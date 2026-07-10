@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: SprawaRozowyPomnik
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: "R\xF3\u017Cowy pomnik burmistrza"
+  crimeDescription: "Wczoraj wieczorem kto\u015B przemalowa\u0142 pomnik burmistrza
+    na r\xF3\u017Cowo i przyklei\u0142 mu w\u0105sy z waty cukrowej. Sprawca dzia\u0142a\u0142
+    w czasie, gdy ca\u0142a grupa by\u0142a razem na kolacji."
+  alibiFacts:
+  - text: "O 19:00 wszyscy spotkali si\u0119 w pizzerii \u201EU Grubego\u201D przy
+      rynku."
+    canBeHidden: 0
+  - text: "Zam\xF3wili\u015Bmy trzy pizze: hawajsk\u0105, capriccios\u0119 i podw\xF3jny
+      ser."
+    canBeHidden: 1
+  - text: "Kelner pomyli\u0142 rachunek \u2014 doliczy\u0142 cztery kompoty, kt\xF3rych
+      nikt nie zamawia\u0142."
+    canBeHidden: 1
+  - text: "Oko\u0142o 19:40 na kilka minut zgas\u0142o \u015Bwiat\u0142o w ca\u0142ym
+      lokalu."
+    canBeHidden: 0
+  - text: "Kucharz opowiedzia\u0142 dowcip o stra\u017Caku, z kt\xF3rego nikt si\u0119
+      nie za\u015Bmia\u0142."
+    canBeHidden: 1
+  - text: "Po kolacji grali\u015Bmy w rzutki; zwyci\u0119zca dosta\u0142 darmowy
+      deser."
+    canBeHidden: 0
+  - text: "Wyszli\u015Bmy po 21:00 i razem doszli\u015Bmy do przystanku przy fontannie."
+    canBeHidden: 0
+  - text: "W drodze powrotnej min\u0119li\u015Bmy patrol stra\u017Cy miejskiej."
+    canBeHidden: 0
+  minHiddenFacts: 2
+  maxHiddenFacts: 3
