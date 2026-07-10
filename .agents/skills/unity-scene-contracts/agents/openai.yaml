@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Scene Contracts"
+  short_description: "Define explicit scene wiring contracts"
+  default_prompt: "Use $unity-scene-contracts to define this scene setup contract."

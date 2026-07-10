@@ -6,6 +6,7 @@ using UnityEngine;
 public class CenteredNetworkManagerHUD : MonoBehaviour
 {
     NetworkManager manager;
+    SteamLobby steamLobby;
 
     public int offsetX;
     public int offsetY;
@@ -23,7 +24,10 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     void Awake()
     {
         manager = GetComponent<NetworkManager>();
+        steamLobby = GetComponent<SteamLobby>();
     }
+
+    bool SteamMode => steamLobby != null && steamLobby.SteamAvailable;
 
     void InitStyles()
     {
@@ -99,6 +103,12 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void StartButtons()
     {
+        if (SteamMode)
+        {
+            SteamStartButtons();
+            return;
+        }
+
         if (!NetworkClient.active)
         {
 #if UNITY_WEBGL
@@ -146,8 +156,52 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             GUILayout.Label($"Connecting to {manager.networkAddress}..", labelStyle);
             if (GUILayout.Button("Cancel Connection Attempt", buttonStyle))
             {
-                manager.StopClient();
+                StopClientAndLobby();
             }
+        }
+    }
+
+    void SteamStartButtons()
+    {
+        if (NetworkClient.active)
+        {
+            GUILayout.Label("Connecting via Steam..", labelStyle);
+            if (GUILayout.Button("Cancel Connection Attempt", buttonStyle))
+            {
+                StopClientAndLobby();
+            }
+            return;
+        }
+
+        if (steamLobby.LobbyPending)
+        {
+            GUILayout.Label("Waiting for Steam lobby..", labelStyle);
+            return;
+        }
+
+        if (GUILayout.Button("Host Steam Lobby (Friends)", buttonStyle))
+        {
+            steamLobby.HostLobby();
+        }
+
+        GUILayout.Label("Friends join through the Steam overlay: Friends → Join Game", labelStyle);
+    }
+
+    void StopClientAndLobby()
+    {
+        manager.StopClient();
+        if (steamLobby != null)
+        {
+            steamLobby.LeaveLobby();
+        }
+    }
+
+    void StopHostAndLobby()
+    {
+        manager.StopHost();
+        if (steamLobby != null)
+        {
+            steamLobby.LeaveLobby();
         }
     }
 
@@ -165,6 +219,14 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         {
             GUILayout.Label($"<b>Client</b>: connected to {manager.networkAddress} via {Transport.active}", labelStyle);
         }
+
+        if (steamLobby != null && steamLobby.InLobby)
+        {
+            if (GUILayout.Button("Invite Friends", buttonStyle))
+            {
+                steamLobby.OpenInviteDialog();
+            }
+        }
     }
 
     void StopButtons()
@@ -175,17 +237,17 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 #if UNITY_WEBGL
             if (GUILayout.Button("Stop Single Player", buttonStyle))
             {
-                manager.StopHost();
+                StopHostAndLobby();
             }
 #else
             if (GUILayout.Button("Stop Host", buttonStyle))
             {
-                manager.StopHost();
+                StopHostAndLobby();
             }
 
             if (GUILayout.Button("Stop Client", buttonStyle))
             {
-                manager.StopClient();
+                StopClientAndLobby();
             }
 #endif
             GUILayout.EndHorizontal();
@@ -194,7 +256,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         {
             if (GUILayout.Button("Stop Client", buttonStyle))
             {
-                manager.StopClient();
+                StopClientAndLobby();
             }
         }
         else if (NetworkServer.active)

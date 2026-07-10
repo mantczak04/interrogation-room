@@ -19,6 +19,7 @@ using Steamworks;
 // It handles the basics of starting up and shutting down the SteamAPI for use.
 //
 [DisallowMultipleComponent]
+[DefaultExecutionOrder(-2000)] // SteamAPI must be initialized before SteamLobby picks a transport.
 public class SteamManager : MonoBehaviour
 {
 #if !DISABLESTEAMWORKS

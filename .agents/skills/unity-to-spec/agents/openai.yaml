@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity To Spec"
+  short_description: "Synthesize a minimal Unity spec"
+  default_prompt: "Use $unity-to-spec to turn this discussion into a project spec."

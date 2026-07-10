@@ -25,3 +25,9 @@
 *.wav binary
 *.webm binary
 *.dll binary
+
+# Unity can serialize these assets in a binary format. Treating them as text
+# lets core.autocrlf silently corrupt their byte stream on Windows.
+**/LightingData.asset binary
+**/NavMesh.asset binary
+**/TerrainData*.asset binary

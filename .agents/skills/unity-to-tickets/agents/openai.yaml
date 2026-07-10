@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity To Tickets"
+  short_description: "Split Unity work into ordered tickets"
+  default_prompt: "Use $unity-to-tickets to break this plan into verifiable increments."

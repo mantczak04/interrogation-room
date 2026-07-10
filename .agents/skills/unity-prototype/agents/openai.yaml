@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Prototype"
+  short_description: "Prototype Unity decisions safely"
+  default_prompt: "Use $unity-prototype to answer this design question with throwaway code."

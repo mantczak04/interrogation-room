@@ -1,0 +1,4 @@
+interface:
+  display_name: "Interrogation Room Skill Router"
+  short_description: "Route work to the right project skill"
+  default_prompt: "Use $ask-interrogation-room to choose the right workflow for this Unity task."

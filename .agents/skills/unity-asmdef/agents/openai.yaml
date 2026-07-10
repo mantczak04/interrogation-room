@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Assembly Definitions"
+  short_description: "Plan directional Unity assemblies"
+  default_prompt: "Use $unity-asmdef to plan or review this assembly split."

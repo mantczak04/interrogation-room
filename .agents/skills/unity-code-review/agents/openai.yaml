@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Code Review"
+  short_description: "Review Unity changes on two axes"
+  default_prompt: "Use $unity-code-review to review these changes against standards and spec."

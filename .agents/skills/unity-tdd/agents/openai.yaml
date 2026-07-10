@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity TDD"
+  short_description: "Run project-aware Unity TDD"
+  default_prompt: "Use $unity-tdd to build this behavior test-first."

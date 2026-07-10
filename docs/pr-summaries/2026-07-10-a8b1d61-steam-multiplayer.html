@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interrogation Room — Steam Multiplayer &amp; fundamenty projektu (a8b1d61)</title>
+<style>
+  :root {
+    --bg: #f7f8fc;
+    --card: #ffffff;
+    --border: #e6e9f2;
+    --border-strong: #d8dcea;
+    --text: #1e2433;
+    --text-soft: #5b6478;
+    --text-dim: #8a92a6;
+    --indigo: #5b5fe9;
+    --violet: #8b5cf6;
+    --sky: #38bdf8;
+    --teal: #14b8a6;
+    --amber: #f59e0b;
+    --rose: #f43f5e;
+    --grad-hero: linear-gradient(135deg, #5b5fe9 0%, #8b5cf6 45%, #38bdf8 100%);
+    --grad-text: linear-gradient(90deg, #5b5fe9, #8b5cf6 55%, #0ea5e9);
+    --grad-card: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+    --shadow-sm: 0 1px 2px rgba(30, 36, 51, 0.04), 0 2px 8px rgba(30, 36, 51, 0.05);
+    --shadow-md: 0 4px 12px rgba(30, 36, 51, 0.06), 0 12px 32px rgba(91, 95, 233, 0.08);
+    --mono: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+    --radius: 16px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.65;
+  }
+
+  /* ===== Hero ===== */
+  .hero {
+    background: var(--grad-hero);
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    padding: 72px 24px 150px;
+  }
+  .hero::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 80% at 15% 0%, rgba(255,255,255,0.18), transparent),
+      radial-gradient(ellipse 50% 70% at 90% 100%, rgba(255,255,255,0.12), transparent);
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 960px; margin: 0 auto; position: relative; text-align: center; }
+  .badge-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+  .badge {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.3px;
+    padding: 6px 15px; border-radius: 999px;
+    background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.28);
+    color: #fff; backdrop-filter: blur(4px);
+  }
+  .hero h1 {
+    font-size: clamp(30px, 5vw, 48px); font-weight: 800; letter-spacing: -0.8px;
+    line-height: 1.15; margin-bottom: 18px;
+  }
+  .hero .subtitle {
+    font-size: 18px; max-width: 700px; margin: 0 auto;
+    color: rgba(255,255,255,0.88);
+  }
+  .hero .meta-line { margin-top: 24px; font-family: var(--mono); font-size: 13.5px; color: rgba(255,255,255,0.85); }
+
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* ===== Stats (overlapping hero) ===== */
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;
+    margin-top: -78px; position: relative;
+  }
+  .stat {
+    background: var(--grad-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 18px; text-align: center; box-shadow: var(--shadow-md);
+  }
+  .stat .num {
+    font-size: 34px; font-weight: 800; font-family: var(--mono);
+    background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .stat .label { font-size: 13px; color: var(--text-soft); margin-top: 6px; }
+
+  /* ===== Sections ===== */
+  section { margin-top: 72px; }
+  .section-tag {
+    display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 1.6px;
+    text-transform: uppercase; margin-bottom: 12px; padding: 4px 14px; border-radius: 999px;
+    color: var(--indigo); background: rgba(91, 95, 233, 0.09); border: 1px solid rgba(91, 95, 233, 0.18);
+  }
+  .section-tag.teal { color: #0d9488; background: rgba(20,184,166,0.09); border-color: rgba(20,184,166,0.2); }
+  .section-tag.amber { color: #b45309; background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.22); }
+  h2 { font-size: 28px; font-weight: 780; letter-spacing: -0.4px; margin-bottom: 10px; }
+  .section-desc { color: var(--text-soft); max-width: 760px; margin-bottom: 28px; font-size: 15.5px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .card {
+    background: var(--grad-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; box-shadow: var(--shadow-sm);
+    transition: box-shadow .25s, transform .25s, border-color .25s;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--grad-hero); opacity: 0; transition: opacity .25s;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
+  .card:hover::before { opacity: 1; }
+  .card h3 { font-size: 16.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 9px; }
+  .card p { font-size: 14.5px; color: var(--text-soft); }
+  code {
+    font-family: var(--mono); font-size: 0.87em;
+    background: #eef0fb; border: 1px solid #e0e3f7; border-radius: 6px;
+    padding: 1px 7px; color: #4649c9; white-space: nowrap;
+  }
+  .card h3 small { font-weight: 500; color: var(--text-dim); font-size: 12px; }
+
+  /* ===== Flow diagram ===== */
+  .flow {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 26px; margin-top: 20px; overflow-x: auto; box-shadow: var(--shadow-sm);
+  }
+  .flow h4 { font-size: 13px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; }
+  .flow-steps { display: flex; align-items: stretch; min-width: 660px; }
+  .flow-step {
+    flex: 1; background: linear-gradient(180deg, #f6f7ff, #f0f2fe);
+    border: 1px solid #e0e3f7; border-radius: 12px; padding: 14px; font-size: 13px; text-align: center;
+  }
+  .flow-step strong { display: block; font-family: var(--mono); font-size: 12.5px; color: var(--indigo); margin-bottom: 4px; }
+  .flow-step span { color: var(--text-soft); font-size: 12.5px; }
+  .flow-arrow { display: flex; align-items: center; padding: 0 12px; font-size: 18px; flex-shrink: 0;
+    background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 700; }
+
+  /* ===== Table ===== */
+  .table-wrap {
+    overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius);
+    margin-top: 20px; background: var(--card); box-shadow: var(--shadow-sm);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 620px; }
+  th {
+    text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--text-dim); padding: 14px 20px;
+    background: linear-gradient(180deg, #fafbff, #f4f6fd);
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 14px 20px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbff; }
+  td.dim { color: var(--text-soft); }
+
+  /* ===== ADR grid ===== */
+  .adr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 20px; }
+  .adr {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; font-size: 13.5px; display: flex; gap: 11px; align-items: baseline;
+    color: var(--text-soft); box-shadow: var(--shadow-sm); transition: transform .2s, box-shadow .2s;
+  }
+  .adr:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .adr .id {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 700; flex-shrink: 0;
+    background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* ===== Lists ===== */
+  ul.nice { list-style: none; margin-top: 16px; }
+  ul.nice li { padding: 8px 0 8px 30px; position: relative; font-size: 15px; color: var(--text-soft); }
+  ul.nice li::before {
+    content: "✓"; position: absolute; left: 2px; top: 8px;
+    width: 20px; height: 20px; border-radius: 6px; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; background: linear-gradient(135deg, var(--teal), var(--sky));
+  }
+  ul.nice li strong { color: var(--text); font-weight: 650; }
+
+  /* ===== Callout ===== */
+  .callout {
+    display: flex; gap: 15px; border-radius: var(--radius); padding: 18px 22px; margin-top: 24px;
+    font-size: 14.5px; background: linear-gradient(135deg, rgba(91,95,233,0.06), rgba(56,189,248,0.07));
+    border: 1px solid rgba(91,95,233,0.16);
+  }
+  .callout.warm { background: linear-gradient(135deg, rgba(245,158,11,0.07), rgba(244,63,94,0.05)); border-color: rgba(245,158,11,0.25); }
+  .callout .icon { font-size: 21px; flex-shrink: 0; }
+  .callout p { color: var(--text-soft); }
+  .callout strong { color: var(--text); }
+
+  /* ===== Skill chips ===== */
+  .chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+  .chip {
+    font-family: var(--mono); font-size: 12px; padding: 6px 14px; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--border-strong); color: var(--text-soft);
+    box-shadow: var(--shadow-sm);
+  }
+  .chip.hl {
+    color: #fff; border: none;
+    background: linear-gradient(135deg, var(--indigo), var(--violet));
+  }
+
+  footer {
+    margin-top: 88px; padding-top: 30px; border-top: 1px solid var(--border);
+    text-align: center; color: var(--text-dim); font-size: 13px; font-family: var(--mono);
+  }
+
+  @media (max-width: 640px) {
+    .hero { padding: 52px 20px 130px; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="badge-row">
+        <span class="badge">commit a8b1d61</span>
+        <span class="badge">main</span>
+        <span class="badge">2026-07-10</span>
+        <span class="badge">Piotr Kaczorowski</span>
+      </div>
+      <h1>Multiplayer przez Steam 🎮<br>+ fundamenty projektu</h1>
+      <p class="subtitle">
+        Ekipa, mamy to! Gra działa już w trybie multiplayer przez lobby Steam z automatycznym
+        fallbackiem na KCP. Do tego kompletna dokumentacja projektowa: reguły domenowe,
+        architektura MVP, 12 ADR-ów i pełne wyposażenie repo pod pracę z agentami AI.
+      </p>
+      <p class="meta-line">71 plików · +1591 / −19 linii</p>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <div class="stats">
+      <div class="stat"><div class="num">2</div><div class="label">transporty sieciowe<br>(FizzySteamworks + KCP)</div></div>
+      <div class="stat"><div class="num">12</div><div class="label">ADR-ów z decyzjami<br>projektowymi</div></div>
+      <div class="stat"><div class="num">15</div><div class="label">skilli agentowych<br>w <code>.agents/skills/</code></div></div>
+      <div class="stat"><div class="num">6</div><div class="label">dokumentów<br>architektury i designu</div></div>
+    </div>
+
+    <!-- ================= STEAM ================= -->
+    <section>
+      <span class="section-tag">Najważniejsze</span>
+      <h2>Multiplayer przez Steam</h2>
+      <p class="section-desc">
+        Zaimplementowany zgodnie z <strong>ADR-0012</strong>: lobby Steam z wyborem transportu w runtime.
+        Gdy klient Steam działa — ruch idzie przez relay Valve (nikt nie widzi niczyich IP, zero
+        konfiguracji portów). Gdy Steama nie ma — gra sama spada na KCP, więc ParrelSync
+        i testy lokalne działają jak zawsze, bez żadnego kombinowania.
+      </p>
+
+      <div class="cards">
+        <div class="card">
+          <h3>🔌 Stos technologiczny</h3>
+          <p>
+            <code>Steamworks.NET</code> (binding C# do Steamworks API) +
+            <code>FizzySteamworks</code> (transport Mirror przez sieć Steam, tryb SteamSockets).
+            Testowy AppID <code>480</code> („Spacewar”) — do podmiany przed wydaniem.
+          </p>
+        </div>
+        <div class="card">
+          <h3>🧩 SteamLobby.cs <small>(201 linii, nowy)</small></h3>
+          <p>
+            Całe klejenie lobby i wybór transportu. <code>[DefaultExecutionOrder(-1000)]</code>
+            gwarantuje, że transport jest wybrany zanim Mirror zapamięta <code>Transport.active</code>.
+            Obsługuje tworzenie lobby, dołączanie z nakładki Steam i z argumentu <code>+connect_lobby</code>.
+          </p>
+        </div>
+        <div class="card">
+          <h3>⚙️ SteamManager</h3>
+          <p>
+            Osobny GameObject z <code>[DefaultExecutionOrder(-2000)]</code> —
+            inicjalizuje i zamyka SteamAPI oraz pompuje callbacki, zanim ktokolwiek
+            zapyta o dostępność Steama.
+          </p>
+        </div>
+        <div class="card">
+          <h3>🖥️ Nowy HUD</h3>
+          <p>
+            <code>CenteredNetworkManagerHUD</code> w trybie Steam pokazuje
+            <strong>„Host Steam Lobby (Friends)”</strong> i <strong>„Invite Friends”</strong>
+            (nakładka Steam); bez Steama — klasyczne pola IP/port dla KCP.
+          </p>
+        </div>
+      </div>
+
+      <div class="flow">
+        <h4>Przepływ: hostowanie i dołączanie</h4>
+        <div class="flow-steps">
+          <div class="flow-step"><strong>HostLobby()</strong><span>CreateLobby<br>(friends-only)</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><strong>OnLobbyCreated</strong><span>zapis SteamID hosta<br>→ StartHost()</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><strong>znajomy: „Dołącz”</strong><span>nakładka Steam<br>lub +connect_lobby</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><strong>OnLobbyEntered</strong><span>czyta HostAddress<br>→ StartClient()</span></div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="icon">🧪</div>
+        <p>
+          <strong>Jak testować:</strong> lokalnie — ParrelSync na KCP działa od strzała
+          (bez klienta Steam gra sama spada na KCP). Prawdziwy test Steam wymaga
+          <strong>dwóch maszyn z dwoma kontami Steam</strong> na AppID 480 — dwie instancje
+          na jednym koncie nie przetestują ścieżki Steam.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= DOCS ================= -->
+    <section>
+      <span class="section-tag amber">Fundamenty</span>
+      <h2>Dokumentacja projektowa</h2>
+      <p class="section-desc">
+        Repo dostało kompletny szkielet dokumentacji: kanoniczny język domenowy, zakres pierwszego
+        vertical slice’a i zapis wszystkich podjętych decyzji projektowych. Zanim coś zmieniacie
+        w gameplayu — rzućcie okiem na <code>CONTEXT.md</code>.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dokument</th><th>Co zawiera</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>CONTEXT.md</code></td>
+              <td class="dim">Kanoniczny język i zatwierdzone reguły domenowe: <strong>Runda</strong>, <strong>Detektyw</strong>, <strong>Winny</strong>, <strong>Niewinny</strong>, <strong>Alibi</strong>, <strong>Egzekucja</strong>. Skład rundy 4–6 graczy (balans pod 5), 1 Detektyw, 1 Winny.</td>
+            </tr>
+            <tr>
+              <td><code>docs/architecture/MVP-ARCHITECTURE.md</code></td>
+              <td class="dim">Zakres pierwszego vertical slice’a: moduły, szwy, kolejność implementacji. Czysty <code>RoundEngine</code> bez zależności od Unity/Mirror, <code>NetworkRoundCoordinator</code> jako jedyny adapter Mirror, sekrety tylko po stronie hosta.</td>
+            </tr>
+            <tr>
+              <td><code>docs/architecture/STEAM-NETWORKING.md</code></td>
+              <td class="dim">Opis zaimplementowanego stosu Steam: komponenty w <code>Room.unity</code>, przepływy hostowania i dołączania, zasady testów lokalnych.</td>
+            </tr>
+            <tr>
+              <td><code>docs/design/OPEN-QUESTIONS.md</code></td>
+              <td class="dim">Odłożone decyzje (m.in. mechanika Rebelii, UI notatek Detektywa, liczba Sekretnych Celów) — <strong>nie implementujemy bez nowej decyzji</strong>.</td>
+            </tr>
+            <tr>
+              <td><code>docs/research/proximity-voice-tools.md</code></td>
+              <td class="dim">Research voice chatu przestrzennego: Dissonance / Vivox / Photon / Steam Voice. Rekomendowany pierwszy spike: Dissonance nad Mirror z własną atenuacją drzwi.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 style="font-size:20px; margin-top:40px;">Rejestr decyzji — 12 ADR-ów</h2>
+      <div class="adr-grid">
+        <div class="adr"><span class="id">0001</span>Jeden ukryty Winny podejrzany</div>
+        <div class="adr"><span class="id">0002</span>Niewinni grają o własne przetrwanie</div>
+        <div class="adr"><span class="id">0003</span>Jedna Egzekucja kończy Rundę</div>
+        <div class="adr"><span class="id">0004</span>Jeden limit czasu na całą Rundę</div>
+        <div class="adr"><span class="id">0005</span>Ciągłe, free-roamingowe Rundy</div>
+        <div class="adr"><span class="id">0006</span>Winny dostaje ocenzurowane Alibi</div>
+        <div class="adr"><span class="id">0007</span>Alibi znika po Przygotowaniu</div>
+        <div class="adr"><span class="id">0008</span>Detektyw rekonstruuje Alibi z zeznań</div>
+        <div class="adr"><span class="id">0009</span>Prywatność głosu wynika z przestrzeni</div>
+        <div class="adr"><span class="id">0010</span>Ręcznie tworzone modułowe sprawy</div>
+        <div class="adr"><span class="id">0011</span>Serwer trzyma sekrety, klient widzi tylko swój widok</div>
+        <div class="adr"><span class="id">0012</span>Lobby Steam z fallbackiem transportu w runtime</div>
+      </div>
+    </section>
+
+    <!-- ================= AGENTS ================= -->
+    <section>
+      <span class="section-tag teal">Tooling</span>
+      <h2>Instrukcje i skille dla agentów AI</h2>
+      <p class="section-desc">
+        Repo jest teraz przygotowane do pracy z agentami (Claude Code, Codex).
+        <code>AGENTS.md</code> to źródło prawdy dla całego repozytorium, <code>CLAUDE.md</code> je włącza
+        i dodaje twardą regułę: operacje w Unity Editor <strong>wyłącznie przez Unity MCP</strong> —
+        bez obejść i bez ręcznej edycji YAML-a scen czy prefabów.
+      </p>
+
+      <ul class="nice">
+        <li><strong>Ochrona repo:</strong> zakaz skanowania <code>Library/</code>, <code>Temp/</code>, logów i katalogów vendor (Mirror, Plugins, TextMesh Pro).</li>
+        <li><strong>Reguły Unity MCP:</strong> paginowane zapytania, limity wyników, obowiązkowy stop + handoff do Computer Use, gdy MCP nie ma potrzebnej możliwości.</li>
+        <li><strong>Ograniczenia architektury MVP:</strong> czysty <code>RoundEngine</code>, sekrety nigdy przez globalne <code>SyncVar</code>, UI tylko renderuje widoki.</li>
+        <li><strong>Weryfikacja:</strong> testy Edit Mode dla <code>RoundEngine</code>, kontrola kompilacji po zmianach C#, test host+klient po zmianach sieciowych.</li>
+      </ul>
+
+      <h2 style="font-size:20px; margin-top:40px;">15 skilli w <code>.agents/skills/</code></h2>
+      <div class="chips">
+        <span class="chip hl">ask-interrogation-room</span>
+        <span class="chip">mirror-round-networking</span>
+        <span class="chip">unity-asmdef</span>
+        <span class="chip">unity-change-verification</span>
+        <span class="chip">unity-code-review</span>
+        <span class="chip">unity-diagnosing-bugs</span>
+        <span class="chip">unity-implement</span>
+        <span class="chip">unity-performance</span>
+        <span class="chip">unity-prototype</span>
+        <span class="chip">unity-scene-contracts</span>
+        <span class="chip">unity-script-roles</span>
+        <span class="chip">unity-tdd</span>
+        <span class="chip">unity-testability</span>
+        <span class="chip">unity-to-spec</span>
+        <span class="chip">unity-to-tickets</span>
+      </div>
+      <div class="callout warm">
+        <div class="icon">💡</div>
+        <p>Workflowy projektowe zaczynajcie od skilla <code>ask-interrogation-room</code> — kieruje do właściwych dokumentów i pozostałych skilli.</p>
+      </div>
+    </section>
+
+    <!-- ================= MISC ================= -->
+    <section>
+      <span class="section-tag">Pozostałe zmiany</span>
+      <h2>Infrastruktura i scena</h2>
+      <ul class="nice">
+        <li><strong>ParrelSync</strong> dodany do <code>Assets/Plugins/</code> — klonowanie projektu do lokalnych testów host + klient na KCP.</li>
+        <li><strong>Scena <code>Room.unity</code></strong> rozbudowana o obiekt <code>SteamManager</code> i komponenty sieciowe na <code>NetworkManager</code>.</li>
+        <li><strong>Pakiety:</strong> <code>com.rlabrecque.steamworks.net</code> w <code>Packages/manifest.json</code> (FizzySteamworks jako <code>com.mirror.steamworks.net</code>).</li>
+        <li><strong><code>.gitattributes</code></strong> — poprawna obsługa końcówek linii i plików binarnych.</li>
+        <li>Drobne aktualizacje ustawień URP i <code>ProjectSettings/</code> wynikające z konfiguracji projektu.</li>
+      </ul>
+    </section>
+
+    <footer>
+      Interrogation Room · commit a8b1d61 · wygenerowano 2026-07-10 ·
+      źródła: STEAM-NETWORKING.md, AGENTS.md, CONTEXT.md
+    </footer>
+
+  </div>
+
+</body>
+</html>
