@@ -1,0 +1,36 @@
+.round-ui {
+    flex-grow: 1;
+    color: rgb(240, 236, 225);
+}
+.screen-card {
+    position: absolute;
+    width: 620px;
+    min-height: 360px;
+    left: 50%;
+    top: 50%;
+    translate: -310px -180px;
+    padding: 28px;
+    background-color: rgba(18, 20, 24, 0.96);
+    border-radius: 10px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgb(128, 105, 72);
+    border-right-color: rgb(128, 105, 72);
+    border-top-color: rgb(128, 105, 72);
+    border-bottom-color: rgb(128, 105, 72);
+}
+.title { font-size: 32px; -unity-font-style: bold; margin-bottom: 12px; }
+.subtitle, .body-text, .alibi, .result { font-size: 18px; white-space: normal; margin-bottom: 14px; }
+.role { font-size: 24px; color: rgb(224, 181, 104); -unity-font-style: bold; margin-bottom: 12px; }
+.section-title { font-size: 15px; color: rgb(177, 163, 140); -unity-font-style: bold; margin-top: 8px; }
+.primary-button, .danger-button { height: 42px; font-size: 17px; margin-top: 14px; }
+.primary-button { background-color: rgb(65, 91, 76); }
+.danger-button { background-color: rgb(126, 42, 38); }
+.hud { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+.timer { position: absolute; top: 18px; left: 50%; translate: -55px 0; width: 110px; font-size: 28px; -unity-font-style: bold; -unity-text-align: middle-center; background-color: rgba(12, 14, 18, 0.82); border-radius: 6px; }
+.hud-card { position: absolute; right: 20px; bottom: 20px; width: 330px; padding: 14px; background-color: rgba(12, 14, 18, 0.9); border-radius: 6px; }
+.hud-role { font-size: 14px; color: rgb(224, 181, 104); -unity-font-style: bold; margin-bottom: 5px; }
+.hud-crime { font-size: 13px; color: rgb(210, 210, 210); white-space: normal; margin-bottom: 10px; }
+.rejection { position: absolute; left: 50%; bottom: 28px; translate: -260px 0; width: 520px; padding: 10px; font-size: 16px; -unity-text-align: middle-center; color: rgb(255, 218, 148); background-color: rgba(112, 41, 35, 0.94); white-space: normal; }

@@ -51,6 +51,8 @@ namespace InterrogationRoom.Networking.Tests
             Assert.That(restored.Viewer, Is.EqualTo(source.Viewer));
             Assert.That(restored.Phase, Is.EqualTo(source.Phase));
             Assert.That(restored.Role, Is.EqualTo(source.Role));
+            Assert.That(restored.Players, Is.EqualTo(source.Players));
+            Assert.That(restored.Detective, Is.EqualTo(source.Detective));
             Assert.That(restored.CrimeDescription, Is.EqualTo(source.CrimeDescription));
             Assert.That(restored.Alibi.Entries.Select(entry => entry.FactId),
                 Is.EqualTo(source.Alibi.Entries.Select(entry => entry.FactId)));
@@ -105,7 +107,9 @@ namespace InterrogationRoom.Networking.Tests
                     survived: true,
                     detectiveWon: false,
                     RoundEndCause.Execution,
-                    new PlayerId(14)));
+                    new PlayerId(14)),
+                new[] { new PlayerId(10), new PlayerId(11), new PlayerId(12), new PlayerId(13), new PlayerId(14) },
+                new PlayerId(10));
             var message = RoundViewMessage.FromView(source, remainingSeconds: 0f);
 
             RoundViewMessage restoredMessage;
@@ -127,6 +131,8 @@ namespace InterrogationRoom.Networking.Tests
             Assert.That(restored.Result.DetectiveWon, Is.False);
             Assert.That(restored.Result.EndCause, Is.EqualTo(RoundEndCause.Execution));
             Assert.That(restored.Result.ExecutedPlayer, Is.EqualTo(new PlayerId(14)));
+            Assert.That(restored.Players.Select(player => player.Value), Is.EqualTo(new[] { 10, 11, 12, 13, 14 }));
+            Assert.That(restored.Detective, Is.EqualTo(new PlayerId(10)));
         }
     }
 }

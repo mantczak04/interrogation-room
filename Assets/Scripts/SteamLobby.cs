@@ -51,10 +51,22 @@ public class SteamLobby : MonoBehaviour
     {
         manager = GetComponent<NetworkManager>();
 
-        Transport selected = SteamAvailable ? steamTransport : localTransport;
+        bool steamAvailable = SteamAvailable;
+        SetTransportEnabled(steamTransport, steamAvailable);
+        SetTransportEnabled(localTransport, !steamAvailable);
+
+        Transport selected = steamAvailable ? steamTransport : localTransport;
         if (selected != null)
         {
             manager.transport = selected;
+        }
+    }
+
+    static void SetTransportEnabled(Transport transport, bool enabled)
+    {
+        if (transport != null)
+        {
+            transport.enabled = enabled;
         }
     }
 

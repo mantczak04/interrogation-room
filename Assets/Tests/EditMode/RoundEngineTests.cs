@@ -137,6 +137,22 @@ namespace InterrogationRoom.Domain.Tests
         }
 
         [Test]
+        public void ViewFor_ExposesOnlyPublicRosterAndDetectiveIdentity()
+        {
+            var engine = StartedEngine();
+            var detective = FindByRole(engine, RoundRole.Detective);
+
+            foreach (var viewer in FivePlayers)
+            {
+                var view = engine.ViewFor(viewer);
+
+                Assert.That(view.Players, Is.EqualTo(FivePlayers));
+                Assert.That(view.Detective, Is.EqualTo(detective));
+                Assert.That(view.Players.Distinct().Count(), Is.EqualTo(FivePlayers.Length));
+            }
+        }
+
+        [Test]
         public void ViewFor_UnknownPlayerOrLobby_ReturnsNull()
         {
             Assert.That(new RoundEngine().ViewFor(new PlayerId(1)), Is.Null);

@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/RoundUI.uss" />
+    <ui:VisualElement name="round-ui-root" class="round-ui">
+        <ui:VisualElement name="lobby-panel" class="screen-card">
+            <ui:Label text="Przesłuchanie" class="title" />
+            <ui:Label text="Połącz 4–6 graczy, aby rozpocząć Rundę." class="subtitle" />
+            <ui:Button name="start-button" text="Start Rundy" class="primary-button" />
+        </ui:VisualElement>
+        <ui:VisualElement name="preparation-panel" class="screen-card">
+            <ui:Label text="Przygotowanie" class="title" />
+            <ui:Label name="role-label" class="role" />
+            <ui:Label text="Przestępstwo" class="section-title" />
+            <ui:Label name="crime-label" class="body-text" />
+            <ui:VisualElement name="alibi-section">
+                <ui:Label text="Twoje Alibi" class="section-title" />
+                <ui:Label name="alibi-label" class="alibi" />
+            </ui:VisualElement>
+            <ui:Button name="end-preparation-button" text="Zakończ Przygotowanie" class="primary-button" />
+        </ui:VisualElement>
+        <ui:VisualElement name="round-hud" class="hud">
+            <ui:Label name="timer-label" class="timer" />
+            <ui:VisualElement class="hud-card">
+                <ui:Label name="hud-role-label" class="hud-role" />
+                <ui:Label name="hud-crime-label" class="hud-crime" />
+                <ui:DropdownField name="execution-target" label="Podejrzany" />
+                <ui:Button name="execute-button" text="Wykonaj Egzekucję" class="danger-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="result-panel" class="screen-card">
+            <ui:Label text="Koniec Rundy" class="title" />
+            <ui:Label name="result-label" class="result" />
+        </ui:VisualElement>
+        <ui:Label name="rejection-label" class="rejection" />
+    </ui:VisualElement>
+</ui:UXML>

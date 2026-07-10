@@ -104,7 +104,7 @@ public class SteamManager : MonoBehaviour
         m_bInitialized = SteamAPI.Init();
         if (!m_bInitialized)
         {
-            Debug.LogError("[Steamworks.NET] SteamAPI_Init() failed. Refer to Valve's documentation or the comment above this line for more information.", this);
+            Debug.Log("[Steamworks.NET] SteamAPI_Init() unavailable; continuing with the configured local transport.", this);
             return;
         }
 

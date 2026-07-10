@@ -65,6 +65,8 @@ namespace InterrogationRoom.Networking
         public int ViewerId;
         public RoundPhase Phase;
         public RoundRole Role;
+        public int[] PlayerIds;
+        public int DetectiveId;
         public string CrimeDescription;
 
         public bool HasAlibi;
@@ -94,6 +96,8 @@ namespace InterrogationRoom.Networking
                 ViewerId = view.Viewer.Value,
                 Phase = view.Phase,
                 Role = view.Role,
+                PlayerIds = CopyPlayerIds(view.Players),
+                DetectiveId = view.Detective.Value,
                 CrimeDescription = view.CrimeDescription,
                 HasAlibi = view.Alibi != null,
                 AlibiEntries = view.Alibi == null
@@ -159,7 +163,26 @@ namespace InterrogationRoom.Networking
                 CrimeDescription,
                 alibi,
                 secretObjective,
-                result);
+                result,
+                CopyPlayers(PlayerIds),
+                new PlayerId(DetectiveId));
+        }
+
+        private static int[] CopyPlayerIds(System.Collections.Generic.IReadOnlyList<PlayerId> players)
+        {
+            var ids = new int[players.Count];
+            for (var index = 0; index < players.Count; index++)
+                ids[index] = players[index].Value;
+            return ids;
+        }
+
+        private static PlayerId[] CopyPlayers(int[] playerIds)
+        {
+            var source = playerIds ?? Array.Empty<int>();
+            var players = new PlayerId[source.Length];
+            for (var index = 0; index < source.Length; index++)
+                players[index] = new PlayerId(source[index]);
+            return players;
         }
 
         private static AlibiEntryMessage[] CopyAlibi(AlibiView alibi)
@@ -187,6 +210,7 @@ namespace InterrogationRoom.Networking
     public static class RoundMessageSerialization
     {
         private const int MaxAlibiEntries = 256;
+        private const int MaxPlayers = RoundEngine.MaxPlayers;
         private static bool _registered;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -241,6 +265,13 @@ namespace InterrogationRoom.Networking
             writer.WriteInt(message.ViewerId);
             writer.WriteByte((byte)message.Phase);
             writer.WriteByte((byte)message.Role);
+            var playerIds = message.PlayerIds ?? Array.Empty<int>();
+            if (playerIds.Length > MaxPlayers)
+                throw new ArgumentOutOfRangeException(nameof(message), $"Skład Rundy cannot contain more than {MaxPlayers} players.");
+            writer.WriteByte((byte)playerIds.Length);
+            foreach (var playerId in playerIds)
+                writer.WriteInt(playerId);
+            writer.WriteInt(message.DetectiveId);
             writer.WriteString(message.CrimeDescription);
 
             writer.WriteBool(message.HasAlibi);
@@ -285,10 +316,19 @@ namespace InterrogationRoom.Networking
                 ViewerId = reader.ReadInt(),
                 Phase = (RoundPhase)reader.ReadByte(),
                 Role = (RoundRole)reader.ReadByte(),
-                CrimeDescription = reader.ReadString(),
-                HasAlibi = reader.ReadBool(),
-                AlibiEntries = Array.Empty<AlibiEntryMessage>()
+                PlayerIds = Array.Empty<int>()
             };
+
+            var playerCount = reader.ReadByte();
+            if (playerCount > MaxPlayers)
+                throw new FormatException($"Received Skład Rundy count {playerCount}, maximum is {MaxPlayers}.");
+            message.PlayerIds = new int[playerCount];
+            for (var index = 0; index < playerCount; index++)
+                message.PlayerIds[index] = reader.ReadInt();
+            message.DetectiveId = reader.ReadInt();
+            message.CrimeDescription = reader.ReadString();
+            message.HasAlibi = reader.ReadBool();
+            message.AlibiEntries = Array.Empty<AlibiEntryMessage>();
 
             if (message.HasAlibi)
             {

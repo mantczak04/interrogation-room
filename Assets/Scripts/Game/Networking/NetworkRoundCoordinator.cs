@@ -40,6 +40,8 @@ namespace InterrogationRoom.Networking
 
         public PlayerRoundView CurrentView { get; private set; }
         public float CurrentRemainingSeconds { get; private set; }
+        public bool IsLocalHost => NetworkServer.activeHost;
+        public int ConnectedPlayerCount => _connectionsByPlayerId.Count;
 
         public event Action<PlayerRoundView, float> ViewReceived;
         public event Action<string> IntentRejected;

@@ -29,6 +29,12 @@ namespace InterrogationRoom.Domain
         /// <summary>The viewer's own role only.</summary>
         public RoundRole Role { get; }
 
+        /// <summary>Public Skład Rundy. Contains identities only, never suspect roles.</summary>
+        public IReadOnlyList<PlayerId> Players { get; }
+
+        /// <summary>The publicly known Detektyw.</summary>
+        public PlayerId Detective { get; }
+
         /// <summary>Przestępstwo — public, present in every phase of the Runda.</summary>
         public string CrimeDescription { get; }
 
@@ -52,11 +58,15 @@ namespace InterrogationRoom.Domain
             string crimeDescription,
             AlibiView alibi,
             SecretObjectiveView secretObjective,
-            PlayerResultView result)
+            PlayerResultView result,
+            IReadOnlyList<PlayerId> players,
+            PlayerId detective)
         {
             Viewer = viewer;
             Phase = phase;
             Role = role;
+            Players = players ?? throw new System.ArgumentNullException(nameof(players));
+            Detective = detective;
             CrimeDescription = crimeDescription;
             Alibi = alibi;
             SecretObjective = secretObjective;

@@ -68,7 +68,16 @@ namespace InterrogationRoom.Domain
             if (_phase == RoundPhase.Finished)
                 result = BuildResult(viewer, role);
 
-            return new PlayerRoundView(viewer, _phase, role, _case.CrimeDescription, alibi, secretObjective, result);
+            return new PlayerRoundView(
+                viewer,
+                _phase,
+                role,
+                _case.CrimeDescription,
+                alibi,
+                secretObjective,
+                result,
+                Array.AsReadOnly((PlayerId[])_players.Clone()),
+                _detective.Value);
         }
 
         private RoundTransition HandleStartRound(RoundCommand.StartRound start)
