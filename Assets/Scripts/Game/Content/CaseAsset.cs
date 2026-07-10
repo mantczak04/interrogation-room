@@ -57,8 +57,7 @@ namespace InterrogationRoom.Content
         /// </summary>
         public CaseDefinition ToDefinition()
         {
-            var errors = new List<string>();
-            CollectErrors(errors);
+            var errors = Validate();
             if (errors.Count > 0)
                 throw new InvalidOperationException($"CaseAsset '{name}' is invalid: {string.Join(" | ", errors)}");
 
@@ -68,14 +67,28 @@ namespace InterrogationRoom.Content
             return new CaseDefinition(title.Trim(), crimeDescription.Trim(), facts, minHiddenFacts, maxHiddenFacts);
         }
 
+        /// <summary>
+        /// Returns all deterministic authoring errors without logging or throwing.
+        /// Editor tooling and the host lobby can use this before a Runda starts.
+        /// </summary>
+        public IReadOnlyList<string> Validate()
+        {
+            var errors = new List<string>();
+            CollectErrors(errors);
+            return errors;
+        }
+
         private void CollectErrors(List<string> errors)
         {
             if (string.IsNullOrWhiteSpace(title))
                 errors.Add("Title is empty.");
             if (string.IsNullOrWhiteSpace(crimeDescription))
                 errors.Add("Przestępstwo text is empty.");
-            if (alibiFacts.Count == 0)
+            if (alibiFacts == null || alibiFacts.Count == 0)
+            {
                 errors.Add("Alibi has no facts.");
+                return;
+            }
             if (alibiFacts.Any(f => f == null || string.IsNullOrWhiteSpace(f.text)))
                 errors.Add("Alibi contains an empty fact.");
             if (minHiddenFacts < 0 || minHiddenFacts > maxHiddenFacts)
@@ -88,12 +101,11 @@ namespace InterrogationRoom.Content
 
         private void OnValidate()
         {
-            var errors = new List<string>();
-            CollectErrors(errors);
+            var errors = Validate();
             foreach (var error in errors)
                 Debug.LogError($"CaseAsset '{name}': {error}", this);
 
-            if (alibiFacts.Count > 0 && alibiFacts.Count < RecommendedMinFacts)
+            if (alibiFacts != null && alibiFacts.Count > 0 && alibiFacts.Count < RecommendedMinFacts)
                 Debug.LogWarning($"CaseAsset '{name}': {alibiFacts.Count} facts — MVP recommends {RecommendedMinFacts}-10.", this);
         }
     }

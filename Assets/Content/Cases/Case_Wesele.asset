@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_Wesele
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: Wesele bez Tortu
+  crimeDescription: "Kto\u015B wystrzeli\u0142 weselny tort z armatki konfetti na
+    dach remizy."
+  alibiFacts:
+  - text: "O 18:30 wszyscy zaj\u0119li miejsca przy stole obok orkiestry."
+    canBeHidden: 0
+  - text: "\u015Awiadek pana m\u0142odego rozla\u0142 kompot z agrestu na bia\u0142y
+      obrus."
+    canBeHidden: 1
+  - text: "Kapela zagra\u0142a polk\u0119, gdy zegar nad barem wskazywa\u0142 18:47."
+    canBeHidden: 1
+  - text: "Ciocia Gra\u017Cyna rozdawa\u0142a papierowe korony z napisem Kr\xF3l
+      Parkietu."
+    canBeHidden: 1
+  - text: "Kelner wni\xF3s\u0142 tort na w\xF3zku z jednym skrzypi\u0105cym ko\u0142em."
+    canBeHidden: 1
+  - text: "Przez pi\u0119\u0107 minut zgas\u0142o \u015Bwiat\u0142o, ale muzyka nadal
+      gra\u0142a."
+    canBeHidden: 1
+  - text: "O 19:05 grupa wysz\u0142a przed remiz\u0119 ogl\u0105da\u0107 pokaz zimnych
+      ogni."
+    canBeHidden: 0
+  minHiddenFacts: 2
+  maxHiddenFacts: 2

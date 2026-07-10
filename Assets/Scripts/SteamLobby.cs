@@ -62,6 +62,14 @@ public class SteamLobby : MonoBehaviour
         }
     }
 
+    void OnValidate()
+    {
+        if (localTransport == null)
+            Debug.LogError("[SteamLobby] Local KCP transport reference is required.", this);
+        if (steamTransport != null && steamTransport == localTransport)
+            Debug.LogError("[SteamLobby] Steam and local transports must be different components.", this);
+    }
+
     static void SetTransportEnabled(Transport transport, bool enabled)
     {
         if (transport != null)

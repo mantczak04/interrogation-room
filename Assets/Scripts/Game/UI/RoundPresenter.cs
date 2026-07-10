@@ -96,6 +96,7 @@ namespace InterrogationRoom.UI
         private Label _resultLabel;
         private Label _rejectionLabel;
         private Button _startButton;
+        private DropdownField _caseSelection;
         private Button _endPreparationButton;
         private Button _executeButton;
         private DropdownField _executionTarget;
@@ -103,6 +104,16 @@ namespace InterrogationRoom.UI
         private void Reset()
         {
             uiDocument = GetComponent<UIDocument>();
+        }
+
+        private void OnValidate()
+        {
+            if (uiDocument == null)
+                uiDocument = GetComponent<UIDocument>();
+            if (coordinator == null)
+                Debug.LogError("[RoundPresenter] NetworkRoundCoordinator reference is required.", this);
+            if (uiDocument == null)
+                Debug.LogError("[RoundPresenter] UIDocument reference is required.", this);
         }
 
         private void OnEnable()
@@ -122,6 +133,7 @@ namespace InterrogationRoom.UI
             coordinator.ViewReceived += OnViewReceived;
             coordinator.IntentRejected += OnIntentRejected;
             _startButton.clicked += OnStartClicked;
+            _caseSelection.RegisterValueChangedCallback(OnCaseSelectionChanged);
             _endPreparationButton.clicked += OnEndPreparationClicked;
             _executeButton.clicked += OnExecuteClicked;
 
@@ -140,6 +152,8 @@ namespace InterrogationRoom.UI
             }
             if (_startButton != null)
                 _startButton.clicked -= OnStartClicked;
+            if (_caseSelection != null)
+                _caseSelection.UnregisterValueChangedCallback(OnCaseSelectionChanged);
             if (_endPreparationButton != null)
                 _endPreparationButton.clicked -= OnEndPreparationClicked;
             if (_executeButton != null)
@@ -231,6 +245,14 @@ namespace InterrogationRoom.UI
                 && coordinator.ConnectedPlayerCount >= RoundEngine.MinPlayers
                 && coordinator.ConnectedPlayerCount <= RoundEngine.MaxPlayers;
             SetVisible(_startButton, coordinator.IsLocalHost);
+            SetVisible(_caseSelection, coordinator.IsLocalHost);
+            var caseTitles = coordinator.AvailableCaseTitles.ToList();
+            _caseSelection.choices = caseTitles;
+            _caseSelection.SetEnabled(caseTitles.Count > 1);
+            if (caseTitles.Count == 0)
+                _caseSelection.SetValueWithoutNotify(string.Empty);
+            else
+                _caseSelection.SetValueWithoutNotify(caseTitles[Mathf.Clamp(coordinator.SelectedCaseIndex, 0, caseTitles.Count - 1)]);
             _startButton.SetEnabled(canStart);
             _startButton.text = canStart
                 ? "Start Rundy"
@@ -255,12 +277,19 @@ namespace InterrogationRoom.UI
             _resultLabel = Required<Label>(root, "result-label");
             _rejectionLabel = Required<Label>(root, "rejection-label");
             _startButton = Required<Button>(root, "start-button");
+            _caseSelection = Required<DropdownField>(root, "case-selection");
             _endPreparationButton = Required<Button>(root, "end-preparation-button");
             _executeButton = Required<Button>(root, "execute-button");
             _executionTarget = Required<DropdownField>(root, "execution-target");
         }
 
         private void OnStartClicked() => coordinator.RequestStartRound();
+
+        private void OnCaseSelectionChanged(ChangeEvent<string> changeEvent)
+        {
+            if (_caseSelection.index >= 0)
+                coordinator.TrySelectCase(_caseSelection.index);
+        }
         private void OnEndPreparationClicked() => coordinator.RequestEndPreparation();
 
         private void OnExecuteClicked()

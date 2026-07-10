@@ -19,6 +19,10 @@ namespace InterrogationRoom.Networking
         [Tooltip("Sprawa converted to an immutable CaseDefinition when the host starts the Runda.")]
         private CaseAsset caseAsset;
 
+        [SerializeField]
+        [Tooltip("Additional hand-authored Sprawy available to the host in the lobby.")]
+        private List<CaseAsset> additionalCases = new List<CaseAsset>();
+
         [SerializeField, Min(1f)]
         [Tooltip("Limit Rundy measured authoritatively by the server, in seconds.")]
         private float roundLimitSeconds = 600f;
@@ -42,6 +46,12 @@ namespace InterrogationRoom.Networking
         public float CurrentRemainingSeconds { get; private set; }
         public bool IsLocalHost => NetworkServer.activeHost;
         public int ConnectedPlayerCount => _connectionsByPlayerId.Count;
+        public int SelectedCaseIndex { get; private set; }
+
+        /// <summary>Public lobby data only. Never exposes Alibi facts or hidden-fact flags.</summary>
+        public IReadOnlyList<string> AvailableCaseTitles => AvailableCases()
+            .Select(asset => string.IsNullOrWhiteSpace(asset.title) ? asset.name : asset.title.Trim())
+            .ToArray();
 
         public event Action<PlayerRoundView, float> ViewReceived;
         public event Action<string> IntentRejected;
@@ -86,6 +96,16 @@ namespace InterrogationRoom.Networking
         public void RequestExecution(PlayerId target)
         {
             SendIntent(RoundIntentMessage.Execute(target));
+        }
+
+        public bool TrySelectCase(int index)
+        {
+            var cases = AvailableCases();
+            if (!IsLocalHost || _phase != RoundPhase.Lobby || index < 0 || index >= cases.Count)
+                return false;
+
+            SelectedCaseIndex = index;
+            return true;
         }
 
         private static void SendIntent(RoundIntentMessage message)
@@ -232,20 +252,23 @@ namespace InterrogationRoom.Networking
 
         private void StartRound(NetworkConnectionToClient sender)
         {
-            if (caseAsset == null)
+            var cases = AvailableCases();
+            if (cases.Count == 0 || SelectedCaseIndex < 0 || SelectedCaseIndex >= cases.Count)
             {
                 Reject(sender, "The host has not selected a CaseAsset.");
                 return;
             }
 
+            var selectedCase = cases[SelectedCaseIndex];
+
             CaseDefinition definition;
             try
             {
-                definition = caseAsset.ToDefinition();
+                definition = selectedCase.ToDefinition();
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[NetworkRoundCoordinator] Selected CaseAsset is invalid: {exception}", caseAsset);
+                Debug.LogError($"[NetworkRoundCoordinator] Selected CaseAsset is invalid: {exception}", selectedCase);
                 Reject(sender, "The selected CaseAsset is invalid.");
                 return;
             }
@@ -256,6 +279,40 @@ namespace InterrogationRoom.Networking
                 .ToArray();
             var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
             Submit(sender, new RoundCommand.StartRound(definition, players, seed));
+        }
+
+        private IReadOnlyList<CaseAsset> AvailableCases()
+        {
+            var result = new List<CaseAsset>();
+            if (caseAsset != null)
+                result.Add(caseAsset);
+            if (additionalCases != null)
+            {
+                foreach (var candidate in additionalCases)
+                {
+                    if (candidate != null && !result.Contains(candidate))
+                        result.Add(candidate);
+                }
+            }
+            return result;
+        }
+
+        private void OnValidate()
+        {
+            var cases = AvailableCases();
+            if (cases.Count == 0)
+            {
+                Debug.LogError("[NetworkRoundCoordinator] At least one CaseAsset is required.", this);
+                return;
+            }
+
+            foreach (var authoredCase in cases)
+            {
+                foreach (var error in authoredCase.Validate())
+                    Debug.LogError($"[NetworkRoundCoordinator] CaseAsset '{authoredCase.name}': {error}", authoredCase);
+            }
+
+            SelectedCaseIndex = Mathf.Clamp(SelectedCaseIndex, 0, cases.Count - 1);
         }
 
         private void Submit(NetworkConnectionToClient sender, RoundCommand command)

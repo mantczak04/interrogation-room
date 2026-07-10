@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_Muzeum
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: "Noc w Muzeum Osobliwo\u015Bci"
+  crimeDescription: "Kto\u015B zamieni\u0142 woskow\u0105 figur\u0119 burmistrza
+    na gigantyczny ser."
+  alibiFacts:
+  - text: "O 20:10 grupa wesz\u0142a do muzeum bocznym wej\u015Bciem przy szatni."
+    canBeHidden: 0
+  - text: "Przewodniczka mia\u0142a czerwony parasol, mimo \u017Ce nie pada\u0142o."
+    canBeHidden: 1
+  - text: "W sali zegar\xF3w rozleg\u0142 si\u0119 alarm dok\u0142adnie o 20:24."
+    canBeHidden: 1
+  - text: "Pan Leon upu\u015Bci\u0142 bilet obok gabloty z mechaniczn\u0105 kaczk\u0105."
+    canBeHidden: 1
+  - text: "Grupa zrobi\u0142a zdj\u0119cie przy szkielecie wieloryba w papierowej
+      koronie."
+    canBeHidden: 1
+  - text: "Kustosz pocz\u0119stowa\u0142 wszystkich mi\u0119towymi cukierkami."
+    canBeHidden: 0
+  - text: "O 20:41 wszyscy wyszli razem przez sklep z pami\u0105tkami."
+    canBeHidden: 0
+  minHiddenFacts: 2
+  maxHiddenFacts: 2

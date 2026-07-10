@@ -4,6 +4,7 @@
         <ui:VisualElement name="lobby-panel" class="screen-card">
             <ui:Label text="Przesłuchanie" class="title" />
             <ui:Label text="Połącz 4–6 graczy, aby rozpocząć Rundę." class="subtitle" />
+            <ui:DropdownField name="case-selection" label="Sprawa" />
             <ui:Button name="start-button" text="Start Rundy" class="primary-button" />
         </ui:VisualElement>
         <ui:VisualElement name="preparation-panel" class="screen-card">

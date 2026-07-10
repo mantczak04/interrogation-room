@@ -4,6 +4,7 @@ using System.Linq;
 using InterrogationRoom.Content;
 using InterrogationRoom.Domain;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 namespace InterrogationRoom.Content.Tests
@@ -107,6 +108,35 @@ namespace InterrogationRoom.Content.Tests
         }
 
         [Test]
+        public void Validate_ReturnsAllAuthoringErrorsWithoutThrowing()
+        {
+            var asset = ValidAsset();
+            asset.title = " ";
+            asset.crimeDescription = null;
+            asset.minHiddenFacts = 4;
+            asset.maxHiddenFacts = 2;
+
+            var errors = asset.Validate();
+
+            Assert.That(errors, Has.Some.Contains("Title"));
+            Assert.That(errors, Has.Some.Contains("Przestępstwo"));
+            Assert.That(errors, Has.Some.Contains("range"));
+        }
+
+        [Test]
+        public void Validate_NullFactList_IsReportedInsteadOfThrowing()
+        {
+            var asset = ValidAsset();
+            asset.alibiFacts = null;
+
+            var errors = asset.Validate();
+
+            Assert.That(errors, Has.Count.EqualTo(1));
+            Assert.That(errors[0], Does.Contain("no facts"));
+            Assert.That(() => asset.ToDefinition(), Throws.InvalidOperationException);
+        }
+
+        [Test]
         public void ToDefinition_OutputStartsARoundInTheEngine()
         {
             var players = Enumerable.Range(1, 5).Select(i => new PlayerId(i));
@@ -116,6 +146,27 @@ namespace InterrogationRoom.Content.Tests
 
             Assert.That(transition.Accepted, Is.True, transition.RejectionReason);
             Assert.That(transition.State.Phase, Is.EqualTo(RoundPhase.Preparation));
+        }
+
+        [Test]
+        public void AuthoredCaseLibrary_AllAssetsConvertToPlayableDefinitions()
+        {
+            var paths = AssetDatabase.FindAssets("t:CaseAsset", new[] { "Assets/Content/Cases" })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .OrderBy(path => path)
+                .ToArray();
+
+            Assert.That(paths, Has.Length.GreaterThanOrEqualTo(4));
+            foreach (var path in paths)
+            {
+                var asset = AssetDatabase.LoadAssetAtPath<CaseAsset>(path);
+                var definition = asset.ToDefinition();
+
+                Assert.That(asset.Validate(), Is.Empty, path);
+                Assert.That(definition.AlibiFacts.Count, Is.InRange(CaseAsset.RecommendedMinFacts, 10), path);
+                Assert.That(definition.AlibiFacts.Count(fact => fact.CanBeHidden),
+                    Is.GreaterThanOrEqualTo(definition.MaxHiddenFacts), path);
+            }
         }
     }
 }

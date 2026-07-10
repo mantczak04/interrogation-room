@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_Obserwatorium
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: Incydent w Obserwatorium
+  crimeDescription: "Kto\u015B przyklei\u0142 do teleskopu ogromne rz\u0119sy i skierowa\u0142
+    go na komin piekarni."
+  alibiFacts:
+  - text: "O 21:12 grupa otrzyma\u0142a niebieskie ochraniacze na buty."
+    canBeHidden: 0
+  - text: "Astronom ni\xF3s\u0142 termos w kszta\u0142cie rakiety."
+    canBeHidden: 1
+  - text: "Pierwsz\u0105 obserwowan\u0105 gwiazd\u0105 by\u0142a Wega, wskazana zielonym
+      laserem."
+    canBeHidden: 1
+  - text: "Projektor zgas\u0142 po komunikacie o b\u0142\u0119dzie numer 17."
+    canBeHidden: 1
+  - text: "Pani Marta znalaz\u0142a srebrny guzik pod obrotowym krzes\u0142em."
+    canBeHidden: 1
+  - text: "W kopule pachnia\u0142o \u015Bwie\u017Cymi dro\u017Cd\u017C\xF3wkami z
+      pobliskiej piekarni."
+    canBeHidden: 1
+  - text: "O 21:46 wszyscy podpisali ksi\u0119g\u0119 go\u015Bci przy wyj\u015Bciu."
+    canBeHidden: 0
+  minHiddenFacts: 2
+  maxHiddenFacts: 2
