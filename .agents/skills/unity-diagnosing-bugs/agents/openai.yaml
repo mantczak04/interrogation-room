@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Bug Diagnosis"
+  short_description: "Diagnose Unity bugs with tight loops"
+  default_prompt: "Use $unity-diagnosing-bugs to isolate this Unity problem."

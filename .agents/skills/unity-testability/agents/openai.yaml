@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Testability"
+  short_description: "Design testable Unity boundaries"
+  default_prompt: "Use $unity-testability to choose seams and test levels for this code."

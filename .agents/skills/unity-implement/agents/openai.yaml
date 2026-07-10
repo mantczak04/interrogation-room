@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Implement"
+  short_description: "Implement scoped Unity work safely"
+  default_prompt: "Use $unity-implement to implement this approved Unity change."

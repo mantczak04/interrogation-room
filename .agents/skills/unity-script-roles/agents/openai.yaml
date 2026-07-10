@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Script Roles"
+  short_description: "Choose the right Unity script role"
+  default_prompt: "Use $unity-script-roles to assign roles to these Unity classes."

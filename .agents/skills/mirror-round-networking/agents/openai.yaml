@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mirror Round Networking"
+  short_description: "Protect secrets in Mirror Round work"
+  default_prompt: "Use $mirror-round-networking to design or implement this networked Runda change."

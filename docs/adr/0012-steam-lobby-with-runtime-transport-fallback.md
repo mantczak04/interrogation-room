@@ -1,0 +1,3 @@
+# Multiplayer Steam przez lobby Steamworks z transportem zapasowym
+
+Gra przez Steam używa Steamworks.NET oraz transportu FizzySteamworks nad Mirror: host tworzy lobby Steam tylko dla znajomych, a klienci dołączają przez nakładkę Steam („Dołącz do gry”), zaproszenie z lobby lub argument uruchomieniowy `+connect_lobby`. Adresem sieciowym jest SteamID hosta zapisane w danych lobby, więc gracze nie wymieniają adresów IP ani portów, a ruch przechodzi przez relay Valve. Wybór transportu następuje w czasie działania: gdy klient Steam jest niedostępny albo przełącznik `useSteamWhenAvailable` jest wyłączony, gra wraca do KCP, dzięki czemu lokalny rozwój przez ParrelSync działa bez konfiguracji i bez osobnych scen czy buildów.

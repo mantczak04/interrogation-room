@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Performance"
+  short_description: "Investigate measured Unity hotspots"
+  default_prompt: "Use $unity-performance to investigate and improve this Unity hotspot."

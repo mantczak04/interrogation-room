@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Change Verification"
+  short_description: "Choose deterministic Unity verification"
+  default_prompt: "Use $unity-change-verification to verify these Unity changes."
