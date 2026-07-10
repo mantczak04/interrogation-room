@@ -16,6 +16,7 @@ public class PlayerController : NetworkBehaviour
 
     private CharacterController characterController;
     private AudioListener audioListener;
+    private Renderer[] playerRenderers;
     private float verticalVelocity;
     private float cameraPitch;
     private const float InputSystemMouseScale = 0.1f;
@@ -23,6 +24,7 @@ public class PlayerController : NetworkBehaviour
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
+        playerRenderers = GetComponentsInChildren<Renderer>(true);
 
         if (playerCamera == null)
         {
@@ -49,7 +51,15 @@ public class PlayerController : NetworkBehaviour
             audioListener.enabled = local;
         }
 
-        characterController.enabled = local;
+        characterController.enabled = local || isServer;
+
+        foreach (Renderer playerRenderer in playerRenderers)
+        {
+            if (playerRenderer != null)
+            {
+                playerRenderer.enabled = !local;
+            }
+        }
     }
 
     public override void OnStartLocalPlayer()

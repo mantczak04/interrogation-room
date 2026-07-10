@@ -30,7 +30,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 1.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 6515090701736740767}
   m_Father: {fileID: 6439715637567842820}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &7222047874019103226
@@ -107,6 +108,9 @@ GameObject:
   - component: {fileID: 2334104018584690749}
   - component: {fileID: 1955240651609465090}
   - component: {fileID: 7695313116378969966}
+  - component: {fileID: 6372588484174122585}
+  - component: {fileID: 3607388793084567030}
+  - component: {fileID: 5364703619725945018}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -128,6 +132,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8978288339994973719}
+  - {fileID: 5208276838169119503}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &1357385145845789926
@@ -224,6 +229,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93137ab40c2b14ecf8e0dd8cad28aa08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   speed: 5
   mouseSensitivity: 2
   jumpHeight: 1.5
@@ -280,3 +288,155 @@ MonoBehaviour:
   rotationSensitivity: 0.01
   positionPrecision: 0.01
   scalePrecision: 0.01
+--- !u!114 &6372588484174122585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2552652179993696903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60ee7975bda98a3489695a908fede7d1, type: 3}
+  m_Name: PlayerWeaponController
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Weapons.PlayerWeaponController
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  playerCamera: {fileID: 7222047874019103226}
+  weaponSocket: {fileID: 6515090701736740767}
+  heldWeaponVisualPrefab: {fileID: 2037406299853551675, guid: 5c8d5277f35e12d4ab791008dc4e280b, type: 3}
+  shotSound: {fileID: 8300000, guid: 97c2c9b95bb673447a30131dd540e0a9, type: 3}
+  shotRange: 100
+  shotInterval: 0.25
+  maxAimAngle: 85
+  serverCameraHeight: 1.6
+  hitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  tracerWidth: 0.02
+  tracerLifetime: 0.12
+  tracerLength: 1.25
+  tracerColor: {r: 1, g: 0.75, b: 0.2, a: 1}
+  shotSoundVolume: 1
+--- !u!114 &3607388793084567030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2552652179993696903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 706232cdb6c75f449b845bf85fec3d7e, type: 3}
+  m_Name: PlayerInteractor
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.PlayerInteractor
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  interactionCamera: {fileID: 7222047874019103226}
+  interactionRange: 2.5
+  serverRangeTolerance: 0.25
+  serverViewHeight: 1.6
+  interactionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &5364703619725945018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2552652179993696903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d68cd546f7a59e14e9242ca12603875e, type: 3}
+  m_Name: ShotHitbox
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Weapons.ShotHitbox
+  hitKind: 2
+--- !u!1 &3497073664194909700
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5208276838169119503}
+  - component: {fileID: 9133446212468714266}
+  m_Layer: 0
+  m_Name: PlayerHitbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5208276838169119503
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3497073664194909700}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6439715637567842820}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &9133446212468714266
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3497073664194909700}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 3
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.4, z: 0}
+--- !u!1 &4049170286700898963
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6515090701736740767}
+  m_Layer: 0
+  m_Name: WeaponSocket
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6515090701736740767
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4049170286700898963}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.22, y: -0.18, z: 0.42}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8978288339994973719}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
