@@ -295,7 +295,7 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
-        Vector3 standPosition = activeSeat.StandPosition;
+        Vector3 standPosition = activeSeat.GetStandPositionServer();
         Quaternion standRotation = activeSeat.SeatRotation;
         activeSeat.ReleaseServer(netIdentity);
         activeSeat = null;

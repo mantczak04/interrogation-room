@@ -5195,6 +5195,37 @@ Transform:
   - {fileID: 1779888469}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &321344236
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 321344237}
+  m_Layer: 0
+  m_Name: SeatPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &321344237
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 321344236}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
+  m_LocalPosition: {x: 0.20000005, y: 0, z: 0.19999981}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1974923087}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &321410722
 GameObject:
   m_ObjectHideFlags: 0
@@ -7015,6 +7046,37 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.4250002, y: 0.56200004, z: 0.4250002}
   m_Center: {x: 0.21249998, y: 0.28100002, z: 0.2125001}
+--- !u!1 &433988771
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 433988772}
+  m_Layer: 0
+  m_Name: SeatPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &433988772
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 433988771}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
+  m_LocalPosition: {x: 0.19999981, y: 0, z: 0.19999981}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2026307427}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &439931338
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9702,7 +9764,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -3
+      value: -3.4
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -9710,11 +9772,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 7.3
+      value: 6.9000006
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.00000004371139
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.x
@@ -9722,7 +9784,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: -0.00000004371139
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.z
@@ -9750,7 +9812,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1291460063}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
@@ -9808,10 +9873,13 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  seatPoint: {fileID: 0}
+  seatPoint: {fileID: 1291460063}
   standPoint: {fileID: 0}
   seatHeight: 0.02
   standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   interactionPrompt: Sit down
 --- !u!114 &562628511
 MonoBehaviour:
@@ -13506,7 +13574,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: c4ae54390c490ab488423df28e898edd, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.185701
+      value: 1.814299
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c4ae54390c490ab488423df28e898edd, type: 3}
       propertyPath: m_LocalPosition.y
@@ -13514,11 +13582,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c4ae54390c490ab488423df28e898edd, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -4.53505
+      value: -5.20495
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c4ae54390c490ab488423df28e898edd, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7071068
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c4ae54390c490ab488423df28e898edd, type: 3}
       propertyPath: m_LocalRotation.x
@@ -13562,7 +13630,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: c4ae54390c490ab488423df28e898edd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1463614304}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c4ae54390c490ab488423df28e898edd, type: 3}
       insertIndex: -1
@@ -13620,10 +13691,13 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  seatPoint: {fileID: 0}
+  seatPoint: {fileID: 1463614304}
   standPoint: {fileID: 0}
   seatHeight: 0.02
   standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   interactionPrompt: Sit down
 --- !u!114 &761638566
 MonoBehaviour:
@@ -14940,6 +15014,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 847037082}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &859621811
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 859621812}
+  m_Layer: 0
+  m_Name: SeatPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &859621812
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859621811}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
+  m_LocalPosition: {x: 0.20000003, y: 0, z: 0.19999982}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1392618761}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &863668242
 GameObject:
   m_ObjectHideFlags: 0
@@ -18209,7 +18314,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.2
+      value: -2.6000001
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -18217,7 +18322,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 6.5
+      value: 6.8999996
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -18229,7 +18334,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.7071068
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.z
@@ -18257,7 +18362,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1437957191}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
@@ -18315,10 +18423,13 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  seatPoint: {fileID: 0}
+  seatPoint: {fileID: 1437957191}
   standPoint: {fileID: 0}
   seatHeight: 0.02
   standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   interactionPrompt: Sit down
 --- !u!114 &1026611452
 MonoBehaviour:
@@ -23105,6 +23216,37 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4e0b67a79f858704d801b955aec1f8fc, type: 3}
   m_PrefabInstance: {fileID: 2126119573}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1291460062
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1291460063}
+  m_Layer: 0
+  m_Name: SeatPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1291460063
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1291460062}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
+  m_LocalPosition: {x: 0.20000003, y: 0, z: 0.19999982}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 562628503}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1295519676
 GameObject:
   m_ObjectHideFlags: 0
@@ -25158,7 +25300,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3
+      value: 2.6
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -25166,11 +25308,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 7.3
+      value: 6.9000006
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.00000004371139
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.x
@@ -25178,7 +25320,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: -0.00000004371139
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.z
@@ -25206,7 +25348,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 859621812}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
@@ -25264,10 +25409,13 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  seatPoint: {fileID: 0}
+  seatPoint: {fileID: 859621812}
   standPoint: {fileID: 0}
   seatHeight: 0.02
   standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   interactionPrompt: Sit down
 --- !u!114 &1392618769
 MonoBehaviour:
@@ -26006,6 +26154,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1437465532}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1437957190
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1437957191}
+  m_Layer: 0
+  m_Name: SeatPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1437957191
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1437957190}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: -0.00000008940697}
+  m_LocalPosition: {x: 0.19999981, y: 0, z: 0.2000001}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1026611444}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1443799988
 GameObject:
   m_ObjectHideFlags: 0
@@ -26186,6 +26365,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1446141201}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1463614303
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1463614304}
+  m_Layer: 0
+  m_Name: SeatPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1463614304
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1463614303}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0.00000008940697}
+  m_LocalPosition: {x: 0.33495003, y: 0, z: 0.31429896}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 761638558}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1466209205
 GameObject:
   m_ObjectHideFlags: 0
@@ -30029,7 +30239,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 9.05
+      value: 8.650001
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -30037,11 +30247,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 4.05
+      value: 3.65
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.00000004371139
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.x
@@ -30049,7 +30259,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: -0.00000004371139
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.z
@@ -30077,7 +30287,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1744252051}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
@@ -30135,10 +30348,13 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  seatPoint: {fileID: 0}
+  seatPoint: {fileID: 1744252051}
   standPoint: {fileID: 0}
   seatHeight: 0.02
   standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   interactionPrompt: Sit down
 --- !u!114 &1687229002
 MonoBehaviour:
@@ -30607,6 +30823,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1700066041}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1701020588
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1701020589}
+  m_Layer: 0
+  m_Name: SeatPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1701020589
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1701020588}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0.00000008940697}
+  m_LocalPosition: {x: 0.20000035, y: 0, z: 0.20000005}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2143198341}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1707533746
 GameObject:
   m_ObjectHideFlags: 0
@@ -31878,6 +32125,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1744073247}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1744252050
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1744252051}
+  m_Layer: 0
+  m_Name: SeatPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1744252051
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1744252050}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
+  m_LocalPosition: {x: 0.1999998, y: 0, z: 0.20000006}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1687228994}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1744626059
 GameObject:
   m_ObjectHideFlags: 0
@@ -36230,7 +36508,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3
+      value: 3.4
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -36238,11 +36516,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 5.7
+      value: 6.0999994
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.x
@@ -36250,7 +36528,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.z
@@ -36278,7 +36556,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 321344237}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
@@ -36336,10 +36617,13 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  seatPoint: {fileID: 0}
+  seatPoint: {fileID: 321344237}
   standPoint: {fileID: 0}
   seatHeight: 0.02
   standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   interactionPrompt: Sit down
 --- !u!114 &1974923095
 MonoBehaviour:
@@ -37458,7 +37742,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 8.650001
+      value: 9.05
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -37466,11 +37750,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.922
+      value: 2.3219998
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.x
@@ -37478,7 +37762,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.z
@@ -37506,7 +37790,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 433988772}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
@@ -37564,10 +37851,13 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  seatPoint: {fileID: 0}
+  seatPoint: {fileID: 433988772}
   standPoint: {fileID: 0}
   seatHeight: 0.02
   standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   interactionPrompt: Sit down
 --- !u!114 &2026307435
 MonoBehaviour:
@@ -39675,7 +39965,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -3.8
+      value: -3.3999999
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -39683,11 +39973,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 6.5
+      value: 6.0999994
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7071068
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.x
@@ -39723,7 +40013,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1701020589}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
@@ -39781,10 +40074,13 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  seatPoint: {fileID: 0}
+  seatPoint: {fileID: 1701020589}
   standPoint: {fileID: 0}
   seatHeight: 0.02
   standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   interactionPrompt: Sit down
 --- !u!114 &2143198349
 MonoBehaviour:
