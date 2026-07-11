@@ -68,6 +68,7 @@ public class SteamLobby : MonoBehaviour
 
     public bool LobbyPending => lobbyPending;
     public bool InLobby => currentLobbyId.IsValid();
+    public string VoiceSessionId => InLobby ? currentLobbyId.ToString() : "local";
 
     void Start()
     {
@@ -197,6 +198,7 @@ public class SteamLobby : MonoBehaviour
 #else
     public bool LobbyPending => false;
     public bool InLobby => false;
+    public string VoiceSessionId => "local";
 
     public void HostLobby() { }
     public void OpenInviteDialog() { }
