@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 706550816203690483}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.6, z: 0}
+  m_LocalPosition: {x: 0, y: 0.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -256,10 +256,10 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 2
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_SlopeLimit: 45
   m_StepOffset: 0.3
-  m_SkinWidth: 0.08
+  m_SkinWidth: 0.05
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &2334104018584690749
@@ -355,7 +355,7 @@ MonoBehaviour:
   shotRange: 100
   shotInterval: 0.25
   maxAimAngle: 85
-  serverCameraHeight: 1.6
+  serverCameraHeight: 0.7
   hitMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -382,7 +382,7 @@ MonoBehaviour:
   interactionCamera: {fileID: 7222047874019103226}
   interactionRange: 2.5
   serverRangeTolerance: 0.25
-  serverViewHeight: 1.6
+  serverViewHeight: 0.7
   interactionMask:
     serializedVersion: 2
     m_Bits: 4294967295
