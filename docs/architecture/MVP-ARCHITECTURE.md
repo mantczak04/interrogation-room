@@ -10,7 +10,7 @@ Poza pierwszym slice'em pozostają: Bunt, finalna forma Notatek Detektywa, konfi
 
 Scena `Room` pozostaje technicznym playgroundem, a nie prezentacją docelowej pętli Rundy. Widoczny jest wyłącznie developerski launcher sieciowy potrzebny do prostego uruchomienia hosta i klienta. Pickup broni, strzelanie oraz integracja Vivox pozostają w kodzie i scenie jako działające spike'i, ale nie są podpinane do reguł Rundy ani przedstawiane jako zatwierdzone elementy jej interfejsu.
 
-Canvas z ikoną stanu mikrofonu jest domyślnie ukryty. To celowa decyzja produktowa, nie sygnał do usunięcia voice chatu. UI tych mechanik można ponownie odsłonić dopiero jako część uzgodnionego przepływu Rundy. Do lokalnego uruchamiania playgroundu można wymusić KCP argumentem `-force-kcp`, bez usuwania istniejącej ścieżki Steam/FizzySteamworks.
+Canvas z ikoną stanu mikrofonu jest domyślnie ukryty, a komponenty `VivoxTest` i `NetworkRoundCoordinator` są wyłączone w scenie. To celowa decyzja produktowa, nie sygnał do usunięcia voice chatu ani Rundy. Można je ponownie włączyć dopiero po skonfigurowaniu projektu Unity/Vivox i uzgodnieniu przepływu Rundy. Do lokalnego uruchamiania playgroundu można wymusić KCP argumentem `-force-kcp`, bez usuwania istniejącej ścieżki Steam/FizzySteamworks.
 
 ## Moduły
 

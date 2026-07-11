@@ -817,7 +817,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 983608745}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 377314caddb0169438593a27a23f5ad6, type: 3}
   m_Name: 
@@ -1403,12 +1403,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1864596218}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e3e3f0b7a72663e428c9e06675c5607a, type: 3}
   m_Name: NetworkRoundCoordinator
   m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Networking.NetworkRoundCoordinator
   caseAsset: {fileID: 11400000, guid: 34772311517764248bce5cf9cf5b6fd4, type: 2}
+  additionalCases: []
   roundLimitSeconds: 600
   timerDeliveryInterval: 1
 --- !u!1 &1933330317
