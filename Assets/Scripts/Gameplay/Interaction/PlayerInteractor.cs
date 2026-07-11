@@ -1,3 +1,4 @@
+using System;
 using Mirror;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
@@ -19,6 +20,15 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField, Min(0f)] private float serverViewHeight = 1.6f;
         [SerializeField] private LayerMask interactionMask = ~0;
 
+        private NetworkIdentity hoveredIdentity;
+        private INetworkInteractable hoveredInteractable;
+
+        public NetworkIdentity HoveredIdentity => hoveredIdentity;
+
+        public bool HasHoveredTarget => hoveredIdentity != null && hoveredInteractable != null;
+
+        public event Action<NetworkIdentity> HoveredTargetChanged;
+
         public override void OnStartLocalPlayer()
         {
             base.OnStartLocalPlayer();
@@ -31,17 +41,33 @@ namespace InterrogationRoom.Gameplay.Interaction
             }
         }
 
+        private void OnDisable()
+        {
+            SetHoveredTarget(null, null);
+        }
+
         private void Update()
         {
-            if (!isLocalPlayer || interactionCamera == null || !WasInteractPressed())
+            if (!isLocalPlayer || interactionCamera == null)
             {
                 return;
             }
 
-            TryRequestInteraction();
+            if (PlayerController.CursorReleased)
+            {
+                SetHoveredTarget(null, null);
+                return;
+            }
+
+            RefreshHoveredTarget();
+
+            if (WasInteractPressed() && HasHoveredTarget)
+            {
+                CmdTryInteract(hoveredIdentity.netId);
+            }
         }
 
-        private void TryRequestInteraction()
+        private void RefreshHoveredTarget()
         {
             float cameraOffset = Vector3.Distance(interactionCamera.transform.position, transform.position);
             float raycastRange = interactionRange + serverRangeTolerance + cameraOffset;
@@ -51,17 +77,32 @@ namespace InterrogationRoom.Gameplay.Interaction
                     raycastRange,
                     out RaycastHit hit))
             {
+                SetHoveredTarget(null, null);
                 return;
             }
 
             NetworkIdentity targetIdentity = hit.collider.GetComponentInParent<NetworkIdentity>();
             if (targetIdentity == null || targetIdentity.netId == 0 ||
-                !TryGetInteractable(targetIdentity, out _))
+                !TryGetInteractable(targetIdentity, out INetworkInteractable interactable))
             {
+                SetHoveredTarget(null, null);
                 return;
             }
 
-            CmdTryInteract(targetIdentity.netId);
+            SetHoveredTarget(targetIdentity, interactable);
+        }
+
+        private void SetHoveredTarget(NetworkIdentity identity, INetworkInteractable interactable)
+        {
+            if (hoveredIdentity == identity)
+            {
+                hoveredInteractable = interactable;
+                return;
+            }
+
+            hoveredIdentity = identity;
+            hoveredInteractable = interactable;
+            HoveredTargetChanged?.Invoke(identity);
         }
 
         [Command]
