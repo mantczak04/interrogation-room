@@ -6,6 +6,12 @@ Pierwszy slice ma pozwolić 4–6 graczom połączyć się lokalnie, rozpocząć
 
 Poza pierwszym slice'em pozostają: Bunt, finalna forma Notatek Detektywa, konfiguracja Sekretnych Celów, docelowa biblioteka contentu, dopracowana broń i prezentacja wyników. Głos Przestrzenny jest osobnym spike'em integracyjnym opisanym w [researchu narzędzi](../research/proximity-voice-tools.md).
 
+## Playground po pivocie
+
+Scena `Room` pozostaje technicznym playgroundem, a nie prezentacją docelowej pętli Rundy. Widoczny jest wyłącznie developerski launcher sieciowy potrzebny do prostego uruchomienia hosta i klienta. Pickup broni, strzelanie oraz integracja Vivox pozostają w kodzie i scenie jako działające spike'i, ale nie są podpinane do reguł Rundy ani przedstawiane jako zatwierdzone elementy jej interfejsu.
+
+Canvas z ikoną stanu mikrofonu jest domyślnie ukryty. To celowa decyzja produktowa, nie sygnał do usunięcia voice chatu. UI tych mechanik można ponownie odsłonić dopiero jako część uzgodnionego przepływu Rundy. Do lokalnego uruchamiania playgroundu można wymusić KCP argumentem `-force-kcp`, bez usuwania istniejącej ścieżki Steam/FizzySteamworks.
+
 ## Moduły
 
 ### `RoundEngine`
