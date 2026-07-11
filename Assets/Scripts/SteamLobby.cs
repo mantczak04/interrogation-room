@@ -82,13 +82,17 @@ public class SteamLobby : MonoBehaviour
     Callback<LobbyCreated_t> lobbyCreated;
     Callback<GameLobbyJoinRequested_t> gameLobbyJoinRequested;
     Callback<LobbyEnter_t> lobbyEntered;
+    Callback<GameOverlayActivated_t> gameOverlayActivated;
 
     CSteamID currentLobbyId = CSteamID.Nil;
     bool lobbyPending;
+    bool cursorWasReleasedBeforeOverlay;
 
     public bool LobbyPending => lobbyPending;
     public bool InLobby => currentLobbyId.IsValid();
     public string VoiceSessionId => InLobby ? currentLobbyId.ToString() : "local";
+    public bool OverlayEnabled => SteamManager.Initialized && SteamUtils.IsOverlayEnabled();
+    public int DirectInviteFriendCount => CountDirectInviteFriends();
 
     void Start()
     {
@@ -100,6 +104,9 @@ public class SteamLobby : MonoBehaviour
         lobbyCreated = Callback<LobbyCreated_t>.Create(OnLobbyCreated);
         gameLobbyJoinRequested = Callback<GameLobbyJoinRequested_t>.Create(OnGameLobbyJoinRequested);
         lobbyEntered = Callback<LobbyEnter_t>.Create(OnLobbyEntered);
+        gameOverlayActivated = Callback<GameOverlayActivated_t>.Create(OnGameOverlayActivated);
+
+        Debug.Log($"[SteamLobby] Overlay enabled: {OverlayEnabled}");
 
         TryJoinFromCommandLine();
     }
@@ -125,8 +132,86 @@ public class SteamLobby : MonoBehaviour
     {
         if (InLobby)
         {
+            PlayerController.SetCursorReleased(true);
+            Debug.Log($"[SteamLobby] Opening invite overlay for lobby {currentLobbyId}. Overlay enabled: {OverlayEnabled}");
             SteamFriends.ActivateGameOverlayInviteDialog(currentLobbyId);
         }
+    }
+
+    public string GetDirectInviteFriendName(int visibleIndex)
+    {
+        CSteamID friendId = GetDirectInviteFriend(visibleIndex);
+        return friendId.IsValid() ? SteamFriends.GetFriendPersonaName(friendId) : "Unknown friend";
+    }
+
+    public bool InviteDirectFriend(int visibleIndex)
+    {
+        if (!InLobby)
+        {
+            return false;
+        }
+
+        CSteamID friendId = GetDirectInviteFriend(visibleIndex);
+        if (!friendId.IsValid())
+        {
+            return false;
+        }
+
+        bool sent = SteamMatchmaking.InviteUserToLobby(currentLobbyId, friendId);
+        Debug.Log($"[SteamLobby] Direct invite to {SteamFriends.GetFriendPersonaName(friendId)} ({friendId}): {sent}");
+        return sent;
+    }
+
+    int CountDirectInviteFriends()
+    {
+        int visibleCount = 0;
+        int friendCount = SteamFriends.GetFriendCount(EFriendFlags.k_EFriendFlagImmediate);
+        for (int i = 0; i < friendCount; i++)
+        {
+            CSteamID friendId = SteamFriends.GetFriendByIndex(i, EFriendFlags.k_EFriendFlagImmediate);
+            if (friendId.IsValid() && SteamFriends.GetFriendPersonaState(friendId) != EPersonaState.k_EPersonaStateOffline)
+            {
+                visibleCount++;
+            }
+        }
+
+        return visibleCount;
+    }
+
+    CSteamID GetDirectInviteFriend(int visibleIndex)
+    {
+        int visibleCount = 0;
+        int friendCount = SteamFriends.GetFriendCount(EFriendFlags.k_EFriendFlagImmediate);
+        for (int i = 0; i < friendCount; i++)
+        {
+            CSteamID friendId = SteamFriends.GetFriendByIndex(i, EFriendFlags.k_EFriendFlagImmediate);
+            if (!friendId.IsValid() || SteamFriends.GetFriendPersonaState(friendId) == EPersonaState.k_EPersonaStateOffline)
+            {
+                continue;
+            }
+
+            if (visibleCount == visibleIndex)
+            {
+                return friendId;
+            }
+
+            visibleCount++;
+        }
+
+        return CSteamID.Nil;
+    }
+
+    void OnGameOverlayActivated(GameOverlayActivated_t callback)
+    {
+        bool overlayActive = callback.m_bActive != 0;
+        if (overlayActive)
+        {
+            cursorWasReleasedBeforeOverlay = PlayerController.CursorReleased;
+            PlayerController.SetCursorReleased(true);
+            return;
+        }
+
+        PlayerController.SetCursorReleased(cursorWasReleasedBeforeOverlay);
     }
 
     public void LeaveLobby()
@@ -219,9 +304,13 @@ public class SteamLobby : MonoBehaviour
     public bool LobbyPending => false;
     public bool InLobby => false;
     public string VoiceSessionId => "local";
+    public bool OverlayEnabled => false;
+    public int DirectInviteFriendCount => 0;
 
     public void HostLobby() { }
     public void OpenInviteDialog() { }
+    public string GetDirectInviteFriendName(int visibleIndex) => "Unknown friend";
+    public bool InviteDirectFriend(int visibleIndex) => false;
     public void LeaveLobby() { }
 #endif
 }

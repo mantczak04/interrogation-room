@@ -222,10 +222,34 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
         if (steamLobby != null && steamLobby.InLobby)
         {
-            if (GUILayout.Button("Invite Friends", buttonStyle))
+            if (steamLobby.OverlayEnabled)
             {
-                steamLobby.OpenInviteDialog();
+                if (GUILayout.Button("Invite Friends (Steam Overlay)", buttonStyle))
+                {
+                    steamLobby.OpenInviteDialog();
+                }
             }
+            else
+            {
+                GUILayout.Label("Steam Overlay unavailable — use direct invite below", labelStyle);
+            }
+
+            int friendCount = Mathf.Min(steamLobby.DirectInviteFriendCount, 2);
+            for (int i = 0; i < friendCount; i++)
+            {
+                string friendName = steamLobby.GetDirectInviteFriendName(i);
+                if (GUILayout.Button($"Invite {friendName}", buttonStyle, GUILayout.Height(52f)))
+                {
+                    steamLobby.InviteDirectFriend(i);
+                }
+            }
+
+            if (friendCount == 0)
+            {
+                GUILayout.Label("No online Steam friends found", labelStyle);
+            }
+
+            GUILayout.Label("Esc: release / capture mouse", labelStyle);
         }
     }
 

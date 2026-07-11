@@ -21,6 +21,8 @@ public class PlayerController : NetworkBehaviour
     private float cameraPitch;
     private const float InputSystemMouseScale = 0.1f;
 
+    public static bool CursorReleased { get; private set; } = true;
+
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
@@ -73,14 +75,12 @@ public class PlayerController : NetworkBehaviour
             }
         }
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        SetCursorReleased(false);
     }
 
     public override void OnStopLocalPlayer()
     {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        SetCursorReleased(true);
     }
 
     private void Update()
@@ -90,8 +90,25 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        if (WasCursorTogglePressed())
+        {
+            SetCursorReleased(!CursorReleased);
+        }
+
+        if (CursorReleased)
+        {
+            return;
+        }
+
         Look();
         Move();
+    }
+
+    public static void SetCursorReleased(bool released)
+    {
+        CursorReleased = released;
+        Cursor.lockState = released ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = released;
     }
 
     private void Look()
@@ -192,6 +209,15 @@ public class PlayerController : NetworkBehaviour
         return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
 #else
         return Input.GetKeyDown(KeyCode.Space);
+#endif
+    }
+
+    private bool WasCursorTogglePressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+#else
+        return Input.GetKeyDown(KeyCode.Escape);
 #endif
     }
 }
