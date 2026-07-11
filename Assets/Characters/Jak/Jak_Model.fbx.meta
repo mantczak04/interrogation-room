@@ -3,10 +3,15 @@ guid: cc8ee2dc9a192cb0e89bc8c358f3b0d6
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tripo_material_bd1b954b-3630-413c-b7d1-949fa7b90a9d
+    second: {fileID: 2100000, guid: a23830ac42dd60304b3d65ff20dce806, type: 2}
   materials:
-    materialImportMode: 1
-    materialName: 0
+    materialImportMode: 2
+    materialName: 1
     materialSearch: 1
     materialLocation: 1
     searchTexturesGlobally: 0
@@ -89,7 +94,7 @@ ModelImporter:
     human: []
     skeleton:
     - name: Jak_Model(Clone)
-      parentName:
+      parentName: 
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071068}
       scale: {x: 100, y: 100, z: 100}

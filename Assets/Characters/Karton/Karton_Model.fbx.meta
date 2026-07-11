@@ -3,10 +3,15 @@ guid: 6b14d8435c73668edba49c24445fb051
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tripo_material_a09e6fc1-1536-4547-9c81-73911175bc3a
+    second: {fileID: 2100000, guid: 05af653ad7e9a695d925760721f56f96, type: 2}
   materials:
-    materialImportMode: 1
-    materialName: 0
+    materialImportMode: 2
+    materialName: 1
     materialSearch: 1
     materialLocation: 1
     searchTexturesGlobally: 0
@@ -89,7 +94,7 @@ ModelImporter:
     human: []
     skeleton:
     - name: Karton_Model(Clone)
-      parentName:
+      parentName: 
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071068}
       scale: {x: 100, y: 100, z: 100}
