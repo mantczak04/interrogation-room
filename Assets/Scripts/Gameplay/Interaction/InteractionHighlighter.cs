@@ -1,4 +1,3 @@
-using Mirror;
 using UnityEngine;
 
 namespace InterrogationRoom.Gameplay.Interaction
@@ -65,7 +64,7 @@ namespace InterrogationRoom.Gameplay.Interaction
             }
         }
 
-        private void OnHoveredTargetChanged(NetworkIdentity target)
+        private void OnHoveredTargetChanged(Component target)
         {
             ClearTarget();
 
