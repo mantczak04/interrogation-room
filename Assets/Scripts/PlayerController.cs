@@ -15,17 +15,21 @@ public class PlayerController : NetworkBehaviour
     public Camera playerCamera;
 
     private CharacterController characterController;
+    private Animator animator;
     private AudioListener audioListener;
     private Renderer[] playerRenderers;
     private float verticalVelocity;
     private float cameraPitch;
     private const float InputSystemMouseScale = 0.1f;
+    private static readonly int SpeedParameter = Animator.StringToHash("Speed");
+    private static readonly int LookPitchParameter = Animator.StringToHash("LookPitch");
 
     public static bool CursorReleased { get; private set; } = true;
 
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
         playerRenderers = GetComponentsInChildren<Renderer>(true);
 
         if (playerCamera == null)
@@ -126,6 +130,11 @@ public class PlayerController : NetworkBehaviour
 
         cameraPitch = Mathf.Clamp(cameraPitch - mouseY, -80f, 80f);
         playerCamera.transform.localRotation = Quaternion.Euler(cameraPitch, 0f, 0f);
+
+        if (animator != null)
+        {
+            animator.SetFloat(LookPitchParameter, cameraPitch);
+        }
     }
 
     private void Move()
@@ -140,6 +149,11 @@ public class PlayerController : NetworkBehaviour
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         move = Vector3.ClampMagnitude(move, 1f);
 
+        if (animator != null)
+        {
+            animator.SetFloat(SpeedParameter, move.magnitude, 0.1f, Time.deltaTime);
+        }
+
         if (characterController.isGrounded && WasJumpPressed())
         {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
@@ -151,6 +165,26 @@ public class PlayerController : NetworkBehaviour
         velocity.y = verticalVelocity;
 
         characterController.Move(velocity * Time.deltaTime);
+    }
+
+    private void OnAnimatorIK(int layerIndex)
+    {
+        if (animator == null || !animator.isHuman)
+        {
+            return;
+        }
+
+        Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
+        if (head == null)
+        {
+            return;
+        }
+
+        float lookPitch = animator.GetFloat(LookPitchParameter);
+        Vector3 lookDirection = Quaternion.AngleAxis(lookPitch, transform.right) * transform.forward;
+
+        animator.SetLookAtWeight(1f, 0.2f, 0.85f, 0.35f, 0.5f);
+        animator.SetLookAtPosition(head.position + lookDirection * 10f);
     }
 
     private Vector2 GetMoveInput()
