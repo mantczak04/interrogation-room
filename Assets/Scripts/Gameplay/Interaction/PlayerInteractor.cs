@@ -20,6 +20,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField, Min(0f)] private float serverViewHeight = 1.6f;
         [SerializeField] private LayerMask interactionMask = ~0;
 
+        private PlayerController playerController;
         private Component hoveredTarget;
         private NetworkIdentity hoveredIdentity;
         private INetworkInteractable hoveredInteractable;
@@ -28,7 +29,14 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         public bool HasHoveredTarget => hoveredTarget != null && hoveredInteractable != null;
 
+        public string HoveredPrompt => hoveredInteractable?.InteractionPrompt;
+
         public event Action<Component> HoveredTargetChanged;
+
+        private void Awake()
+        {
+            playerController = GetComponent<PlayerController>();
+        }
 
         public override void OnStartLocalPlayer()
         {
@@ -67,7 +75,7 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
-            if (TryGetComponent(out PlayerController playerController) && playerController.TryRequestStand())
+            if (playerController != null && playerController.TryRequestStand())
             {
                 return;
             }
@@ -89,6 +97,12 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         private void RefreshHoveredTarget()
         {
+            if (playerController != null && (playerController.IsSeated || playerController.IsDead))
+            {
+                SetHoveredTarget(null, null);
+                return;
+            }
+
             float cameraOffset = Vector3.Distance(interactionCamera.transform.position, transform.position);
             float raycastRange = interactionRange + serverRangeTolerance + cameraOffset;
             if (!TryGetFirstNonSelfHit(
@@ -101,13 +115,54 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
-            if (!TryGetInteractable(hit.collider.transform, out INetworkInteractable interactable))
+            if (!TryGetInteractable(hit.collider.transform, out INetworkInteractable interactable) ||
+                !IsHoverActionable(interactable))
             {
                 SetHoveredTarget(null, null);
                 return;
             }
 
             SetHoveredTarget(interactable as Component, interactable);
+        }
+
+        /// <summary>
+        /// Mirrors the server-side validation so the hover highlight and prompt only
+        /// appear when the interaction request would actually be accepted.
+        /// </summary>
+        private bool IsHoverActionable(INetworkInteractable interactable)
+        {
+            if (!interactable.CanInteract(netIdentity))
+            {
+                return false;
+            }
+
+            Vector3 interactionPosition = interactable.InteractionPosition;
+            if ((interactionPosition - transform.position).sqrMagnitude > interactionRange * interactionRange)
+            {
+                return false;
+            }
+
+            Component targetComponent = interactable as Component;
+            NetworkIdentity targetIdentity = targetComponent != null
+                ? targetComponent.GetComponentInParent<NetworkIdentity>()
+                : null;
+
+            if (targetIdentity != null && targetIdentity.netId != 0)
+            {
+                return HasLineOfSightTo(targetIdentity, interactionPosition);
+            }
+
+            // Direction fallback parity: the server re-raycasts from the player's
+            // head along the camera direction, so require the same ray to resolve
+            // to the same interactable here.
+            Vector3 origin = transform.TransformPoint(Vector3.up * serverViewHeight);
+            return TryGetFirstNonSelfHit(
+                       origin,
+                       interactionCamera.transform.forward,
+                       interactionRange + serverRangeTolerance,
+                       out RaycastHit headHit) &&
+                   TryGetInteractable(headHit.collider.transform, out INetworkInteractable headInteractable) &&
+                   ReferenceEquals(headInteractable, interactable);
         }
 
         private void SetHoveredTarget(Component target, INetworkInteractable interactable)
@@ -138,7 +193,7 @@ namespace InterrogationRoom.Gameplay.Interaction
             float allowedDistance = interactionRange + serverRangeTolerance;
             Vector3 interactionPosition = interactable.InteractionPosition;
             if ((interactionPosition - transform.position).sqrMagnitude > allowedDistance * allowedDistance ||
-                !HasServerLineOfSightTo(targetIdentity, interactionPosition))
+                !HasLineOfSightTo(targetIdentity, interactionPosition))
             {
                 return;
             }
@@ -175,7 +230,7 @@ namespace InterrogationRoom.Gameplay.Interaction
             interactable.TryInteractServer(netIdentity);
         }
 
-        private bool HasServerLineOfSightTo(NetworkIdentity targetIdentity, Vector3 interactionPosition)
+        private bool HasLineOfSightTo(NetworkIdentity targetIdentity, Vector3 interactionPosition)
         {
             Vector3 origin = transform.TransformPoint(Vector3.up * serverViewHeight);
             Vector3 delta = interactionPosition - origin;

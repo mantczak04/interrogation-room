@@ -4,7 +4,8 @@ using UnityEngine;
 namespace InterrogationRoom.Gameplay.Interaction
 {
     [DisallowMultipleComponent]
-    public sealed class NetworkChairSeat : MonoBehaviour, INetworkInteractable
+    [RequireComponent(typeof(NetworkIdentity))]
+    public sealed class NetworkChairSeat : NetworkBehaviour, INetworkInteractable
     {
         [Header("Optional anchors")]
         [SerializeField] private Transform seatPoint;
@@ -14,6 +15,10 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField, Min(0f)] private float seatHeight = 0.02f;
         [SerializeField, Min(0.25f)] private float standDistance = 0.75f;
 
+        [Header("Interaction")]
+        [SerializeField] private string interactionPrompt = "Sit down";
+
+        [SyncVar]
         private uint occupantNetId;
 
         public Vector3 SeatPosition => seatPoint != null
@@ -28,6 +33,8 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         public Vector3 InteractionPosition => SeatPosition + transform.up * 0.45f;
 
+        public string InteractionPrompt => interactionPrompt;
+
         private void Awake()
         {
             if (GetComponentInChildren<Collider>(true) == null)
@@ -38,11 +45,19 @@ namespace InterrogationRoom.Gameplay.Interaction
             }
         }
 
+        public bool CanInteract(NetworkIdentity interactor)
+        {
+            return occupantNetId == 0 &&
+                   interactor != null &&
+                   interactor.TryGetComponent(out PlayerController playerController) &&
+                   !playerController.IsDead &&
+                   !playerController.IsSeated;
+        }
+
         public bool TryInteractServer(NetworkIdentity interactor)
         {
             return NetworkServer.active &&
-                   occupantNetId == 0 &&
-                   interactor != null &&
+                   CanInteract(interactor) &&
                    interactor.TryGetComponent(out PlayerController playerController) &&
                    playerController.TrySitServer(this);
         }

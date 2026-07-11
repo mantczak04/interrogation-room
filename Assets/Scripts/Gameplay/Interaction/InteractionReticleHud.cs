@@ -16,9 +16,11 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField, Min(1f)] private float sizeLerpSpeed = 14f;
 
         [Header("Hint")]
-        [SerializeField] private string hintText = "[E]";
+        [SerializeField] private string hintKey = "[E]";
+        [SerializeField] private string standUpPrompt = "Stand up";
 
         private PlayerInteractor interactor;
+        private PlayerController playerController;
         private Canvas hudCanvas;
         private Image dotImage;
         private RectTransform dotRect;
@@ -28,6 +30,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         private void Awake()
         {
             interactor = GetComponent<PlayerInteractor>();
+            playerController = GetComponent<PlayerController>();
         }
 
         public override void OnStartLocalPlayer()
@@ -51,7 +54,8 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
-            bool visible = !PlayerController.CursorReleased;
+            bool visible = !PlayerController.CursorReleased &&
+                           (playerController == null || !playerController.IsDead);
             if (hudCanvas.enabled != visible)
             {
                 hudCanvas.enabled = visible;
@@ -68,10 +72,27 @@ namespace InterrogationRoom.Gameplay.Interaction
             dotRect.sizeDelta = new Vector2(currentSize, currentSize);
             dotImage.color = targeted ? targetedColor : idleColor;
 
-            if (hintLabel.enabled != targeted)
+            string prompt = ResolvePrompt(targeted);
+            bool showHint = !string.IsNullOrEmpty(prompt);
+            if (showHint)
             {
-                hintLabel.enabled = targeted;
+                hintLabel.text = $"{hintKey} {prompt}";
             }
+
+            if (hintLabel.enabled != showHint)
+            {
+                hintLabel.enabled = showHint;
+            }
+        }
+
+        private string ResolvePrompt(bool targeted)
+        {
+            if (playerController != null && playerController.IsSeated)
+            {
+                return standUpPrompt;
+            }
+
+            return targeted ? interactor.HoveredPrompt : null;
         }
 
         private void BuildHud()
@@ -108,13 +129,13 @@ namespace InterrogationRoom.Gameplay.Interaction
             hintLabel.fontStyle = FontStyle.Bold;
             hintLabel.alignment = TextAnchor.MiddleCenter;
             hintLabel.color = targetedColor;
-            hintLabel.text = hintText;
+            hintLabel.text = hintKey;
             hintLabel.raycastTarget = false;
             hintLabel.enabled = false;
             RectTransform hintRect = hintLabel.rectTransform;
             hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 0.5f);
             hintRect.anchoredPosition = new Vector2(0f, -36f);
-            hintRect.sizeDelta = new Vector2(160f, 28f);
+            hintRect.sizeDelta = new Vector2(480f, 28f);
 
             hudCanvas.enabled = false;
         }

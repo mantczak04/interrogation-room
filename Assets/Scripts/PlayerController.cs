@@ -46,6 +46,7 @@ public class PlayerController : NetworkBehaviour
     private NetworkChairSeat activeSeat;
     private Vector3 smoothedLookTarget;
     private bool hasSmoothedLookTarget;
+    private bool forceShowLocalModel;
 
     [SyncVar(hook = nameof(OnSeatedChanged))]
     private bool isSeated;
@@ -240,6 +241,32 @@ public class PlayerController : NetworkBehaviour
         StandServer();
     }
 
+    [Server]
+    public bool TrySwapCharacterServer(CharacterId newCharacter, out CharacterId previousCharacter)
+    {
+        previousCharacter = characterId;
+        if (isDead || isSeated || newCharacter == characterId || !HasVisualFor(newCharacter))
+        {
+            return false;
+        }
+
+        characterId = newCharacter;
+        return true;
+    }
+
+    public bool HasVisualFor(CharacterId candidate)
+    {
+        foreach (CharacterVisualDefinition visual in characterVisuals)
+        {
+            if (visual != null && visual.characterId == candidate && visual.modelRoot != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     [Command]
     private void CmdTryPunch()
     {
@@ -411,9 +438,19 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
+    /// <summary>
+    /// Local-only debug aid: shows the normally hidden local player model so
+    /// animations can be inspected from an external camera.
+    /// </summary>
+    public void SetLocalModelVisible(bool visible)
+    {
+        forceShowLocalModel = visible;
+        RefreshRendererVisibility();
+    }
+
     private void RefreshRendererVisibility()
     {
-        bool visible = !isLocalPlayer;
+        bool visible = !isLocalPlayer || forceShowLocalModel;
         foreach (Renderer playerRenderer in playerRenderers)
         {
             if (playerRenderer != null)

@@ -10,11 +10,16 @@ namespace InterrogationRoom.Gameplay.Weapons
     {
         [SerializeField] private Transform pickupPoint;
 
+        [Header("Interaction")]
+        [SerializeField] private string interactionPrompt = "Pick up gun";
+
         private bool consumed;
 
         public Vector3 PickupPosition => pickupPoint != null ? pickupPoint.position : transform.position;
 
         public Vector3 InteractionPosition => PickupPosition;
+
+        public string InteractionPrompt => interactionPrompt;
 
         public override void OnStartServer()
         {
@@ -28,10 +33,19 @@ namespace InterrogationRoom.Gameplay.Weapons
             }
         }
 
+        public bool CanInteract(NetworkIdentity interactor)
+        {
+            return !consumed &&
+                   interactor != null &&
+                   interactor.TryGetComponent(out PlayerWeaponController weaponController) &&
+                   !weaponController.HasWeapon;
+        }
+
         [Server]
         public bool TryInteractServer(NetworkIdentity interactor)
         {
-            if (consumed || !NetworkServer.active || interactor == null ||
+            if (!NetworkServer.active ||
+                !CanInteract(interactor) ||
                 !interactor.TryGetComponent(out PlayerWeaponController weaponController) ||
                 !weaponController.TryEquipWeaponServer())
             {

@@ -193,6 +193,7 @@ GameObject:
   - component: {fileID: 694561094909925642}
   - component: {fileID: 2075991133823677100}
   - component: {fileID: 8989187108789138874}
+  - component: {fileID: 499868362974860615}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -433,7 +434,8 @@ MonoBehaviour:
   idleColor: {r: 1, g: 1, b: 1, a: 0.7}
   targetedColor: {r: 1, g: 0.78, b: 0.43, a: 1}
   sizeLerpSpeed: 14
-  hintText: '[E]'
+  hintKey: '[E]'
+  standUpPrompt: Stand up
 --- !u!95 &2075991133823677100
 Animator:
   serializedVersion: 7
@@ -473,6 +475,24 @@ MonoBehaviour:
   syncInterval: 0
   clientAuthority: 1
   animator: {fileID: 2075991133823677100}
+--- !u!114 &499868362974860615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2552652179993696903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afc5e44fcee96484d8c2cc39cca46853, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Debugging.AnimationTestCamera
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  player: {fileID: 0}
+  flySpeed: 3
+  lookHeight: 1.1
 --- !u!1 &3497073664194909700
 GameObject:
   m_ObjectHideFlags: 0

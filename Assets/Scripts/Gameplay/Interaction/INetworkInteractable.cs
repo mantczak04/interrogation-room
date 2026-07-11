@@ -7,6 +7,10 @@ namespace InterrogationRoom.Gameplay.Interaction
     {
         Vector3 InteractionPosition { get; }
 
+        string InteractionPrompt { get; }
+
+        bool CanInteract(NetworkIdentity interactor);
+
         bool TryInteractServer(NetworkIdentity interactor);
     }
 }
