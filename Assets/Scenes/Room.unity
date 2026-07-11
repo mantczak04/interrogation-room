@@ -822,6 +822,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 377314caddb0169438593a27a23f5ad6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VivoxTest
+  channelPrefix: interrogation-room
+  positionUpdateInterval: 0.3
+  audibleDistance: 32
+  occlusionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   micIcon: {fileID: 1374615111}
   micNormalColor: {r: 1, g: 1, b: 1, a: 1}
   micSpeakingColor: {r: 0, g: 1, b: 0, a: 1}

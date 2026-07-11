@@ -8,6 +8,14 @@
 /UserSettings/
 /MemoryCaptures/
 
+# Local Vivox Test Mode credentials. Never commit the token signing key.
+/ProjectSettings/Packages/com.unity.services.vivox/Settings.json
+
+# Optional local environment files for backend tooling only.
+.env
+.env.local
+.env.*.local
+
 # Unity generated files
 *.csproj
 *.sln
