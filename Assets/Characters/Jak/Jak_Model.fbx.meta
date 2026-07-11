@@ -8,10 +8,10 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: tripo_material_bd1b954b-3630-413c-b7d1-949fa7b90a9d
-    second: {fileID: 2100000, guid: c4a11629f84feb842be2a0124f2ffdaa, type: 2}
+    second: {fileID: 2100000, guid: a23830ac42dd60304b3d65ff20dce806, type: 2}
   materials:
-    materialImportMode: 1
-    materialName: 0
+    materialImportMode: 2
+    materialName: 1
     materialSearch: 1
     materialLocation: 1
     searchTexturesGlobally: 0
@@ -39,7 +39,7 @@ ModelImporter:
     isReadable: 0
   meshes:
     lODScreenPercentages: []
-    globalScale: 0.0142
+    globalScale: 0.016315788
     meshCompression: 0
     addColliders: 0
     useSRGBMaterialColor: 1
@@ -105,7 +105,7 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
-    globalScale: 0.0142
+    globalScale: 0.016315788
     rootMotionBoneName: 
     hasTranslationDoF: 0
     hasExtraRoot: 0

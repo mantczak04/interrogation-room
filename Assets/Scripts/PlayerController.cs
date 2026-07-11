@@ -44,6 +44,8 @@ public class PlayerController : NetworkBehaviour
     private float cameraPitch;
     private float seatedCameraYaw;
     private NetworkChairSeat activeSeat;
+    private Vector3 smoothedLookTarget;
+    private bool hasSmoothedLookTarget;
 
     [SyncVar(hook = nameof(OnSeatedChanged))]
     private bool isSeated;
@@ -55,6 +57,13 @@ public class PlayerController : NetworkBehaviour
     private bool isDead;
 
     private const float InputSystemMouseScale = 0.1f;
+    private const float LookAtDistance = 5f;
+    private const float LookTargetSmoothSpeed = 25f;
+    private const float MinLookAtHumanScale = 0.25f;
+    private const float MaxLookAtHumanScale = 4f;
+    private const float MaxVisualRootScaleDeviation = 0.05f;
+    private const float MaxLookDownDegrees = 50f;
+    private const float MaxLookUpDegrees = 60f;
     private static readonly int SpeedParameter = Animator.StringToHash("Speed");
     private static readonly int LookPitchParameter = Animator.StringToHash("LookPitch");
     private static readonly int IsSeatedParameter = Animator.StringToHash("IsSeated");
@@ -166,11 +175,13 @@ public class PlayerController : NetworkBehaviour
 
         if (CursorReleased)
         {
+            SetMovementAnimationIdle();
             return;
         }
 
         if (isDead)
         {
+            SetMovementAnimationIdle();
             return;
         }
 
@@ -358,6 +369,7 @@ public class PlayerController : NetworkBehaviour
             animator.avatar = selected.avatar;
             animator.Rebind();
             animator.Update(0f);
+            SetMovementAnimationIdle();
             animator.SetBool(IsSeatedParameter, isSeated);
             animator.SetBool(IsDeadParameter, isDead);
         }
@@ -419,6 +431,11 @@ public class PlayerController : NetworkBehaviour
     private void SetDeadLocally(bool dead)
     {
         animator?.SetBool(IsDeadParameter, dead);
+
+        if (dead)
+        {
+            ResetLookAtIkState();
+        }
 
         if (characterController != null)
         {
@@ -513,24 +530,135 @@ public class PlayerController : NetworkBehaviour
         characterController.Move(velocity * Time.deltaTime);
     }
 
+    private void SetMovementAnimationIdle()
+    {
+        animator?.SetFloat(SpeedParameter, 0f);
+    }
+
     private void OnAnimatorIK(int layerIndex)
     {
-        if (animator == null || !animator.isHuman)
+        if (animator == null || !animator.isHuman || isDead)
         {
+            ResetLookAtIkState();
             return;
         }
 
-        Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
-        if (head == null)
+        if (!TryGetActiveVisualRootScale(out Vector3 visualRootScale) ||
+            !IsHumanoidIkScaleValid(animator.humanScale, visualRootScale))
         {
+            animator.SetLookAtWeight(0f);
+            ResetLookAtIkState();
             return;
         }
 
-        float lookPitch = animator.GetFloat(LookPitchParameter);
-        Vector3 lookDirection = Quaternion.AngleAxis(lookPitch, transform.right) * transform.forward;
+        Transform anchor = animator.GetBoneTransform(HumanBodyBones.Neck);
+        if (anchor == null)
+        {
+            anchor = animator.GetBoneTransform(HumanBodyBones.Head);
+        }
+
+        if (anchor == null)
+        {
+            animator.SetLookAtWeight(0f);
+            ResetLookAtIkState();
+            return;
+        }
+
+        Vector3 lookDirection = GetClampedLookDirection();
+        Vector3 desiredLookTarget = anchor.position + lookDirection * LookAtDistance;
+        if (!hasSmoothedLookTarget)
+        {
+            smoothedLookTarget = desiredLookTarget;
+            hasSmoothedLookTarget = true;
+        }
+        else
+        {
+            float smoothFactor = 1f - Mathf.Exp(-LookTargetSmoothSpeed * Time.deltaTime);
+            smoothedLookTarget = Vector3.Lerp(smoothedLookTarget, desiredLookTarget, smoothFactor);
+        }
 
         animator.SetLookAtWeight(1f, 0.2f, 0.85f, 0.35f, 0.5f);
-        animator.SetLookAtPosition(head.position + lookDirection * 10f);
+        animator.SetLookAtPosition(smoothedLookTarget);
+    }
+
+    private Vector3 GetClampedLookDirection()
+    {
+        float pitch = Mathf.Clamp(
+            GetBodyRelativeLookPitch(),
+            -MaxLookDownDegrees,
+            MaxLookUpDegrees);
+
+        return (Quaternion.AngleAxis(pitch, transform.right) * transform.forward).normalized;
+    }
+
+    private float GetBodyRelativeLookPitch()
+    {
+        if (isLocalPlayer && playerCamera != null)
+        {
+            if (isSeated)
+            {
+                return GetPitchFromDirection(playerCamera.transform.forward);
+            }
+
+            return cameraPitch;
+        }
+
+        return animator.GetFloat(LookPitchParameter);
+    }
+
+    private float GetPitchFromDirection(Vector3 worldDirection)
+    {
+        if (worldDirection.sqrMagnitude <= Mathf.Epsilon)
+        {
+            return 0f;
+        }
+
+        Vector3 flatForward = Vector3.ProjectOnPlane(worldDirection, transform.right);
+        if (flatForward.sqrMagnitude <= Mathf.Epsilon)
+        {
+            return worldDirection.y >= 0f ? MaxLookUpDegrees : -MaxLookDownDegrees;
+        }
+
+        flatForward.Normalize();
+        return Vector3.SignedAngle(flatForward, worldDirection.normalized, transform.right);
+    }
+
+    private void ResetLookAtIkState()
+    {
+        hasSmoothedLookTarget = false;
+    }
+
+    private bool TryGetActiveVisualRootScale(out Vector3 visualRootScale)
+    {
+        visualRootScale = Vector3.one;
+
+        foreach (CharacterVisualDefinition visual in characterVisuals)
+        {
+            if (visual?.modelRoot == null || !visual.modelRoot.activeInHierarchy)
+            {
+                continue;
+            }
+
+            visualRootScale = visual.modelRoot.transform.lossyScale;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsHumanoidIkScaleValid(float humanScale, Vector3 visualRootScale)
+    {
+        if (humanScale < MinLookAtHumanScale || humanScale > MaxLookAtHumanScale)
+        {
+            return false;
+        }
+
+        float maxAxisDeviation = Mathf.Max(
+            Mathf.Abs(visualRootScale.x - 1f),
+            Mathf.Abs(visualRootScale.y - 1f),
+            Mathf.Abs(visualRootScale.z - 1f));
+
+        return maxAxisDeviation <= MaxVisualRootScaleDeviation;
     }
 
     public override void OnStopServer()
