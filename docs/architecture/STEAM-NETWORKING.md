@@ -26,5 +26,6 @@ Ten dokument opisuje zaimplementowaną integrację multiplayer przez Steam. Decy
 ## Rozwój lokalny i testy
 
 - Bez uruchomionego klienta Steam `SteamAPI_Init()` nie przechodzi i gra automatycznie spada na KCP — ParrelSync działa bez żadnej konfiguracji. Można też ręcznie wyłączyć pole `useSteamWhenAvailable` na komponencie `SteamLobby`.
+- Build lub Editor uruchomiony z argumentem `-force-kcp` zawsze wybiera KCP, nawet gdy klient Steam działa. To zalecany tryb dla powtarzalnych lokalnych testów i buildów QA.
 - Prawdziwy test Steam wymaga dwóch maszyn z dwoma kontami Steam, obu na AppID 480, z uruchomionym klientem Steam — zgodnie z regułą testowania FizzySteamworks w `AGENTS.md`.
 - Dwie instancje na jednym koncie/komputerze nie przetestują ścieżki Steam; do testów lokalnych służy KCP.

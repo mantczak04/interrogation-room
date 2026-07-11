@@ -3,6 +3,7 @@
 #endif
 
 using Mirror;
+using InterrogationRoom.Networking;
 using UnityEngine;
 #if !DISABLESTEAMWORKS
 using System;
@@ -36,7 +37,10 @@ public class SteamLobby : MonoBehaviour
         get
         {
 #if !DISABLESTEAMWORKS
-            return useSteamWhenAvailable && steamTransport != null && SteamManager.Initialized;
+            return useSteamWhenAvailable
+                && !TransportLaunchOptions.ForceKcp(Environment.GetCommandLineArgs())
+                && steamTransport != null
+                && SteamManager.Initialized;
 #else
             return false;
 #endif
