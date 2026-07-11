@@ -1,5 +1,8 @@
 using Mirror;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NetworkManager))]
@@ -20,6 +23,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     GUIStyle labelStyle;
     GUIStyle textFieldStyle;
     bool stylesInitialized;
+    bool isVisible = true;
 
     void Awake()
     {
@@ -28,6 +32,19 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     }
 
     bool SteamMode => steamLobby != null && steamLobby.SteamAvailable;
+
+    void Update()
+    {
+#if ENABLE_INPUT_SYSTEM
+        bool togglePressed = Keyboard.current != null && Keyboard.current.pKey.wasPressedThisFrame;
+#else
+        bool togglePressed = Input.GetKeyDown(KeyCode.P);
+#endif
+        if (togglePressed)
+        {
+            isVisible = !isVisible;
+        }
+    }
 
     void InitStyles()
     {
@@ -68,10 +85,22 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         float scale = uiScale * Mathf.Min(Screen.width / 1280f, Screen.height / 720f, 2f);
         GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1f));
 
+        float screenWidth = Screen.width / scale;
+        float screenHeight = Screen.height / scale;
+        GUILayout.BeginArea(new Rect(0f, screenHeight - 44f, screenWidth, 40f));
+        GUILayout.Label("P: show / hide UI     V: mute / unmute voice chat", labelStyle);
+        GUILayout.EndArea();
+
+        if (!isVisible)
+        {
+            GUI.matrix = previousMatrix;
+            return;
+        }
+
         float scaledWidth = panelWidth;
         float scaledHeight = 420f;
-        float x = (Screen.width / scale - scaledWidth) * 0.5f + offsetX;
-        float y = (Screen.height / scale - scaledHeight) * 0.5f + offsetY;
+        float x = (screenWidth - scaledWidth) * 0.5f + offsetX;
+        float y = (screenHeight - scaledHeight) * 0.5f + offsetY;
         GUILayout.BeginArea(new Rect(x, y, scaledWidth, scaledHeight));
 
         if (!NetworkClient.isConnected && !NetworkServer.active)
