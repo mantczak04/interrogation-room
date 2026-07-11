@@ -16,7 +16,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField, Min(1f)] private float sizeLerpSpeed = 14f;
 
         [Header("Hint")]
-        [SerializeField] private string hintText = "[F]";
+        [SerializeField] private string hintText = "[E]";
 
         private PlayerInteractor interactor;
         private Canvas hudCanvas;

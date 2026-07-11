@@ -9406,7 +9406,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
   seatPoint: {fileID: 0}
   standPoint: {fileID: 0}
@@ -24082,7 +24082,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
   seatPoint: {fileID: 0}
   standPoint: {fileID: 0}
@@ -28850,7 +28850,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
   seatPoint: {fileID: 0}
   standPoint: {fileID: 0}
@@ -36041,7 +36041,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
   seatPoint: {fileID: 0}
   standPoint: {fileID: 0}

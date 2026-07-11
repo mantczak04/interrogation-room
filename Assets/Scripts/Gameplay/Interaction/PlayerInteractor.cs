@@ -21,6 +21,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField] private LayerMask interactionMask = ~0;
 
         private Component hoveredTarget;
+        private NetworkIdentity hoveredIdentity;
         private INetworkInteractable hoveredInteractable;
 
         public Component HoveredTarget => hoveredTarget;
@@ -71,9 +72,18 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
-            if (HasHoveredTarget)
+            if (!HasHoveredTarget)
             {
-                CmdTryInteract(interactionCamera.transform.forward);
+                return;
+            }
+
+            if (hoveredIdentity != null && hoveredIdentity.netId != 0)
+            {
+                CmdTryInteract(hoveredIdentity.netId);
+            }
+            else
+            {
+                CmdTryInteractByDirection(interactionCamera.transform.forward);
             }
         }
 
@@ -102,6 +112,8 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         private void SetHoveredTarget(Component target, INetworkInteractable interactable)
         {
+            hoveredIdentity = target != null ? target.GetComponentInParent<NetworkIdentity>() : null;
+
             if (hoveredTarget == target)
             {
                 hoveredInteractable = interactable;
@@ -114,7 +126,28 @@ namespace InterrogationRoom.Gameplay.Interaction
         }
 
         [Command]
-        private void CmdTryInteract(Vector3 requestedDirection)
+        private void CmdTryInteract(uint targetNetId)
+        {
+            if (!NetworkServer.spawned.TryGetValue(targetNetId, out NetworkIdentity targetIdentity) ||
+                targetIdentity == netIdentity ||
+                !TryGetInteractable(targetIdentity.transform, out INetworkInteractable interactable))
+            {
+                return;
+            }
+
+            float allowedDistance = interactionRange + serverRangeTolerance;
+            Vector3 interactionPosition = interactable.InteractionPosition;
+            if ((interactionPosition - transform.position).sqrMagnitude > allowedDistance * allowedDistance ||
+                !HasServerLineOfSightTo(targetIdentity, interactionPosition))
+            {
+                return;
+            }
+
+            interactable.TryInteractServer(netIdentity);
+        }
+
+        [Command]
+        private void CmdTryInteractByDirection(Vector3 requestedDirection)
         {
             if (!IsFinite(requestedDirection) || requestedDirection.sqrMagnitude < 0.5f)
             {
@@ -140,6 +173,24 @@ namespace InterrogationRoom.Gameplay.Interaction
             }
 
             interactable.TryInteractServer(netIdentity);
+        }
+
+        private bool HasServerLineOfSightTo(NetworkIdentity targetIdentity, Vector3 interactionPosition)
+        {
+            Vector3 origin = transform.TransformPoint(Vector3.up * serverViewHeight);
+            Vector3 delta = interactionPosition - origin;
+            if (delta.sqrMagnitude < 0.0001f)
+            {
+                return true;
+            }
+
+            if (!TryGetFirstNonSelfHit(origin, delta.normalized, delta.magnitude + 0.05f, out RaycastHit hit))
+            {
+                return false;
+            }
+
+            Transform hitTransform = hit.collider.transform;
+            return hitTransform == targetIdentity.transform || hitTransform.IsChildOf(targetIdentity.transform);
         }
 
         private bool TryGetFirstNonSelfHit(
@@ -209,9 +260,9 @@ namespace InterrogationRoom.Gameplay.Interaction
         private static bool WasInteractPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
+            return Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
 #else
-            return Input.GetKeyDown(KeyCode.F);
+            return Input.GetKeyDown(KeyCode.E);
 #endif
         }
     }
