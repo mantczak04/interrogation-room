@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
+using InterrogationRoom.Gameplay.Characters;
 using InterrogationRoom.Gameplay.Interaction;
+using InterrogationRoom.Gameplay.Weapons;
 using Mirror;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
@@ -9,16 +13,33 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(NetworkIdentity))]
 public class PlayerController : NetworkBehaviour
 {
+    [Serializable]
+    private sealed class CharacterVisualDefinition
+    {
+        public CharacterId characterId;
+        public GameObject modelRoot;
+        public RuntimeAnimatorController animatorController;
+        public Avatar avatar;
+    }
+
+    [Header("Movement")]
     public float speed = 5f;
     public float mouseSensitivity = 2f;
     public float jumpHeight = 1.5f;
     public float gravity = -9.81f;
     public Camera playerCamera;
 
+    [Header("Characters")]
+    [SerializeField] private CharacterVisualDefinition[] characterVisuals = Array.Empty<CharacterVisualDefinition>();
+
     private CharacterController characterController;
     private Animator animator;
     private AudioListener audioListener;
     private Renderer[] playerRenderers;
+    private PlayerInteractor playerInteractor;
+    private PlayerWeaponController playerWeaponController;
+    private ShotHitbox shotHitbox;
+    private int allocationKey;
     private float verticalVelocity;
     private float cameraPitch;
     private float seatedCameraYaw;
@@ -27,19 +48,34 @@ public class PlayerController : NetworkBehaviour
     [SyncVar(hook = nameof(OnSeatedChanged))]
     private bool isSeated;
 
+    [SyncVar(hook = nameof(OnCharacterChanged))]
+    private CharacterId characterId;
+
+    [SyncVar(hook = nameof(OnDeadChanged))]
+    private bool isDead;
+
     private const float InputSystemMouseScale = 0.1f;
     private static readonly int SpeedParameter = Animator.StringToHash("Speed");
     private static readonly int LookPitchParameter = Animator.StringToHash("LookPitch");
+    private static readonly int IsSeatedParameter = Animator.StringToHash("IsSeated");
+    private static readonly int PunchParameter = Animator.StringToHash("Punch");
+    private static readonly int IsDeadParameter = Animator.StringToHash("IsDead");
 
     public static bool CursorReleased { get; private set; } = true;
 
     public bool IsSeated => isSeated;
+    public bool IsDead => isDead;
+    public CharacterId CharacterId => characterId;
 
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
-        playerRenderers = GetComponentsInChildren<Renderer>(true);
+        playerInteractor = GetComponent<PlayerInteractor>();
+        playerWeaponController = GetComponent<PlayerWeaponController>();
+        shotHitbox = GetComponent<ShotHitbox>();
+        RefreshPlayerRenderers();
+        ValidateCharacterVisuals();
 
         if (playerCamera == null)
         {
@@ -54,6 +90,9 @@ public class PlayerController : NetworkBehaviour
 
     public override void OnStartClient()
     {
+        base.OnStartClient();
+        ApplyCharacter(characterId);
+
         bool local = isLocalPlayer;
 
         if (playerCamera != null)
@@ -68,13 +107,29 @@ public class PlayerController : NetworkBehaviour
 
         characterController.enabled = local || isServer;
         RefreshSeatedState();
+        RefreshRendererVisibility();
+        SetDeadLocally(isDead);
+    }
 
-        foreach (Renderer playerRenderer in playerRenderers)
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+
+        allocationKey = connectionToClient != null ? connectionToClient.connectionId : netId.GetHashCode();
+        if (NetworkCharacterAllocator.Instance == null)
         {
-            if (playerRenderer != null)
-            {
-                playerRenderer.enabled = !local;
-            }
+            Debug.LogError(
+                $"The scene requires an active {nameof(NetworkCharacterAllocator)} on its NetworkManager.",
+                this);
+        }
+        else
+        {
+            characterId = NetworkCharacterAllocator.Instance.Acquire(allocationKey);
+        }
+
+        if (shotHitbox != null)
+        {
+            shotHitbox.HitReceivedServer += OnShotHitServer;
         }
     }
 
@@ -114,6 +169,19 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        if (isDead)
+        {
+            return;
+        }
+
+        if (WasPunchPressed() && CharacterActionRules.CanPunch(
+                isDead,
+                isSeated,
+                playerWeaponController != null && playerWeaponController.HasWeapon))
+        {
+            CmdTryPunch();
+        }
+
         Look();
         if (!isSeated)
         {
@@ -130,7 +198,7 @@ public class PlayerController : NetworkBehaviour
 
     public bool TryRequestStand()
     {
-        if (!isLocalPlayer || !isSeated)
+        if (!isLocalPlayer || !isSeated || isDead)
         {
             return false;
         }
@@ -142,7 +210,7 @@ public class PlayerController : NetworkBehaviour
     [Server]
     public bool TrySitServer(NetworkChairSeat seat)
     {
-        if (!NetworkServer.active || isSeated || seat == null || !seat.TryOccupyServer(netIdentity))
+        if (!NetworkServer.active || isDead || isSeated || seat == null || !seat.TryOccupyServer(netIdentity))
         {
             return false;
         }
@@ -159,6 +227,26 @@ public class PlayerController : NetworkBehaviour
     private void CmdStand()
     {
         StandServer();
+    }
+
+    [Command]
+    private void CmdTryPunch()
+    {
+        if (!CharacterActionRules.CanPunch(
+                isDead,
+                isSeated,
+                playerWeaponController != null && playerWeaponController.HasWeapon))
+        {
+            return;
+        }
+
+        RpcPlayPunch();
+    }
+
+    [ClientRpc]
+    private void RpcPlayPunch()
+    {
+        animator?.SetTrigger(PunchParameter);
     }
 
     [Server]
@@ -217,6 +305,7 @@ public class PlayerController : NetworkBehaviour
         if (animator != null)
         {
             animator.SetFloat(SpeedParameter, 0f);
+            animator.SetBool(IsSeatedParameter, seated);
         }
 
         if (characterController != null)
@@ -228,6 +317,140 @@ public class PlayerController : NetworkBehaviour
     private void RefreshSeatedState()
     {
         SetSeatedLocally(isSeated);
+    }
+
+    private void OnCharacterChanged(CharacterId _, CharacterId selectedCharacter)
+    {
+        ApplyCharacter(selectedCharacter);
+    }
+
+    private void ApplyCharacter(CharacterId selectedCharacter)
+    {
+        CharacterVisualDefinition selected = null;
+        foreach (CharacterVisualDefinition visual in characterVisuals)
+        {
+            if (visual == null)
+            {
+                continue;
+            }
+
+            bool active = visual.characterId == selectedCharacter;
+            if (visual.modelRoot != null)
+            {
+                visual.modelRoot.SetActive(active);
+            }
+
+            if (active)
+            {
+                selected = visual;
+            }
+        }
+
+        if (selected == null)
+        {
+            Debug.LogError($"No visual is configured for character '{selectedCharacter}'.", this);
+            return;
+        }
+
+        if (animator != null)
+        {
+            animator.runtimeAnimatorController = selected.animatorController;
+            animator.avatar = selected.avatar;
+            animator.Rebind();
+            animator.Update(0f);
+            animator.SetBool(IsSeatedParameter, isSeated);
+            animator.SetBool(IsDeadParameter, isDead);
+        }
+
+        RefreshPlayerRenderers();
+        RefreshRendererVisibility();
+    }
+
+    private void RefreshPlayerRenderers()
+    {
+        playerRenderers = GetComponentsInChildren<Renderer>(true);
+    }
+
+    private void ValidateCharacterVisuals()
+    {
+        var configuredCharacters = new HashSet<CharacterId>();
+        foreach (CharacterVisualDefinition visual in characterVisuals)
+        {
+            if (visual == null ||
+                visual.modelRoot == null ||
+                visual.animatorController == null ||
+                visual.avatar == null ||
+                !visual.avatar.isHuman ||
+                !configuredCharacters.Add(visual.characterId))
+            {
+                Debug.LogError(
+                    "Character visuals must contain one complete, unique Humanoid definition per character.",
+                    this);
+                return;
+            }
+        }
+
+        if (configuredCharacters.Count != CharacterAssignmentRoster.DefaultCharacters.Count)
+        {
+            Debug.LogError(
+                $"Expected {CharacterAssignmentRoster.DefaultCharacters.Count} character visuals, " +
+                $"but found {configuredCharacters.Count}.",
+                this);
+        }
+    }
+
+    private void RefreshRendererVisibility()
+    {
+        bool visible = !isLocalPlayer;
+        foreach (Renderer playerRenderer in playerRenderers)
+        {
+            if (playerRenderer != null)
+            {
+                playerRenderer.enabled = visible;
+            }
+        }
+    }
+
+    private void OnDeadChanged(bool _, bool dead)
+    {
+        SetDeadLocally(dead);
+    }
+
+    private void SetDeadLocally(bool dead)
+    {
+        animator?.SetBool(IsDeadParameter, dead);
+
+        if (characterController != null)
+        {
+            characterController.enabled = !dead && !isSeated && (isLocalPlayer || isServer);
+        }
+
+        if (playerInteractor != null)
+        {
+            playerInteractor.enabled = !dead;
+        }
+
+        if (playerWeaponController != null)
+        {
+            playerWeaponController.enabled = !dead;
+        }
+    }
+
+    [Server]
+    private void OnShotHitServer(ShotHitContext _)
+    {
+        if (!CharacterActionRules.CanDie(isDead))
+        {
+            return;
+        }
+
+        if (isSeated)
+        {
+            StandServer();
+        }
+
+        isDead = true;
+        verticalVelocity = 0f;
     }
 
     private void Look()
@@ -303,8 +526,6 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
-        ApplySeatedIk();
-
         float lookPitch = animator.GetFloat(LookPitchParameter);
         Vector3 lookDirection = Quaternion.AngleAxis(lookPitch, transform.right) * transform.forward;
 
@@ -312,38 +533,20 @@ public class PlayerController : NetworkBehaviour
         animator.SetLookAtPosition(head.position + lookDirection * 10f);
     }
 
-    private void ApplySeatedIk()
-    {
-        float weight = isSeated ? 1f : 0f;
-        animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, weight);
-        animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, weight);
-        animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, weight);
-        animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, weight);
-
-        if (!isSeated)
-        {
-            return;
-        }
-
-        animator.bodyPosition = transform.TransformPoint(new Vector3(0f, 0.58f, 0f));
-        Quaternion footRotation = transform.rotation;
-        animator.SetIKPosition(
-            AvatarIKGoal.LeftFoot,
-            transform.TransformPoint(new Vector3(-0.16f, 0.05f, 0.42f)));
-        animator.SetIKRotation(AvatarIKGoal.LeftFoot, footRotation);
-        animator.SetIKPosition(
-            AvatarIKGoal.RightFoot,
-            transform.TransformPoint(new Vector3(0.16f, 0.05f, 0.42f)));
-        animator.SetIKRotation(AvatarIKGoal.RightFoot, footRotation);
-    }
-
     public override void OnStopServer()
     {
+        if (shotHitbox != null)
+        {
+            shotHitbox.HitReceivedServer -= OnShotHitServer;
+        }
+
         if (activeSeat != null)
         {
             activeSeat.ReleaseServer(netIdentity);
             activeSeat = null;
         }
+
+        NetworkCharacterAllocator.Instance?.Release(allocationKey);
 
         base.OnStopServer();
     }
@@ -413,6 +616,15 @@ public class PlayerController : NetworkBehaviour
         return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
 #else
         return Input.GetKeyDown(KeyCode.Escape);
+#endif
+    }
+
+    private bool WasPunchPressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+#else
+        return Input.GetMouseButtonDown(0);
 #endif
     }
 }

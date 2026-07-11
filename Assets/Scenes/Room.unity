@@ -14130,6 +14130,7 @@ GameObject:
   - component: {fileID: 1864596225}
   - component: {fileID: 1864596224}
   - component: {fileID: 1864596226}
+  - component: {fileID: 1864596227}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -14292,6 +14293,18 @@ MonoBehaviour:
   additionalCases: []
   roundLimitSeconds: 600
   timerDeliveryInterval: 1
+--- !u!114 &1864596227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1864596218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f67dbba3069cf8671ad56cf2bcc44c6d, type: 3}
+  m_Name: NetworkCharacterAllocator
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Gameplay.Characters.NetworkCharacterAllocator
 --- !u!1 &1873459404
 GameObject:
   m_ObjectHideFlags: 0
