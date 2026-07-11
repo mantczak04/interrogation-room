@@ -127,10 +127,13 @@ public sealed class VivoxTest : MonoBehaviour
                 ChatCapability.AudioOnly,
                 new Channel3DProperties());
 
+            VivoxService.Instance.UnmuteInputDevice();
+            isMuted = false;
+
             VivoxService.Instance.Set3DPosition(localPlayer, activeChannelName);
             nextPositionUpdate = Time.unscaledTime + positionUpdateInterval;
             isReady = true;
-            Debug.Log($"[Vivox] Joined positional channel '{activeChannelName}'.");
+            Debug.Log($"[Vivox] Joined positional channel '{activeChannelName}' and enabled input microphone.");
         }
         catch (Exception exception)
         {

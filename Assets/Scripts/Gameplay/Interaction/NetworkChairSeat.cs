@@ -18,13 +18,15 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         public Vector3 SeatPosition => seatPoint != null
             ? seatPoint.position
-            : transform.position + transform.up * seatHeight;
+            : transform.TransformPoint(new Vector3(0.2f, seatHeight <= 0.1f ? 0.46f : seatHeight, 0.2f));
 
-        public Quaternion SeatRotation => seatPoint != null ? seatPoint.rotation : transform.rotation;
+        public Quaternion SeatRotation => seatPoint != null
+            ? seatPoint.rotation
+            : transform.rotation * Quaternion.Euler(0f, 180f, 0f);
 
         public Vector3 StandPosition => standPoint != null
             ? standPoint.position
-            : transform.position + transform.forward * standDistance;
+            : transform.TransformPoint(new Vector3(0.2f, 0.02f, 0.2f - standDistance));
 
         public Vector3 InteractionPosition => SeatPosition + transform.up * 0.45f;
 

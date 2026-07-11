@@ -163,9 +163,9 @@ namespace InterrogationRoom.Gameplay.Interaction
         private static bool WasInteractPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
+            return Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
 #else
-            return Input.GetKeyDown(KeyCode.F);
+            return Input.GetKeyDown(KeyCode.E);
 #endif
         }
     }

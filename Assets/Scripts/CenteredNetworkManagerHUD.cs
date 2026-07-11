@@ -35,15 +35,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void Update()
     {
-#if ENABLE_INPUT_SYSTEM
-        bool togglePressed = Keyboard.current != null && Keyboard.current.pKey.wasPressedThisFrame;
-#else
-        bool togglePressed = Input.GetKeyDown(KeyCode.P);
-#endif
-        if (togglePressed)
-        {
-            isVisible = !isVisible;
-        }
+        isVisible = PlayerController.CursorReleased;
     }
 
     void InitStyles()
@@ -88,7 +80,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         float screenWidth = Screen.width / scale;
         float screenHeight = Screen.height / scale;
         GUILayout.BeginArea(new Rect(0f, screenHeight - 44f, screenWidth, 40f));
-        GUILayout.Label("P: show / hide UI     V: mute / unmute voice chat", labelStyle);
+        GUILayout.Label("Esc: show/hide menu & release mouse     V: mute / unmute voice chat", labelStyle);
         GUILayout.EndArea();
 
         if (!isVisible)
