@@ -4695,6 +4695,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 562628505}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 562628508}
   m_SourcePrefab: {fileID: 100100000, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
 --- !u!4 &562628503 stripped
 Transform:
@@ -4727,6 +4730,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.4000001, y: 0.94000006, z: 0.39999962}
   m_Center: {x: 0.20000005, y: 0.47000003, z: 0.19999981}
+--- !u!114 &562628508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 562628504}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatHeight: 0.02
+  standDistance: 0.75
 --- !u!1 &569453584
 GameObject:
   m_ObjectHideFlags: 0
@@ -6690,6 +6709,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c4ae54390c490ab488423df28e898edd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 761638560}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c4ae54390c490ab488423df28e898edd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 761638563}
   m_SourcePrefab: {fileID: 100100000, guid: c4ae54390c490ab488423df28e898edd, type: 3}
 --- !u!4 &761638558 stripped
 Transform:
@@ -6722,6 +6744,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.66990006, y: 1.2152001, z: 0.628598}
   m_Center: {x: 0.33494985, y: 0.60760003, z: 0.3142991}
+--- !u!114 &761638563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 761638559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatHeight: 0.02
+  standDistance: 0.75
 --- !u!1 &767746403
 GameObject:
   m_ObjectHideFlags: 0
@@ -8388,6 +8426,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1026611446}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1026611449}
   m_SourcePrefab: {fileID: 100100000, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
 --- !u!4 &1026611444 stripped
 Transform:
@@ -8420,6 +8461,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.4000001, y: 0.94000006, z: 0.39999962}
   m_Center: {x: 0.20000005, y: 0.47000003, z: 0.19999981}
+--- !u!114 &1026611449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026611445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatHeight: 0.02
+  standDistance: 0.75
 --- !u!1 &1038372487
 GameObject:
   m_ObjectHideFlags: 0
@@ -10853,6 +10910,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1392618763}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1392618766}
   m_SourcePrefab: {fileID: 100100000, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
 --- !u!4 &1392618761 stripped
 Transform:
@@ -10885,6 +10945,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.4000001, y: 0.94000006, z: 0.39999962}
   m_Center: {x: 0.20000005, y: 0.47000003, z: 0.19999981}
+--- !u!114 &1392618766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1392618762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatHeight: 0.02
+  standDistance: 0.75
 --- !u!1 &1407505428
 GameObject:
   m_ObjectHideFlags: 0
@@ -12188,6 +12264,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1687228996}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1687228999}
   m_SourcePrefab: {fileID: 100100000, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
 --- !u!4 &1687228994 stripped
 Transform:
@@ -12220,6 +12299,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.39999962, y: 0.94000006, z: 0.4000001}
   m_Center: {x: 0.19999981, y: 0.47000003, z: 0.20000005}
+--- !u!114 &1687228999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1687228995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatHeight: 0.02
+  standDistance: 0.75
 --- !u!1 &1707533746
 GameObject:
   m_ObjectHideFlags: 0
@@ -15077,6 +15172,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1974923089}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1974923092}
   m_SourcePrefab: {fileID: 100100000, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
 --- !u!4 &1974923087 stripped
 Transform:
@@ -15109,6 +15207,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.4000001, y: 0.94000006, z: 0.39999962}
   m_Center: {x: 0.20000005, y: 0.47000003, z: 0.19999981}
+--- !u!114 &1974923092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1974923088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatHeight: 0.02
+  standDistance: 0.75
 --- !u!1 &1976702945
 GameObject:
   m_ObjectHideFlags: 0
@@ -15739,7 +15853,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.05
+      value: 1.922
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -15784,6 +15898,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2026307429}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2026307432}
   m_SourcePrefab: {fileID: 100100000, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
 --- !u!4 &2026307427 stripped
 Transform:
@@ -15816,6 +15933,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.39999962, y: 0.94000006, z: 0.4000001}
   m_Center: {x: 0.19999981, y: 0.47000003, z: 0.20000005}
+--- !u!114 &2026307432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2026307428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatHeight: 0.02
+  standDistance: 0.75
 --- !u!1 &2036204040
 GameObject:
   m_ObjectHideFlags: 0
@@ -16741,6 +16874,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2143198343}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2143198346}
   m_SourcePrefab: {fileID: 100100000, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
 --- !u!4 &2143198341 stripped
 Transform:
@@ -16773,6 +16909,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.4000001, y: 0.94000006, z: 0.39999962}
   m_Center: {x: 0.20000005, y: 0.47000003, z: 0.19999981}
+--- !u!114 &2143198346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2143198342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatHeight: 0.02
+  standDistance: 0.75
 --- !u!1001 &2701715779734087862
 PrefabInstance:
   m_ObjectHideFlags: 0

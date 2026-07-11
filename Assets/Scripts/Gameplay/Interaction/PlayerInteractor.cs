@@ -38,6 +38,11 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
+            if (TryGetComponent(out PlayerController playerController) && playerController.TryRequestStand())
+            {
+                return;
+            }
+
             TryRequestInteraction();
         }
 
@@ -54,53 +59,41 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
-            NetworkIdentity targetIdentity = hit.collider.GetComponentInParent<NetworkIdentity>();
-            if (targetIdentity == null || targetIdentity.netId == 0 ||
-                !TryGetInteractable(targetIdentity, out _))
+            if (!TryGetInteractable(hit.collider.transform, out _))
             {
                 return;
             }
 
-            CmdTryInteract(targetIdentity.netId);
+            CmdTryInteract(interactionCamera.transform.forward);
         }
 
         [Command]
-        private void CmdTryInteract(uint targetNetId)
+        private void CmdTryInteract(Vector3 requestedDirection)
         {
-            if (!NetworkServer.spawned.TryGetValue(targetNetId, out NetworkIdentity targetIdentity) ||
-                targetIdentity == netIdentity ||
-                !TryGetInteractable(targetIdentity, out INetworkInteractable interactable))
+            if (!IsFinite(requestedDirection) || requestedDirection.sqrMagnitude < 0.5f)
             {
                 return;
             }
 
             float allowedDistance = interactionRange + serverRangeTolerance;
+            Vector3 origin = transform.TransformPoint(Vector3.up * serverViewHeight);
+            if (!TryGetFirstNonSelfHit(
+                    origin,
+                    requestedDirection.normalized,
+                    allowedDistance,
+                    out RaycastHit hit) ||
+                !TryGetInteractable(hit.collider.transform, out INetworkInteractable interactable))
+            {
+                return;
+            }
+
             Vector3 interactionPosition = interactable.InteractionPosition;
-            if ((interactionPosition - transform.position).sqrMagnitude > allowedDistance * allowedDistance ||
-                !HasServerLineOfSightTo(targetIdentity, interactionPosition))
+            if ((interactionPosition - transform.position).sqrMagnitude > allowedDistance * allowedDistance)
             {
                 return;
             }
 
             interactable.TryInteractServer(netIdentity);
-        }
-
-        private bool HasServerLineOfSightTo(NetworkIdentity targetIdentity, Vector3 interactionPosition)
-        {
-            Vector3 origin = transform.TransformPoint(Vector3.up * serverViewHeight);
-            Vector3 delta = interactionPosition - origin;
-            if (delta.sqrMagnitude < 0.0001f)
-            {
-                return true;
-            }
-
-            if (!TryGetFirstNonSelfHit(origin, delta.normalized, delta.magnitude + 0.05f, out RaycastHit hit))
-            {
-                return false;
-            }
-
-            Transform hitTransform = hit.collider.transform;
-            return hitTransform == targetIdentity.transform || hitTransform.IsChildOf(targetIdentity.transform);
         }
 
         private bool TryGetFirstNonSelfHit(
@@ -138,15 +131,18 @@ namespace InterrogationRoom.Gameplay.Interaction
         }
 
         private static bool TryGetInteractable(
-            NetworkIdentity targetIdentity,
+            Transform hitTransform,
             out INetworkInteractable interactable)
         {
-            foreach (MonoBehaviour component in targetIdentity.GetComponents<MonoBehaviour>())
+            for (Transform current = hitTransform; current != null; current = current.parent)
             {
-                if (component is INetworkInteractable candidate)
+                foreach (MonoBehaviour component in current.GetComponents<MonoBehaviour>())
                 {
-                    interactable = candidate;
-                    return true;
+                    if (component is INetworkInteractable candidate)
+                    {
+                        interactable = candidate;
+                        return true;
+                    }
                 }
             }
 
@@ -154,12 +150,22 @@ namespace InterrogationRoom.Gameplay.Interaction
             return false;
         }
 
+        private static bool IsFinite(Vector3 value)
+        {
+            return IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
+        }
+
+        private static bool IsFinite(float value)
+        {
+            return !float.IsNaN(value) && !float.IsInfinity(value);
+        }
+
         private static bool WasInteractPressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
+            return Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
 #else
-            return Input.GetKeyDown(KeyCode.E);
+            return Input.GetKeyDown(KeyCode.F);
 #endif
         }
     }

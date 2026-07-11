@@ -1,3 +1,4 @@
+using InterrogationRoom.Gameplay.Interaction;
 using Mirror;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
@@ -20,11 +21,19 @@ public class PlayerController : NetworkBehaviour
     private Renderer[] playerRenderers;
     private float verticalVelocity;
     private float cameraPitch;
+    private float seatedCameraYaw;
+    private NetworkChairSeat activeSeat;
+
+    [SyncVar(hook = nameof(OnSeatedChanged))]
+    private bool isSeated;
+
     private const float InputSystemMouseScale = 0.1f;
     private static readonly int SpeedParameter = Animator.StringToHash("Speed");
     private static readonly int LookPitchParameter = Animator.StringToHash("LookPitch");
 
     public static bool CursorReleased { get; private set; } = true;
+
+    public bool IsSeated => isSeated;
 
     private void Awake()
     {
@@ -58,6 +67,7 @@ public class PlayerController : NetworkBehaviour
         }
 
         characterController.enabled = local || isServer;
+        RefreshSeatedState();
 
         foreach (Renderer playerRenderer in playerRenderers)
         {
@@ -105,7 +115,10 @@ public class PlayerController : NetworkBehaviour
         }
 
         Look();
-        Move();
+        if (!isSeated)
+        {
+            Move();
+        }
     }
 
     public static void SetCursorReleased(bool released)
@@ -115,13 +128,123 @@ public class PlayerController : NetworkBehaviour
         Cursor.visible = released;
     }
 
+    public bool TryRequestStand()
+    {
+        if (!isLocalPlayer || !isSeated)
+        {
+            return false;
+        }
+
+        CmdStand();
+        return true;
+    }
+
+    [Server]
+    public bool TrySitServer(NetworkChairSeat seat)
+    {
+        if (!NetworkServer.active || isSeated || seat == null || !seat.TryOccupyServer(netIdentity))
+        {
+            return false;
+        }
+
+        activeSeat = seat;
+        isSeated = true;
+        verticalVelocity = 0f;
+        ApplySeatPose(seat.SeatPosition, seat.SeatRotation);
+        TargetApplyPose(connectionToClient, seat.SeatPosition, seat.SeatRotation, true);
+        return true;
+    }
+
+    [Command]
+    private void CmdStand()
+    {
+        StandServer();
+    }
+
+    [Server]
+    private void StandServer()
+    {
+        if (!isSeated || activeSeat == null)
+        {
+            return;
+        }
+
+        Vector3 standPosition = activeSeat.StandPosition;
+        Quaternion standRotation = activeSeat.SeatRotation;
+        activeSeat.ReleaseServer(netIdentity);
+        activeSeat = null;
+        isSeated = false;
+        verticalVelocity = -2f;
+        ApplySeatPose(standPosition, standRotation);
+        TargetApplyPose(connectionToClient, standPosition, standRotation, false);
+    }
+
+    [TargetRpc]
+    private void TargetApplyPose(
+        NetworkConnectionToClient _,
+        Vector3 position,
+        Quaternion rotation,
+        bool seated)
+    {
+        isSeated = seated;
+        ApplySeatPose(position, rotation);
+        SetSeatedLocally(seated);
+    }
+
+    private void ApplySeatPose(Vector3 position, Quaternion rotation)
+    {
+        bool wasEnabled = characterController != null && characterController.enabled;
+        if (wasEnabled)
+        {
+            characterController.enabled = false;
+        }
+
+        transform.SetPositionAndRotation(position, rotation);
+
+        if (characterController != null)
+        {
+            characterController.enabled = !isSeated && (isLocalPlayer || isServer);
+        }
+    }
+
+    private void OnSeatedChanged(bool _, bool seated)
+    {
+        SetSeatedLocally(seated);
+    }
+
+    private void SetSeatedLocally(bool seated)
+    {
+        if (animator != null)
+        {
+            animator.SetFloat(SpeedParameter, 0f);
+        }
+
+        if (characterController != null)
+        {
+            characterController.enabled = !seated && (isLocalPlayer || isServer);
+        }
+    }
+
+    private void RefreshSeatedState()
+    {
+        SetSeatedLocally(isSeated);
+    }
+
     private void Look()
     {
         Vector2 mouseDelta = GetMouseDelta();
         float mouseX = mouseDelta.x * mouseSensitivity;
         float mouseY = mouseDelta.y * mouseSensitivity;
 
-        transform.Rotate(Vector3.up * mouseX);
+        if (isSeated)
+        {
+            seatedCameraYaw = Mathf.Clamp(seatedCameraYaw + mouseX, -70f, 70f);
+        }
+        else
+        {
+            seatedCameraYaw = 0f;
+            transform.Rotate(Vector3.up * mouseX);
+        }
 
         if (playerCamera == null)
         {
@@ -129,7 +252,7 @@ public class PlayerController : NetworkBehaviour
         }
 
         cameraPitch = Mathf.Clamp(cameraPitch - mouseY, -80f, 80f);
-        playerCamera.transform.localRotation = Quaternion.Euler(cameraPitch, 0f, 0f);
+        playerCamera.transform.localRotation = Quaternion.Euler(cameraPitch, seatedCameraYaw, 0f);
 
         if (animator != null)
         {
@@ -180,11 +303,49 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        ApplySeatedIk();
+
         float lookPitch = animator.GetFloat(LookPitchParameter);
         Vector3 lookDirection = Quaternion.AngleAxis(lookPitch, transform.right) * transform.forward;
 
         animator.SetLookAtWeight(1f, 0.2f, 0.85f, 0.35f, 0.5f);
         animator.SetLookAtPosition(head.position + lookDirection * 10f);
+    }
+
+    private void ApplySeatedIk()
+    {
+        float weight = isSeated ? 1f : 0f;
+        animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, weight);
+        animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, weight);
+        animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, weight);
+        animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, weight);
+
+        if (!isSeated)
+        {
+            return;
+        }
+
+        animator.bodyPosition = transform.TransformPoint(new Vector3(0f, 0.58f, 0f));
+        Quaternion footRotation = transform.rotation;
+        animator.SetIKPosition(
+            AvatarIKGoal.LeftFoot,
+            transform.TransformPoint(new Vector3(-0.16f, 0.05f, 0.42f)));
+        animator.SetIKRotation(AvatarIKGoal.LeftFoot, footRotation);
+        animator.SetIKPosition(
+            AvatarIKGoal.RightFoot,
+            transform.TransformPoint(new Vector3(0.16f, 0.05f, 0.42f)));
+        animator.SetIKRotation(AvatarIKGoal.RightFoot, footRotation);
+    }
+
+    public override void OnStopServer()
+    {
+        if (activeSeat != null)
+        {
+            activeSeat.ReleaseServer(netIdentity);
+            activeSeat = null;
+        }
+
+        base.OnStopServer();
     }
 
     private Vector2 GetMoveInput()
