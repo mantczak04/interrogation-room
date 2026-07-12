@@ -18,7 +18,7 @@ Istnieje zatwierdzony przez użytkownika dokument `docs/design/graphics/ART-DIRE
 ## Zadania
 
 - [ ] [CZŁOWIEK] Zebrać moodboard (8–15 obrazów): L.A. Noire, Interrogation (2019), Twelve Minutes, Twin Peaks (pokój przesłuchań), zdjęcia komisariatów lat 80–90. Zapisać linki/pliki w `ART-DIRECTION.md`.
-- [ ] [AGENT] Utworzyć szkielet `docs/design/graphics/ART-DIRECTION.md` z sekcjami: Styl, Paleta, Światło, Materiały, Postacie, Zakazy.
+- [x] [AGENT] Utworzyć szkielet `docs/design/graphics/ART-DIRECTION.md` z sekcjami: Styl, Paleta, Światło, Materiały, Postacie, Zakazy.
 - [ ] [AGENT] Zaproponować paletę jako konkretne wartości HEX + temperatury barwowe świateł. Punkt startowy:
   - świetlówki: `#C8E0C0`, ~4500K, lekko zgniłozielone;
   - lampa przesłuchań: `#FFB868`, ~3000K wolfram;
