@@ -32,6 +32,9 @@ public class PlayerController : NetworkBehaviour
     [Header("Characters")]
     [SerializeField] private CharacterVisualDefinition[] characterVisuals = Array.Empty<CharacterVisualDefinition>();
 
+    [Header("Seated Pose")]
+    [SerializeField, Range(-0.2f, 0.2f)] private float seatedHipsBackOffset = 0.06f;
+
     [Header("Third Person Camera")]
     [SerializeField, Min(0.5f)] private float minZoomDistance = 1f;
     [SerializeField, Min(1f)] private float maxZoomDistance = 6f;
@@ -55,6 +58,8 @@ public class PlayerController : NetworkBehaviour
     private bool isThirdPerson;
     private float thirdPersonDistance = 2.5f;
     private Vector3 firstPersonCameraLocalPos;
+    private GameObject activeModelRoot;
+    private Vector3 activeModelRootBaseLocalPos;
 
     [SyncVar(hook = nameof(OnSeatedChanged))]
     private bool isSeated;
@@ -438,6 +443,9 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        activeModelRoot = selected.modelRoot;
+        activeModelRootBaseLocalPos = selected.modelRoot.transform.localPosition;
+
         if (animator != null)
         {
             animator.runtimeAnimatorController = selected.animatorController;
@@ -665,6 +673,43 @@ public class PlayerController : NetworkBehaviour
     private void SetMovementAnimationIdle()
     {
         animator?.SetFloat(SpeedParameter, 0f);
+    }
+
+    private void LateUpdate()
+    {
+        AlignSeatedHipsToSeat();
+    }
+
+    /// <summary>
+    /// Every character's sit clip carries a different hips offset from the
+    /// animation root, so seating the root at the seat centre leaves some
+    /// characters perched in front of the chair. After the animator poses the
+    /// skeleton, shift the visual model so the hips land on the seat, just in
+    /// front of the backrest — works for any character and any sit clip.
+    /// </summary>
+    private void AlignSeatedHipsToSeat()
+    {
+        if (activeModelRoot == null)
+        {
+            return;
+        }
+
+        if (!isSeated || isDead || animator == null || !animator.isHuman)
+        {
+            activeModelRoot.transform.localPosition = activeModelRootBaseLocalPos;
+            return;
+        }
+
+        Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+        if (hips == null)
+        {
+            return;
+        }
+
+        Vector3 desired = transform.position - transform.forward * seatedHipsBackOffset;
+        Vector3 delta = desired - hips.position;
+        delta.y = 0f;
+        activeModelRoot.transform.position += delta;
     }
 
     private void OnAnimatorIK(int layerIndex)
