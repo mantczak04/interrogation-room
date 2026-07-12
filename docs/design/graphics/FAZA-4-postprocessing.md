@@ -1,6 +1,6 @@
 # Faza 4 — Post-processing i kamera
 
-- **Status:** Open
+- **Status:** In progress
 - **Branch roboczy pakietu:** `gfx/graphics-overhaul`
 - **Branch historyczny fazy:** `gfx/faza-4-postprocessing`
 - **Zależności:** Faza 0 (`Approved` na `gfx/graphics-overhaul` lub `Done` na `main`)

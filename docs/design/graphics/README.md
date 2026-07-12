@@ -12,7 +12,7 @@ Statusy: `Open` → `In progress` → `Review` → `Approved` → `Done`. `Appro
 | 1. Art direction | [FAZA-1-art-direction.md](./FAZA-1-art-direction.md) | `gfx/faza-1-art-direction` | Approved |
 | 2. Oświetlenie | [FAZA-2-oswietlenie.md](./FAZA-2-oswietlenie.md) | `gfx/graphics-overhaul` | Open |
 | 3. Materiały i kit | [FAZA-3-materialy-kit.md](./FAZA-3-materialy-kit.md) | `gfx/faza-3-materialy-kit` | Open |
-| 4. Post-processing | [FAZA-4-postprocessing.md](./FAZA-4-postprocessing.md) | `gfx/graphics-overhaul` | Open |
+| 4. Post-processing | [FAZA-4-postprocessing.md](./FAZA-4-postprocessing.md) | `gfx/graphics-overhaul` | In progress |
 | 5. Postacie | [FAZA-5-postacie.md](./FAZA-5-postacie.md) | `gfx/faza-5-postacie` | Open |
 | 6. VFX i mikrodetale | [FAZA-6-vfx-detale.md](./FAZA-6-vfx-detale.md) | `gfx/faza-6-vfx-detale` | Open |
 | 7. Optymalizacja | [FAZA-7-optymalizacja.md](./FAZA-7-optymalizacja.md) | `gfx/faza-7-optymalizacja` | Open |
