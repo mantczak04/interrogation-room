@@ -1,6 +1,6 @@
 # Faza 0 — Fundamenty techniczne URP
 
-- **Status:** In progress
+- **Status:** Review
 - **Branch:** `gfx/faza-0-fundamenty-urp`
 - **Zależności:** brak (pierwsza faza)
 - **Szacowany czas:** 1–2 dni pracy agenta
@@ -54,10 +54,10 @@ Wszystkie zmiany pipeline/renderer wykonuj przez Unity MCP (`manage_asset`, `man
 
 ### 0.5 Weryfikacja
 
-- [ ] Brak błędów w Unity Console (najpierw `Error`, potem `Warning` z filtrem, mały limit).
-- [ ] Otwórz `Room.unity`, wykonaj zrzuty „po" do `Assets/Screenshots/gfx_faza0_room.png` (Game view, ta sama pozycja kamery co istniejące zrzuty `sit_check_*`, jeśli to możliwe).
-- [ ] Zapisz zmodyfikowane assety/sceny przez Unity MCP; `git diff --check`.
-- [ ] Zaktualizuj statusy: ten plik + tabela w `README.md` → `Review`.
+- [x] Brak błędów w Unity Console (najpierw `Error`, potem `Warning` z filtrem, mały limit).
+- [x] Otwórz `Room.unity`, wykonaj zrzuty „po” do `Assets/Screenshots/gfx_faza0_room.png` (Game view, ta sama pozycja kamery co istniejące zrzuty `sit_check_*`, jeśli to możliwe).
+- [x] Zapisz zmodyfikowane assety/sceny przez Unity MCP; `git diff --check`.
+- [x] Zaktualizuj statusy: ten plik + tabela w `README.md` → `Review`.
 
 ## Poza zakresem tej fazy
 
@@ -72,3 +72,10 @@ Decal Renderer Feature (Faza 3), zmiany świateł w scenie (Faza 2), post-proces
 - Quality Settings: `Mobile` → `Mobile_RPAsset`, `PC` → `PC_RPAsset`; aktywny i domyślny poziom dla bieżącego celu Standalone: `PC`.
 - Color Space: Linear (zweryfikowane, bez zmiany).
 - Dostępne w tej wersji URP ustawienie `Conservative Enclosing Sphere` na `PC_RPAsset` było już włączone.
+
+## Wynik weryfikacji
+
+- Kompilacja/refresh Unity zakończone; końcowy odczyt Console: 0 błędów, 0 ostrzeżeń z filtrem `render`.
+- `Room.unity` zapisana przez Unity MCP i zweryfikowana przez ograniczony odczyt hierarchii (25 obiektów głównych).
+- Zrzut Game View: `Assets/Screenshots/gfx_faza0_room.png`; użyto dostępnej `MapOverviewCamera`, ponieważ po uruchomieniu sceny nie była dostępna kamera gracza z kadrów `sit_check_*`.
+- `git diff --check`: bez błędów.
