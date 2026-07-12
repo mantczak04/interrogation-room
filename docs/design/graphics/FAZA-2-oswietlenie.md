@@ -126,6 +126,22 @@ Ocena: wszystkie pokoje OK, ale sala wspólna (pokój startowy) zbyt zielona wzg
 - [x] Kanapy — 2 sloty siedzenia: usunięty `NetworkChairSeat`+`NetworkIdentity` z roota (siadanie wrzucało gracza w podłokietnik); dodane dzieci `Siedzisko_L`/`Siedzisko_P` (local x ±0.42) z własnym BoxColliderem, `NetworkChairSeat` (seatSurfaceHeight 0.35, backrestOffset 0.30) i `NetworkIdentity`; collider roota zwężony do oparcia, żeby raycast interakcji trafiał w sloty.
 - [x] Krzesła dosunięte do stołów (szpara 0.12 m od krawędzi blatu, siedzisko częściowo pod blatem, bez przecinania geometrii), obroty przodem do blatu.
 
+### Przegląd użytkownika #4 (2026-07-12, ze zrzutami z gry)
+
+Zgłoszenie: hitbox kanapy zupełnie gdzie indziej niż tekstura (siadanie „na skraju"), fotele w ogóle nie przy stołach, błędne tekstury na blatach stołów i stolikach.
+
+Diagnoza — dwie niezależne przyczyny:
+
+1. **Pivoty meshy Kenneya są w rogu modelu, nie w środku** (np. `loungeSofa`: mesh zajmuje lokalnie x∈[0, 1.96], z∈[0, 0.82]; `tableRound`: środek wizualny +0.69/+0.80 od pivota). Poprzednie poprawki ustawiały pozycje i collidery względem pivotów, więc wizualnie wszystko było rozjechane ~0.7–1.4 m względem hitboxów (kanapa: collidery siedzisk ~1 m od widocznego mesha).
+2. **„Błędne tekstury" = brak UV2 w FBX Kenneya.** Modele FurnitureKit nie mają lightmap UV, a importery miały `Generate Lightmap UVs = OFF`; lightmapper pakował je po paletowych, nakładających się UV0 — `lightmapScaleOffset` schodził do ~0.001, cały mebel próbkował pojedyncze texele atlasu i renderował losowe plamy (ciemny „romb" na blatach, rude łaty na kanapach).
+
+- [x] Cały układ sali przeliczony po **wizualnych** granicach meshy (Renderer.bounds), nie pivotach: kącik TV w osi z=3.00 (szafka, TV na szafce, stolik, kanapa naprzeciw), stoły wizualnie na (−3.00, 6.50) i (3.00, 6.50), `Sala_SofaE` + stolik E w osi z=4.13.
+- [x] Collidery kanap odbudowane w lokalnej przestrzeni mesha: oparcie (0.98, 0.45, 0.73) 1.96×0.90×0.18 + dwa podłokietniki; sloty `Siedzisko_L/P` przeniesione na realne poduszki: local (0.58, 0, 0.35) i (1.38, 0, 0.35), collider 0.78×0.60×0.64.
+- [x] Krzesła rozstawione względem wizualnego środka stołu (siedzisko 10 cm pod blatem), pivot krzesła przeliczony z offsetu mesha (+0.2, +0.2).
+- [x] Weryfikacja: delta środka renderera i collidera ≤ 0.01 m dla całego umeblowania sali.
+- [x] `Generate Lightmap UVs = ON` w importerach 29 FBX z `Assets/ThirdParty/Kenney/FurnitureKit/` używanych przez statyczne renderery bez UV2 (zmiana przez `ModelImporter` API, nie ręcznie w `.meta`).
+- [x] Rebake lightmap po przestawieniu i reimporcie (usuwa plamy na blatach, kanapach i pozostałych meblach we wszystkich pokojach).
+
 ### Kwestia projektowa (poza Fazą 2): latarka na F
 
 Pomysł użytkownika: skoro ciemno, może dać graczom latarkę (toggle F). To decyzja gameplayowa, nie graficzna — latarka pozwala prześwietlać ciemne strefy prywatności (ADR-0009): wzmacnia `Detektywa`, osłabia szeptanie po kątach; zmienia też czytelność sylwetek. Rekomendacja: najpierw naprawić P1 („ciemno ≠ czarno"), a latarkę wpisać do `docs/design/OPEN-QUESTIONS.md` jako odroczoną decyzję — nie implementować w ramach grafiki.
