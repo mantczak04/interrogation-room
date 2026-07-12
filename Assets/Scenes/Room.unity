@@ -5366,8 +5366,6 @@ GameObject:
   - component: {fileID: 323081828}
   - component: {fileID: 323081827}
   - component: {fileID: 323081826}
-  - component: {fileID: 323081830}
-  - component: {fileID: 323081829}
   m_Layer: 0
   m_Name: Sala_SofaE
   m_TagString: Untagged
@@ -5388,7 +5386,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 437238201}
+  - {fileID: 751445716}
+  - {fileID: 426898408}
   m_Father: {fileID: 1617923463}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &323081826
@@ -5410,8 +5409,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.96, y: 0.9200001, z: 0.8200002}
-  m_Center: {x: 0.98, y: 0.46000004, z: 0.4100001}
+  m_Size: {x: 1.96, y: 0.9, z: 0.26}
+  m_Center: {x: 0, y: 0.45, z: 0.28}
 --- !u!23 &323081827
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5470,48 +5469,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 323081824}
   m_Mesh: {fileID: -7960909975771927058, guid: c600c25cc034e4348bea967b810b43a5, type: 3}
---- !u!114 &323081829
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 323081824}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0
-  seatPoint: {fileID: 437238201}
-  standPoint: {fileID: 0}
-  seatSurfaceHeight: 0.35
-  backrestOffset: 0.15
-  seatHeight: 0.02
-  standDistance: 0.75
-  standObstructionMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  interactionPrompt: Sit down
---- !u!114 &323081830
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 323081824}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
-  sceneId: 3950593982
-  _assetId: 0
-  serverOnly: 0
-  visibility: 0
-  hasSpawned: 0
 --- !u!1001 &324620552
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6997,6 +6954,103 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 426094959}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &426898407
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 426898408}
+  - component: {fileID: 426898411}
+  - component: {fileID: 426898410}
+  - component: {fileID: 426898409}
+  m_Layer: 0
+  m_Name: Siedzisko_P
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &426898408
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 426898407}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+  m_LocalPosition: {x: 0.42, y: 0, z: -0.08}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 323081825}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &426898409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 426898407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.35
+  backrestOffset: 0.3
+  seatHeight: 0.02
+  standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  interactionPrompt: Sit down
+--- !u!114 &426898410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 426898407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 414793157
+  _assetId: 0
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!65 &426898411
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 426898407}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.92, y: 0.62, z: 0.66}
+  m_Center: {x: 0, y: 0.3, z: 0}
 --- !u!1001 &428142785
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7122,37 +7176,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2026307427}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &437238200
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 437238201}
-  m_Layer: 0
-  m_Name: SeatPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &437238201
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 437238200}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
-  m_LocalPosition: {x: 0, y: 0, z: 0.1}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 323081825}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &439931338
 PrefabInstance:
@@ -8595,9 +8618,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 493481615}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: -1}
-  m_LocalPosition: {x: -0.000000014901161, y: 0.49, z: -0.131}
-  m_LocalScale: {x: 1.0799998, y: 0.58, z: 0.99999976}
+  m_LocalRotation: {x: -0.0000000035816459, y: 0.9966374, z: -0.081938505, w: -0.000000043564405}
+  m_LocalPosition: {x: 0, y: 0.66, z: 0.049}
+  m_LocalScale: {x: 1.24, y: 0.44, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2126119574}
@@ -9841,7 +9864,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -3.95
+      value: -3.85
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -13387,6 +13410,103 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c7c0c5bc5b0ea3ac4a90665856f5146c, type: 3}
   m_PrefabInstance: {fileID: 744749140}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &751445715
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 751445716}
+  - component: {fileID: 751445719}
+  - component: {fileID: 751445718}
+  - component: {fileID: 751445717}
+  m_Layer: 0
+  m_Name: Siedzisko_L
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &751445716
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751445715}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+  m_LocalPosition: {x: -0.42, y: 0, z: -0.08}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 323081825}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &751445717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751445715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.35
+  backrestOffset: 0.3
+  seatHeight: 0.02
+  standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  interactionPrompt: Sit down
+--- !u!114 &751445718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751445715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 343479593
+  _assetId: 0
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!65 &751445719
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751445715}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.92, y: 0.62, z: 0.66}
+  m_Center: {x: 0, y: 0.3, z: 0}
 --- !u!1 &751531927
 GameObject:
   m_ObjectHideFlags: 0
@@ -18417,7 +18537,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 7.55
+      value: 7.42
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -20465,11 +20585,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 96f7e08d3bdcc1b4ba71beb6abdec4b5, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.019999988
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 96f7e08d3bdcc1b4ba71beb6abdec4b5, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.8000002
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 96f7e08d3bdcc1b4ba71beb6abdec4b5, type: 3}
       propertyPath: m_LocalRotation.w
@@ -22672,37 +22792,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1229418939}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &1239158421
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1239158422}
-  m_Layer: 0
-  m_Name: SeatPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1239158422
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1239158421}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
-  m_LocalPosition: {x: 0, y: 0, z: 0.1}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1530327064}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1240463047
 GameObject:
   m_ObjectHideFlags: 0
@@ -25468,7 +25557,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.05
+      value: 2.15
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -27733,17 +27822,14 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: c600c25cc034e4348bea967b810b43a5, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1239158422}
+      addedObject: {fileID: 2134756762}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: c600c25cc034e4348bea967b810b43a5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1782390478}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c600c25cc034e4348bea967b810b43a5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1530327066}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c600c25cc034e4348bea967b810b43a5, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1530327070}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c600c25cc034e4348bea967b810b43a5, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1530327069}
   m_SourcePrefab: {fileID: 100100000, guid: c600c25cc034e4348bea967b810b43a5, type: 3}
 --- !u!4 &1530327064 stripped
 Transform:
@@ -27774,50 +27860,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.96, y: 0.9200001, z: 0.8200002}
-  m_Center: {x: 0.98, y: 0.46000004, z: 0.4100001}
---- !u!114 &1530327069
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1530327065}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0
-  seatPoint: {fileID: 1239158422}
-  standPoint: {fileID: 0}
-  seatSurfaceHeight: 0.35
-  backrestOffset: 0.15
-  seatHeight: 0.02
-  standDistance: 0.75
-  standObstructionMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  interactionPrompt: Sit down
---- !u!114 &1530327070
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1530327065}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
-  sceneId: 3175446094
-  _assetId: 4242662242
-  serverOnly: 0
-  visibility: 0
-  hasSpawned: 0
+  m_Size: {x: 1.96, y: 0.9, z: 0.26}
+  m_Center: {x: 0, y: 0.45, z: 0.28}
 --- !u!1 &1532118366
 GameObject:
   m_ObjectHideFlags: 0
@@ -33544,6 +33588,103 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c7c0c5bc5b0ea3ac4a90665856f5146c, type: 3}
   m_PrefabInstance: {fileID: 1779888467}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1782390477
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1782390478}
+  - component: {fileID: 1782390481}
+  - component: {fileID: 1782390480}
+  - component: {fileID: 1782390479}
+  m_Layer: 0
+  m_Name: Siedzisko_P
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1782390478
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782390477}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+  m_LocalPosition: {x: 0.42, y: 0, z: -0.08}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1530327064}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1782390479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782390477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.35
+  backrestOffset: 0.3
+  seatHeight: 0.02
+  standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  interactionPrompt: Sit down
+--- !u!114 &1782390480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782390477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 1296815088
+  _assetId: 0
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!65 &1782390481
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782390477}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.92, y: 0.62, z: 0.66}
+  m_Center: {x: 0, y: 0.3, z: 0}
 --- !u!1 &1790509473
 GameObject:
   m_ObjectHideFlags: 0
@@ -36880,7 +37021,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.95
+      value: 3.85
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -39593,7 +39734,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 4e0b67a79f858704d801b955aec1f8fc, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.6
+      value: -5.9
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4e0b67a79f858704d801b955aec1f8fc, type: 3}
       propertyPath: m_LocalPosition.y
@@ -39605,7 +39746,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4e0b67a79f858704d801b955aec1f8fc, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.7071068
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4e0b67a79f858704d801b955aec1f8fc, type: 3}
       propertyPath: m_LocalRotation.x
@@ -40042,6 +40183,103 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!1 &2134756761
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2134756762}
+  - component: {fileID: 2134756765}
+  - component: {fileID: 2134756764}
+  - component: {fileID: 2134756763}
+  m_Layer: 0
+  m_Name: Siedzisko_L
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2134756762
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2134756761}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+  m_LocalPosition: {x: -0.42, y: 0, z: -0.08}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1530327064}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2134756763
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2134756761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451d5ff93113b950faf01686a98645cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkChairSeat
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  seatPoint: {fileID: 0}
+  standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.35
+  backrestOffset: 0.3
+  seatHeight: 0.02
+  standDistance: 0.75
+  standObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  interactionPrompt: Sit down
+--- !u!114 &2134756764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2134756761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 2214305462
+  _assetId: 0
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!65 &2134756765
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2134756761}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.92, y: 0.62, z: 0.66}
+  m_Center: {x: 0, y: 0.3, z: 0}
 --- !u!1 &2136846818
 GameObject:
   m_ObjectHideFlags: 0
@@ -40349,7 +40587,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 5.45
+      value: 5.58
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w

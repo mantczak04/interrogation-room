@@ -117,6 +117,15 @@ Ocena: wszystkie pokoje OK, ale sala wspólna (pokój startowy) zbyt zielona wzg
 - [x] Propsy sali: oba stoły (`Sala_StolW/E`) były zapadnięte 0.54 m w podłogę (min.y = −0.52) — podniesione na 0.56, blat na ~0.75 m; krzesła stały wewnątrz obrysów stołów — rozstawione logicznie wokół stołów (W: 3 krzesła, E: 2), tyłem od stołu wg konwencji z pokoju przesłuchań; stolik kawowy był wbity w kanapę — przesunięty między kanapę a szafkę TV; kącik TV wyrównany do osi telewizora (z = 3.0); drugi stolik kawowy dosunięty przed `Sala_SofaE`.
 - [x] Kanapy (`Sala_Sofa`, `Sala_SofaE`): dodany `NetworkChairSeat` + `NetworkIdentity` + child `SeatPoint` (konfiguracja wg krzeseł; seatSurfaceHeight 0.35, backrestOffset 0.15) — na kanapach można siedzieć.
 
+### Przegląd użytkownika #3 (2026-07-12, ze zrzutami z gry)
+
+- [x] Jasność globalnie +15%: `PosterunekPostFX` Post Exposure 0 → **0.2 EV** (świadome odstępstwo od zasady „ekspozycję reguluje światło" z Fazy 4 — na prośbę użytkownika o globalne podbicie).
+- [x] Winieta (czarny obrys/“rybie oko"): Intensity 0.30 → **0.38**.
+- [x] Telewizor — właściwa przyczyna „odlepionego ekranu": korpus `Sala_TV` (mesh `televisionModern`) stał **tyłem do pokoju** (rotY 270; front mesha to strona lokalnego +Z), a quad ekranu wisiał po stronie pokoju przed obudową. Dodatkowo panel mesha jest pochylony ~9.4°. Poprawka: rotY=90 (front do pokoju), quad dopasowany do płaszczyzny panelu z wierzchołków mesha (localPos z=+0.049, tilt 9.4°, flip Y, skala 1.24×0.44). TV wycentrowany na szafce, szafka dosunięta pod TV (z=3.0).
+- [x] Kącik TV wyrównany: szafka (−5.90, 3.00), TV na szafce, kanapa (−4.01, 3.00) i stolik (−5.00, 3.00) w jednej osi z telewizorem.
+- [x] Kanapy — 2 sloty siedzenia: usunięty `NetworkChairSeat`+`NetworkIdentity` z roota (siadanie wrzucało gracza w podłokietnik); dodane dzieci `Siedzisko_L`/`Siedzisko_P` (local x ±0.42) z własnym BoxColliderem, `NetworkChairSeat` (seatSurfaceHeight 0.35, backrestOffset 0.30) i `NetworkIdentity`; collider roota zwężony do oparcia, żeby raycast interakcji trafiał w sloty.
+- [x] Krzesła dosunięte do stołów (szpara 0.12 m od krawędzi blatu, siedzisko częściowo pod blatem, bez przecinania geometrii), obroty przodem do blatu.
+
 ### Kwestia projektowa (poza Fazą 2): latarka na F
 
 Pomysł użytkownika: skoro ciemno, może dać graczom latarkę (toggle F). To decyzja gameplayowa, nie graficzna — latarka pozwala prześwietlać ciemne strefy prywatności (ADR-0009): wzmacnia `Detektywa`, osłabia szeptanie po kątach; zmienia też czytelność sylwetek. Rekomendacja: najpierw naprawić P1 („ciemno ≠ czarno"), a latarkę wpisać do `docs/design/OPEN-QUESTIONS.md` jako odroczoną decyzję — nie implementować w ramach grafiki.
