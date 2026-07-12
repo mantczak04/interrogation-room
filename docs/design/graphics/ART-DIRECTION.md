@@ -66,12 +66,49 @@ Faza 2 może dobrać intensywności, zasięgi i technikę bake/mixed, ale nie po
 
 ## Materiały
 
-Do opracowania.
+Materiały są fizycznie wiarygodne, lecz uproszczone do cech rozpoznawalnych z dystansu rozgrywki. Najpierw czyta się rodzaj powierzchni i stopień zużycia, dopiero potem drobny detal.
+
+- Docelowa texel density środowiska to **512 px/m**. Odstępstwa dla małych rekwizytów fabularnych lub powierzchni oglądanych z bliska wymagają jawnego uzasadnienia.
+- Roughness zawsze zawiera wariację w skali makro i mikro. Jednolita wartość na całej powierzchni jest niedozwolona, nawet dla pozornie prostego plastiku czy metalu.
+- Zużycie wynika z użycia: dotykane krawędzie, okolice uchwytów, ciągi komunikacyjne, kurz w zagłębieniach. Nie nakładać jednakowego grunge'u na każdy obiekt.
+- Metalness rozdziela metal od niemetalu; zabrudzenie lub farba na metalu pozostają niemetaliczne. Materiał nie może być „trochę metaliczny” wyłącznie dla atrakcyjnego połysku.
+- Duże powierzchnie otrzymują łagodną zmianę tonu, roughness lub zabrudzenia, aby nie wyglądały syntetycznie, ale nie mogą tworzyć szumu konkurującego z postaciami.
+- Najjaśniejsza neutralna powierzchnia to `#E8E8E8`, a najciemniejsza `#0A0A0A`. Czyste `#FFFFFF` i `#000000` są zabronione.
+- Emisja oznacza faktyczne źródło światła lub komunikat. Nie służy do przypadkowego „upiększania” materiału.
+- Powtarzalne elementy kitu muszą zachować wspólną skalę, paletę i poziom zużycia. Warianty buduje się rozmieszczeniem śladów, kolorem wtórnym i detalem, nie zmianą języka materiałowego.
 
 ## Postacie
 
-Do opracowania.
+Postacie są absurdalne w formie, ale oświetlane i osadzane w świecie tak samo poważnie jak ludzie w kinowym kryminale. Ich czytelność wynika z sylwetki, proporcji i animacji całego ciała.
+
+- Sylwetki muszą być rozróżnialne w ciemności, pod światło i przez szybę wenecką. Test akceptacyjny używa jednolitego czarnego wypełnienia bez tekstur.
+- Każda postać ma inny dominujący obrys: Jak — szeroki górny kontur z rogami; Małpa — długie kończyny i pochylona linia; Wieprz — niski, masywny korpus z czytelnym pyskiem; Karton — kanciasta, prostokątna bryła.
+- Czytelność ma pierwszeństwo przed detalem. Drobne akcesoria nie mogą być jedyną cechą odróżniającą postać.
+- Brak riggu mimiki jest świadomą zasadą stylu. Sztywne pyski i maski budują absurd; emocję przenoszą poza, przechylenie głowy, gest, tempo i bezruch.
+- Oczy i najważniejsze płaszczyzny pyska lub maski muszą pozostać czytelne w motywach świetlnych z sekcji „Światło”, bez samopodświetlenia.
+- Paleta postaci może tworzyć kontrast z pomieszczeniem, ale nie może używać sygnałowej czerwieni `#C22E28` jako dużej dominującej plamy.
+- Wygląd, materiał i kolor postaci nigdy nie kodują tajnej roli, `Alibi`, celu ani wyniku `Rundy`. Te same modele pozostają neutralne względem informacji gameplayowych.
 
 ## Zakazy
 
-Do opracowania.
+- Fotorealizm, skanowy nadmiar detalu i szum tekstur.
+- Cel-shading, komiksowy kontur oraz kreskówkowe światło środowiska.
+- Żartobliwe dekoracje tłumaczące absurd postaci; posterunek pozostaje szczery i wiarygodny.
+- Globalny zielony filtr. Zieleń pochodzi ze świetlówek i materiałów, a skóra, papier oraz wolfram zachowują własną barwę.
+- Czyste biele, czyste czernie, jednolity roughness i nieuzasadniona emisja.
+- Neonowe akcenty bez funkcji oraz dekoracyjne użycie czerwieni `#C22E28`.
+- Mrok ukrywający gracza, drzwi, drogę przejścia lub istotny obiekt.
+- Bloom przepalający kształt lampy, twarz, maskę albo komunikat UI.
+- Materiałowe zabrudzenie nakładane równomiernie na wszystkie krawędzie i powierzchnie.
+- Cechy wizualne zdradzające tajną rolę lub prywatną informację gracza.
+
+## Kontrola spójności
+
+Każdy art pass w Fazach 3, 5 i 6 powinien cytować ten dokument oraz odpowiedzieć na cztery pytania:
+
+1. Czy hierarchia kadru prowadzi najpierw do gracza lub interakcji?
+2. Czy dominujący motyw i kontrapunkt temperaturowy odpowiadają sekcji „Światło”?
+3. Czy materiały zachowują skalę 512 px/m, wariację roughness i granice neutralnej bieli/czerni?
+4. Czy postać pozostaje rozpoznawalna jako czarna sylwetka i nie zdradza informacji gameplayowej?
+
+Zmiana kierunku estetycznego wymaga aktualizacji tego dokumentu, a nie lokalnego wyjątku ukrytego w scenie, materiale lub modelu.

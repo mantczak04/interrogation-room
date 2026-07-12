@@ -25,8 +25,8 @@ Istnieje zatwierdzony przez użytkownika dokument `docs/design/graphics/ART-DIRE
   - noc za oknem: `#3A4A6B`, ~7500K;
   - akcent gameplayowy (UI/`Egzekucja`): jeden kolor sygnałowy, np. `#C22E28`.
 - [x] [AGENT] Spisać motywy świetlne per pomieszczenie (pokój przesłuchań, korytarz, archiwum, pokój obserwacyjny) — wejście dla Fazy 2.
-- [ ] [AGENT] Spisać zasady materiałowe — wejście dla Fazy 3: texel density 512 px/m, roughness zawsze z wariacją (nigdy jednolita), zakaz czystych bieli (max `#E8E8E8`) i czystych czerni (min `#0A0A0A`).
-- [ ] [AGENT] Spisać zasady postaci — wejście dla Fazy 5: sylwetki rozróżnialne w ciemności i przez szybę wenecką, brak riggu mimiki (sztywne pyski/maski — celowy absurd), czytelność > detal.
+- [x] [AGENT] Spisać zasady materiałowe — wejście dla Fazy 3: texel density 512 px/m, roughness zawsze z wariacją (nigdy jednolita), zakaz czystych bieli (max `#E8E8E8`) i czystych czerni (min `#0A0A0A`).
+- [x] [AGENT] Spisać zasady postaci — wejście dla Fazy 5: sylwetki rozróżnialne w ciemności i przez szybę wenecką, brak riggu mimiki (sztywne pyski/maski — celowy absurd), czytelność > detal.
 - [ ] [CZŁOWIEK] Przegląd i zatwierdzenie dokumentu. Dopiero po zatwierdzeniu Fazy 3 i 5 mogą ruszyć.
 
 ## Weryfikacja
