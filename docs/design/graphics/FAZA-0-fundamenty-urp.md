@@ -33,24 +33,24 @@ Wszystkie zmiany pipeline/renderer wykonuj przez Unity MCP (`manage_asset`, `man
 
 ### 0.2 Konfiguracja PC (`PC_RPAsset` + `PC_Renderer`)
 
-- [ ] HDR: włączone, precision domyślna (R11G11B10).
-- [ ] Rendering Path na `PC_Renderer`: **Forward+** (dużo lokalnych świateł we wnętrzu bez limitu per-object).
-- [ ] Cienie: Shadow Distance 30 m (gra w całości we wnętrzu), Cascade Count 2, Main Light Shadow Resolution 4096, Additional Lights Shadow Atlas 4096, Soft Shadows ON (jakość High), Conservative Enclosed Space Culling ON jeśli dostępne.
-- [ ] MSAA: Disabled (antyaliasing zrobi kamera w Fazie 4 — SMAA/TAA; MSAA + SSAO to zbędny koszt).
-- [ ] Render Scale: 1.0.
-- [ ] LOD Cross Fade: ON.
-- [ ] Dodaj Renderer Feature **Screen Space Ambient Occlusion** do `PC_Renderer`: Method = Blue Noise, Intensity = 1.5, Radius = 0.3, Falloff Distance = 50, Downsample = OFF, After Opaque = OFF, Normal Quality = Medium.
+- [x] HDR: włączone, precision domyślna (R11G11B10).
+- [x] Rendering Path na `PC_Renderer`: **Forward+** (dużo lokalnych świateł we wnętrzu bez limitu per-object).
+- [x] Cienie: Shadow Distance 30 m (gra w całości we wnętrzu), Cascade Count 2, Main Light Shadow Resolution 4096, Additional Lights Shadow Atlas 4096, Soft Shadows ON (jakość High), Conservative Enclosed Space Culling ON jeśli dostępne.
+- [x] MSAA: Disabled (antyaliasing zrobi kamera w Fazie 4 — SMAA/TAA; MSAA + SSAO to zbędny koszt).
+- [x] Render Scale: 1.0.
+- [x] LOD Cross Fade: ON.
+- [x] Dodaj Renderer Feature **Screen Space Ambient Occlusion** do `PC_Renderer`: Method = Blue Noise, Intensity = 1.5, Radius = 0.3, Falloff Distance = 50, Downsample = OFF, After Opaque = OFF, Normal Quality = Medium.
 
 ### 0.3 Konfiguracja Mobile/Low (`Mobile_RPAsset` + `Mobile_Renderer`)
 
-- [ ] HDR: włączone (tonemapping w Fazie 4 musi działać na obu tierach).
-- [ ] Cienie: Shadow Distance 20 m, Cascade Count 1, Main Light Shadows 2048, Additional Lights Shadow Atlas 1024, Soft Shadows ON (Low).
-- [ ] Bez SSAO na `Mobile_Renderer`.
-- [ ] Render Scale: 1.0 (skalowanie w dół to decyzja Fazy 7).
+- [x] HDR: włączone (tonemapping w Fazie 4 musi działać na obu tierach).
+- [x] Cienie: Shadow Distance 20 m, Cascade Count 1, Main Light Shadows 2048, Additional Lights Shadow Atlas 1024, Soft Shadows ON (Low).
+- [x] Bez SSAO na `Mobile_Renderer`.
+- [x] Render Scale: 1.0 (skalowanie w dół to decyzja Fazy 7).
 
 ### 0.4 Quality tiers
 
-- [ ] Upewnij się, że istnieją co najmniej dwa poziomy Quality: „PC/High" → `PC_RPAsset`, „Low/Mobile" → `Mobile_RPAsset`; domyślny dla Standalone = PC/High. Popraw mapowanie, jeśli jest inne.
+- [x] Upewnij się, że istnieją co najmniej dwa poziomy Quality: „PC/High” → `PC_RPAsset`, „Low/Mobile” → `Mobile_RPAsset`; domyślny dla Standalone = PC/High. Popraw mapowanie, jeśli jest inne.
 
 ### 0.5 Weryfikacja
 
@@ -71,3 +71,4 @@ Decal Renderer Feature (Faza 3), zmiany świateł w scenie (Faza 2), post-proces
 - `Mobile_Renderer`: Forward+; brak Renderer Features.
 - Quality Settings: `Mobile` → `Mobile_RPAsset`, `PC` → `PC_RPAsset`; aktywny i domyślny poziom dla bieżącego celu Standalone: `PC`.
 - Color Space: Linear (zweryfikowane, bez zmiany).
+- Dostępne w tej wersji URP ustawienie `Conservative Enclosing Sphere` na `PC_RPAsset` było już włączone.
