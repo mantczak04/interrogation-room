@@ -22,6 +22,12 @@ namespace InterrogationRoom.EditorTools
         private const float KneeZoneForwardCenter = 0.3f;
         private const float KneeZoneHeightCenter = 0.375f;
         private static readonly Vector3 KneeZoneHalfExtents = new(0.17f, 0.225f, 0.25f);
+
+        // The widest seated body (Wieprz) reaches ~0.32 sideways and ~0.34
+        // behind the seat centre; the zone covers hips to shoulders.
+        private static readonly Vector3 BodyZoneHalfExtents = new(0.32f, 0.45f, 0.35f);
+        private const float BodyZoneHeightCenter = 0.6f;
+
         private const float PullBackStep = 0.05f;
         private const float MaxPullBack = 0.5f;
 
@@ -81,7 +87,7 @@ namespace InterrogationRoom.EditorTools
             foreach (MeshFilter meshFilter in chair.GetComponentsInChildren<MeshFilter>(true))
             {
                 Mesh mesh = meshFilter.sharedMesh;
-                if (mesh == null || !mesh.isReadable)
+                if (mesh == null)
                 {
                     continue;
                 }
@@ -149,7 +155,25 @@ namespace InterrogationRoom.EditorTools
 
                 chair.transform.position -= facing * PullBackStep;
                 Physics.SyncTransforms();
+
+                // Retreat must not push the sitter's torso into whatever is
+                // behind or beside the chair (e.g. a wall); undo and stop.
+                if (IsBodyZoneBlocked(chair, seatPoint, facing))
+                {
+                    chair.transform.position += facing * PullBackStep;
+                    Physics.SyncTransforms();
+                    break;
+                }
+
                 pulledBack += PullBackStep;
+            }
+
+            if (IsKneeZoneBlocked(chair, seatPoint, facing) || IsBodyZoneBlocked(chair, seatPoint, facing))
+            {
+                Debug.LogWarning(
+                    $"[{nameof(ChairSeatBaker)}] {chair.name}: the seated body still overlaps nearby " +
+                    "colliders after the pull-back; the chair is boxed in. Reposition it manually.",
+                    chair);
             }
 
             return pulledBack;
@@ -160,9 +184,29 @@ namespace InterrogationRoom.EditorTools
             Vector3 center = seatPoint.position +
                              facing * KneeZoneForwardCenter +
                              Vector3.up * KneeZoneHeightCenter;
+            return IsZoneBlocked(chair, center, KneeZoneHalfExtents, facing);
+        }
+
+        /// <summary>
+        /// The space the seated torso occupies, including its sides and back.
+        /// The front face stays behind the knees so a table the sitter faces
+        /// does not trigger it.
+        /// </summary>
+        private static bool IsBodyZoneBlocked(NetworkChairSeat chair, Transform seatPoint, Vector3 facing)
+        {
+            Vector3 center = seatPoint.position + Vector3.up * BodyZoneHeightCenter;
+            return IsZoneBlocked(chair, center, BodyZoneHalfExtents, facing);
+        }
+
+        private static bool IsZoneBlocked(
+            NetworkChairSeat chair,
+            Vector3 center,
+            Vector3 halfExtents,
+            Vector3 facing)
+        {
             foreach (Collider overlap in Physics.OverlapBox(
                          center,
-                         KneeZoneHalfExtents,
+                         halfExtents,
                          Quaternion.LookRotation(facing, Vector3.up),
                          ~0,
                          QueryTriggerInteraction.Ignore))
