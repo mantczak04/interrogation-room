@@ -26,10 +26,10 @@ Wszystkie zmiany pipeline/renderer wykonuj przez Unity MCP (`manage_asset`, `man
 
 ### 0.1 Audyt (bez zmian, wynik zapisz w sekcji „Wynik audytu" na dole tego pliku)
 
-- [ ] Odczytaj przez Unity MCP bieżące wartości `PC_RPAsset`: HDR, Render Scale, MSAA, Shadow Distance, Main Light Shadow Resolution, Additional Lights (tryb, limit per object, shadow atlas), Soft Shadows, Cascade Count, LOD Cross Fade.
-- [ ] To samo dla `Mobile_RPAsset`.
-- [ ] Odczytaj z `PC_Renderer` i `Mobile_Renderer` Rendering Path oraz listę Renderer Features.
-- [ ] Sprawdź w Quality Settings (`ProjectSettings` przez Unity MCP), które poziomy jakości wskazują który RP asset. Zanotuj mapowanie.
+- [x] Odczytaj przez Unity MCP bieżące wartości `PC_RPAsset`: HDR, Render Scale, MSAA, Shadow Distance, Main Light Shadow Resolution, Additional Lights (tryb, limit per object, shadow atlas), Soft Shadows, Cascade Count, LOD Cross Fade.
+- [x] To samo dla `Mobile_RPAsset`.
+- [x] Odczytaj z `PC_Renderer` i `Mobile_Renderer` Rendering Path oraz listę Renderer Features.
+- [x] Sprawdź w Quality Settings (`ProjectSettings` przez Unity MCP), które poziomy jakości wskazują który RP asset. Zanotuj mapowanie.
 
 ### 0.2 Konfiguracja PC (`PC_RPAsset` + `PC_Renderer`)
 
@@ -65,4 +65,9 @@ Decal Renderer Feature (Faza 3), zmiany świateł w scenie (Faza 2), post-proces
 
 ## Wynik audytu
 
-_(agent wypełnia po zadaniu 0.1)_
+- `PC_RPAsset`: HDR ON (precision 32 Bits / R11G11B10), Render Scale 1.0, MSAA Disabled, Shadow Distance 35 m, Main Light Shadow Resolution 2048, Additional Lights Per Pixel (limit 4 per object, shadows ON, atlas 1024), Soft Shadows ON (High), 4 cascades, LOD Cross Fade ON (Blue Noise).
+- `Mobile_RPAsset`: HDR ON (precision 32 Bits / R11G11B10), Render Scale 0.8, MSAA Disabled, Shadow Distance 50 m, Main Light Shadow Resolution 1024, Additional Lights Per Pixel (limit 4 per object, shadows OFF, atlas 2048), Soft Shadows OFF (quality value Medium), 1 cascade, LOD Cross Fade ON (Blue Noise).
+- `PC_Renderer`: Forward+; jedna aktywna Renderer Feature — Screen Space Ambient Occlusion (Blue Noise, Intensity 0.4, Radius 0.3, Falloff 100, Downsample OFF, After Opaque OFF, Depth Normals / Normal Quality Medium).
+- `Mobile_Renderer`: Forward+; brak Renderer Features.
+- Quality Settings: `Mobile` → `Mobile_RPAsset`, `PC` → `PC_RPAsset`; aktywny i domyślny poziom dla bieżącego celu Standalone: `PC`.
+- Color Space: Linear (zweryfikowane, bez zmiany).
