@@ -142,6 +142,14 @@ Diagnoza — dwie niezależne przyczyny:
 - [x] `Generate Lightmap UVs = ON` w importerach 29 FBX z `Assets/ThirdParty/Kenney/FurnitureKit/` używanych przez statyczne renderery bez UV2 (zmiana przez `ModelImporter` API, nie ręcznie w `.meta`).
 - [x] Rebake lightmap po przestawieniu i reimporcie (usuwa plamy na blatach, kanapach i pozostałych meblach we wszystkich pokojach).
 
+### Przegląd użytkownika #5 (2026-07-12)
+
+Ocena: układ i tekstury naprawione, „pięknie jest". Trzy korekty:
+
+- [x] Sala wspólna z ciepłej żółtej na **chłodną, „szpitalną"** (vibe korytarza, ale nie zielony): nowy materiał klosza `Mat_Lamp_ColdBlue` (emisja 2.1/2.5/3.1 — niebiesko-biały; korytarzowy `Mat_Lamp_Cool` jest zielonkawy, celowo nieużyty) na 4 panelach opraw sali; światła `Swiatlo_Sala`…`Sala4` → kolor (0.70, 0.83, 1.00), intensywność 2.4 → 2.6 (chłodna barwa czyta się ciemniej); wash-e `Wash_SalaE`/`Wash_SalaN_W` → (0.72, 0.82, 1.00). Ciepły żółty zostaje tożsamością pokoju socjalnego.
+- [x] Jasność jeszcze lekko w górę: `PosterunekPostFX` Post Exposure 0.2 → **0.3 EV**.
+- [x] `WeaponPickup` (leżał na środku podłogi sali) przeniesiony na stolik kawowy `Sala_StolikKawowyE` (1.62, 0.54, 4.13), obrócony naturalnie (rotY 120).
+
 ### Kwestia projektowa (poza Fazą 2): latarka na F
 
 Pomysł użytkownika: skoro ciemno, może dać graczom latarkę (toggle F). To decyzja gameplayowa, nie graficzna — latarka pozwala prześwietlać ciemne strefy prywatności (ADR-0009): wzmacnia `Detektywa`, osłabia szeptanie po kątach; zmienia też czytelność sylwetek. Rekomendacja: najpierw naprawić P1 („ciemno ≠ czarno"), a latarkę wpisać do `docs/design/OPEN-QUESTIONS.md` jako odroczoną decyzję — nie implementować w ramach grafiki.
