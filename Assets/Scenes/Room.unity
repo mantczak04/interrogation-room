@@ -39931,7 +39931,7 @@ GameObject:
   - component: {fileID: 2142818464}
   - component: {fileID: 2142818463}
   m_Layer: 0
-  m_Name: GlobalVolume
+  m_Name: PostFX_Global
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
