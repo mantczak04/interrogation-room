@@ -9,7 +9,7 @@ Statusy: `Open` → `In progress` → `Review` (czeka na akceptację użytkownik
 | Faza | Dokument | Branch | Status |
 |---|---|---|---|
 | 0. Fundamenty URP | [FAZA-0-fundamenty-urp.md](./FAZA-0-fundamenty-urp.md) | `gfx/faza-0-fundamenty-urp` | Review |
-| 1. Art direction | [FAZA-1-art-direction.md](./FAZA-1-art-direction.md) | `gfx/faza-1-art-direction` | In progress |
+| 1. Art direction | [FAZA-1-art-direction.md](./FAZA-1-art-direction.md) | `gfx/faza-1-art-direction` | Review |
 | 2. Oświetlenie | [FAZA-2-oswietlenie.md](./FAZA-2-oswietlenie.md) | `gfx/faza-2-oswietlenie` | Open |
 | 3. Materiały i kit | [FAZA-3-materialy-kit.md](./FAZA-3-materialy-kit.md) | `gfx/faza-3-materialy-kit` | Open |
 | 4. Post-processing | [FAZA-4-postprocessing.md](./FAZA-4-postprocessing.md) | `gfx/faza-4-postprocessing` | Open |

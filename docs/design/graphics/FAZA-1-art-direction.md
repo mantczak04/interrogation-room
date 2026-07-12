@@ -1,6 +1,6 @@
 # Faza 1 — Art direction
 
-- **Status:** In progress
+- **Status:** Review
 - **Branch:** `gfx/faza-1-art-direction`
 - **Zależności:** brak twardych; można prowadzić równolegle z Fazami 0/4/2. Blokuje Fazy 3 i 5.
 - **Szacowany czas:** 2–4 dni, w większości decyzje użytkownika
@@ -31,8 +31,8 @@ Istnieje zatwierdzony przez użytkownika dokument `docs/design/graphics/ART-DIRE
 
 ## Weryfikacja
 
-- [ ] `ART-DIRECTION.md` istnieje, jest po polsku, ma wszystkie sekcje wypełnione.
-- [ ] Statusy zaktualizowane (ten plik + `README.md`). Status `Review` = czeka na zatwierdzenie użytkownika.
+- [x] `ART-DIRECTION.md` istnieje, jest po polsku, ma wszystkie sekcje wypełnione.
+- [x] Statusy zaktualizowane (ten plik + `README.md`). Status `Review` = czeka na zatwierdzenie użytkownika.
 
 ## Poza zakresem
 
