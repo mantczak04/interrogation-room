@@ -32,6 +32,11 @@ public class PlayerController : NetworkBehaviour
     [Header("Characters")]
     [SerializeField] private CharacterVisualDefinition[] characterVisuals = Array.Empty<CharacterVisualDefinition>();
 
+    [Header("Third Person Camera")]
+    [SerializeField, Min(0.5f)] private float minZoomDistance = 1f;
+    [SerializeField, Min(1f)] private float maxZoomDistance = 6f;
+    [SerializeField, Min(0.05f)] private float zoomSensitivity = 0.5f;
+
     private CharacterController characterController;
     private Animator animator;
     private AudioListener audioListener;
@@ -47,6 +52,9 @@ public class PlayerController : NetworkBehaviour
     private Vector3 smoothedLookTarget;
     private bool hasSmoothedLookTarget;
     private bool forceShowLocalModel;
+    private bool isThirdPerson;
+    private float thirdPersonDistance = 2.5f;
+    private Vector3 firstPersonCameraLocalPos;
 
     [SyncVar(hook = nameof(OnSeatedChanged))]
     private bool isSeated;
@@ -95,6 +103,7 @@ public class PlayerController : NetworkBehaviour
         if (playerCamera != null)
         {
             audioListener = playerCamera.GetComponent<AudioListener>();
+            firstPersonCameraLocalPos = playerCamera.transform.localPosition;
         }
     }
 
@@ -194,6 +203,26 @@ public class PlayerController : NetworkBehaviour
             CmdTryPunch();
         }
 
+        if (WasCameraTogglePressed())
+        {
+            isThirdPerson = !isThirdPerson;
+            RefreshRendererVisibility();
+        }
+
+        if (isThirdPerson)
+        {
+            float scroll = GetScrollInput();
+            if (Mathf.Abs(scroll) > 0.001f)
+            {
+                thirdPersonDistance = Mathf.Clamp(
+                    thirdPersonDistance - scroll * zoomSensitivity,
+                    minZoomDistance,
+                    maxZoomDistance);
+            }
+        }
+
+        HandleCharacterHotkeys();
+
         Look();
         if (!isSeated)
         {
@@ -239,6 +268,25 @@ public class PlayerController : NetworkBehaviour
     private void CmdStand()
     {
         StandServer();
+    }
+
+    private void HandleCharacterHotkeys()
+    {
+        CharacterId? requested = GetPressedCharacterHotkey();
+        if (requested.HasValue)
+        {
+            CmdSelectCharacter(requested.Value);
+        }
+    }
+
+    /// <summary>
+    /// Testing shortcut: keys 1-4 switch the character directly, bypassing the
+    /// swap stations' uniqueness guarantee.
+    /// </summary>
+    [Command]
+    private void CmdSelectCharacter(CharacterId selectedCharacter)
+    {
+        TrySwapCharacterServer(selectedCharacter, out _);
     }
 
     [Server]
@@ -450,7 +498,7 @@ public class PlayerController : NetworkBehaviour
 
     private void RefreshRendererVisibility()
     {
-        bool visible = !isLocalPlayer || forceShowLocalModel;
+        bool visible = !isLocalPlayer || forceShowLocalModel || isThirdPerson;
         foreach (Renderer playerRenderer in playerRenderers)
         {
             if (playerRenderer != null)
@@ -513,7 +561,13 @@ public class PlayerController : NetworkBehaviour
         float mouseX = mouseDelta.x * mouseSensitivity;
         float mouseY = mouseDelta.y * mouseSensitivity;
 
-        if (isSeated)
+        if (isThirdPerson)
+        {
+            // Third person orbits the full 360 degrees around the player, both
+            // seated and standing; the player transform does not rotate.
+            seatedCameraYaw += mouseX;
+        }
+        else if (isSeated)
         {
             seatedCameraYaw = Mathf.Clamp(seatedCameraYaw + mouseX, -70f, 70f);
         }
@@ -529,12 +583,53 @@ public class PlayerController : NetworkBehaviour
         }
 
         cameraPitch = Mathf.Clamp(cameraPitch - mouseY, -80f, 80f);
-        playerCamera.transform.localRotation = Quaternion.Euler(cameraPitch, seatedCameraYaw, 0f);
+        Quaternion cameraRotation = Quaternion.Euler(cameraPitch, seatedCameraYaw, 0f);
+        playerCamera.transform.localRotation = cameraRotation;
+
+        if (isThirdPerson)
+        {
+            Vector3 worldPivot = transform.TransformPoint(firstPersonCameraLocalPos);
+            Vector3 orbitOffset = cameraRotation * Vector3.forward * thirdPersonDistance;
+            Vector3 worldTarget = transform.TransformPoint(firstPersonCameraLocalPos - orbitOffset);
+            float obstacleDistance = GetCameraObstacleDistance(worldPivot, worldTarget, thirdPersonDistance);
+            float finalDistance = Mathf.Max(0.2f, obstacleDistance - 0.2f);
+            playerCamera.transform.localPosition =
+                firstPersonCameraLocalPos - cameraRotation * Vector3.forward * finalDistance;
+        }
+        else
+        {
+            playerCamera.transform.localPosition = firstPersonCameraLocalPos;
+        }
 
         if (animator != null)
         {
             animator.SetFloat(LookPitchParameter, cameraPitch);
         }
+    }
+
+    private float GetCameraObstacleDistance(Vector3 worldPivot, Vector3 worldTarget, float maxDistance)
+    {
+        Vector3 direction = worldTarget - worldPivot;
+        if (direction.sqrMagnitude < 0.0001f)
+        {
+            return maxDistance;
+        }
+
+        float closestDistance = maxDistance;
+        foreach (RaycastHit hit in Physics.RaycastAll(worldPivot, direction.normalized, maxDistance))
+        {
+            if (hit.collider.isTrigger || hit.transform.root == transform.root)
+            {
+                continue;
+            }
+
+            if (hit.distance < closestDistance)
+            {
+                closestDistance = hit.distance;
+            }
+        }
+
+        return closestDistance;
     }
 
     private void Move()
@@ -574,7 +669,7 @@ public class PlayerController : NetworkBehaviour
 
     private void OnAnimatorIK(int layerIndex)
     {
-        if (animator == null || !animator.isHuman || isDead)
+        if (animator == null || !animator.isHuman || isDead || (isLocalPlayer && isThirdPerson))
         {
             ResetLookAtIkState();
             return;
@@ -782,6 +877,52 @@ public class PlayerController : NetworkBehaviour
 #else
         return Input.GetKeyDown(KeyCode.Escape);
 #endif
+    }
+
+    private bool WasCameraTogglePressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame;
+#else
+        return Input.GetKeyDown(KeyCode.C);
+#endif
+    }
+
+    private static float GetScrollInput()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (Mouse.current == null)
+        {
+            return 0f;
+        }
+
+        float scroll = Mouse.current.scroll.ReadValue().y;
+        return Mathf.Abs(scroll) > 0.0001f ? Mathf.Sign(scroll) : 0f;
+#else
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        return Mathf.Abs(scroll) > 0.0001f ? Mathf.Sign(scroll) : 0f;
+#endif
+    }
+
+    private static CharacterId? GetPressedCharacterHotkey()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current == null)
+        {
+            return null;
+        }
+
+        if (Keyboard.current.digit1Key.wasPressedThisFrame) return CharacterId.Malpa;
+        if (Keyboard.current.digit2Key.wasPressedThisFrame) return CharacterId.Wieprz;
+        if (Keyboard.current.digit3Key.wasPressedThisFrame) return CharacterId.Jak;
+        if (Keyboard.current.digit4Key.wasPressedThisFrame) return CharacterId.Karton;
+#else
+        if (Input.GetKeyDown(KeyCode.Alpha1)) return CharacterId.Malpa;
+        if (Input.GetKeyDown(KeyCode.Alpha2)) return CharacterId.Wieprz;
+        if (Input.GetKeyDown(KeyCode.Alpha3)) return CharacterId.Jak;
+        if (Input.GetKeyDown(KeyCode.Alpha4)) return CharacterId.Karton;
+#endif
+        return null;
     }
 
     private bool WasPunchPressed()
