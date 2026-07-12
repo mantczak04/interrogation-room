@@ -150,6 +150,10 @@ Ocena: układ i tekstury naprawione, „pięknie jest". Trzy korekty:
 - [x] Jasność jeszcze lekko w górę: `PosterunekPostFX` Post Exposure 0.2 → **0.3 EV**.
 - [x] `WeaponPickup` (leżał na środku podłogi sali) przeniesiony na stolik kawowy `Sala_StolikKawowyE` (1.62, 0.54, 4.13), obrócony naturalnie (rotY 120).
 
+Korekta po teście w grze: kolory sali na plus, ale za jasno (kontrast z „aurą" pozostałych pokoi).
+
+- [x] Ściemnienie tylko sali (bez ruszania globalnej ekspozycji): `Swiatlo_Sala`…`Sala4` intensywność 2.6 → **1.8**, `Wash_SalaE` 1.0 → 0.65, `Wash_SalaN_W` 1.1 → 0.7; rebake.
+
 ### Kwestia projektowa (poza Fazą 2): latarka na F
 
 Pomysł użytkownika: skoro ciemno, może dać graczom latarkę (toggle F). To decyzja gameplayowa, nie graficzna — latarka pozwala prześwietlać ciemne strefy prywatności (ADR-0009): wzmacnia `Detektywa`, osłabia szeptanie po kątach; zmienia też czytelność sylwetek. Rekomendacja: najpierw naprawić P1 („ciemno ≠ czarno"), a latarkę wpisać do `docs/design/OPEN-QUESTIONS.md` jako odroczoną decyzję — nie implementować w ramach grafiki.
