@@ -62,11 +62,15 @@ public class PlayerController : NetworkBehaviour
     private Vector3 activeModelRootBaseLocalPos;
     private Mesh seatedPoseMesh;
     private float seatedButtToHipsHeight;
+    private float seatedTorsoBackDepth;
     private bool hasSeatedButtHeight;
     private int seatedFrameCount;
 
     [SyncVar]
     private float seatedSeatSurfaceHeight;
+
+    [SyncVar]
+    private float seatedBackrestOffset;
 
     [SyncVar(hook = nameof(OnSeatedChanged))]
     private bool isSeated;
@@ -271,6 +275,7 @@ public class PlayerController : NetworkBehaviour
         activeSeat = seat;
         isSeated = true;
         seatedSeatSurfaceHeight = seat.SeatSurfaceHeight;
+        seatedBackrestOffset = seat.BackrestOffset;
         verticalVelocity = 0f;
         ApplySeatPose(seat.SeatPosition, seat.SeatRotation);
         TargetApplyPose(connectionToClient, seat.SeatPosition, seat.SeatRotation, true);
@@ -719,7 +724,19 @@ public class PlayerController : NetworkBehaviour
 
         seatedFrameCount++;
 
-        Vector3 desired = transform.position - transform.forward * seatedHipsBackOffset;
+        // Pull the hips toward the backrest, but not so far that the
+        // character's measured back sinks deep into the backrest — a bulky
+        // torso sits further forward on the seat. Up to 5 cm of overlap is
+        // allowed (it reads as pressing into the backrest), so slim
+        // characters keep their natural pose.
+        float backOffset = seatedHipsBackOffset;
+        if (hasSeatedButtHeight && seatedBackrestOffset > 0f)
+        {
+            float backrestLimit = seatedBackrestOffset - seatedTorsoBackDepth + 0.05f;
+            backOffset = Mathf.Max(Mathf.Min(seatedHipsBackOffset, backrestLimit), -0.10f);
+        }
+
+        Vector3 desired = transform.position - transform.forward * backOffset;
         Vector3 delta = desired - hips.position;
         delta.y = 0f;
 
@@ -742,9 +759,10 @@ public class PlayerController : NetworkBehaviour
     }
 
     /// <summary>
-    /// Measures how far the character's lowest point under the pelvis sits
-    /// below the hips bone in the current pose, so the model can be dropped
-    /// until that point touches the seat surface.
+    /// Measures the seated body against the hips bone in the current pose:
+    /// how far the lowest pelvis point sits below the hips (to rest it on the
+    /// seat surface) and how far the back sticks out behind them (to keep it
+    /// in front of the backrest).
     /// </summary>
     private void MeasureSeatedButtHeight(Transform hips)
     {
@@ -759,28 +777,40 @@ public class PlayerController : NetworkBehaviour
 
         Matrix4x4 localToWorld = skinnedRenderer.transform.localToWorldMatrix;
         Vector3 hipsPosition = hips.position;
+        Vector3 back = -transform.forward;
         float lowestY = float.MaxValue;
+        float backDepth = 0f;
 
         foreach (Vector3 vertex in seatedPoseMesh.vertices)
         {
             Vector3 world = localToWorld.MultiplyPoint3x4(vertex);
-            Vector2 planar = new(world.x - hipsPosition.x, world.z - hipsPosition.z);
-            if (planar.sqrMagnitude > 0.17f * 0.17f ||
-                world.y > hipsPosition.y ||
-                world.y < hipsPosition.y - 0.3f) // pelvis area only, not calves/feet
-            {
-                continue;
-            }
 
-            if (world.y < lowestY)
+            Vector2 planar = new(world.x - hipsPosition.x, world.z - hipsPosition.z);
+            if (planar.sqrMagnitude <= 0.17f * 0.17f &&
+                world.y <= hipsPosition.y &&
+                world.y >= hipsPosition.y - 0.3f && // pelvis area only, not calves/feet
+                world.y < lowestY)
             {
                 lowestY = world.y;
+            }
+
+            // Lower back / torso band that would meet a backrest.
+            if (world.y >= hipsPosition.y &&
+                world.y <= hipsPosition.y + 0.45f &&
+                planar.sqrMagnitude <= 0.3f * 0.3f)
+            {
+                float depth = Vector3.Dot(world - hipsPosition, back);
+                if (depth > backDepth)
+                {
+                    backDepth = depth;
+                }
             }
         }
 
         if (lowestY < float.MaxValue)
         {
             seatedButtToHipsHeight = hipsPosition.y - lowestY;
+            seatedTorsoBackDepth = backDepth;
             hasSeatedButtHeight = true;
         }
     }

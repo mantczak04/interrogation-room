@@ -9876,6 +9876,7 @@ MonoBehaviour:
   seatPoint: {fileID: 1291460063}
   standPoint: {fileID: 0}
   seatSurfaceHeight: 0.48
+  backrestOffset: 0.12000036
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -13695,6 +13696,7 @@ MonoBehaviour:
   seatPoint: {fileID: 1463614304}
   standPoint: {fileID: 0}
   seatSurfaceHeight: 0.467
+  backrestOffset: 0.19176781
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -18428,6 +18430,7 @@ MonoBehaviour:
   seatPoint: {fileID: 1437957191}
   standPoint: {fileID: 0}
   seatSurfaceHeight: 0.4800001
+  backrestOffset: 0.12000024
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -25415,6 +25418,7 @@ MonoBehaviour:
   seatPoint: {fileID: 859621812}
   standPoint: {fileID: 0}
   seatSurfaceHeight: 0.48
+  backrestOffset: 0.12000036
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -30355,6 +30359,7 @@ MonoBehaviour:
   seatPoint: {fileID: 1744252051}
   standPoint: {fileID: 0}
   seatSurfaceHeight: 0.48
+  backrestOffset: 0.119999886
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -36625,6 +36630,7 @@ MonoBehaviour:
   seatPoint: {fileID: 321344237}
   standPoint: {fileID: 0}
   seatSurfaceHeight: 0.48
+  backrestOffset: 0.12000036
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -37860,6 +37866,7 @@ MonoBehaviour:
   seatPoint: {fileID: 433988772}
   standPoint: {fileID: 0}
   seatSurfaceHeight: 0.48000002
+  backrestOffset: 0.120000005
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -40084,6 +40091,7 @@ MonoBehaviour:
   seatPoint: {fileID: 1701020589}
   standPoint: {fileID: 0}
   seatSurfaceHeight: 0.4800001
+  backrestOffset: 0.120000124
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:

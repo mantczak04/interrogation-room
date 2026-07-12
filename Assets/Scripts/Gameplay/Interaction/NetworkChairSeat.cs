@@ -13,6 +13,7 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         [Header("Seat geometry")]
         [SerializeField, Min(0f)] private float seatSurfaceHeight = 0.46f;
+        [SerializeField, Min(0f)] private float backrestOffset = 0.5f;
 
         [Header("Fallback pose")]
         [SerializeField, Min(0f)] private float seatHeight = 0.02f;
@@ -101,6 +102,12 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         /// <summary>Height of the sittable surface above SeatPosition.</summary>
         public float SeatSurfaceHeight => seatSurfaceHeight;
+
+        /// <summary>
+        /// Distance behind the seat centre at which the backrest's front face
+        /// starts. Large values mean no backrest (e.g. a stool).
+        /// </summary>
+        public float BackrestOffset => backrestOffset;
 
         public string InteractionPrompt => interactionPrompt;
 

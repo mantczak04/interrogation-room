@@ -68,15 +68,18 @@ namespace InterrogationRoom.EditorTools
             seatPoint.SetPositionAndRotation(seatCenter, Quaternion.LookRotation(facing, Vector3.up));
 
             float surfaceHeight = ResolveSeatSurfaceHeight(chair, bounds, seatCenter.y);
+            float backrestOffset = ResolveBackrestOffset(chair, seatPoint, facing, surfaceHeight);
             var serialized = new SerializedObject(chair);
             serialized.FindProperty("seatSurfaceHeight").floatValue = surfaceHeight;
+            serialized.FindProperty("backrestOffset").floatValue = backrestOffset;
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             float pulledBack = PullChairClearOfObstacles(chair, seatPoint, facing);
 
             EditorUtility.SetDirty(chair);
             return $"{chair.name}: seat={seatPoint.position} facing={facing} " +
-                   $"surfaceHeight={surfaceHeight:F2} pulledBack={pulledBack:F2}m";
+                   $"surfaceHeight={surfaceHeight:F2} backrestOffset={backrestOffset:F2} " +
+                   $"pulledBack={pulledBack:F2}m";
         }
 
         /// <summary>
@@ -137,7 +140,59 @@ namespace InterrogationRoom.EditorTools
             var ray = new Ray(
                 new Vector3(bounds.center.x, bounds.max.y + 0.5f, bounds.center.z),
                 Vector3.down);
-            float best = float.MinValue;
+
+            if (!RaycastChairMeshes(chair, ray, bounds.size.y + 1f, out RaycastHit hit))
+            {
+                Debug.LogWarning(
+                    $"[{nameof(ChairSeatBaker)}] {chair.name}: seat surface probe found no mesh under " +
+                    "the seat centre; keeping the default height.",
+                    chair);
+                return 0.46f;
+            }
+
+            return Mathf.Max(0.1f, hit.point.y - groundY);
+        }
+
+        /// <summary>
+        /// Finds the backrest's front face by raycasting backward at lower
+        /// torso height from in front of the seat. Returns a large value when
+        /// nothing is hit (a stool has no backrest to clip into).
+        /// </summary>
+        private static float ResolveBackrestOffset(
+            NetworkChairSeat chair,
+            Transform seatPoint,
+            Vector3 facing,
+            float surfaceHeight)
+        {
+            // Slatted backrests have gaps, so probe a fan of heights and keep
+            // the closest hit.
+            float best = float.MaxValue;
+            for (float height = 0.1f; height <= 0.45f; height += 0.05f)
+            {
+                var ray = new Ray(
+                    seatPoint.position + facing * 0.5f + Vector3.up * (surfaceHeight + height),
+                    -facing);
+                if (RaycastChairMeshes(chair, ray, 1.2f, out RaycastHit hit))
+                {
+                    float behindCenter = Vector3.Dot(hit.point - seatPoint.position, -facing);
+                    if (behindCenter > 0.02f && behindCenter < best)
+                    {
+                        best = behindCenter;
+                    }
+                }
+            }
+
+            return best < float.MaxValue ? Mathf.Min(best, 0.5f) : 0.5f;
+        }
+
+        private static bool RaycastChairMeshes(
+            NetworkChairSeat chair,
+            Ray ray,
+            float maxDistance,
+            out RaycastHit closestHit)
+        {
+            closestHit = default;
+            float closestDistance = float.MaxValue;
 
             foreach (MeshFilter meshFilter in chair.GetComponentsInChildren<MeshFilter>(true))
             {
@@ -157,10 +212,11 @@ namespace InterrogationRoom.EditorTools
                     var probe = probeObject.AddComponent<MeshCollider>();
                     probe.sharedMesh = mesh;
 
-                    if (probe.Raycast(ray, out RaycastHit hit, bounds.size.y + 1f) &&
-                        hit.point.y > best)
+                    if (probe.Raycast(ray, out RaycastHit hit, maxDistance) &&
+                        hit.distance < closestDistance)
                     {
-                        best = hit.point.y;
+                        closestDistance = hit.distance;
+                        closestHit = hit;
                     }
                 }
                 finally
@@ -169,16 +225,7 @@ namespace InterrogationRoom.EditorTools
                 }
             }
 
-            if (best <= float.MinValue)
-            {
-                Debug.LogWarning(
-                    $"[{nameof(ChairSeatBaker)}] {chair.name}: seat surface probe found no mesh under " +
-                    "the seat centre; keeping the default height.",
-                    chair);
-                return 0.46f;
-            }
-
-            return Mathf.Max(0.1f, best - groundY);
+            return closestDistance < float.MaxValue;
         }
 
         private static Transform GetOrCreateSeatPoint(NetworkChairSeat chair)
