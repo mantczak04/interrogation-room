@@ -1,6 +1,6 @@
 # Faza 0 — Fundamenty techniczne URP
 
-- **Status:** Review
+- **Status:** Approved — użytkownik zatwierdził 2026-07-12; zmiany włączone do `gfx/graphics-overhaul`, bez merge do `main`.
 - **Branch:** `gfx/faza-0-fundamenty-urp`
 - **Zależności:** brak (pierwsza faza)
 - **Szacowany czas:** 1–2 dni pracy agenta

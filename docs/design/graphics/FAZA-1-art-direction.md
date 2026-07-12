@@ -1,6 +1,6 @@
 # Faza 1 — Art direction
 
-- **Status:** Review
+- **Status:** Approved — użytkownik zatwierdził 2026-07-12; dokument włączony do `gfx/graphics-overhaul`, bez merge do `main`.
 - **Branch:** `gfx/faza-1-art-direction`
 - **Zależności:** brak twardych; można prowadzić równolegle z Fazami 0/4/2. Blokuje Fazy 3 i 5.
 - **Szacowany czas:** 2–4 dni, w większości decyzje użytkownika
@@ -27,7 +27,7 @@ Istnieje zatwierdzony przez użytkownika dokument `docs/design/graphics/ART-DIRE
 - [x] [AGENT] Spisać motywy świetlne per pomieszczenie (pokój przesłuchań, korytarz, archiwum, pokój obserwacyjny) — wejście dla Fazy 2.
 - [x] [AGENT] Spisać zasady materiałowe — wejście dla Fazy 3: texel density 512 px/m, roughness zawsze z wariacją (nigdy jednolita), zakaz czystych bieli (max `#E8E8E8`) i czystych czerni (min `#0A0A0A`).
 - [x] [AGENT] Spisać zasady postaci — wejście dla Fazy 5: sylwetki rozróżnialne w ciemności i przez szybę wenecką, brak riggu mimiki (sztywne pyski/maski — celowy absurd), czytelność > detal.
-- [ ] [CZŁOWIEK] Przegląd i zatwierdzenie dokumentu. Dopiero po zatwierdzeniu Fazy 3 i 5 mogą ruszyć.
+- [x] [CZŁOWIEK] Przegląd i zatwierdzenie dokumentu. Zatwierdzone przez użytkownika 2026-07-12.
 
 ## Weryfikacja
 
