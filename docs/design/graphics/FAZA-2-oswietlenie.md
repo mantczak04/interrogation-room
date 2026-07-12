@@ -1,6 +1,6 @@
 # Faza 2 — Oświetlenie
 
-- **Status:** Open
+- **Status:** In progress
 - **Branch roboczy pakietu:** `gfx/graphics-overhaul`
 - **Branch historyczny fazy:** `gfx/faza-2-oswietlenie`
 - **Zależności:** Faza 0 (`Approved` lub `Done`), Faza 4 (`Review`, `Approved` lub `Done` na tym samym branchu integracyjnym — tonemapping ACES musi działać przed strojeniem świateł)
