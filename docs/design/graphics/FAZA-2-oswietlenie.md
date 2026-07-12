@@ -109,6 +109,14 @@ Przyczyny złożone: (a) wszystkie baked lampy pomieszczeń mają `shadows = Non
 - [x] Ogranicz przeciek świetlówki: Range `Faza2_Flicker_Korytarz` 3.2 → 3.0 (cieni na tym świetle nadal nie włączamy — koszt). Wykonane 2026-07-12.
 - [ ] Decyzja o TAA zamiast SMAA — odroczona do testów ghostingu (notatka w Fazie 4).
 
+### Przegląd użytkownika #2 (2026-07-12, po poprawkach P1–P4)
+
+Ocena: wszystkie pokoje OK, ale sala wspólna (pokój startowy) zbyt zielona względem ciepłych pozostałych pomieszczeń; dodatkowo bałagan propsów.
+
+- [x] Kolor świateł sali `Swiatlo_Sala`…`Sala4`: zielony `(0.784, 0.878, 0.753)` → ciepły `(1.0, 0.722, 0.408)` (ten sam co `Swiatlo_Socjalny`; panele opraw sali już używały `Mat_Lamp_Warm`, więc kolor świateł wreszcie zgadza się z kloszami). Zielony zostaje tożsamością korytarza.
+- [x] Propsy sali: oba stoły (`Sala_StolW/E`) były zapadnięte 0.54 m w podłogę (min.y = −0.52) — podniesione na 0.56, blat na ~0.75 m; krzesła stały wewnątrz obrysów stołów — rozstawione logicznie wokół stołów (W: 3 krzesła, E: 2), tyłem od stołu wg konwencji z pokoju przesłuchań; stolik kawowy był wbity w kanapę — przesunięty między kanapę a szafkę TV; kącik TV wyrównany do osi telewizora (z = 3.0); drugi stolik kawowy dosunięty przed `Sala_SofaE`.
+- [x] Kanapy (`Sala_Sofa`, `Sala_SofaE`): dodany `NetworkChairSeat` + `NetworkIdentity` + child `SeatPoint` (konfiguracja wg krzeseł; seatSurfaceHeight 0.35, backrestOffset 0.15) — na kanapach można siedzieć.
+
 ### Kwestia projektowa (poza Fazą 2): latarka na F
 
 Pomysł użytkownika: skoro ciemno, może dać graczom latarkę (toggle F). To decyzja gameplayowa, nie graficzna — latarka pozwala prześwietlać ciemne strefy prywatności (ADR-0009): wzmacnia `Detektywa`, osłabia szeptanie po kątach; zmienia też czytelność sylwetek. Rekomendacja: najpierw naprawić P1 („ciemno ≠ czarno"), a latarkę wpisać do `docs/design/OPEN-QUESTIONS.md` jako odroczoną decyzję — nie implementować w ramach grafiki.
