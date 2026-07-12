@@ -1,6 +1,6 @@
 # Faza 2 — Oświetlenie
 
-- **Status:** In progress
+- **Status:** Blocked — Unity MCP nie umożliwia bezpiecznego utworzenia Shader Graph `Assets/VFX/LightConeAdditive.shadergraph` ani mesh/material fake volumetrics; pozostałe zadania wykonane, dwa checkboxy 2.6 otwarte.
 - **Branch roboczy pakietu:** `gfx/graphics-overhaul`
 - **Branch historyczny fazy:** `gfx/faza-2-oswietlenie`
 - **Zależności:** Faza 0 (`Approved` lub `Done`), Faza 4 (`Review`, `Approved` lub `Done` na tym samym branchu integracyjnym — tonemapping ACES musi działać przed strojeniem świateł)
