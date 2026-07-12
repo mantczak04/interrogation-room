@@ -67,7 +67,7 @@ Tryb: **Shadowmask** (Lighting window → Mixed Lighting). Docelowy układ:
 - [x] Unity Console bez błędów; kompilacja `FlickeringLight.cs` czysta.
 - [x] Zrzuty „po” per pomieszczenie: `Assets/Screenshots/gfx_faza2_<pomieszczenie>.png`.
 - [x] Postać testowa (dowolny prefab z `Assets/Characters/`) postawiona w 3 miejscach — odbiera światło z probe'ów i rzuca cień pod lampą.
-- [ ] Scena zapisana przez Unity MCP; `git diff --check`; statusy zaktualizowane.
+- [x] Scena zapisana przez Unity MCP; `git diff --check`; statusy zaktualizowane.
 
 ## Poza zakresem
 
