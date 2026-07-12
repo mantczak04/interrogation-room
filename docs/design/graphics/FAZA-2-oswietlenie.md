@@ -1,6 +1,6 @@
 # Faza 2 — Oświetlenie
 
-- **Status:** Blocked — Unity MCP nie umożliwia bezpiecznego utworzenia Shader Graph `Assets/VFX/LightConeAdditive.shadergraph` ani mesh/material fake volumetrics; pozostałe zadania wykonane, dwa checkboxy 2.6 otwarte.
+- **Status:** Review
 - **Branch roboczy pakietu:** `gfx/graphics-overhaul`
 - **Branch historyczny fazy:** `gfx/faza-2-oswietlenie`
 - **Zależności:** Faza 0 (`Approved` lub `Done`), Faza 4 (`Review`, `Approved` lub `Done` na tym samym branchu integracyjnym — tonemapping ACES musi działać przed strojeniem świateł)
@@ -54,8 +54,8 @@ Tryb: **Shadowmask** (Lighting window → Mixed Lighting). Docelowy układ:
 
 ### 2.6 Fake volumetrics
 
-- [ ] Stożek światła nad stołem przesłuchań: mesh stożka + materiał Shader Graph (URP Unlit, Transparent Additive, gradient przezroczystości od źródła do podstawy, fade przy przecięciu geometrii przez depth — soft particles/depth fade node). Zapisz shader jako `Assets/VFX/LightConeAdditive.shadergraph`, materiał `Assets/VFX/Mat_LightCone.mat`.
-- [ ] Intensywność bardzo subtelna (widoczna, dopiero gdy się jej szuka). Bez cząsteczek kurzu — to Faza 6.
+- [x] Stożek światła nad stołem przesłuchań: mesh stożka + materiał Shader Graph (URP Unlit, Transparent Additive, gradient przezroczystości od źródła do podstawy, fade przy przecięciu geometrii przez depth — soft particles/depth fade node). Zapisz shader jako `Assets/VFX/LightConeAdditive.shadergraph`, materiał `Assets/VFX/Mat_LightCone.mat`.
+- [x] Intensywność bardzo subtelna (widoczna, dopiero gdy się jej szuka). Bez cząsteczek kurzu — to Faza 6.
 
 ### 2.7 Bake i strojenie
 

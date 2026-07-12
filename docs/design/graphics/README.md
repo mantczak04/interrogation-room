@@ -10,7 +10,7 @@ Statusy: `Open` → `In progress` → `Review` → `Approved` → `Done`. `Appro
 |---|---|---|---|
 | 0. Fundamenty URP | [FAZA-0-fundamenty-urp.md](./FAZA-0-fundamenty-urp.md) | `gfx/faza-0-fundamenty-urp` | Approved |
 | 1. Art direction | [FAZA-1-art-direction.md](./FAZA-1-art-direction.md) | `gfx/faza-1-art-direction` | Approved |
-| 2. Oświetlenie | [FAZA-2-oswietlenie.md](./FAZA-2-oswietlenie.md) | `gfx/graphics-overhaul` | Blocked — Unity MCP nie umożliwia bezpiecznego utworzenia Shader Graph `Assets/VFX/LightConeAdditive.shadergraph` ani mesh/material fake volumetrics; pozostałe zadania wykonane, dwa checkboxy 2.6 otwarte. |
+| 2. Oświetlenie | [FAZA-2-oswietlenie.md](./FAZA-2-oswietlenie.md) | `gfx/graphics-overhaul` | Review |
 | 3. Materiały i kit | [FAZA-3-materialy-kit.md](./FAZA-3-materialy-kit.md) | `gfx/faza-3-materialy-kit` | Open |
 | 4. Post-processing | [FAZA-4-postprocessing.md](./FAZA-4-postprocessing.md) | `gfx/graphics-overhaul` | Review |
 | 5. Postacie | [FAZA-5-postacie.md](./FAZA-5-postacie.md) | `gfx/faza-5-postacie` | Open |
