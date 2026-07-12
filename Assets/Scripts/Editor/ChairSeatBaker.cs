@@ -67,10 +67,16 @@ namespace InterrogationRoom.EditorTools
             Transform seatPoint = GetOrCreateSeatPoint(chair);
             seatPoint.SetPositionAndRotation(seatCenter, Quaternion.LookRotation(facing, Vector3.up));
 
+            float surfaceHeight = ResolveSeatSurfaceHeight(chair, bounds, seatCenter.y);
+            var serialized = new SerializedObject(chair);
+            serialized.FindProperty("seatSurfaceHeight").floatValue = surfaceHeight;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
             float pulledBack = PullChairClearOfObstacles(chair, seatPoint, facing);
 
             EditorUtility.SetDirty(chair);
-            return $"{chair.name}: seat={seatPoint.position} facing={facing} pulledBack={pulledBack:F2}m";
+            return $"{chair.name}: seat={seatPoint.position} facing={facing} " +
+                   $"surfaceHeight={surfaceHeight:F2} pulledBack={pulledBack:F2}m";
         }
 
         /// <summary>
@@ -118,6 +124,61 @@ namespace InterrogationRoom.EditorTools
                 "falling back to -transform.forward. Verify the seat direction manually.",
                 chair);
             return -chair.transform.forward;
+        }
+
+        /// <summary>
+        /// Finds the sittable surface by raycasting straight down at the seat
+        /// centre against the chair's actual meshes (via temporary
+        /// MeshColliders). The backrest sits at the chair's edge, so the ray
+        /// through the centre hits the seat plate.
+        /// </summary>
+        private static float ResolveSeatSurfaceHeight(NetworkChairSeat chair, Bounds bounds, float groundY)
+        {
+            var ray = new Ray(
+                new Vector3(bounds.center.x, bounds.max.y + 0.5f, bounds.center.z),
+                Vector3.down);
+            float best = float.MinValue;
+
+            foreach (MeshFilter meshFilter in chair.GetComponentsInChildren<MeshFilter>(true))
+            {
+                Mesh mesh = meshFilter.sharedMesh;
+                if (mesh == null)
+                {
+                    continue;
+                }
+
+                var probeObject = new GameObject("TEMP_SeatProbe");
+                try
+                {
+                    probeObject.transform.SetPositionAndRotation(
+                        meshFilter.transform.position,
+                        meshFilter.transform.rotation);
+                    probeObject.transform.localScale = meshFilter.transform.lossyScale;
+                    var probe = probeObject.AddComponent<MeshCollider>();
+                    probe.sharedMesh = mesh;
+
+                    if (probe.Raycast(ray, out RaycastHit hit, bounds.size.y + 1f) &&
+                        hit.point.y > best)
+                    {
+                        best = hit.point.y;
+                    }
+                }
+                finally
+                {
+                    Object.DestroyImmediate(probeObject);
+                }
+            }
+
+            if (best <= float.MinValue)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(ChairSeatBaker)}] {chair.name}: seat surface probe found no mesh under " +
+                    "the seat centre; keeping the default height.",
+                    chair);
+                return 0.46f;
+            }
+
+            return Mathf.Max(0.1f, best - groundY);
         }
 
         private static Transform GetOrCreateSeatPoint(NetworkChairSeat chair)

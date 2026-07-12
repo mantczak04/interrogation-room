@@ -60,6 +60,13 @@ public class PlayerController : NetworkBehaviour
     private Vector3 firstPersonCameraLocalPos;
     private GameObject activeModelRoot;
     private Vector3 activeModelRootBaseLocalPos;
+    private Mesh seatedPoseMesh;
+    private float seatedButtToHipsHeight;
+    private bool hasSeatedButtHeight;
+    private int seatedFrameCount;
+
+    [SyncVar]
+    private float seatedSeatSurfaceHeight;
 
     [SyncVar(hook = nameof(OnSeatedChanged))]
     private bool isSeated;
@@ -263,6 +270,7 @@ public class PlayerController : NetworkBehaviour
 
         activeSeat = seat;
         isSeated = true;
+        seatedSeatSurfaceHeight = seat.SeatSurfaceHeight;
         verticalVelocity = 0f;
         ApplySeatPose(seat.SeatPosition, seat.SeatRotation);
         TargetApplyPose(connectionToClient, seat.SeatPosition, seat.SeatRotation, true);
@@ -683,9 +691,10 @@ public class PlayerController : NetworkBehaviour
     /// <summary>
     /// Every character's sit clip carries a different hips offset from the
     /// animation root, so seating the root at the seat centre leaves some
-    /// characters perched in front of the chair. After the animator poses the
-    /// skeleton, shift the visual model so the hips land on the seat, just in
-    /// front of the backrest — works for any character and any sit clip.
+    /// characters perched in front of, or hovering above, the chair. After
+    /// the animator poses the skeleton, shift the visual model so the hips
+    /// land over the seat and the measured bottom of the character rests on
+    /// the seat surface — works for any character and any sit clip.
     /// </summary>
     private void AlignSeatedHipsToSeat()
     {
@@ -697,6 +706,8 @@ public class PlayerController : NetworkBehaviour
         if (!isSeated || isDead || animator == null || !animator.isHuman)
         {
             activeModelRoot.transform.localPosition = activeModelRootBaseLocalPos;
+            seatedFrameCount = 0;
+            hasSeatedButtHeight = false;
             return;
         }
 
@@ -706,10 +717,72 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        seatedFrameCount++;
+
         Vector3 desired = transform.position - transform.forward * seatedHipsBackOffset;
         Vector3 delta = desired - hips.position;
         delta.y = 0f;
+
+        // The sit-down transition takes a moment; measure once the pose has
+        // settled and refine once more shortly after.
+        if (seatedFrameCount == 30 || seatedFrameCount == 90)
+        {
+            MeasureSeatedButtHeight(hips);
+        }
+
+        if (hasSeatedButtHeight)
+        {
+            float seatTopY = transform.position.y +
+                             (seatedSeatSurfaceHeight > 0f ? seatedSeatSurfaceHeight : 0.46f);
+            float desiredHipsY = seatTopY - 0.015f + seatedButtToHipsHeight;
+            delta.y = desiredHipsY - hips.position.y;
+        }
+
         activeModelRoot.transform.position += delta;
+    }
+
+    /// <summary>
+    /// Measures how far the character's lowest point under the pelvis sits
+    /// below the hips bone in the current pose, so the model can be dropped
+    /// until that point touches the seat surface.
+    /// </summary>
+    private void MeasureSeatedButtHeight(Transform hips)
+    {
+        SkinnedMeshRenderer skinnedRenderer = GetComponentInChildren<SkinnedMeshRenderer>(false);
+        if (skinnedRenderer == null)
+        {
+            return;
+        }
+
+        seatedPoseMesh ??= new Mesh();
+        skinnedRenderer.BakeMesh(seatedPoseMesh, true);
+
+        Matrix4x4 localToWorld = skinnedRenderer.transform.localToWorldMatrix;
+        Vector3 hipsPosition = hips.position;
+        float lowestY = float.MaxValue;
+
+        foreach (Vector3 vertex in seatedPoseMesh.vertices)
+        {
+            Vector3 world = localToWorld.MultiplyPoint3x4(vertex);
+            Vector2 planar = new(world.x - hipsPosition.x, world.z - hipsPosition.z);
+            if (planar.sqrMagnitude > 0.17f * 0.17f ||
+                world.y > hipsPosition.y ||
+                world.y < hipsPosition.y - 0.3f) // pelvis area only, not calves/feet
+            {
+                continue;
+            }
+
+            if (world.y < lowestY)
+            {
+                lowestY = world.y;
+            }
+        }
+
+        if (lowestY < float.MaxValue)
+        {
+            seatedButtToHipsHeight = hipsPosition.y - lowestY;
+            hasSeatedButtHeight = true;
+        }
     }
 
     private void OnAnimatorIK(int layerIndex)

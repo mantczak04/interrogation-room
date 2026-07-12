@@ -11,6 +11,9 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField] private Transform seatPoint;
         [SerializeField] private Transform standPoint;
 
+        [Header("Seat geometry")]
+        [SerializeField, Min(0f)] private float seatSurfaceHeight = 0.46f;
+
         [Header("Fallback pose")]
         [SerializeField, Min(0f)] private float seatHeight = 0.02f;
         [SerializeField, Min(0.25f)] private float standDistance = 0.75f;
@@ -95,6 +98,9 @@ namespace InterrogationRoom.Gameplay.Interaction
         }
 
         public Vector3 InteractionPosition => SeatPosition + transform.up * 0.45f;
+
+        /// <summary>Height of the sittable surface above SeatPosition.</summary>
+        public float SeatSurfaceHeight => seatSurfaceHeight;
 
         public string InteractionPrompt => interactionPrompt;
 

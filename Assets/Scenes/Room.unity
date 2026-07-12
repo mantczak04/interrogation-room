@@ -9875,6 +9875,7 @@ MonoBehaviour:
   syncInterval: 0
   seatPoint: {fileID: 1291460063}
   standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.48
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -13693,6 +13694,7 @@ MonoBehaviour:
   syncInterval: 0
   seatPoint: {fileID: 1463614304}
   standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.467
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -18425,6 +18427,7 @@ MonoBehaviour:
   syncInterval: 0
   seatPoint: {fileID: 1437957191}
   standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.4800001
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -25411,6 +25414,7 @@ MonoBehaviour:
   syncInterval: 0
   seatPoint: {fileID: 859621812}
   standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.48
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -30247,7 +30251,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.5500002
+      value: 3.6000001
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a997a39ce98588640b1b192ae84ec84c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -30350,6 +30354,7 @@ MonoBehaviour:
   syncInterval: 0
   seatPoint: {fileID: 1744252051}
   standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.48
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -32149,7 +32154,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1744252050}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0.0000029365103}
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0.000002936528}
   m_LocalPosition: {x: 0.1999998, y: 0, z: 0.20000006}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -36619,6 +36624,7 @@ MonoBehaviour:
   syncInterval: 0
   seatPoint: {fileID: 321344237}
   standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.48
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -37853,6 +37859,7 @@ MonoBehaviour:
   syncInterval: 0
   seatPoint: {fileID: 433988772}
   standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.48000002
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
@@ -40076,6 +40083,7 @@ MonoBehaviour:
   syncInterval: 0
   seatPoint: {fileID: 1701020589}
   standPoint: {fileID: 0}
+  seatSurfaceHeight: 0.4800001
   seatHeight: 0.02
   standDistance: 0.75
   standObstructionMask:
