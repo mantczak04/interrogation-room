@@ -19,8 +19,7 @@ namespace InterrogationRoom.Gameplay.Weapons
         [Header("Shooting")]
         [SerializeField, Min(1f)] private float shotRange = 100f;
         [SerializeField, Min(0.05f)] private float shotInterval = 0.25f;
-        [SerializeField, Range(0f, 180f)] private float maxAimAngle = 85f;
-        [SerializeField, Min(0f)] private float serverCameraHeight = 1.6f;
+        [SerializeField, Min(1f)] private float maxShotOriginDistance = 10f;
         [SerializeField] private LayerMask hitMask = ~0;
 
         [Header("Feedback")]
@@ -100,7 +99,8 @@ namespace InterrogationRoom.Gameplay.Weapons
 
             if (hasWeapon && WasFirePressed())
             {
-                CmdTryFire(playerCamera.transform.forward);
+                Transform cameraTransform = playerCamera.transform;
+                CmdTryFire(cameraTransform.position, cameraTransform.forward);
             }
         }
 
@@ -117,15 +117,22 @@ namespace InterrogationRoom.Gameplay.Weapons
         }
 
         [Command]
-        private void CmdTryFire(Vector3 requestedDirection)
+        private void CmdTryFire(Vector3 requestedOrigin, Vector3 requestedDirection)
         {
-            if (!hasWeapon || !IsFinite(requestedDirection) || requestedDirection.sqrMagnitude < 0.5f)
+            if (!hasWeapon ||
+                !IsFinite(requestedOrigin) ||
+                !IsFinite(requestedDirection) ||
+                requestedDirection.sqrMagnitude < 0.5f)
             {
                 return;
             }
 
-            Vector3 direction = requestedDirection.normalized;
-            if (!IsAimDirectionAllowed(direction))
+            // The client aims through its camera (the crosshair sits on the
+            // camera's centre ray), so the shot must start at the camera. The
+            // camera position is client authored; only accept it near the
+            // server-side body so a tampered client cannot shoot from afar.
+            if ((requestedOrigin - transform.position).sqrMagnitude >
+                maxShotOriginDistance * maxShotOriginDistance)
             {
                 return;
             }
@@ -138,20 +145,9 @@ namespace InterrogationRoom.Gameplay.Weapons
 
             nextServerShotTime = now + shotInterval;
 
-            Vector3 origin = ServerCameraPosition;
-            ShotResolution shot = ResolveShot(origin, direction);
-            RpcShowShot(origin, shot.Endpoint, shot.Normal, shot.HitKind);
-        }
-
-        private bool IsAimDirectionAllowed(Vector3 direction)
-        {
-            Vector3 horizontalDirection = Vector3.ProjectOnPlane(direction, Vector3.up);
-            if (horizontalDirection.sqrMagnitude < 0.0001f)
-            {
-                return true;
-            }
-
-            return Vector3.Angle(transform.forward, horizontalDirection.normalized) <= maxAimAngle;
+            Vector3 direction = requestedDirection.normalized;
+            ShotResolution shot = ResolveShot(requestedOrigin, direction);
+            RpcShowShot(requestedOrigin, shot.Endpoint, shot.Normal, shot.HitKind);
         }
 
         [Server]
@@ -308,8 +304,6 @@ namespace InterrogationRoom.Gameplay.Weapons
                 Destroy(tracerMaterial);
             }
         }
-
-        private Vector3 ServerCameraPosition => transform.TransformPoint(Vector3.up * serverCameraHeight);
 
         private static bool IsFinite(Vector3 value)
         {
