@@ -153,10 +153,10 @@ MonoBehaviour:
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 1
-  m_Antialiasing: 0
+  m_Antialiasing: 2
   m_AntialiasingQuality: 2
   m_StopNaN: 0
-  m_Dithering: 0
+  m_Dithering: 1
   m_ClearDepth: 1
   m_AllowXRRendering: 1
   m_AllowHDROutput: 1
@@ -281,6 +281,10 @@ MonoBehaviour:
     modelRoot: {fileID: 8441895133018389511}
     animatorController: {fileID: 9100000, guid: 9798dc649bf49c73b92dc7617f7efd3d, type: 2}
     avatar: {fileID: 9000000, guid: c7c0c5bc5b0ea3ac4a90665856f5146c, type: 3}
+  seatedHipsBackOffset: 0.06
+  minZoomDistance: 1
+  maxZoomDistance: 6
+  zoomSensitivity: 0.5
 --- !u!114 &1955240651609465090
 MonoBehaviour:
   m_ObjectHideFlags: 0
