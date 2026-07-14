@@ -29,6 +29,9 @@ namespace InterrogationRoom.Content
         [Tooltip("Uporządkowana lista faktów Alibi. Kolejność jest częścią treści.")]
         public List<AuthoredFact> alibiFacts = new List<AuthoredFact>();
 
+        [Tooltip("Ręcznie napisane Tropy powiązane ze stabilnymi id ukrywalnych faktów.")]
+        public List<AuthoredAlibiClue> alibiClues = new List<AuthoredAlibiClue>();
+
         [Tooltip("Minimalna liczba faktów ukrywanych Winnemu.")]
         [Min(0)]
         public int minHiddenFacts = 2;
@@ -40,12 +43,29 @@ namespace InterrogationRoom.Content
         [Serializable]
         public sealed class AuthoredFact
         {
+            [Tooltip("Stabilne id faktu. Wymagane, gdy wskazuje go Trop do Alibi.")]
+            public string id;
+
             [Tooltip("Krótki fakt do ustnego relacjonowania, z detalami do przekręcenia.")]
             [TextArea(1, 3)]
             public string text;
 
             [Tooltip("możliwyDoUkrycia — tylko takie fakty mogą zostać ukryte Winnemu.")]
             public bool canBeHidden;
+        }
+
+        [Serializable]
+        public sealed class AuthoredAlibiClue
+        {
+            [Tooltip("Stabilne id Tropu do Alibi.")]
+            public string id;
+
+            [Tooltip("Stabilne id ukrywalnego faktu, którego dotyczy Trop.")]
+            public string linkedFactId;
+
+            [Tooltip("Pośrednia treść do interpretacji, nigdy kopia faktu Alibi.")]
+            [TextArea(1, 3)]
+            public string content;
         }
 
         /// <summary>
@@ -62,9 +82,24 @@ namespace InterrogationRoom.Content
                 throw new InvalidOperationException($"CaseAsset '{name}' is invalid: {string.Join(" | ", errors)}");
 
             var facts = alibiFacts
-                .Select((fact, index) => new AlibiFact($"fact-{index}", fact.text.Trim(), fact.canBeHidden))
+                .Select((fact, index) => new AlibiFact(
+                    ResolveFactId(fact, index),
+                    fact.text.Trim(),
+                    fact.canBeHidden))
                 .ToList();
-            return new CaseDefinition(title.Trim(), crimeDescription.Trim(), facts, minHiddenFacts, maxHiddenFacts);
+            var clues = (alibiClues ?? new List<AuthoredAlibiClue>())
+                .Select(clue => new AlibiClueDefinition(
+                    new AlibiClueId(clue.id.Trim()),
+                    clue.linkedFactId.Trim(),
+                    clue.content.Trim()))
+                .ToList();
+            return new CaseDefinition(
+                title.Trim(),
+                crimeDescription.Trim(),
+                facts,
+                minHiddenFacts,
+                maxHiddenFacts,
+                clues);
         }
 
         /// <summary>
@@ -97,7 +132,55 @@ namespace InterrogationRoom.Content
             var hideableCount = alibiFacts.Count(f => f != null && f.canBeHidden);
             if (hideableCount < maxHiddenFacts)
                 errors.Add($"Only {hideableCount} facts are marked możliwyDoUkrycia, but up to {maxHiddenFacts} must be hidden.");
+            var factIds = alibiFacts
+                .Select((fact, index) => fact == null ? null : ResolveFactId(fact, index))
+                .ToArray();
+            if (factIds.Where(id => id != null).Distinct().Count() != factIds.Count(id => id != null))
+                errors.Add("Alibi contains duplicate fact ids.");
+
+            var clues = alibiClues ?? new List<AuthoredAlibiClue>();
+            if (clues.Any(clue => clue == null
+                || string.IsNullOrWhiteSpace(clue.id)
+                || string.IsNullOrWhiteSpace(clue.linkedFactId)
+                || string.IsNullOrWhiteSpace(clue.content)))
+            {
+                errors.Add("Alibi clues contain missing id, fact link or content.");
+            }
+
+            var validClues = clues.Where(clue => clue != null
+                && !string.IsNullOrWhiteSpace(clue.id)
+                && !string.IsNullOrWhiteSpace(clue.linkedFactId)
+                && !string.IsNullOrWhiteSpace(clue.content)).ToArray();
+            if (validClues.Select(clue => clue.id.Trim()).Distinct().Count() != validClues.Length)
+                errors.Add("Alibi clues contain duplicate ids.");
+
+            foreach (var clue in validClues)
+            {
+                var linkedIndex = Array.FindIndex(
+                    factIds,
+                    factId => string.Equals(factId, clue.linkedFactId.Trim(), StringComparison.Ordinal));
+                if (linkedIndex < 0)
+                {
+                    errors.Add($"Alibi clue '{clue.id}' has a missing fact link '{clue.linkedFactId}'.");
+                    continue;
+                }
+
+                var linkedFact = alibiFacts[linkedIndex];
+                if (!linkedFact.canBeHidden)
+                    errors.Add($"Alibi clue '{clue.id}' must link to a hideable fact.");
+                if (string.IsNullOrWhiteSpace(linkedFact.id))
+                    errors.Add($"Alibi clue '{clue.id}' requires an explicit stable fact id.");
+                if (clue.content.Trim().IndexOf(
+                    linkedFact.text.Trim(),
+                    StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    errors.Add($"Alibi clue '{clue.id}' cannot be a copy of its fact text.");
+                }
+            }
         }
+
+        private static string ResolveFactId(AuthoredFact fact, int index) =>
+            string.IsNullOrWhiteSpace(fact.id) ? $"fact-{index}" : fact.id.Trim();
 
         private void OnValidate()
         {

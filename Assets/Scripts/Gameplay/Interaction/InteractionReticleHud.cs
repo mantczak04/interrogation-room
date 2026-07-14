@@ -66,17 +66,18 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
-            bool targeted = interactor.HasHoveredTarget;
+            bool timedInteractionActive = interactor.HasActiveTimedInteraction;
+            bool targeted = timedInteractionActive || interactor.HasHoveredTarget;
             float desiredSize = targeted ? targetedSize : idleSize;
             currentSize = Mathf.Lerp(currentSize, desiredSize, Time.deltaTime * sizeLerpSpeed);
             dotRect.sizeDelta = new Vector2(currentSize, currentSize);
             dotImage.color = targeted ? targetedColor : idleColor;
 
-            string prompt = ResolvePrompt(targeted);
+            string prompt = ResolvePrompt(targeted, timedInteractionActive);
             bool showHint = !string.IsNullOrEmpty(prompt);
             if (showHint)
             {
-                hintLabel.text = $"{hintKey} {prompt}";
+                hintLabel.text = timedInteractionActive ? prompt : $"{hintKey} {prompt}";
             }
 
             if (hintLabel.enabled != showHint)
@@ -85,11 +86,17 @@ namespace InterrogationRoom.Gameplay.Interaction
             }
         }
 
-        private string ResolvePrompt(bool targeted)
+        private string ResolvePrompt(bool targeted, bool timedInteractionActive)
         {
             if (playerController != null && playerController.IsSeated)
             {
                 return standUpPrompt;
+            }
+
+            if (timedInteractionActive)
+            {
+                int progressPercent = Mathf.RoundToInt(interactor.TimedInteractionProgress01 * 100f);
+                return $"{interactor.ActiveTimedInteractionPrompt} {progressPercent}%";
             }
 
             return targeted ? interactor.HoveredPrompt : null;

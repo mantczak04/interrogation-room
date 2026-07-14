@@ -44,6 +44,16 @@ namespace InterrogationRoom.Content.Tests
                 new CaseAsset.AuthoredFact { text = "Grupa wróciła tramwajem numer 12.", canBeHidden = false },
                 new CaseAsset.AuthoredFact { text = "Na przystanku padał deszcz.", canBeHidden = false }
             };
+            asset.alibiFacts[1].id = "zupa";
+            asset.alibiClues = new List<CaseAsset.AuthoredAlibiClue>
+            {
+                new CaseAsset.AuthoredAlibiClue
+                {
+                    id = "paragon-zupa",
+                    linkedFactId = "zupa",
+                    content = "Paragon z restauracji: dwie zupy naliczone o 18:17."
+                }
+            };
             return asset;
         }
 
@@ -62,6 +72,12 @@ namespace InterrogationRoom.Content.Tests
             Assert.That(definition.AlibiFacts.Select(f => f.Text), Is.EqualTo(asset.alibiFacts.Select(f => f.text)));
             Assert.That(definition.AlibiFacts.Select(f => f.CanBeHidden), Is.EqualTo(asset.alibiFacts.Select(f => f.canBeHidden)));
             Assert.That(definition.AlibiFacts.Select(f => f.Id).Distinct().Count(), Is.EqualTo(6), "fact ids are unique");
+            Assert.That(definition.AlibiFacts[1].Id, Is.EqualTo("zupa"));
+            Assert.That(definition.AlibiClues.Count, Is.EqualTo(1));
+            Assert.That(definition.AlibiClues[0].Id, Is.EqualTo(new AlibiClueId("paragon-zupa")));
+            Assert.That(definition.AlibiClues[0].LinkedFactId, Is.EqualTo("zupa"));
+            Assert.That(definition.AlibiClues[0].Content,
+                Is.EqualTo("Paragon z restauracji: dwie zupy naliczone o 18:17."));
         }
 
         [Test]
@@ -72,13 +88,36 @@ namespace InterrogationRoom.Content.Tests
 
             asset.title = "Zmieniony tytuł";
             asset.alibiFacts[0].text = "Podmieniony fakt.";
+            asset.alibiClues[0].content = "Podmieniony Trop.";
             asset.alibiFacts.RemoveAt(5);
             asset.maxHiddenFacts = 3;
 
             Assert.That(definition.Title, Is.EqualTo("Testowa Sprawa"));
             Assert.That(definition.AlibiFacts.Count, Is.EqualTo(6));
+            Assert.That(definition.AlibiClues[0].Content,
+                Is.EqualTo("Paragon z restauracji: dwie zupy naliczone o 18:17."));
             Assert.That(definition.AlibiFacts[0].Text, Is.EqualTo("O 18:00 grupa spotkała się przy fontannie."));
             Assert.That(definition.MaxHiddenFacts, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void ToDefinition_InvalidAlibiClueBindingsAndCopiedFactText_AreBlocked()
+        {
+            var missingFact = ValidAsset();
+            missingFact.alibiClues[0].linkedFactId = "brakujacy-fakt";
+
+            var visibleFact = ValidAsset();
+            visibleFact.alibiClues[0].linkedFactId = "fact-0";
+
+            var copiedFact = ValidAsset();
+            copiedFact.alibiClues[0].content = copiedFact.alibiFacts[1].text;
+
+            Assert.That(() => missingFact.ToDefinition(), Throws.InvalidOperationException);
+            Assert.That(() => visibleFact.ToDefinition(), Throws.InvalidOperationException);
+            Assert.That(() => copiedFact.ToDefinition(), Throws.InvalidOperationException);
+            Assert.That(missingFact.Validate(), Has.Some.Contains("missing"));
+            Assert.That(visibleFact.Validate(), Has.Some.Contains("hideable"));
+            Assert.That(copiedFact.Validate(), Has.Some.Contains("copy"));
         }
 
         [Test]

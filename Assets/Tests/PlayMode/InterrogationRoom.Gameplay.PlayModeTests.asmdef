@@ -1,0 +1,21 @@
+{
+    "name": "InterrogationRoom.Gameplay.PlayModeTests",
+    "rootNamespace": "InterrogationRoom.Gameplay.Tests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "Mirror"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

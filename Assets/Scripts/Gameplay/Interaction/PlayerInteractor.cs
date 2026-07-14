@@ -20,22 +20,44 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField, Min(0f)] private float serverViewHeight = 1.6f;
         [SerializeField] private LayerMask interactionMask = ~0;
 
+        [Header("Timed interaction")]
+        [SerializeField] private string interactionAnimatorBool = "IsInteracting";
+
         private PlayerController playerController;
+        private Animator animator;
         private Component hoveredTarget;
         private NetworkIdentity hoveredIdentity;
         private INetworkInteractable hoveredInteractable;
+        private INetworkTimedInteractable activeTimedTarget;
+        private NetworkIdentity activeTimedTargetIdentity;
+        private double activeTimedEndsAt;
+        private bool localTimedInteractionActive;
+        private double localTimedInteractionStartedAt;
+        private double localTimedInteractionEndsAt;
+        private string localTimedInteractionPrompt;
+
+        [SyncVar(hook = nameof(OnInteractionMovementLockedChanged))]
+        private bool interactionMovementLocked;
 
         public Component HoveredTarget => hoveredTarget;
 
         public bool HasHoveredTarget => hoveredTarget != null && hoveredInteractable != null;
 
         public string HoveredPrompt => hoveredInteractable?.InteractionPrompt;
+        public bool IsMovementLocked => interactionMovementLocked;
+        public bool HasActiveTimedInteraction => localTimedInteractionActive;
+        public string ActiveTimedInteractionPrompt => localTimedInteractionPrompt;
+        public float TimedInteractionProgress01 => !localTimedInteractionActive
+            ? 0f
+            : Mathf.Clamp01((float)((NetworkTime.time - localTimedInteractionStartedAt) /
+                Math.Max(0.001d, localTimedInteractionEndsAt - localTimedInteractionStartedAt)));
 
         public event Action<Component> HoveredTargetChanged;
 
         private void Awake()
         {
             playerController = GetComponent<PlayerController>();
+            animator = GetComponent<Animator>();
         }
 
         public override void OnStartLocalPlayer()
@@ -52,11 +74,17 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         private void OnDisable()
         {
+            if (NetworkServer.active)
+                CancelActiveTimedInteractionServer(TimedInteractionCancellationReason.PerformerUnavailable);
             SetHoveredTarget(null, null);
+            ClearLocalTimedInteraction();
         }
 
         private void Update()
         {
+            if (isServer)
+                UpdateActiveTimedInteractionServer();
+
             if (!isLocalPlayer || interactionCamera == null)
             {
                 return;
@@ -64,11 +92,24 @@ namespace InterrogationRoom.Gameplay.Interaction
 
             if (PlayerController.CursorReleased)
             {
+                if (localTimedInteractionActive)
+                {
+                    ClearLocalTimedInteraction();
+                    CmdCancelTimedInteraction();
+                }
+
                 SetHoveredTarget(null, null);
                 return;
             }
 
             RefreshHoveredTarget();
+
+            if (localTimedInteractionActive && WasInteractReleased())
+            {
+                ClearLocalTimedInteraction();
+                CmdCancelTimedInteraction();
+                return;
+            }
 
             if (!WasInteractPressed())
             {
@@ -198,7 +239,7 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
-            interactable.TryInteractServer(netIdentity);
+            TryBeginOrCompleteInstantServer(targetIdentity, interactable);
         }
 
         [Command]
@@ -227,7 +268,157 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
+            Component targetComponent = interactable as Component;
+            NetworkIdentity targetIdentity = targetComponent != null
+                ? targetComponent.GetComponentInParent<NetworkIdentity>()
+                : null;
+            TryBeginOrCompleteInstantServer(targetIdentity, interactable);
+        }
+
+        [Command]
+        private void CmdCancelTimedInteraction()
+        {
+            CancelActiveTimedInteractionServer(TimedInteractionCancellationReason.Explicit);
+        }
+
+        [Server]
+        private void TryBeginOrCompleteInstantServer(
+            NetworkIdentity targetIdentity,
+            INetworkInteractable interactable)
+        {
+            if (activeTimedTarget != null)
+                return;
+
+            if (interactable is INetworkTimedInteractable timedInteractable)
+            {
+                if (targetIdentity == null ||
+                    !timedInteractable.TryBeginInteractionServer(netIdentity))
+                {
+                    return;
+                }
+
+                // A synchronous server binder may reject the emitted begin
+                // result and cancel the reservation before this method resumes.
+                if (!timedInteractable.HasActiveInteractor)
+                    return;
+
+                activeTimedTarget = timedInteractable;
+                activeTimedTargetIdentity = targetIdentity;
+                activeTimedEndsAt = NetworkTime.time + Math.Max(0.05d, timedInteractable.InteractionDuration);
+                interactionMovementLocked = true;
+                SetInteractionAnimation(true);
+                TargetBeginTimedInteraction(
+                    connectionToClient,
+                    activeTimedEndsAt,
+                    timedInteractable.InteractionDuration,
+                    timedInteractable.InteractionPrompt);
+                return;
+            }
+
             interactable.TryInteractServer(netIdentity);
+        }
+
+        [Server]
+        private void UpdateActiveTimedInteractionServer()
+        {
+            if (activeTimedTarget == null)
+                return;
+
+            Component targetComponent = activeTimedTarget as Component;
+            if (targetComponent == null || activeTimedTargetIdentity == null ||
+                playerController == null || playerController.IsDead || playerController.IsSeated)
+            {
+                CancelActiveTimedInteractionServer(TimedInteractionCancellationReason.PerformerUnavailable);
+                return;
+            }
+
+            float allowedDistance = interactionRange + serverRangeTolerance;
+            Vector3 interactionPosition = activeTimedTarget.InteractionPosition;
+            if ((interactionPosition - transform.position).sqrMagnitude > allowedDistance * allowedDistance ||
+                !HasLineOfSightTo(activeTimedTargetIdentity, interactionPosition))
+            {
+                CancelActiveTimedInteractionServer(TimedInteractionCancellationReason.ValidationFailed);
+                return;
+            }
+
+            if (NetworkTime.time < activeTimedEndsAt)
+                return;
+
+            bool completed = activeTimedTarget.TryCompleteInteractionServer(netIdentity);
+            if (!completed)
+                activeTimedTarget.CancelInteractionServer(
+                    netIdentity,
+                    TimedInteractionCancellationReason.CompletionRejected);
+            EndActiveTimedInteractionServer(completed);
+        }
+
+        [Server]
+        private void CancelActiveTimedInteractionServer(TimedInteractionCancellationReason reason)
+        {
+            activeTimedTarget?.CancelInteractionServer(netIdentity, reason);
+            EndActiveTimedInteractionServer(false);
+        }
+
+        [Server]
+        private void EndActiveTimedInteractionServer(bool completed)
+        {
+            activeTimedTarget = null;
+            activeTimedTargetIdentity = null;
+            activeTimedEndsAt = 0d;
+            interactionMovementLocked = false;
+            SetInteractionAnimation(false);
+            if (connectionToClient != null)
+                TargetEndTimedInteraction(connectionToClient, completed);
+        }
+
+        [TargetRpc]
+        private void TargetBeginTimedInteraction(
+            NetworkConnection target,
+            double endsAt,
+            float duration,
+            string prompt)
+        {
+            localTimedInteractionActive = true;
+            localTimedInteractionEndsAt = endsAt;
+            localTimedInteractionStartedAt = endsAt - Math.Max(0.05d, duration);
+            localTimedInteractionPrompt = prompt;
+        }
+
+        [TargetRpc]
+        private void TargetEndTimedInteraction(NetworkConnection target, bool _)
+        {
+            ClearLocalTimedInteraction();
+        }
+
+        private void ClearLocalTimedInteraction()
+        {
+            localTimedInteractionActive = false;
+            localTimedInteractionStartedAt = 0d;
+            localTimedInteractionEndsAt = 0d;
+            localTimedInteractionPrompt = null;
+        }
+
+        private void OnInteractionMovementLockedChanged(bool _, bool locked)
+        {
+            SetInteractionAnimation(locked);
+        }
+
+        private void SetInteractionAnimation(bool active)
+        {
+            if (animator == null ||
+                animator.runtimeAnimatorController == null ||
+                string.IsNullOrWhiteSpace(interactionAnimatorBool))
+                return;
+
+            foreach (AnimatorControllerParameter parameter in animator.parameters)
+            {
+                if (parameter.type == AnimatorControllerParameterType.Bool &&
+                    parameter.name == interactionAnimatorBool)
+                {
+                    animator.SetBool(interactionAnimatorBool, active);
+                    return;
+                }
+            }
         }
 
         private bool HasLineOfSightTo(NetworkIdentity targetIdentity, Vector3 interactionPosition)
@@ -318,6 +509,15 @@ namespace InterrogationRoom.Gameplay.Interaction
             return Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
 #else
             return Input.GetKeyDown(KeyCode.E);
+#endif
+        }
+
+        private static bool WasInteractReleased()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return Keyboard.current != null && Keyboard.current.eKey.wasReleasedThisFrame;
+#else
+            return Input.GetKeyUp(KeyCode.E);
 #endif
         }
     }

@@ -23,13 +23,18 @@
             <ui:VisualElement class="hud-card">
                 <ui:Label name="hud-role-label" class="hud-role" />
                 <ui:Label name="hud-crime-label" class="hud-crime" />
-                <ui:DropdownField name="execution-target" label="Podejrzany" />
-                <ui:Button name="execute-button" text="Wykonaj Egzekucję" class="danger-button" />
+            </ui:VisualElement>
+            <ui:VisualElement name="private-panel" class="private-card">
+                <ui:Label name="private-title-label" class="private-title" />
+                <ui:Label name="private-label" class="private-text" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="result-panel" class="screen-card">
+        <ui:VisualElement name="result-panel" class="screen-card result-card">
             <ui:Label text="Koniec Rundy" class="title" />
-            <ui:Label name="result-label" class="result" />
+            <ui:ScrollView name="result-scroll" class="result-scroll">
+                <ui:Label name="result-label" class="result" />
+            </ui:ScrollView>
+            <ui:Button name="return-to-lobby-button" text="Powrót do lobby" class="primary-button" />
         </ui:VisualElement>
         <ui:Label name="rejection-label" class="rejection" />
     </ui:VisualElement>

@@ -1,4 +1,5 @@
 using Mirror;
+using InterrogationRoom.Networking;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -8,7 +9,7 @@ namespace InterrogationRoom.Gameplay.Weapons
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NetworkIdentity))]
-    public sealed class PlayerWeaponController : NetworkBehaviour
+    public sealed class PlayerWeaponController : NetworkBehaviour, IRoundWeaponPort
     {
         [Header("References")]
         [SerializeField] private Camera playerCamera;
@@ -32,12 +33,16 @@ namespace InterrogationRoom.Gameplay.Weapons
         [SyncVar(hook = nameof(OnHasWeaponChanged))]
         private bool hasWeapon;
 
+        [SyncVar]
+        private bool weaponAuthorized;
+
         private double nextServerShotTime;
         private GameObject heldWeaponVisual;
         private WeaponMuzzle heldWeaponMuzzle;
         private Material tracerMaterial;
 
         public bool HasWeapon => hasWeapon;
+        public bool IsWeaponAuthorized => weaponAuthorized;
 
         public override void OnStartClient()
         {
@@ -107,7 +112,8 @@ namespace InterrogationRoom.Gameplay.Weapons
         [Server]
         public bool TryEquipWeaponServer()
         {
-            if (hasWeapon || !NetworkServer.active)
+            if (!NetworkServer.active ||
+                !RoundPhysicalRules.CanEquipWeapon(weaponAuthorized, hasWeapon))
             {
                 return false;
             }
@@ -116,10 +122,30 @@ namespace InterrogationRoom.Gameplay.Weapons
             return true;
         }
 
+        [Server]
+        public bool SetWeaponAuthorizationServer(bool authorized)
+        {
+            if (!NetworkServer.active)
+            {
+                return false;
+            }
+
+            bool changed = weaponAuthorized != authorized;
+            weaponAuthorized = authorized;
+
+            if (!authorized && hasWeapon)
+            {
+                hasWeapon = false;
+                changed = true;
+            }
+
+            return changed;
+        }
+
         [Command]
         private void CmdTryFire(Vector3 requestedOrigin, Vector3 requestedDirection)
         {
-            if (!hasWeapon ||
+            if (!RoundPhysicalRules.CanFireWeapon(weaponAuthorized, hasWeapon) ||
                 !IsFinite(requestedOrigin) ||
                 !IsFinite(requestedDirection) ||
                 requestedDirection.sqrMagnitude < 0.5f)

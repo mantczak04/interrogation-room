@@ -5,8 +5,8 @@ using System.Linq;
 namespace InterrogationRoom.Domain
 {
     /// <summary>
-    /// The single source of Runda rules: phases, roles, Alibi access, Limit
-    /// Rundy resolution and the Egzekucja. Pure C# — no Unity, Mirror, UI or
+    /// The single source of Runda rules: phases, roles, Alibi access, Prywatne
+    /// Cele, Limit Rundy resolution and the Egzekucja. Pure C# — no Unity, Mirror, UI or
     /// clock. Time enters only as the TimeExpired command; all randomness comes
     /// from the StartRound seed. Commands never throw for disallowed input:
     /// they return a rejection without changing state.
@@ -21,11 +21,23 @@ namespace InterrogationRoom.Domain
         private PlayerId[] _players = Array.Empty<PlayerId>();
         private readonly Dictionary<PlayerId, RoundRole> _roles = new Dictionary<PlayerId, RoundRole>();
         private readonly HashSet<string> _hiddenFactIds = new HashSet<string>();
-        private readonly Dictionary<PlayerId, PlayerId> _secretObjectives = new Dictionary<PlayerId, PlayerId>();
+        private readonly Dictionary<PlayerId, PrivateObjectiveState> _privateObjectives =
+            new Dictionary<PlayerId, PrivateObjectiveState>();
+        private readonly Dictionary<IncidentId, IncidentState> _incidents =
+            new Dictionary<IncidentId, IncidentState>();
+        private readonly List<IncidentState> _incidentOrder = new List<IncidentState>();
+        private readonly List<IncidentRegistryEntryView> _incidentRegistry =
+            new List<IncidentRegistryEntryView>();
+        private readonly List<AlibiClueDefinition> _acquiredAlibiClues =
+            new List<AlibiClueDefinition>();
+        private readonly HashSet<AlibiClueId> _acquiredAlibiClueIds =
+            new HashSet<AlibiClueId>();
+        private EscapePlanState _escapePlan;
         private PlayerId? _detective;
         private PlayerId? _executedPlayer;
         private bool? _detectiveWon;
         private RoundEndCause? _endCause;
+        private EscapeExitId? _successfulEscapeExit;
 
         public RoundTransition Handle(RoundCommand command)
         {
@@ -39,6 +51,22 @@ namespace InterrogationRoom.Domain
                     return HandleExecute(execute);
                 case RoundCommand.TimeExpired _:
                     return HandleTimeExpired();
+                case RoundCommand.AdvancePrivateObjective advance:
+                    return HandleAdvancePrivateObjective(advance);
+                case RoundCommand.RegisterIncident registerIncident:
+                    return HandleRegisterIncident(registerIncident);
+                case RoundCommand.DiscoverQuietIncident discoverQuietIncident:
+                    return HandleDiscoverQuietIncident(discoverQuietIncident);
+                case RoundCommand.AcquireAlibiClue acquireAlibiClue:
+                    return HandleAcquireAlibiClue(acquireAlibiClue);
+                case RoundCommand.PrepareEscape prepareEscape:
+                    return HandlePrepareEscape(prepareEscape);
+                case RoundCommand.BeginEscape beginEscape:
+                    return HandleBeginEscape(beginEscape);
+                case RoundCommand.InterruptEscape interruptEscape:
+                    return HandleInterruptEscape(interruptEscape);
+                case RoundCommand.CompleteEscape completeEscape:
+                    return HandleCompleteEscape(completeEscape);
                 case null:
                     return Reject("Command is null.");
                 default:
@@ -60,13 +88,44 @@ namespace InterrogationRoom.Domain
             if (_phase == RoundPhase.Preparation && role != RoundRole.Detective)
                 alibi = BuildAlibiView(role);
 
-            SecretObjectiveView secretObjective = null;
-            if (_secretObjectives.TryGetValue(viewer, out var target))
-                secretObjective = new SecretObjectiveView(target);
+            PrivateObjectiveView privateObjective = null;
+            if (_privateObjectives.TryGetValue(viewer, out var objective))
+                privateObjective = BuildPrivateObjectiveView(objective);
 
             PlayerResultView result = null;
             if (_phase == RoundPhase.Finished)
                 result = BuildResult(viewer, role);
+
+            IReadOnlyList<IncidentRegistryEntryView> incidentRegistry = null;
+            if (role == RoundRole.Detective)
+                incidentRegistry = Array.AsReadOnly(_incidentRegistry.ToArray());
+
+            IReadOnlyList<IncidentRevealView> revealedIncidents = null;
+            if (_phase == RoundPhase.Finished)
+            {
+                revealedIncidents = Array.AsReadOnly(_incidentOrder
+                    .Select(incident => new IncidentRevealView(
+                        incident.Id,
+                        incident.Kind,
+                        incident.Effect,
+                        incident.Location,
+                        incident.Author))
+                    .ToArray());
+            }
+
+            IReadOnlyList<AlibiClueView> acquiredAlibiClues = null;
+            EscapePlanView escapePlan = null;
+            if (role == RoundRole.Guilty)
+            {
+                acquiredAlibiClues = Array.AsReadOnly(_acquiredAlibiClues
+                    .Select(clue => new AlibiClueView(clue.Id, clue.Content))
+                    .ToArray());
+                escapePlan = BuildEscapePlanView();
+            }
+
+            RoundRevealView roundReveal = null;
+            if (_phase == RoundPhase.Finished)
+                roundReveal = BuildRoundReveal(revealedIncidents);
 
             return new PlayerRoundView(
                 viewer,
@@ -74,10 +133,15 @@ namespace InterrogationRoom.Domain
                 role,
                 _case.CrimeDescription,
                 alibi,
-                secretObjective,
+                privateObjective,
                 result,
                 Array.AsReadOnly((PlayerId[])_players.Clone()),
-                _detective.Value);
+                _detective.Value,
+                incidentRegistry,
+                revealedIncidents,
+                acquiredAlibiClues,
+                escapePlan,
+                roundReveal);
         }
 
         private RoundTransition HandleStartRound(RoundCommand.StartRound start)
@@ -105,9 +169,44 @@ namespace InterrogationRoom.Domain
                 || start.Case.MaxHiddenFacts > hideableCount)
                 return Reject("Case hidden-fact range is invalid for its hideable facts.");
 
-            var innocentCount = players.Count - 2;
-            if (start.SecretObjectiveCount < 0 || start.SecretObjectiveCount > innocentCount)
-                return Reject($"SecretObjectiveCount must be between 0 and {innocentCount}.");
+            var clues = start.Case.AlibiClues;
+            if (clues.Any(clue => clue == null)
+                || clues.Select(clue => clue.Id).Distinct().Count() != clues.Count)
+                return Reject("Case contains null or duplicate Alibi clues.");
+            foreach (var clue in clues)
+            {
+                var linkedFact = facts.SingleOrDefault(fact => fact.Id == clue.LinkedFactId);
+                if (linkedFact == null || !linkedFact.CanBeHidden)
+                    return Reject("Every Alibi clue must link to an existing hideable fact.");
+                if (clue.Content.Trim().IndexOf(
+                    linkedFact.Text.Trim(),
+                    StringComparison.OrdinalIgnoreCase) >= 0)
+                    return Reject("An Alibi clue cannot copy its linked fact text.");
+            }
+
+            if (start.EscapePlan == null)
+                return Reject("StartRound requires an EscapePlanDefinition.");
+
+            if (start.SecretObjectiveCount < 0)
+                return Reject("SecretObjectiveCount cannot be negative.");
+
+            int secretObjectiveCount;
+            if (players.Count == MinPlayers)
+            {
+                secretObjectiveCount = 0;
+            }
+            else if (!start.SecretObjectiveCount.HasValue)
+            {
+                secretObjectiveCount = 1;
+            }
+            else if (start.SecretObjectiveCount.Value <= 1)
+            {
+                secretObjectiveCount = start.SecretObjectiveCount.Value;
+            }
+            else
+            {
+                return Reject("Five- and six-player Rundy support 0 or 1 Sekretny Cel.");
+            }
 
             var rng = new Random(start.Seed);
 
@@ -115,10 +214,17 @@ namespace InterrogationRoom.Domain
             _players = players.ToArray();
             _roles.Clear();
             _hiddenFactIds.Clear();
-            _secretObjectives.Clear();
+            _privateObjectives.Clear();
+            _incidents.Clear();
+            _incidentOrder.Clear();
+            _incidentRegistry.Clear();
+            _acquiredAlibiClues.Clear();
+            _acquiredAlibiClueIds.Clear();
+            _escapePlan = new EscapePlanState(start.EscapePlan);
             _executedPlayer = null;
             _detectiveWon = null;
             _endCause = null;
+            _successfulEscapeExit = null;
 
             var pool = _players.ToList();
             var detective = TakeRandom(pool, rng);
@@ -134,12 +240,35 @@ namespace InterrogationRoom.Domain
             for (var i = 0; i < hiddenCount; i++)
                 _hiddenFactIds.Add(TakeRandom(hideable, rng).Id);
 
+            var secretOwners = new Dictionary<PlayerId, PlayerId>();
             var objectiveOwners = pool.ToList();
-            for (var i = 0; i < start.SecretObjectiveCount; i++)
+            for (var i = 0; i < secretObjectiveCount; i++)
             {
                 var owner = TakeRandom(objectiveOwners, rng);
                 var candidates = pool.Where(p => p != owner).ToList();
-                _secretObjectives[owner] = candidates[rng.Next(candidates.Count)];
+                secretOwners[owner] = candidates[rng.Next(candidates.Count)];
+            }
+
+            foreach (var innocent in pool)
+            {
+                if (secretOwners.TryGetValue(innocent, out var target))
+                {
+                    _privateObjectives[innocent] = new PrivateObjectiveState(
+                        PrivateObjectiveDefinitions.SecretObjective,
+                        BuildPrivateObjectiveAssignmentId(
+                            PrivateObjectiveDefinitions.SecretObjective,
+                            innocent),
+                        target);
+                }
+                else
+                {
+                    _privateObjectives[innocent] = new PrivateObjectiveState(
+                        PrivateObjectiveDefinitions.PersonalMatter,
+                        BuildPrivateObjectiveAssignmentId(
+                            PrivateObjectiveDefinitions.PersonalMatter,
+                            innocent),
+                        target: null);
+                }
             }
 
             _phase = RoundPhase.Preparation;
@@ -187,6 +316,362 @@ namespace InterrogationRoom.Domain
                 new RoundEvent.RoundEnded(false, RoundEndCause.TimeExpired));
         }
 
+        private RoundTransition HandleAdvancePrivateObjective(RoundCommand.AdvancePrivateObjective advance)
+        {
+            if (!TryAdvancePrivateObjective(
+                    advance.Player,
+                    advance.ObjectiveId,
+                    advance.StepId,
+                    out var objectiveEvent,
+                    out var rejectionReason))
+                return Reject(rejectionReason);
+
+            return RoundTransition.Accept(
+                BuildPublicState(),
+                objectiveEvent);
+        }
+
+        private RoundTransition HandleRegisterIncident(RoundCommand.RegisterIncident register)
+        {
+            if (!TryRegisterIncident(
+                register.Author,
+                register.IncidentId,
+                register.Kind,
+                register.Effect,
+                register.Location,
+                register.OccurredAt,
+                out var incident,
+                out var rejectionReason))
+                return Reject(rejectionReason);
+
+            var events = new List<RoundEvent>
+            {
+                new RoundEvent.IncidentRegistered(incident.Id, incident.Kind)
+            };
+
+            if (incident.Kind == IncidentKind.Loud)
+                ReportIncident(incident, incident.OccurredAt);
+
+            if (register.ObjectiveStep != null
+                && TryAdvancePrivateObjective(
+                    register.Author,
+                    register.ObjectiveStep.ObjectiveId,
+                    register.ObjectiveStep.StepId,
+                    out var objectiveEvent,
+                    out _))
+            {
+                events.Add(objectiveEvent);
+            }
+
+            return RoundTransition.Accept(BuildPublicState(), events.ToArray());
+        }
+
+        private RoundTransition HandleDiscoverQuietIncident(RoundCommand.DiscoverQuietIncident discover)
+        {
+            if (_phase != RoundPhase.Round)
+                return Reject("Quiet Incydenty can only be discovered during the Runda.");
+            if (!_roles.TryGetValue(discover.Detective, out var role)
+                || role != RoundRole.Detective)
+                return Reject("Only the Detektyw can discover a quiet Incydent.");
+            if (!_incidents.TryGetValue(discover.IncidentId, out var incident))
+                return Reject("The quiet Incydent does not exist.");
+            if (incident.Kind != IncidentKind.Quiet)
+                return Reject("Only a quiet Incydent requires discovery.");
+            if (incident.IsReported)
+                return Reject("The quiet Incydent has already been discovered.");
+            if (discover.DiscoveredAt < incident.OccurredAt)
+                return Reject("An Incydent cannot be discovered before its world effect occurred.");
+
+            ReportIncident(incident, discover.DiscoveredAt);
+            return RoundTransition.Accept(
+                BuildPublicState(),
+                new RoundEvent.QuietIncidentDiscovered(incident.Id));
+        }
+
+        private RoundTransition HandleAcquireAlibiClue(RoundCommand.AcquireAlibiClue acquire)
+        {
+            if (_phase != RoundPhase.Round)
+                return Reject("Tropy do Alibi can only be acquired during the Runda.");
+            if (!_roles.TryGetValue(acquire.Player, out var role) || role != RoundRole.Guilty)
+                return Reject("Only the Winny can acquire a Trop do Alibi.");
+
+            var clue = _case.AlibiClues.SingleOrDefault(candidate => candidate.Id == acquire.ClueId);
+            if (clue == null)
+                return Reject("The requested Trop do Alibi is not part of this Sprawa.");
+            if (!_hiddenFactIds.Contains(clue.LinkedFactId))
+                return Reject("A Trop can only be acquired for a fact hidden in this Runda.");
+            if (_acquiredAlibiClueIds.Contains(clue.Id))
+                return Reject("The Trop do Alibi has already been acquired.");
+
+            if (!TryRegisterIncident(
+                acquire.Player,
+                acquire.IncidentId,
+                acquire.IncidentKind,
+                acquire.Effect,
+                acquire.Location,
+                acquire.OccurredAt,
+                out var incident,
+                out var rejectionReason))
+                return Reject(rejectionReason);
+
+            _acquiredAlibiClueIds.Add(clue.Id);
+            _acquiredAlibiClues.Add(clue);
+            if (incident.Kind == IncidentKind.Loud)
+                ReportIncident(incident, incident.OccurredAt);
+
+            return RoundTransition.Accept(
+                BuildPublicState(),
+                new RoundEvent.IncidentRegistered(incident.Id, incident.Kind));
+        }
+
+        private RoundTransition HandlePrepareEscape(RoundCommand.PrepareEscape prepare)
+        {
+            if (!TryGetEscapeActor(prepare.Player, prepare.PlanId, out var rejectionReason))
+                return Reject(rejectionReason);
+            if (_escapePlan.ActiveExit.HasValue)
+                return Reject("The active Ucieczka attempt must finish or be interrupted first.");
+
+            if (!_escapePlan.CommonPreparationComplete)
+            {
+                var expected = _escapePlan.Definition.CommonSteps[_escapePlan.CompletedCommonStepCount].Id;
+                if (prepare.StepId != expected)
+                    return Reject("The reported step is not the current Plan Ucieczki step.");
+
+                _escapePlan.CompletedCommonStepCount++;
+                _escapePlan.Actions.Add(new EscapeActionRevealView(
+                    EscapeActionKind.PreparedCommonStep,
+                    stepId: prepare.StepId));
+                return RoundTransition.Accept(BuildPublicState());
+            }
+
+            var exit = _escapePlan.Definition.Exits.SingleOrDefault(
+                candidate => candidate.PreparationStepId == prepare.StepId);
+            if (exit == null)
+                return Reject("The reported step does not prepare a compatible Ucieczka exit.");
+            if (!_escapePlan.PreparedExits.Add(exit.Id))
+                return Reject("That Ucieczka exit is already prepared.");
+
+            _escapePlan.Actions.Add(new EscapeActionRevealView(
+                EscapeActionKind.PreparedExit,
+                stepId: prepare.StepId,
+                exitId: exit.Id));
+            return RoundTransition.Accept(BuildPublicState());
+        }
+
+        private RoundTransition HandleBeginEscape(RoundCommand.BeginEscape begin)
+        {
+            if (!TryGetEscapeActor(begin.Player, begin.PlanId, out var rejectionReason))
+                return Reject(rejectionReason);
+            if (_escapePlan.ActiveExit.HasValue)
+                return Reject("An Ucieczka attempt is already active.");
+            if (!_escapePlan.CommonPreparationComplete)
+                return Reject("The common Plan Ucieczki steps are incomplete.");
+
+            var exit = _escapePlan.Definition.Exits.SingleOrDefault(candidate => candidate.Id == begin.ExitId);
+            if (exit == null)
+                return Reject("The requested exit is not compatible with this Plan Ucieczki.");
+            if (!_escapePlan.PreparedExits.Contains(exit.Id))
+                return Reject("The requested Ucieczka exit is not prepared.");
+
+            if (!TryRegisterIncident(
+                begin.Player,
+                begin.IncidentId,
+                IncidentKind.Loud,
+                EscapePlanDefinitions.FinalEffect,
+                exit.Location,
+                begin.OccurredAt,
+                out var incident,
+                out rejectionReason))
+                return Reject(rejectionReason);
+
+            _escapePlan.ActiveExit = exit.Id;
+            _escapePlan.Actions.Add(new EscapeActionRevealView(
+                EscapeActionKind.AttemptStarted,
+                exitId: exit.Id));
+            ReportIncident(incident, incident.OccurredAt);
+            return RoundTransition.Accept(
+                BuildPublicState(),
+                new RoundEvent.IncidentRegistered(incident.Id, incident.Kind),
+                new RoundEvent.EscapeAttemptStarted(exit.Id, exit.Location));
+        }
+
+        private RoundTransition HandleInterruptEscape(RoundCommand.InterruptEscape interrupt)
+        {
+            if (!TryGetEscapeActor(interrupt.Player, interrupt.PlanId, out var rejectionReason))
+                return Reject(rejectionReason);
+            if (_escapePlan.ActiveExit != interrupt.ExitId)
+                return Reject("The requested Ucieczka attempt is not active.");
+
+            _escapePlan.ActiveExit = null;
+            _escapePlan.PreparedExits.Remove(interrupt.ExitId);
+            _escapePlan.Actions.Add(new EscapeActionRevealView(
+                EscapeActionKind.AttemptInterrupted,
+                exitId: interrupt.ExitId));
+            return RoundTransition.Accept(
+                BuildPublicState(),
+                new RoundEvent.EscapeAttemptInterrupted(interrupt.ExitId));
+        }
+
+        private RoundTransition HandleCompleteEscape(RoundCommand.CompleteEscape complete)
+        {
+            if (!TryGetEscapeActor(complete.Player, complete.PlanId, out var rejectionReason))
+                return Reject(rejectionReason);
+            if (_escapePlan.ActiveExit != complete.ExitId)
+                return Reject("The requested Ucieczka attempt is not active.");
+
+            _escapePlan.ActiveExit = null;
+            _escapePlan.SuccessfulExit = complete.ExitId;
+            _escapePlan.Actions.Add(new EscapeActionRevealView(
+                EscapeActionKind.Completed,
+                exitId: complete.ExitId));
+            _successfulEscapeExit = complete.ExitId;
+            _detectiveWon = false;
+            _endCause = RoundEndCause.Escape;
+            _phase = RoundPhase.Finished;
+            return RoundTransition.Accept(
+                BuildPublicState(),
+                new RoundEvent.PlayerEscaped(complete.ExitId),
+                new RoundEvent.RoundEnded(false, RoundEndCause.Escape));
+        }
+
+        private bool TryGetEscapeActor(
+            PlayerId player,
+            EscapePlanId planId,
+            out string rejectionReason)
+        {
+            rejectionReason = null;
+            if (_phase != RoundPhase.Round)
+            {
+                rejectionReason = "Plan Ucieczki commands are only allowed during the Runda.";
+                return false;
+            }
+            if (!_roles.TryGetValue(player, out var role) || role != RoundRole.Guilty)
+            {
+                rejectionReason = "Only the Winny can advance the Plan Ucieczki.";
+                return false;
+            }
+            if (_escapePlan == null || _escapePlan.Definition.Id != planId)
+            {
+                rejectionReason = "The reported Plan Ucieczki is not assigned to this Runda.";
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool TryRegisterIncident(
+            PlayerId author,
+            IncidentId incidentId,
+            IncidentKind kind,
+            IncidentEffectId effect,
+            IncidentLocationId location,
+            IncidentTimestamp occurredAt,
+            out IncidentState incident,
+            out string rejectionReason)
+        {
+            incident = null;
+            rejectionReason = null;
+            if (_phase != RoundPhase.Round)
+            {
+                rejectionReason = "Incydenty can only be registered during the Runda.";
+                return false;
+            }
+            if (!_roles.TryGetValue(author, out var authorRole) || authorRole == RoundRole.Detective)
+            {
+                rejectionReason = "Only a Podejrzany in the current Runda can author an Incydent.";
+                return false;
+            }
+            if (kind != IncidentKind.Loud && kind != IncidentKind.Quiet)
+            {
+                rejectionReason = "The Incydent kind must be Loud or Quiet.";
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(incidentId.Value)
+                || string.IsNullOrWhiteSpace(effect.Value)
+                || string.IsNullOrWhiteSpace(location.Value))
+            {
+                rejectionReason = "The Incydent requires stable effect and location identifiers.";
+                return false;
+            }
+            if (_incidents.ContainsKey(incidentId))
+            {
+                rejectionReason = "The Incydent world effect has already been registered.";
+                return false;
+            }
+
+            incident = new IncidentState(incidentId, kind, effect, location, author, occurredAt);
+            _incidents.Add(incident.Id, incident);
+            _incidentOrder.Add(incident);
+            return true;
+        }
+
+        private bool TryAdvancePrivateObjective(
+            PlayerId player,
+            PrivateObjectiveId objectiveId,
+            PrivateObjectiveStepId stepId,
+            out RoundEvent.PrivateObjectiveAdvanced objectiveEvent,
+            out string rejectionReason)
+        {
+            objectiveEvent = null;
+            rejectionReason = null;
+
+            if (_phase != RoundPhase.Round)
+            {
+                rejectionReason = "Prywatny Cel progress is only allowed during the Runda.";
+                return false;
+            }
+
+            if (!_roles.TryGetValue(player, out var role) || role != RoundRole.Innocent)
+            {
+                rejectionReason = "Only a Niewinny can advance their Prywatny Cel.";
+                return false;
+            }
+
+            if (!_privateObjectives.TryGetValue(player, out var objective))
+            {
+                rejectionReason = "The player has no Prywatny Cel assignment.";
+                return false;
+            }
+
+            if (objective.AssignmentId != objectiveId)
+            {
+                rejectionReason = "The reported Prywatny Cel does not belong to the player.";
+                return false;
+            }
+
+            if (objective.IsCompleted)
+            {
+                rejectionReason = "The Prywatny Cel is already completed.";
+                return false;
+            }
+
+            var expectedStep = objective.Definition.Steps[objective.CompletedStepCount].Id;
+            if (expectedStep != stepId)
+            {
+                rejectionReason = "The reported step is not the current Prywatny Cel step.";
+                return false;
+            }
+
+            objective.CompletedStepCount++;
+            objectiveEvent = new RoundEvent.PrivateObjectiveAdvanced(
+                player,
+                objective.AssignmentId,
+                stepId,
+                objective.IsCompleted);
+            return true;
+        }
+
+        private void ReportIncident(IncidentState incident, IncidentTimestamp reportedAt)
+        {
+            incident.IsReported = true;
+            _incidentRegistry.Add(new IncidentRegistryEntryView(
+                incident.Id,
+                incident.Kind,
+                incident.Effect,
+                incident.Location,
+                reportedAt));
+        }
+
         private AlibiView BuildAlibiView(RoundRole role)
         {
             var entries = new List<AlibiEntry>(_case.AlibiFacts.Count);
@@ -199,9 +684,76 @@ namespace InterrogationRoom.Domain
             return new AlibiView(entries);
         }
 
+        private static PrivateObjectiveView BuildPrivateObjectiveView(PrivateObjectiveState objective)
+        {
+            PrivateObjectiveStepId? currentStep = objective.IsCompleted
+                ? (PrivateObjectiveStepId?)null
+                : objective.Definition.Steps[objective.CompletedStepCount].Id;
+            return new PrivateObjectiveView(
+                objective.AssignmentId,
+                objective.Definition.Kind,
+                currentStep,
+                objective.CompletedStepCount,
+                objective.Definition.Steps.Count,
+                objective.IsCompleted,
+                objective.Target);
+        }
+
+        private EscapePlanView BuildEscapePlanView()
+        {
+            EscapeStepId? currentStep = _escapePlan.CommonPreparationComplete
+                ? (EscapeStepId?)null
+                : _escapePlan.Definition.CommonSteps[_escapePlan.CompletedCommonStepCount].Id;
+            var exitOptions = _escapePlan.Definition.Exits
+                .Select(exit => new EscapeExitOptionView(
+                    exit.Id,
+                    exit.PreparationStepId,
+                    exit.Location,
+                    _escapePlan.PreparedExits.Contains(exit.Id)))
+                .ToArray();
+            return new EscapePlanView(
+                _escapePlan.Definition.Id,
+                currentStep,
+                _escapePlan.CompletedCommonStepCount,
+                _escapePlan.Definition.CommonSteps.Count,
+                _escapePlan.PreparedExits.Count > 0,
+                _escapePlan.ActiveExit,
+                Array.AsReadOnly(exitOptions));
+        }
+
+        private RoundRevealView BuildRoundReveal(
+            IReadOnlyList<IncidentRevealView> revealedIncidents)
+        {
+            var players = _players.Select(player =>
+            {
+                var role = _roles[player];
+                PrivateObjectiveView objective = null;
+                if (_privateObjectives.TryGetValue(player, out var objectiveState))
+                    objective = BuildPrivateObjectiveView(objectiveState);
+                return new PlayerEndRevealView(player, role, objective, BuildResult(player, role));
+            }).ToArray();
+            var clues = _acquiredAlibiClues
+                .Select(clue => new AlibiClueRevealView(
+                    clue.Id,
+                    clue.LinkedFactId,
+                    clue.Content))
+                .ToArray();
+            var escape = new EscapePlanRevealView(
+                _escapePlan.Definition.Id,
+                Array.AsReadOnly(_escapePlan.Actions.ToArray()),
+                _escapePlan.SuccessfulExit);
+            return new RoundRevealView(
+                Array.AsReadOnly(players),
+                Array.AsReadOnly(clues),
+                escape,
+                revealedIncidents);
+        }
+
         private PlayerResultView BuildResult(PlayerId viewer, RoundRole role)
         {
             var survived = _executedPlayer != viewer;
+            var privateObjectiveCompleted = _privateObjectives.TryGetValue(viewer, out var objective)
+                && objective.IsCompleted;
             bool won;
             switch (role)
             {
@@ -212,17 +764,32 @@ namespace InterrogationRoom.Domain
                     won = survived;
                     break;
                 default:
-                    won = _secretObjectives.TryGetValue(viewer, out var target)
-                        ? survived && _executedPlayer == target
-                        : survived;
+                    won = survived
+                        && privateObjectiveCompleted
+                        && (objective.Definition.Kind != PrivateObjectiveKind.SecretObjective
+                            || _executedPlayer == objective.Target);
                     break;
             }
 
-            return new PlayerResultView(won, survived, _detectiveWon == true, _endCause.Value, _executedPlayer);
+            return new PlayerResultView(
+                won,
+                survived,
+                _detectiveWon == true,
+                _endCause.Value,
+                _executedPlayer,
+                privateObjectiveCompleted,
+                escaped: role == RoundRole.Guilty && _endCause == RoundEndCause.Escape);
         }
 
         private RoundPublicState BuildPublicState() =>
-            new RoundPublicState(_phase, _players, _detective, _executedPlayer, _detectiveWon, _endCause);
+            new RoundPublicState(
+                _phase,
+                _players,
+                _detective,
+                _executedPlayer,
+                _detectiveWon,
+                _endCause,
+                _successfulEscapeExit);
 
         private RoundTransition Reject(string reason) =>
             RoundTransition.Reject(reason, BuildPublicState());
@@ -233,6 +800,75 @@ namespace InterrogationRoom.Domain
             var item = pool[index];
             pool.RemoveAt(index);
             return item;
+        }
+
+        private static PrivateObjectiveId BuildPrivateObjectiveAssignmentId(
+            PrivateObjectiveDefinition definition,
+            PlayerId owner) =>
+            new PrivateObjectiveId($"{definition.Id.Value}:{owner.Value}");
+
+        private sealed class PrivateObjectiveState
+        {
+            public PrivateObjectiveDefinition Definition { get; }
+            public PrivateObjectiveId AssignmentId { get; }
+            public PlayerId? Target { get; }
+            public int CompletedStepCount { get; set; }
+            public bool IsCompleted => CompletedStepCount == Definition.Steps.Count;
+
+            public PrivateObjectiveState(
+                PrivateObjectiveDefinition definition,
+                PrivateObjectiveId assignmentId,
+                PlayerId? target)
+            {
+                Definition = definition ?? throw new ArgumentNullException(nameof(definition));
+                AssignmentId = assignmentId;
+                Target = target;
+            }
+        }
+
+        private sealed class IncidentState
+        {
+            public IncidentId Id { get; }
+            public IncidentKind Kind { get; }
+            public IncidentEffectId Effect { get; }
+            public IncidentLocationId Location { get; }
+            public PlayerId Author { get; }
+            public IncidentTimestamp OccurredAt { get; }
+            public bool IsReported { get; set; }
+
+            public IncidentState(
+                IncidentId id,
+                IncidentKind kind,
+                IncidentEffectId effect,
+                IncidentLocationId location,
+                PlayerId author,
+                IncidentTimestamp occurredAt)
+            {
+                Id = id;
+                Kind = kind;
+                Effect = effect;
+                Location = location;
+                Author = author;
+                OccurredAt = occurredAt;
+            }
+        }
+
+        private sealed class EscapePlanState
+        {
+            public EscapePlanDefinition Definition { get; }
+            public int CompletedCommonStepCount { get; set; }
+            public HashSet<EscapeExitId> PreparedExits { get; } = new HashSet<EscapeExitId>();
+            public EscapeExitId? ActiveExit { get; set; }
+            public EscapeExitId? SuccessfulExit { get; set; }
+            public List<EscapeActionRevealView> Actions { get; } =
+                new List<EscapeActionRevealView>();
+            public bool CommonPreparationComplete =>
+                CompletedCommonStepCount == Definition.CommonSteps.Count;
+
+            public EscapePlanState(EscapePlanDefinition definition)
+            {
+                Definition = definition ?? throw new ArgumentNullException(nameof(definition));
+            }
         }
     }
 }

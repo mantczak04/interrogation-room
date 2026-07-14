@@ -38,6 +38,7 @@ namespace InterrogationRoom.Gameplay.Weapons
             return !consumed &&
                    interactor != null &&
                    interactor.TryGetComponent(out PlayerWeaponController weaponController) &&
+                   weaponController.IsWeaponAuthorized &&
                    !weaponController.HasWeapon;
         }
 

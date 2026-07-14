@@ -21,6 +21,7 @@
     border-top-color: rgb(128, 105, 72);
     border-bottom-color: rgb(128, 105, 72);
 }
+.result-card { width: 760px; height: 650px; translate: -380px -325px; }
 .title { font-size: 32px; -unity-font-style: bold; margin-bottom: 12px; }
 .subtitle, .body-text, .alibi, .result { font-size: 18px; white-space: normal; margin-bottom: 14px; }
 .role { font-size: 24px; color: rgb(224, 181, 104); -unity-font-style: bold; margin-bottom: 12px; }
@@ -33,4 +34,8 @@
 .hud-card { position: absolute; right: 20px; bottom: 20px; width: 330px; padding: 14px; background-color: rgba(12, 14, 18, 0.9); border-radius: 6px; }
 .hud-role { font-size: 14px; color: rgb(224, 181, 104); -unity-font-style: bold; margin-bottom: 5px; }
 .hud-crime { font-size: 13px; color: rgb(210, 210, 210); white-space: normal; margin-bottom: 10px; }
+.private-card { position: absolute; left: 20px; bottom: 20px; width: 360px; max-height: 310px; padding: 14px; background-color: rgba(12, 14, 18, 0.9); border-radius: 6px; }
+.private-title { font-size: 15px; color: rgb(224, 181, 104); -unity-font-style: bold; margin-bottom: 7px; }
+.private-text { font-size: 13px; color: rgb(226, 226, 226); white-space: normal; }
+.result-scroll { max-height: 430px; margin-bottom: 8px; }
 .rejection { position: absolute; left: 50%; bottom: 28px; translate: -260px 0; width: 520px; padding: 10px; font-size: 16px; -unity-text-align: middle-center; color: rgb(255, 218, 148); background-color: rgba(112, 41, 35, 0.94); white-space: normal; }

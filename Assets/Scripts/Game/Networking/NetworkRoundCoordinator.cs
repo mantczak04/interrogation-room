@@ -27,34 +27,40 @@ namespace InterrogationRoom.Networking
         [Tooltip("Limit Rundy measured authoritatively by the server, in seconds.")]
         private float roundLimitSeconds = 600f;
 
-        [SerializeField, Min(0.1f)]
-        [Tooltip("How often a fresh targeted view carries updated remaining time.")]
-        private float timerDeliveryInterval = 1f;
-
         private readonly Dictionary<int, NetworkConnectionToClient> _connectionsByPlayerId =
             new Dictionary<int, NetworkConnectionToClient>();
         private readonly HashSet<int> _rejectedLateJoiners = new HashSet<int>();
+        private readonly Dictionary<int, IRoundHitSource> _hitSourcesByPlayerId =
+            new Dictionary<int, IRoundHitSource>();
 
         private RoundEngine _engine = new RoundEngine();
         private RoundPhase _phase = RoundPhase.Lobby;
         private bool _serverHandlerRegistered;
         private bool _clientHandlersRegistered;
+        private bool _hostAllowsSecretObjective = true;
         private double _roundDeadline;
-        private double _nextTimerDelivery;
+        private double _roundStartedAtNetworkTime;
 
         public PlayerRoundView CurrentView { get; private set; }
-        public float CurrentRemainingSeconds { get; private set; }
+        public double CurrentRoundEndsAtNetworkTime { get; private set; }
         public bool IsLocalHost => NetworkServer.activeHost;
         public int ConnectedPlayerCount => _connectionsByPlayerId.Count;
         public int SelectedCaseIndex { get; private set; }
+        public bool HostAllowsSecretObjective => _hostAllowsSecretObjective;
+        public int EffectiveSecretObjectiveCount => RoundLobbyRules.ResolveSecretObjectiveCount(
+            ConnectedPlayerCount,
+            _hostAllowsSecretObjective);
 
         /// <summary>Public lobby data only. Never exposes Alibi facts or hidden-fact flags.</summary>
         public IReadOnlyList<string> AvailableCaseTitles => AvailableCases()
             .Select(asset => string.IsNullOrWhiteSpace(asset.title) ? asset.name : asset.title.Trim())
             .ToArray();
 
-        public event Action<PlayerRoundView, float> ViewReceived;
+        public event Action<PlayerRoundView, double> ViewReceived;
         public event Action<string> IntentRejected;
+        public event Action LobbyResetReceived;
+        public event Action ServerRoundReset;
+        public event Action<NetworkIdentity> ServerExecutionAccepted;
 
         private void Awake()
         {
@@ -75,12 +81,13 @@ namespace InterrogationRoom.Networking
             {
                 NetworkClient.UnregisterHandler<RoundViewMessage>();
                 NetworkClient.UnregisterHandler<RoundIntentRejectedMessage>();
+                NetworkClient.UnregisterHandler<RoundLobbyResetMessage>();
             }
 
             ResetServerRuntime();
             _clientHandlersRegistered = false;
             CurrentView = null;
-            CurrentRemainingSeconds = 0f;
+            CurrentRoundEndsAtNetworkTime = 0d;
         }
 
         public void RequestStartRound()
@@ -93,10 +100,59 @@ namespace InterrogationRoom.Networking
             SendIntent(RoundIntentMessage.EndPreparation());
         }
 
-        public void RequestExecution(PlayerId target)
+        public void RequestReturnToLobby()
         {
-            SendIntent(RoundIntentMessage.Execute(target));
+            SendIntent(RoundIntentMessage.ReturnToLobby());
         }
+
+        public void RequestAdvancePrivateObjective(
+            PrivateObjectiveId objectiveId,
+            PrivateObjectiveStepId stepId) =>
+            SendIntent(RoundIntentMessage.AdvancePrivateObjective(objectiveId, stepId));
+
+        public void RequestRegisterIncident(
+            IncidentId incidentId,
+            IncidentKind kind,
+            IncidentEffectId effect,
+            IncidentLocationId location,
+            PrivateObjectiveStepReference objectiveStep = null) =>
+            SendIntent(RoundIntentMessage.RegisterIncident(
+                incidentId,
+                kind,
+                effect,
+                location,
+                objectiveStep));
+
+        public void RequestDiscoverQuietIncident(IncidentId incidentId) =>
+            SendIntent(RoundIntentMessage.DiscoverQuietIncident(incidentId));
+
+        public void RequestAcquireAlibiClue(
+            AlibiClueId clueId,
+            IncidentId incidentId,
+            IncidentKind kind,
+            IncidentEffectId effect,
+            IncidentLocationId location) =>
+            SendIntent(RoundIntentMessage.AcquireAlibiClue(
+                clueId,
+                incidentId,
+                kind,
+                effect,
+                location));
+
+        public void RequestPrepareEscape(EscapePlanId planId, EscapeStepId stepId) =>
+            SendIntent(RoundIntentMessage.PrepareEscape(planId, stepId));
+
+        public void RequestBeginEscape(
+            EscapePlanId planId,
+            EscapeExitId exitId,
+            IncidentId incidentId) =>
+            SendIntent(RoundIntentMessage.BeginEscape(planId, exitId, incidentId));
+
+        public void RequestInterruptEscape(EscapePlanId planId, EscapeExitId exitId) =>
+            SendIntent(RoundIntentMessage.InterruptEscape(planId, exitId));
+
+        public void RequestCompleteEscape(EscapePlanId planId, EscapeExitId exitId) =>
+            SendIntent(RoundIntentMessage.CompleteEscape(planId, exitId));
 
         public bool TrySelectCase(int index)
         {
@@ -106,6 +162,150 @@ namespace InterrogationRoom.Networking
 
             SelectedCaseIndex = index;
             return true;
+        }
+
+        public bool TrySetSecretObjectiveEnabled(bool enabled)
+        {
+            if (!IsLocalHost || _phase != RoundPhase.Lobby)
+                return false;
+
+            _hostAllowsSecretObjective = enabled;
+            return true;
+        }
+
+        [Server]
+        public bool TryAdvancePhysicalObjective(
+            NetworkIdentity actor,
+            string objectiveStepId)
+        {
+            if (!TryGetPhysicalActor(actor, out var playerId) ||
+                string.IsNullOrWhiteSpace(objectiveStepId))
+                return false;
+
+            var objective = _engine.ViewFor(playerId)?.PrivateObjective;
+            if (objective == null)
+                return false;
+
+            return Submit(null, new RoundCommand.AdvancePrivateObjective(
+                playerId,
+                objective.Id,
+                new PrivateObjectiveStepId(objectiveStepId)));
+        }
+
+        [Server]
+        public bool TryRegisterPhysicalIncident(
+            NetworkIdentity actor,
+            string incidentId,
+            IncidentKind kind,
+            string effectId,
+            string locationId,
+            string objectiveStepId,
+            out bool objectiveAdvanced)
+        {
+            objectiveAdvanced = false;
+            if (!TryGetPhysicalActor(actor, out var playerId))
+                return false;
+
+            var before = _engine.ViewFor(playerId)?.PrivateObjective;
+            PrivateObjectiveStepReference objectiveStep = null;
+            if (!string.IsNullOrWhiteSpace(objectiveStepId) && before != null)
+            {
+                objectiveStep = new PrivateObjectiveStepReference(
+                    before.Id,
+                    new PrivateObjectiveStepId(objectiveStepId));
+            }
+
+            bool accepted = Submit(null, new RoundCommand.RegisterIncident(
+                playerId,
+                new IncidentId(incidentId),
+                kind,
+                new IncidentEffectId(effectId),
+                new IncidentLocationId(locationId),
+                CurrentRoundTimestamp(),
+                objectiveStep));
+            if (!accepted)
+                return false;
+
+            var after = _engine.ViewFor(playerId)?.PrivateObjective;
+            objectiveAdvanced = before != null && after != null &&
+                                after.CompletedStepCount > before.CompletedStepCount;
+            return true;
+        }
+
+        [Server]
+        public bool TryDiscoverPhysicalQuietIncident(NetworkIdentity viewer, string incidentId)
+        {
+            return TryGetPhysicalActor(viewer, out var playerId) &&
+                   Submit(null, new RoundCommand.DiscoverQuietIncident(
+                       playerId,
+                       new IncidentId(incidentId),
+                       CurrentRoundTimestamp()));
+        }
+
+        [Server]
+        public bool TryAcquirePhysicalAlibiClue(
+            NetworkIdentity actor,
+            string clueId,
+            string incidentId,
+            IncidentKind kind,
+            string effectId,
+            string locationId)
+        {
+            return TryGetPhysicalActor(actor, out var playerId) &&
+                   Submit(null, new RoundCommand.AcquireAlibiClue(
+                       playerId,
+                       new AlibiClueId(clueId),
+                       new IncidentId(incidentId),
+                       kind,
+                       new IncidentEffectId(effectId),
+                       new IncidentLocationId(locationId),
+                       CurrentRoundTimestamp()));
+        }
+
+        [Server]
+        public bool TryPreparePhysicalEscape(NetworkIdentity actor, string planId, string stepId)
+        {
+            return TryGetPhysicalActor(actor, out var playerId) &&
+                   Submit(null, new RoundCommand.PrepareEscape(
+                       playerId,
+                       new EscapePlanId(planId),
+                       new EscapeStepId(stepId)));
+        }
+
+        [Server]
+        public bool TryBeginPhysicalEscape(
+            NetworkIdentity actor,
+            string planId,
+            string exitId,
+            string incidentId)
+        {
+            return TryGetPhysicalActor(actor, out var playerId) &&
+                   Submit(null, new RoundCommand.BeginEscape(
+                       playerId,
+                       new EscapePlanId(planId),
+                       new EscapeExitId(exitId),
+                       new IncidentId(incidentId),
+                       CurrentRoundTimestamp()));
+        }
+
+        [Server]
+        public bool TryInterruptPhysicalEscape(NetworkIdentity actor, string planId, string exitId)
+        {
+            return TryGetPhysicalActor(actor, out var playerId) &&
+                   Submit(null, new RoundCommand.InterruptEscape(
+                       playerId,
+                       new EscapePlanId(planId),
+                       new EscapeExitId(exitId)));
+        }
+
+        [Server]
+        public bool TryCompletePhysicalEscape(NetworkIdentity actor, string planId, string exitId)
+        {
+            return TryGetPhysicalActor(actor, out var playerId) &&
+                   Submit(null, new RoundCommand.CompleteEscape(
+                       playerId,
+                       new EscapePlanId(planId),
+                       new EscapeExitId(exitId)));
         }
 
         private static void SendIntent(RoundIntentMessage message)
@@ -151,6 +351,7 @@ namespace InterrogationRoom.Networking
 
             NetworkClient.RegisterHandler<RoundViewMessage>(OnClientView);
             NetworkClient.RegisterHandler<RoundIntentRejectedMessage>(OnClientIntentRejected);
+            NetworkClient.RegisterHandler<RoundLobbyResetMessage>(OnClientLobbyReset);
             _clientHandlersRegistered = true;
         }
 
@@ -164,6 +365,7 @@ namespace InterrogationRoom.Networking
 
                 var playerId = ConnectionToPlayerId(connection);
                 connectedIds.Add(playerId.Value);
+                BindHitSource(playerId, connection);
                 if (_connectionsByPlayerId.ContainsKey(playerId.Value)
                     || _rejectedLateJoiners.Contains(playerId.Value))
                     continue;
@@ -191,7 +393,10 @@ namespace InterrogationRoom.Networking
             }
 
             foreach (var disconnectedId in _connectionsByPlayerId.Keys.Where(id => !connectedIds.Contains(id)).ToArray())
+            {
+                UnbindHitSource(disconnectedId);
                 _connectionsByPlayerId.Remove(disconnectedId);
+            }
             _rejectedLateJoiners.RemoveWhere(id => !connectedIds.Contains(id));
         }
 
@@ -232,20 +437,28 @@ namespace InterrogationRoom.Networking
                     Submit(sender, new RoundCommand.EndPreparation());
                     break;
 
-                case RoundIntentKind.Execute:
-                    var senderView = _engine.ViewFor(senderId);
-                    if (senderView == null
-                        || senderView.Phase != RoundPhase.Round
-                        || senderView.Role != RoundRole.Detective)
+                case RoundIntentKind.ReturnToLobby:
+                    if (!IsHost(sender))
                     {
-                        Reject(sender, "Only the Detektyw may perform an Egzekucja during the Runda.");
+                        Reject(sender, "Only the host may return the Runda to lobby.");
                         return;
                     }
-                    Submit(sender, new RoundCommand.Execute(new PlayerId(message.TargetPlayerId)));
+                    ReturnToLobby(sender);
                     break;
 
                 default:
-                    Reject(sender, "Unknown Runda intention.");
+                    if (!RoundIntentMapper.TryMap(
+                            message,
+                            senderId,
+                            CurrentRoundTimestamp(),
+                            out var command,
+                            out var rejectionReason))
+                    {
+                        Reject(sender, rejectionReason);
+                        return;
+                    }
+
+                    Submit(sender, command);
                     break;
             }
         }
@@ -277,8 +490,51 @@ namespace InterrogationRoom.Networking
                 .OrderBy(id => id)
                 .Select(id => new PlayerId(id))
                 .ToArray();
+            if (!HasCompletePhysicalRoster())
+            {
+                Reject(sender, "Every player must be spawned with weapon, hit, and elimination components before the Runda starts.");
+                return;
+            }
+
             var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-            Submit(sender, new RoundCommand.StartRound(definition, players, seed));
+            Submit(sender, new RoundCommand.StartRound(
+                definition,
+                players,
+                seed,
+                EffectiveSecretObjectiveCount));
+        }
+
+        private void ReturnToLobby(NetworkConnectionToClient sender)
+        {
+            if (_phase != RoundPhase.Finished)
+            {
+                Reject(sender, "Return to lobby is only allowed after the Runda ends.");
+                return;
+            }
+
+            foreach (var connection in _connectionsByPlayerId.Values)
+            {
+                if (connection?.identity == null)
+                    continue;
+
+                FindPort<IRoundWeaponPort>(connection.identity)
+                    ?.SetWeaponAuthorizationServer(false);
+                FindPort<IRoundEliminationPort>(connection.identity)
+                    ?.ResetEliminationServer();
+            }
+
+            _engine = new RoundEngine();
+            _phase = RoundPhase.Lobby;
+            _hostAllowsSecretObjective = true;
+            _roundDeadline = 0d;
+            _roundStartedAtNetworkTime = 0d;
+            ServerRoundReset?.Invoke();
+
+            foreach (var connection in _connectionsByPlayerId.Values)
+            {
+                if (connection != null && connection.isAuthenticated)
+                    connection.Send(new RoundLobbyResetMessage());
+            }
         }
 
         private IReadOnlyList<CaseAsset> AvailableCases()
@@ -315,29 +571,160 @@ namespace InterrogationRoom.Networking
             SelectedCaseIndex = Mathf.Clamp(SelectedCaseIndex, 0, cases.Count - 1);
         }
 
-        private void Submit(NetworkConnectionToClient sender, RoundCommand command)
+        private bool Submit(NetworkConnectionToClient sender, RoundCommand command)
         {
             var transition = _engine.Handle(command);
             if (!transition.Accepted)
             {
                 if (sender != null)
                     Reject(sender, transition.RejectionReason);
-                return;
+                return false;
             }
 
             _phase = transition.State.Phase;
-            if (command is RoundCommand.EndPreparation)
+            if (command is RoundCommand.StartRound)
             {
-                _roundDeadline = NetworkTime.time + roundLimitSeconds;
-                _nextTimerDelivery = NetworkTime.time;
+                ConfigureRoundWeapons();
+            }
+            else if (command is RoundCommand.EndPreparation)
+            {
+                _roundStartedAtNetworkTime = NetworkTime.time;
+                _roundDeadline = _roundStartedAtNetworkTime + roundLimitSeconds;
             }
             else if (_phase == RoundPhase.Finished)
             {
                 _roundDeadline = 0d;
-                _nextTimerDelivery = 0d;
             }
 
             DeliverAllViews();
+            return true;
+        }
+
+        private IncidentTimestamp CurrentRoundTimestamp()
+        {
+            if (_phase != RoundPhase.Round)
+                return new IncidentTimestamp(0);
+
+            double elapsedMilliseconds = Math.Max(
+                0d,
+                (NetworkTime.time - _roundStartedAtNetworkTime) * 1000d);
+            return new IncidentTimestamp((long)Math.Min(long.MaxValue, elapsedMilliseconds));
+        }
+
+        private void BindHitSource(PlayerId playerId, NetworkConnectionToClient connection)
+        {
+            if (_hitSourcesByPlayerId.ContainsKey(playerId.Value) || connection?.identity == null)
+                return;
+
+            var hitSource = FindPort<IRoundHitSource>(connection.identity);
+            if (hitSource == null)
+                return;
+
+            hitSource.PlayerHitReceivedServer += OnPlayerHitServer;
+            _hitSourcesByPlayerId.Add(playerId.Value, hitSource);
+        }
+
+        private void UnbindHitSource(int playerId)
+        {
+            if (!_hitSourcesByPlayerId.TryGetValue(playerId, out var hitSource))
+                return;
+
+            hitSource.PlayerHitReceivedServer -= OnPlayerHitServer;
+            _hitSourcesByPlayerId.Remove(playerId);
+        }
+
+        private bool HasCompletePhysicalRoster()
+        {
+            foreach (var connection in _connectionsByPlayerId.Values)
+            {
+                if (connection?.identity == null ||
+                    FindPort<IRoundWeaponPort>(connection.identity) == null ||
+                    FindPort<IRoundHitSource>(connection.identity) == null ||
+                    FindPort<IRoundEliminationPort>(connection.identity) == null)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void ConfigureRoundWeapons()
+        {
+            foreach (var pair in _connectionsByPlayerId)
+            {
+                var playerId = new PlayerId(pair.Key);
+                var view = _engine.ViewFor(playerId);
+                var weapon = FindPort<IRoundWeaponPort>(pair.Value?.identity);
+                if (view == null || weapon == null)
+                    continue;
+
+                bool isDetective = view.Role == RoundRole.Detective;
+                weapon.SetWeaponAuthorizationServer(isDetective);
+                if (isDetective)
+                    weapon.TryEquipWeaponServer();
+            }
+        }
+
+        private void OnPlayerHitServer(RoundPlayerHit hit)
+        {
+            if (!NetworkServer.active || hit.Shooter == null || hit.Target == null)
+                return;
+
+            var shooterConnection = hit.Shooter.connectionToClient;
+            var targetConnection = hit.Target.connectionToClient;
+            if (shooterConnection == null || targetConnection == null)
+                return;
+
+            var shooterId = ConnectionToPlayerId(shooterConnection);
+            var targetId = ConnectionToPlayerId(targetConnection);
+            if (!_connectionsByPlayerId.TryGetValue(shooterId.Value, out var registeredShooter) ||
+                !_connectionsByPlayerId.TryGetValue(targetId.Value, out var registeredTarget) ||
+                !ReferenceEquals(registeredShooter, shooterConnection) ||
+                !ReferenceEquals(registeredTarget, targetConnection) ||
+                !ReferenceEquals(shooterConnection.identity, hit.Shooter) ||
+                !ReferenceEquals(targetConnection.identity, hit.Target))
+            {
+                return;
+            }
+
+            var shooterView = _engine.ViewFor(shooterId);
+            var targetView = _engine.ViewFor(targetId);
+            var weapon = FindPort<IRoundWeaponPort>(hit.Shooter);
+            var elimination = FindPort<IRoundEliminationPort>(hit.Target);
+            if (shooterView == null || targetView == null || weapon == null || elimination == null)
+                return;
+
+            if (!RoundPhysicalRules.CanSubmitExecutionHit(
+                    _phase,
+                    shooterView.Role,
+                    weapon.IsWeaponAuthorized,
+                    weapon.HasWeapon,
+                    targetView.Role,
+                    elimination.IsEliminated))
+            {
+                return;
+            }
+
+            if (Submit(null, new RoundCommand.Execute(targetId)))
+            {
+                ServerExecutionAccepted?.Invoke(hit.Target);
+                elimination.TryEliminateServer();
+            }
+        }
+
+        private static T FindPort<T>(NetworkIdentity identity) where T : class
+        {
+            if (identity == null)
+                return null;
+
+            foreach (var component in identity.GetComponents<MonoBehaviour>())
+            {
+                if (component is T port)
+                    return port;
+            }
+
+            return null;
         }
 
         private void UpdateRoundTimer()
@@ -352,11 +739,6 @@ namespace InterrogationRoom.Networking
                 return;
             }
 
-            if (now >= _nextTimerDelivery)
-            {
-                DeliverAllViews();
-                _nextTimerDelivery = now + timerDeliveryInterval;
-            }
         }
 
         private void DeliverAllViews()
@@ -374,14 +756,9 @@ namespace InterrogationRoom.Networking
             if (view == null)
                 return;
 
-            connection.Send(RoundViewMessage.FromView(view, RemainingSeconds()));
-        }
-
-        private float RemainingSeconds()
-        {
-            if (_phase != RoundPhase.Round)
-                return 0f;
-            return (float)Math.Max(0d, _roundDeadline - NetworkTime.time);
+            connection.Send(RoundViewMessage.FromView(
+                view,
+                _phase == RoundPhase.Round ? _roundDeadline : 0d));
         }
 
         private static PlayerId ConnectionToPlayerId(NetworkConnectionToClient connection)
@@ -389,6 +766,19 @@ namespace InterrogationRoom.Networking
             // This is intentionally the only Mirror connection -> PlayerId map.
             // Steam can later replace connectionId with an authenticated SteamID-derived id here.
             return new PlayerId(connection.connectionId);
+        }
+
+        private bool TryGetPhysicalActor(NetworkIdentity actor, out PlayerId playerId)
+        {
+            playerId = default;
+            if (!NetworkServer.active || actor?.connectionToClient == null)
+                return false;
+
+            var connection = actor.connectionToClient;
+            playerId = ConnectionToPlayerId(connection);
+            return _connectionsByPlayerId.TryGetValue(playerId.Value, out var registered) &&
+                   ReferenceEquals(registered, connection) &&
+                   ReferenceEquals(connection.identity, actor);
         }
 
         private static bool IsHost(NetworkConnectionToClient sender) =>
@@ -403,8 +793,8 @@ namespace InterrogationRoom.Networking
         private void OnClientView(RoundViewMessage message)
         {
             CurrentView = message.ToView();
-            CurrentRemainingSeconds = message.RemainingSeconds;
-            ViewReceived?.Invoke(CurrentView, CurrentRemainingSeconds);
+            CurrentRoundEndsAtNetworkTime = message.RoundEndsAtNetworkTime;
+            ViewReceived?.Invoke(CurrentView, CurrentRoundEndsAtNetworkTime);
         }
 
         private void OnClientIntentRejected(RoundIntentRejectedMessage message)
@@ -412,15 +802,26 @@ namespace InterrogationRoom.Networking
             IntentRejected?.Invoke(message.Reason);
         }
 
+        private void OnClientLobbyReset(RoundLobbyResetMessage _)
+        {
+            CurrentView = null;
+            CurrentRoundEndsAtNetworkTime = 0d;
+            LobbyResetReceived?.Invoke();
+        }
+
         private void ResetServerRuntime()
         {
+            foreach (var playerId in _hitSourcesByPlayerId.Keys.ToArray())
+                UnbindHitSource(playerId);
+
             _serverHandlerRegistered = false;
             _connectionsByPlayerId.Clear();
             _rejectedLateJoiners.Clear();
             _engine = new RoundEngine();
             _phase = RoundPhase.Lobby;
+            _hostAllowsSecretObjective = true;
             _roundDeadline = 0d;
-            _nextTimerDelivery = 0d;
+            _roundStartedAtNetworkTime = 0d;
         }
     }
 }

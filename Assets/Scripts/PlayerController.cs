@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using InterrogationRoom.Gameplay.Characters;
 using InterrogationRoom.Gameplay.Interaction;
 using InterrogationRoom.Gameplay.Weapons;
+using InterrogationRoom.Networking;
 using Mirror;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
@@ -11,7 +12,7 @@ using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(NetworkIdentity))]
-public class PlayerController : NetworkBehaviour
+public class PlayerController : NetworkBehaviour, IRoundEliminationPort
 {
     [Serializable]
     private sealed class CharacterVisualDefinition
@@ -47,7 +48,6 @@ public class PlayerController : NetworkBehaviour
     private Renderer[] playerRenderers;
     private PlayerInteractor playerInteractor;
     private PlayerWeaponController playerWeaponController;
-    private ShotHitbox shotHitbox;
     private int allocationKey;
     private float verticalVelocity;
     private float cameraPitch;
@@ -106,6 +106,7 @@ public class PlayerController : NetworkBehaviour
 
     public bool IsSeated => isSeated;
     public bool IsDead => isDead;
+    public bool IsEliminated => isDead;
     public CharacterId CharacterId => characterId;
 
     private void Awake()
@@ -114,7 +115,6 @@ public class PlayerController : NetworkBehaviour
         animator = GetComponent<Animator>();
         playerInteractor = GetComponent<PlayerInteractor>();
         playerWeaponController = GetComponent<PlayerWeaponController>();
-        shotHitbox = GetComponent<ShotHitbox>();
         RefreshPlayerRenderers();
         ValidateCharacterVisuals();
 
@@ -169,10 +169,6 @@ public class PlayerController : NetworkBehaviour
             characterId = NetworkCharacterAllocator.Instance.Acquire(allocationKey);
         }
 
-        if (shotHitbox != null)
-        {
-            shotHitbox.HitReceivedServer += OnShotHitServer;
-        }
     }
 
     public override void OnStartLocalPlayer()
@@ -218,12 +214,14 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
-        if (WasDancePressed())
+        bool interactionMovementLocked = playerInteractor != null && playerInteractor.IsMovementLocked;
+
+        if (!interactionMovementLocked && WasDancePressed())
         {
             CmdToggleDance();
         }
 
-        if (WasPunchPressed() && CharacterActionRules.CanPunch(
+        if (!interactionMovementLocked && WasPunchPressed() && CharacterActionRules.CanPunch(
                 isDead,
                 isSeated,
                 playerWeaponController != null && playerWeaponController.HasWeapon))
@@ -249,12 +247,19 @@ public class PlayerController : NetworkBehaviour
             }
         }
 
-        HandleCharacterHotkeys();
+        if (!interactionMovementLocked)
+        {
+            HandleCharacterHotkeys();
+        }
 
         Look();
-        if (!isSeated)
+        if (!isSeated && !interactionMovementLocked)
         {
             Move();
+        }
+        else if (interactionMovementLocked)
+        {
+            SetMovementAnimationIdle();
         }
     }
 
@@ -616,11 +621,11 @@ public class PlayerController : NetworkBehaviour
     }
 
     [Server]
-    private void OnShotHitServer(ShotHitContext _)
+    public bool TryEliminateServer()
     {
-        if (!CharacterActionRules.CanDie(isDead))
+        if (!NetworkServer.active || !CharacterActionRules.CanDie(isDead))
         {
-            return;
+            return false;
         }
 
         if (isSeated)
@@ -631,6 +636,20 @@ public class PlayerController : NetworkBehaviour
         isDancing = false;
         isDead = true;
         verticalVelocity = 0f;
+        return true;
+    }
+
+    [Server]
+    public bool ResetEliminationServer()
+    {
+        if (!NetworkServer.active || !isDead)
+        {
+            return false;
+        }
+
+        isDead = false;
+        verticalVelocity = 0f;
+        return true;
     }
 
     private void Look()
@@ -1051,11 +1070,6 @@ public class PlayerController : NetworkBehaviour
 
     public override void OnStopServer()
     {
-        if (shotHitbox != null)
-        {
-            shotHitbox.HitReceivedServer -= OnShotHitServer;
-        }
-
         if (activeSeat != null)
         {
             activeSeat.ReleaseServer(netIdentity);

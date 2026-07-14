@@ -1,15 +1,17 @@
 using System;
+using InterrogationRoom.Networking;
 using Mirror;
 using UnityEngine;
 
 namespace InterrogationRoom.Gameplay.Weapons
 {
     [DisallowMultipleComponent]
-    public sealed class ShotHitbox : MonoBehaviour, IShotHitReceiver
+    [RequireComponent(typeof(NetworkIdentity))]
+    public sealed class ShotHitbox : MonoBehaviour, IShotHitReceiver, IRoundHitSource
     {
         [SerializeField] private ShotHitKind hitKind = ShotHitKind.Surface;
 
-        public event Action<ShotHitContext> HitReceivedServer;
+        public event Action<RoundPlayerHit> PlayerHitReceivedServer;
 
         public ShotHitKind HitKind => hitKind;
         public uint ServerHitCount { get; private set; }
@@ -24,8 +26,17 @@ namespace InterrogationRoom.Gameplay.Weapons
                 return;
             }
 
+            NetworkIdentity target = GetComponent<NetworkIdentity>();
+            if (target == null || context.Shooter == null)
+            {
+                Debug.LogError(
+                    $"[{nameof(ShotHitbox)}] Player hits require shooter and target NetworkIdentity values.",
+                    this);
+                return;
+            }
+
             ServerHitCount++;
-            HitReceivedServer?.Invoke(context);
+            PlayerHitReceivedServer?.Invoke(new RoundPlayerHit(context.Shooter, target));
         }
     }
 }

@@ -45,8 +45,39 @@ namespace InterrogationRoom.Domain
         /// </summary>
         public AlibiView Alibi { get; }
 
-        /// <summary>Sekretny Cel of the viewer; null when the viewer owns none.</summary>
-        public SecretObjectiveView SecretObjective { get; }
+        /// <summary>The viewer's own Prywatny Cel and progress; null for non-Niewinny roles.</summary>
+        public PrivateObjectiveView PrivateObjective { get; }
+
+        /// <summary>
+        /// Detektyw-only private Rejestr, ordered by report or discovery time.
+        /// Null for every suspect.
+        /// </summary>
+        public IReadOnlyList<IncidentRegistryEntryView> IncidentRegistry { get; }
+
+        /// <summary>
+        /// Host-owned Incydent authors, revealed to every player only after the
+        /// Runda ends. Null during live play.
+        /// </summary>
+        public IReadOnlyList<IncidentRevealView> RevealedIncidents { get; }
+
+        /// <summary>Acquired interpretive Tropy; Winny-only until the final reveal.</summary>
+        public IReadOnlyList<AlibiClueView> AcquiredAlibiClues { get; }
+
+        /// <summary>Private Plan Ucieczki visible only to the Winny.</summary>
+        public EscapePlanView EscapePlan { get; }
+
+        /// <summary>Complete approved reveal, non-null only after the Runda ends.</summary>
+        public RoundRevealView RoundReveal { get; }
+
+        /// <summary>
+        /// Compatibility projection for the pre-A1 networking contract. The
+        /// canonical model is <see cref="PrivateObjective"/>.
+        /// </summary>
+        public SecretObjectiveView SecretObjective =>
+            PrivateObjective?.Kind == PrivateObjectiveKind.SecretObjective
+            && PrivateObjective.Target.HasValue
+                ? new SecretObjectiveView(PrivateObjective.Target.Value)
+                : null;
 
         /// <summary>The viewer's individual outcome; non-null only when Zakończona.</summary>
         public PlayerResultView Result { get; }
@@ -60,7 +91,45 @@ namespace InterrogationRoom.Domain
             SecretObjectiveView secretObjective,
             PlayerResultView result,
             IReadOnlyList<PlayerId> players,
-            PlayerId detective)
+            PlayerId detective,
+            IReadOnlyList<IncidentRegistryEntryView> incidentRegistry = null,
+            IReadOnlyList<IncidentRevealView> revealedIncidents = null,
+            IReadOnlyList<AlibiClueView> acquiredAlibiClues = null,
+            EscapePlanView escapePlan = null,
+            RoundRevealView roundReveal = null)
+            : this(
+                viewer,
+                phase,
+                role,
+                crimeDescription,
+                alibi,
+                FromLegacySecretObjective(secretObjective),
+                result,
+                players,
+                detective,
+                incidentRegistry,
+                revealedIncidents,
+                acquiredAlibiClues,
+                escapePlan,
+                roundReveal)
+        {
+        }
+
+        public PlayerRoundView(
+            PlayerId viewer,
+            RoundPhase phase,
+            RoundRole role,
+            string crimeDescription,
+            AlibiView alibi,
+            PrivateObjectiveView privateObjective,
+            PlayerResultView result,
+            IReadOnlyList<PlayerId> players,
+            PlayerId detective,
+            IReadOnlyList<IncidentRegistryEntryView> incidentRegistry = null,
+            IReadOnlyList<IncidentRevealView> revealedIncidents = null,
+            IReadOnlyList<AlibiClueView> acquiredAlibiClues = null,
+            EscapePlanView escapePlan = null,
+            RoundRevealView roundReveal = null)
         {
             Viewer = viewer;
             Phase = phase;
@@ -69,8 +138,29 @@ namespace InterrogationRoom.Domain
             Detective = detective;
             CrimeDescription = crimeDescription;
             Alibi = alibi;
-            SecretObjective = secretObjective;
+            PrivateObjective = privateObjective;
+            IncidentRegistry = incidentRegistry;
+            RevealedIncidents = revealedIncidents;
+            AcquiredAlibiClues = acquiredAlibiClues;
+            EscapePlan = escapePlan;
+            RoundReveal = roundReveal;
             Result = result;
+        }
+
+        private static PrivateObjectiveView FromLegacySecretObjective(SecretObjectiveView secretObjective)
+        {
+            if (secretObjective == null)
+                return null;
+
+            var definition = PrivateObjectiveDefinitions.SecretObjective;
+            return new PrivateObjectiveView(
+                definition.Id,
+                definition.Kind,
+                definition.Steps[0].Id,
+                completedStepCount: 0,
+                definition.Steps.Count,
+                isCompleted: false,
+                secretObjective.Target);
         }
     }
 
@@ -123,7 +213,40 @@ namespace InterrogationRoom.Domain
         }
     }
 
-    /// <summary>Individual outcome of the Runda for one viewer (ADR-0002).</summary>
+    /// <summary>
+    /// Owner-only projection of a Prywatny Cel. It exposes the current step and
+    /// aggregate progress, never another player's assignment or future steps.
+    /// </summary>
+    public sealed class PrivateObjectiveView
+    {
+        public PrivateObjectiveId Id { get; }
+        public PrivateObjectiveKind Kind { get; }
+        public PrivateObjectiveStepId? CurrentStep { get; }
+        public int CompletedStepCount { get; }
+        public int TotalStepCount { get; }
+        public bool IsCompleted { get; }
+        public PlayerId? Target { get; }
+
+        public PrivateObjectiveView(
+            PrivateObjectiveId id,
+            PrivateObjectiveKind kind,
+            PrivateObjectiveStepId? currentStep,
+            int completedStepCount,
+            int totalStepCount,
+            bool isCompleted,
+            PlayerId? target)
+        {
+            Id = id;
+            Kind = kind;
+            CurrentStep = currentStep;
+            CompletedStepCount = completedStepCount;
+            TotalStepCount = totalStepCount;
+            IsCompleted = isCompleted;
+            Target = target;
+        }
+    }
+
+    /// <summary>Individual outcome of the Runda for one viewer (ADR-0013).</summary>
     public sealed class PlayerResultView
     {
         /// <summary>Whether this viewer personally won the Runda.</summary>
@@ -138,13 +261,27 @@ namespace InterrogationRoom.Domain
 
         public PlayerId? ExecutedPlayer { get; }
 
-        public PlayerResultView(bool won, bool survived, bool detectiveWon, RoundEndCause endCause, PlayerId? executedPlayer)
+        public bool PrivateObjectiveCompleted { get; }
+
+        /// <summary>True only for the Winny who completed the Ucieczka.</summary>
+        public bool Escaped { get; }
+
+        public PlayerResultView(
+            bool won,
+            bool survived,
+            bool detectiveWon,
+            RoundEndCause endCause,
+            PlayerId? executedPlayer,
+            bool privateObjectiveCompleted = false,
+            bool escaped = false)
         {
             Won = won;
             Survived = survived;
             DetectiveWon = detectiveWon;
             EndCause = endCause;
             ExecutedPlayer = executedPlayer;
+            PrivateObjectiveCompleted = privateObjectiveCompleted;
+            Escaped = escaped;
         }
     }
 }

@@ -26,7 +26,10 @@ namespace InterrogationRoom.Domain
         Execution,
 
         /// <summary>The Limit Rundy expired without an Egzekucja.</summary>
-        TimeExpired
+        TimeExpired,
+
+        /// <summary>The Winny completed a final Ucieczka action.</summary>
+        Escape
     }
 
     /// <summary>
@@ -83,13 +86,17 @@ namespace InterrogationRoom.Domain
 
         public RoundEndCause? EndCause { get; }
 
+        /// <summary>Public final exit; null unless the Runda ended by Ucieczka.</summary>
+        public EscapeExitId? SuccessfulEscapeExit { get; }
+
         public RoundPublicState(
             RoundPhase phase,
             IReadOnlyList<PlayerId> players,
             PlayerId? detective,
             PlayerId? executedPlayer,
             bool? detectiveWon,
-            RoundEndCause? endCause)
+            RoundEndCause? endCause,
+            EscapeExitId? successfulEscapeExit = null)
         {
             Phase = phase;
             Players = players;
@@ -97,6 +104,7 @@ namespace InterrogationRoom.Domain
             ExecutedPlayer = executedPlayer;
             DetectiveWon = detectiveWon;
             EndCause = endCause;
+            SuccessfulEscapeExit = successfulEscapeExit;
         }
     }
 
@@ -122,6 +130,86 @@ namespace InterrogationRoom.Domain
             public PlayerExecuted(PlayerId target)
             {
                 Target = target;
+            }
+        }
+
+        public sealed class PrivateObjectiveAdvanced : RoundEvent
+        {
+            public PlayerId Player { get; }
+            public PrivateObjectiveId ObjectiveId { get; }
+            public PrivateObjectiveStepId StepId { get; }
+            public bool Completed { get; }
+
+            public PrivateObjectiveAdvanced(
+                PlayerId player,
+                PrivateObjectiveId objectiveId,
+                PrivateObjectiveStepId stepId,
+                bool completed)
+            {
+                Player = player;
+                ObjectiveId = objectiveId;
+                StepId = stepId;
+                Completed = completed;
+            }
+        }
+
+        /// <summary>
+        /// Public-safe notification that a world effect became an Incydent.
+        /// The author remains host-only during the Runda.
+        /// </summary>
+        public sealed class IncidentRegistered : RoundEvent
+        {
+            public IncidentId IncidentId { get; }
+            public IncidentKind Kind { get; }
+
+            public IncidentRegistered(IncidentId incidentId, IncidentKind kind)
+            {
+                IncidentId = incidentId;
+                Kind = kind;
+            }
+        }
+
+        /// <summary>Public-safe notification that a quiet Incydent was discovered.</summary>
+        public sealed class QuietIncidentDiscovered : RoundEvent
+        {
+            public IncidentId IncidentId { get; }
+
+            public QuietIncidentDiscovered(IncidentId incidentId)
+            {
+                IncidentId = incidentId;
+            }
+        }
+
+        /// <summary>Public-safe loud final attempt notification without an author.</summary>
+        public sealed class EscapeAttemptStarted : RoundEvent
+        {
+            public EscapeExitId ExitId { get; }
+            public IncidentLocationId Location { get; }
+
+            public EscapeAttemptStarted(EscapeExitId exitId, IncidentLocationId location)
+            {
+                ExitId = exitId;
+                Location = location;
+            }
+        }
+
+        public sealed class EscapeAttemptInterrupted : RoundEvent
+        {
+            public EscapeExitId ExitId { get; }
+
+            public EscapeAttemptInterrupted(EscapeExitId exitId)
+            {
+                ExitId = exitId;
+            }
+        }
+
+        public sealed class PlayerEscaped : RoundEvent
+        {
+            public EscapeExitId ExitId { get; }
+
+            public PlayerEscaped(EscapeExitId exitId)
+            {
+                ExitId = exitId;
             }
         }
 

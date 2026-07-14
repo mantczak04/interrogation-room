@@ -17,27 +17,40 @@ MonoBehaviour:
     na r\xF3\u017Cowo i przyklei\u0142 mu w\u0105sy z waty cukrowej. Sprawca dzia\u0142a\u0142
     w czasie, gdy ca\u0142a grupa by\u0142a razem na kolacji."
   alibiFacts:
-  - text: "O 19:00 wszyscy spotkali si\u0119 w pizzerii \u201EU Grubego\u201D przy
+  - id: spotkanie-pizzeria
+    text: "O 19:00 wszyscy spotkali si\u0119 w pizzerii \u201EU Grubego\u201D przy
       rynku."
     canBeHidden: 0
-  - text: "Zam\xF3wili\u015Bmy trzy pizze: hawajsk\u0105, capriccios\u0119 i podw\xF3jny
+  - id: trzy-pizze
+    text: "Zam\xF3wili\u015Bmy trzy pizze: hawajsk\u0105, capriccios\u0119 i podw\xF3jny
       ser."
     canBeHidden: 1
-  - text: "Kelner pomyli\u0142 rachunek \u2014 doliczy\u0142 cztery kompoty, kt\xF3rych
+  - id: bledny-rachunek
+    text: "Kelner pomyli\u0142 rachunek \u2014 doliczy\u0142 cztery kompoty, kt\xF3rych
       nikt nie zamawia\u0142."
     canBeHidden: 1
-  - text: "Oko\u0142o 19:40 na kilka minut zgas\u0142o \u015Bwiat\u0142o w ca\u0142ym
+  - id: awaria-swiatla
+    text: "Oko\u0142o 19:40 na kilka minut zgas\u0142o \u015Bwiat\u0142o w ca\u0142ym
       lokalu."
     canBeHidden: 0
-  - text: "Kucharz opowiedzia\u0142 dowcip o stra\u017Caku, z kt\xF3rego nikt si\u0119
+  - id: dowcip-kucharza
+    text: "Kucharz opowiedzia\u0142 dowcip o stra\u017Caku, z kt\xF3rego nikt si\u0119
       nie za\u015Bmia\u0142."
     canBeHidden: 1
-  - text: "Po kolacji grali\u015Bmy w rzutki; zwyci\u0119zca dosta\u0142 darmowy
+  - id: rzutki-deser
+    text: "Po kolacji grali\u015Bmy w rzutki; zwyci\u0119zca dosta\u0142 darmowy
       deser."
     canBeHidden: 0
-  - text: "Wyszli\u015Bmy po 21:00 i razem doszli\u015Bmy do przystanku przy fontannie."
+  - id: wyjscie-przystanek
+    text: "Wyszli\u015Bmy po 21:00 i razem doszli\u015Bmy do przystanku przy fontannie."
     canBeHidden: 0
-  - text: "W drodze powrotnej min\u0119li\u015Bmy patrol stra\u017Cy miejskiej."
+  - id: patrol-strazy
+    text: "W drodze powrotnej min\u0119li\u015Bmy patrol stra\u017Cy miejskiej."
     canBeHidden: 0
+  alibiClues:
+  - id: paragon-cztery-kompoty
+    linkedFactId: bledny-rachunek
+    content: "Zmi\u0119ty paragon z czterema kompotami dopisanymi innym charakterem
+      pisma."
   minHiddenFacts: 2
   maxHiddenFacts: 3

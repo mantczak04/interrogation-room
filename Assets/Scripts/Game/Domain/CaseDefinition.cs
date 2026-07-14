@@ -19,6 +19,9 @@ namespace InterrogationRoom.Domain
         /// <summary>Ordered list of Alibi facts; the order is authored content.</summary>
         public IReadOnlyList<AlibiFact> AlibiFacts { get; }
 
+        /// <summary>Authored interpretive Tropy linked to hideable fact ids.</summary>
+        public IReadOnlyList<AlibiClueDefinition> AlibiClues { get; }
+
         /// <summary>
         /// Inclusive range of facts hidden from the Winny. The exact count is
         /// drawn from the Runda seed at StartRound.
@@ -32,12 +35,14 @@ namespace InterrogationRoom.Domain
             string crimeDescription,
             IEnumerable<AlibiFact> alibiFacts,
             int minHiddenFacts,
-            int maxHiddenFacts)
+            int maxHiddenFacts,
+            IEnumerable<AlibiClueDefinition> alibiClues = null)
         {
             Title = title ?? throw new ArgumentNullException(nameof(title));
             CrimeDescription = crimeDescription ?? throw new ArgumentNullException(nameof(crimeDescription));
             if (alibiFacts == null) throw new ArgumentNullException(nameof(alibiFacts));
             AlibiFacts = alibiFacts.ToArray();
+            AlibiClues = (alibiClues ?? Array.Empty<AlibiClueDefinition>()).ToArray();
             MinHiddenFacts = minHiddenFacts;
             MaxHiddenFacts = maxHiddenFacts;
         }
