@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using InterrogationRoom.Domain;
@@ -36,7 +35,7 @@ namespace InterrogationRoom.Networking.Tests
         }
 
         [Test]
-        public void MapperAlwaysUsesAuthenticatedSenderAsCommandOwner()
+        public void MapperRejectsEveryClientAuthoredPhysicalResult()
         {
             var sender = new PlayerId(42);
             var timestamp = new IncidentTimestamp(1250);
@@ -79,9 +78,10 @@ namespace InterrogationRoom.Networking.Tests
             {
                 Assert.That(
                     RoundIntentMapper.TryMap(message, sender, timestamp, out var command, out var reason),
-                    Is.True,
-                    reason);
-                Assert.That(CommandOwner(command), Is.EqualTo(sender), message.Kind.ToString());
+                    Is.False,
+                    message.Kind.ToString());
+                Assert.That(command, Is.Null, message.Kind.ToString());
+                Assert.That(reason, Does.Contain("server-authoritative"), message.Kind.ToString());
             }
         }
 
@@ -132,7 +132,7 @@ namespace InterrogationRoom.Networking.Tests
         }
 
         [Test]
-        public void MirrorSerialization_RoundTripsReturnToLobbyAndLobbyReset()
+        public void MirrorSerialization_RoundTripsLobbyMessages()
         {
             RoundIntentMessage source = RoundIntentMessage.ReturnToLobby();
             RoundIntentMessage restored;
@@ -151,10 +151,22 @@ namespace InterrogationRoom.Networking.Tests
                 using (var reader = NetworkReaderPool.Get(writer.ToArraySegment()))
                     Assert.That(reader.Read<RoundLobbyResetMessage>(), Is.TypeOf<RoundLobbyResetMessage>());
             }
+
+            var lobbyState = new RoundLobbyStateMessage { PlayerCount = 5 };
+            using (var writer = NetworkWriterPool.Get())
+            {
+                writer.Write(lobbyState);
+                using (var reader = NetworkReaderPool.Get(writer.ToArraySegment()))
+                    Assert.That(reader.Read<RoundLobbyStateMessage>().PlayerCount, Is.EqualTo(5));
+            }
+
+            Assert.That(typeof(RoundLobbyStateMessage).GetFields().Select(field => field.Name),
+                Is.EqualTo(new[] { nameof(RoundLobbyStateMessage.PlayerCount) }),
+                "Public lobby synchronization must not grow into a secret-bearing payload.");
         }
 
         [Test]
-        public void MapperRejectsMalformedStableIdsWithoutCallingDomain()
+        public void MapperRejectsPhysicalIntentBeforeParsingItsPayload()
         {
             var malformed = new RoundIntentMessage
             {
@@ -172,23 +184,7 @@ namespace InterrogationRoom.Networking.Tests
                     out var reason),
                 Is.False);
             Assert.That(command, Is.Null);
-            Assert.That(reason, Is.Not.Empty);
-        }
-
-        private static PlayerId CommandOwner(RoundCommand command)
-        {
-            switch (command)
-            {
-                case RoundCommand.AdvancePrivateObjective value: return value.Player;
-                case RoundCommand.RegisterIncident value: return value.Author;
-                case RoundCommand.DiscoverQuietIncident value: return value.Detective;
-                case RoundCommand.AcquireAlibiClue value: return value.Player;
-                case RoundCommand.PrepareEscape value: return value.Player;
-                case RoundCommand.BeginEscape value: return value.Player;
-                case RoundCommand.InterruptEscape value: return value.Player;
-                case RoundCommand.CompleteEscape value: return value.Player;
-                default: throw new ArgumentOutOfRangeException(nameof(command));
-            }
+            Assert.That(reason, Does.Contain("server-authoritative"));
         }
 
         private static IReadOnlyList<object> IntentFields(RoundIntentMessage message) => new object[]

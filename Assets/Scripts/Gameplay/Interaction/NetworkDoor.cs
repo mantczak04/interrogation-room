@@ -37,6 +37,8 @@ namespace InterrogationRoom.Gameplay.Interaction
         private Quaternion closedLocalRotation;
         private double nextToggleAt;
         private Coroutine animationRoutine;
+        private bool lastPresentedOpen;
+        private bool hasPresentedState;
 
         public string RoomAId => roomAId ?? string.Empty;
         public string RoomBId => roomBId ?? string.Empty;
@@ -52,6 +54,8 @@ namespace InterrogationRoom.Gameplay.Interaction
             ResolveReferences();
             if (doorLeaf != null)
                 closedLocalRotation = doorLeaf.localRotation;
+            lastPresentedOpen = isOpen;
+            hasPresentedState = true;
         }
 
         private void OnEnable()
@@ -108,7 +112,7 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return false;
 
             isOpen = open;
-            ApplyDoorState(open, true, false);
+            ApplyDoorState(open, true, true);
             return true;
         }
 
@@ -120,6 +124,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         private void ApplyDoorState(bool open, bool animate, bool playSound)
         {
             ResolveReferences();
+            bool audibleStateChanged = !hasPresentedState || lastPresentedOpen != open;
             if (blockingCollider != null)
                 blockingCollider.enabled = !open;
 
@@ -138,12 +143,15 @@ namespace InterrogationRoom.Gameplay.Interaction
                     doorLeaf.localRotation = targetRotation;
             }
 
-            if (playSound && audioSource != null)
+            if (playSound && audibleStateChanged && audioSource != null)
             {
                 AudioClip clip = open ? openClip : closeClip;
                 if (clip != null)
                     audioSource.PlayOneShot(clip);
             }
+
+            lastPresentedOpen = open;
+            hasPresentedState = true;
         }
 
         private IEnumerator AnimateDoor(Quaternion targetRotation)

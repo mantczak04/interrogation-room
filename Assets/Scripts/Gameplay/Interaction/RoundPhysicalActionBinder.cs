@@ -223,10 +223,12 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         private void OnEscapeInterruptedServer(PhysicalEscapeAttemptInterrupted attempt)
         {
-            coordinator.TryInterruptPhysicalEscape(
+            bool accepted = coordinator.TryInterruptPhysicalEscape(
                 attempt.Actor,
                 attempt.PlanId,
                 attempt.ExitId);
+            if (accepted)
+                ReleaseInterruptedExitPreparationServer(attempt.ExitId, attempt.Actor);
         }
 
         private void OnEscapeCompletedServer(PhysicalEscapeAttemptCompleted attempt)
@@ -264,6 +266,25 @@ namespace InterrogationRoom.Gameplay.Interaction
 
             escapeExits.FirstOrDefault(value => value.ExitId == definition.Id.Value)
                 ?.AuthorizeRetryServer();
+        }
+
+        [Server]
+        private bool ReleaseInterruptedExitPreparationServer(
+            string exitId,
+            NetworkIdentity actor)
+        {
+            if (!NetworkServer.active || actor == null || string.IsNullOrWhiteSpace(exitId))
+                return false;
+
+            EscapeExitDefinition definition = EscapePlanDefinitions.Prototype.Exits
+                .FirstOrDefault(value => value.Id.Value == exitId);
+            if (definition == null)
+                return false;
+
+            NetworkObjectiveWorldAction preparation = objectiveActions.FirstOrDefault(
+                action => action != null &&
+                          action.CompletionPayloadId == definition.PreparationStepId.Value);
+            return preparation != null && preparation.ReleaseActorCompletionServer(actor);
         }
 
         private static bool IsEscapePreparationStep(string stepId)

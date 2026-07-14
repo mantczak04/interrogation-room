@@ -15,17 +15,16 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         [Header("Public world presentation")]
         [SerializeField] private GameObject effectVisual;
+        [SerializeField] private AudioSource effectAudioSource;
+        [SerializeField] private AudioClip effectAudioClip;
 
         [SyncVar(hook = nameof(OnWorldRevisionChanged))]
         private int worldRevision;
 
-        [SyncVar]
-        private uint lastActorNetId;
-
         private readonly HashSet<int> completedActors = new HashSet<int>();
+        private int lastAudibleRevision;
 
         public int WorldRevision => worldRevision;
-        public uint LastActorNetId => lastActorNetId;
         public int CompletedActorCountServer => completedActors.Count;
         public string AnchorId => anchorId ?? string.Empty;
 
@@ -70,7 +69,6 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return false;
 
             completedActors.Add(actorKey);
-            lastActorNetId = interactor.netId;
             worldRevision = nextRevision;
             ApplyPresentation(worldRevision);
             OnWorldEffectAppliedServer(interactor, worldRevision);
@@ -92,6 +90,15 @@ namespace InterrogationRoom.Gameplay.Interaction
         {
             if (effectVisual != null)
                 effectVisual.SetActive(revision > 0);
+
+            if (revision > lastAudibleRevision &&
+                effectAudioSource != null &&
+                effectAudioClip != null)
+            {
+                effectAudioSource.PlayOneShot(effectAudioClip);
+            }
+
+            lastAudibleRevision = Mathf.Max(lastAudibleRevision, revision);
         }
 
         private static int GetActorKey(NetworkIdentity interactor)
@@ -114,8 +121,8 @@ namespace InterrogationRoom.Gameplay.Interaction
         {
             base.ResetInteractionStateServer();
             completedActors.Clear();
+            lastAudibleRevision = 0;
             worldRevision = 0;
-            lastActorNetId = 0;
             ApplyPresentation(worldRevision);
         }
     }

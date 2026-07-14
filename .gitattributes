@@ -5,10 +5,10 @@
 *.shadergraph text
 *.mat text
 *.prefab text
-*.unity text
+*.unity text whitespace=-blank-at-eol
 *.asset text
 *.meta text
-*.controller text
+*.controller text whitespace=-blank-at-eol
 *.anim text
 *.asmdef text
 *.json text

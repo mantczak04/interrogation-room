@@ -5750,6 +5750,9 @@ GameObject:
   - component: {fileID: 328940140}
   - component: {fileID: 328940139}
   - component: {fileID: 328940138}
+  - component: {fileID: 328940142}
+  - component: {fileID: 328940141}
+  - component: {fileID: 328940143}
   m_Layer: 0
   m_Name: DrzwiSocjalny
   m_TagString: Untagged
@@ -5850,6 +5853,150 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 328940136}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &328940141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 328940136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91e39551af013fa4f811f4e156819fb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkDoor
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  roomAId: korytarz
+  roomBId: pokoj-socjalny
+  interactionPoint: {fileID: 328940137}
+  visualRoot: {fileID: 328940137}
+  doorLeaf: {fileID: 328940137}
+  blockingCollider: {fileID: 328940139}
+  openLocalEulerAngles: {x: 0, y: 90, z: 0}
+  animationDuration: 0.2
+  audioSource: {fileID: 328940143}
+  openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  closeClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  actionId: door-socjalny-toggle
+  closedPrompt: "Otw\xF3rz drzwi"
+  openPrompt: Zamknij drzwi
+  toggleCooldown: 0.3
+--- !u!114 &328940142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 328940136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 164128833
+  _assetId: 0
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!82 &328940143
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 328940136}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  m_PlayOnAwake: 0
+  m_Volume: 0.65
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 0
+  MinDistance: 1
+  MaxDistance: 12
+  Pan2D: 0
+  rolloffMode: 1
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &337577868
 GameObject:
   m_ObjectHideFlags: 0
@@ -12543,6 +12690,7 @@ GameObject:
   m_Component:
   - component: {fileID: 697509293}
   - component: {fileID: 697509294}
+  - component: {fileID: 697509295}
   m_Layer: 0
   m_Name: Strefa_Archiwum
   m_TagString: Untagged
@@ -12586,6 +12734,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 4, y: 3, z: 4.8}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &697509295
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 697509292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f076d6a2305cd6c489f4f8c0a79069f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.RoomVolume
+  roomId: archiwum
+  overlapPriority: 0
+  volumeCollider: {fileID: 697509294}
 --- !u!1001 &703860762
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15017,6 +15180,9 @@ GameObject:
   - component: {fileID: 813735455}
   - component: {fileID: 813735454}
   - component: {fileID: 813735453}
+  - component: {fileID: 813735457}
+  - component: {fileID: 813735456}
+  - component: {fileID: 813735458}
   m_Layer: 0
   m_Name: DrzwiPrzesluchania
   m_TagString: Untagged
@@ -15117,6 +15283,150 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 813735451}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &813735456
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 813735451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91e39551af013fa4f811f4e156819fb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkDoor
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  roomAId: korytarz
+  roomBId: pokoj-przesluchan
+  interactionPoint: {fileID: 813735452}
+  visualRoot: {fileID: 813735452}
+  doorLeaf: {fileID: 813735452}
+  blockingCollider: {fileID: 813735454}
+  openLocalEulerAngles: {x: 0, y: 90, z: 0}
+  animationDuration: 0.2
+  audioSource: {fileID: 813735458}
+  openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  closeClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  actionId: door-przesluchania-toggle
+  closedPrompt: "Otw\xF3rz drzwi"
+  openPrompt: Zamknij drzwi
+  toggleCooldown: 0.3
+--- !u!114 &813735457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 813735451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 2985767343
+  _assetId: 0
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!82 &813735458
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 813735451}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  m_PlayOnAwake: 0
+  m_Volume: 0.65
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 0
+  MinDistance: 1
+  MaxDistance: 12
+  Pan2D: 0
+  rolloffMode: 1
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1001 &834151232
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15924,6 +16234,7 @@ GameObject:
   m_Component:
   - component: {fileID: 876351643}
   - component: {fileID: 876351644}
+  - component: {fileID: 876351645}
   m_Layer: 0
   m_Name: Strefa_Korytarz
   m_TagString: Untagged
@@ -15967,6 +16278,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 16.8, y: 3, z: 2.5}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &876351645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 876351642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f076d6a2305cd6c489f4f8c0a79069f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.RoomVolume
+  roomId: korytarz
+  overlapPriority: 0
+  volumeCollider: {fileID: 876351644}
 --- !u!1 &876766136
 GameObject:
   m_ObjectHideFlags: 0
@@ -18800,6 +19126,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1019968962}
   - component: {fileID: 1019968963}
+  - component: {fileID: 1019968964}
   m_Layer: 0
   m_Name: Strefa_PokojSocjalny
   m_TagString: Untagged
@@ -18843,6 +19170,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 4, y: 3, z: 4.8}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1019968964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1019968961}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f076d6a2305cd6c489f4f8c0a79069f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.RoomVolume
+  roomId: pokoj-socjalny
+  overlapPriority: 0
+  volumeCollider: {fileID: 1019968963}
 --- !u!1 &1021659510
 GameObject:
   m_ObjectHideFlags: 0
@@ -21606,6 +21948,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1154285199}
   - component: {fileID: 1154285200}
+  - component: {fileID: 1154285201}
   m_Layer: 0
   m_Name: Strefa_SalaWspolna
   m_TagString: Untagged
@@ -21649,6 +21992,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 12, y: 3, z: 9}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1154285201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1154285198}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f076d6a2305cd6c489f4f8c0a79069f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.RoomVolume
+  roomId: sala-wspolna
+  overlapPriority: 0
+  volumeCollider: {fileID: 1154285200}
 --- !u!1 &1164158620
 GameObject:
   m_ObjectHideFlags: 0
@@ -32125,6 +32483,9 @@ GameObject:
   - component: {fileID: 1718422810}
   - component: {fileID: 1718422809}
   - component: {fileID: 1718422808}
+  - component: {fileID: 1718422812}
+  - component: {fileID: 1718422811}
+  - component: {fileID: 1718422813}
   m_Layer: 0
   m_Name: DrzwiSala
   m_TagString: Untagged
@@ -32225,6 +32586,150 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1718422806}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1718422811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1718422806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91e39551af013fa4f811f4e156819fb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkDoor
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  roomAId: sala-wspolna
+  roomBId: korytarz
+  interactionPoint: {fileID: 1718422807}
+  visualRoot: {fileID: 1718422807}
+  doorLeaf: {fileID: 1718422807}
+  blockingCollider: {fileID: 1718422809}
+  openLocalEulerAngles: {x: 0, y: 90, z: 0}
+  animationDuration: 0.2
+  audioSource: {fileID: 1718422813}
+  openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  closeClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  actionId: door-sala-toggle
+  closedPrompt: "Otw\xF3rz drzwi"
+  openPrompt: Zamknij drzwi
+  toggleCooldown: 0.3
+--- !u!114 &1718422812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1718422806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 910184058
+  _assetId: 0
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!82 &1718422813
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1718422806}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  m_PlayOnAwake: 0
+  m_Volume: 0.65
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 0
+  MinDistance: 1
+  MaxDistance: 12
+  Pan2D: 0
+  rolloffMode: 1
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1721674543
 GameObject:
   m_ObjectHideFlags: 0
@@ -37688,6 +38193,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1958878208}
   - component: {fileID: 1958878209}
+  - component: {fileID: 1958878210}
   m_Layer: 0
   m_Name: Strefa_PokojPrzesluchan
   m_TagString: Untagged
@@ -37731,6 +38237,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 4.6, y: 3, z: 4}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1958878210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958878207}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f076d6a2305cd6c489f4f8c0a79069f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.RoomVolume
+  roomId: pokoj-przesluchan
+  overlapPriority: 0
+  volumeCollider: {fileID: 1958878209}
 --- !u!1 &1959680342
 GameObject:
   m_ObjectHideFlags: 0
@@ -38700,6 +39221,9 @@ GameObject:
   - component: {fileID: 2002963100}
   - component: {fileID: 2002963099}
   - component: {fileID: 2002963098}
+  - component: {fileID: 2002963102}
+  - component: {fileID: 2002963101}
+  - component: {fileID: 2002963103}
   m_Layer: 0
   m_Name: DrzwiArchiwum
   m_TagString: Untagged
@@ -38800,6 +39324,150 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2002963096}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2002963101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2002963096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91e39551af013fa4f811f4e156819fb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Gameplay.Interaction.NetworkDoor
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  roomAId: korytarz
+  roomBId: archiwum
+  interactionPoint: {fileID: 2002963097}
+  visualRoot: {fileID: 2002963097}
+  doorLeaf: {fileID: 2002963097}
+  blockingCollider: {fileID: 2002963099}
+  openLocalEulerAngles: {x: 0, y: 90, z: 0}
+  animationDuration: 0.2
+  audioSource: {fileID: 2002963103}
+  openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  closeClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  actionId: door-archiwum-toggle
+  closedPrompt: "Otw\xF3rz drzwi"
+  openPrompt: Zamknij drzwi
+  toggleCooldown: 0.3
+--- !u!114 &2002963102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2002963096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 209833429
+  _assetId: 0
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!82 &2002963103
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2002963096}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  m_PlayOnAwake: 0
+  m_Volume: 0.65
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 0
+  MinDistance: 1
+  MaxDistance: 12
+  Pan2D: 0
+  rolloffMode: 1
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1001 &2004779558
 PrefabInstance:
   m_ObjectHideFlags: 0

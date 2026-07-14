@@ -85,6 +85,49 @@ namespace InterrogationRoom.UI.Tests
                 Is.Zero);
         }
 
+        [TestCase(RoundPhase.Lobby, false, false, true)]
+        [TestCase(RoundPhase.Preparation, false, false, true)]
+        [TestCase(RoundPhase.Round, false, false, false)]
+        [TestCase(RoundPhase.Round, true, false, true)]
+        [TestCase(RoundPhase.Round, false, true, true)]
+        [TestCase(RoundPhase.Finished, false, false, true)]
+        public void ShouldReleaseCursor_CoordinatesFullScreenPhasesAndGameplay(
+            RoundPhase phase,
+            bool developerMenuOpen,
+            bool requiresPointer,
+            bool expected)
+        {
+            Assert.That(
+                RoundPresenter.ShouldReleaseCursor(phase, developerMenuOpen, requiresPointer),
+                Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void PlayerInputGate_UsesOneStateForUiAndPlayerControllerBridge()
+        {
+            try
+            {
+                PlayerInputGate.SetUiInputBlocked(true);
+                PlayerInputGate.SetPlayerCursorReleased(false);
+                Assert.That(PlayerInputGate.CursorReleased, Is.True,
+                    "Gameplay code must not reclaim input while full-screen UI is active.");
+
+                PlayerInputGate.SetUiInputBlocked(false);
+                Assert.That(PlayerInputGate.CursorReleased, Is.False);
+
+                PlayerInputGate.SetPlayerCursorReleased(true);
+                Assert.That(PlayerInputGate.CursorReleased, Is.True);
+
+                PlayerInputGate.SetUiInputBlocked(false);
+                Assert.That(PlayerInputGate.CursorReleased, Is.True,
+                    "A repeated gameplay render must preserve a player-opened cursor.");
+            }
+            finally
+            {
+                PlayerInputGate.SetUiInputBlocked(true);
+            }
+        }
+
         [Test]
         public void BuildState_Finished_RendersIndividualOutcomeCauseAndExecutedPlayer()
         {

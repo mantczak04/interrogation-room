@@ -111,6 +111,8 @@ namespace InterrogationRoom.UI
         private Button _startButton;
         private DropdownField _caseSelection;
         private Label _playerCountLabel;
+        private Toggle _secretObjectiveToggle;
+        private Label _secretObjectiveSummary;
         private Button _endPreparationButton;
         private Button _returnToLobbyButton;
         private bool _lobbyMenuVisible;
@@ -150,6 +152,7 @@ namespace InterrogationRoom.UI
             coordinator.LobbyResetReceived += OnLobbyResetReceived;
             _startButton.clicked += OnStartClicked;
             _caseSelection.RegisterValueChangedCallback(OnCaseSelectionChanged);
+            _secretObjectiveToggle.RegisterValueChangedCallback(OnSecretObjectiveChanged);
             _endPreparationButton.clicked += OnEndPreparationClicked;
             _returnToLobbyButton.clicked += OnReturnToLobbyClicked;
 
@@ -171,6 +174,8 @@ namespace InterrogationRoom.UI
                 _startButton.clicked -= OnStartClicked;
             if (_caseSelection != null)
                 _caseSelection.UnregisterValueChangedCallback(OnCaseSelectionChanged);
+            if (_secretObjectiveToggle != null)
+                _secretObjectiveToggle.UnregisterValueChangedCallback(OnSecretObjectiveChanged);
             if (_endPreparationButton != null)
                 _endPreparationButton.clicked -= OnEndPreparationClicked;
             if (_returnToLobbyButton != null)
@@ -205,6 +210,12 @@ namespace InterrogationRoom.UI
 
             return (float)Math.Max(0d, roundEndsAtNetworkTime - currentNetworkTime);
         }
+
+        public static bool ShouldReleaseCursor(
+            RoundPhase phase,
+            bool developerMenuOpen,
+            bool requiresPointer) =>
+            developerMenuOpen || phase != RoundPhase.Round || requiresPointer;
 
         public void SetLobbyMenuVisible(bool visible)
         {
@@ -283,16 +294,19 @@ namespace InterrogationRoom.UI
         private void RenderLobby()
         {
             bool connected = NetworkClient.isConnected || NetworkServer.active;
+            int playerCount = coordinator.PublicLobbyPlayerCount;
             SetVisible(_lobbyPanel, _lobbyMenuVisible || connected);
             SetVisible(_preparationPanel, false);
             SetVisible(_hudPanel, false);
             SetVisible(_resultPanel, false);
             SetVisible(_privatePanel, false);
             var canStart = coordinator.IsLocalHost
-                && coordinator.ConnectedPlayerCount >= RoundEngine.MinPlayers
-                && coordinator.ConnectedPlayerCount <= RoundEngine.MaxPlayers;
+                && playerCount >= RoundEngine.MinPlayers
+                && playerCount <= RoundEngine.MaxPlayers;
             SetVisible(_startButton, coordinator.IsLocalHost);
             SetVisible(_caseSelection, coordinator.IsLocalHost);
+            SetVisible(_secretObjectiveToggle, coordinator.IsLocalHost);
+            SetVisible(_secretObjectiveSummary, coordinator.IsLocalHost);
             var caseTitles = coordinator.AvailableCaseTitles.ToList();
             _caseSelection.choices = caseTitles;
             _caseSelection.SetEnabled(caseTitles.Count > 1);
@@ -303,8 +317,11 @@ namespace InterrogationRoom.UI
             _startButton.SetEnabled(canStart);
             _startButton.text = canStart
                 ? "Start Rundy"
-                : $"Start Rundy ({coordinator.ConnectedPlayerCount}/{RoundEngine.MinPlayers})";
-            _playerCountLabel.text = $"Gracze w lobby: {coordinator.ConnectedPlayerCount}/6";
+                : $"Start Rundy ({playerCount}/{RoundEngine.MinPlayers})";
+            _playerCountLabel.text = $"Gracze w lobby: {playerCount}/{RoundEngine.MaxPlayers}";
+            _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
+            _secretObjectiveSummary.text =
+                $"Efektywna liczba Sekretnych Celów: {coordinator.EffectiveSecretObjectiveCount}";
 
             if (_lobbyMenuVisible || connected)
                 SetCursorFor(RoundPhase.Lobby, false);
@@ -332,6 +349,8 @@ namespace InterrogationRoom.UI
             _startButton = Required<Button>(root, "start-button");
             _caseSelection = Required<DropdownField>(root, "case-selection");
             _playerCountLabel = Required<Label>(root, "player-count-label");
+            _secretObjectiveToggle = Required<Toggle>(root, "secret-objective-toggle");
+            _secretObjectiveSummary = Required<Label>(root, "secret-objective-summary");
             _endPreparationButton = Required<Button>(root, "end-preparation-button");
             _returnToLobbyButton = Required<Button>(root, "return-to-lobby-button");
         }
@@ -343,6 +362,19 @@ namespace InterrogationRoom.UI
             if (_caseSelection.index >= 0)
                 coordinator.TrySelectCase(_caseSelection.index);
         }
+
+        private void OnSecretObjectiveChanged(ChangeEvent<bool> changeEvent)
+        {
+            if (!coordinator.IsLocalHost ||
+                !coordinator.TrySetSecretObjectiveEnabled(changeEvent.newValue))
+            {
+                _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
+                return;
+            }
+
+            RenderLobby();
+        }
+
         private void OnEndPreparationClicked() => coordinator.RequestEndPreparation();
         private void OnReturnToLobbyClicked() => coordinator.RequestReturnToLobby();
 
@@ -570,16 +602,8 @@ namespace InterrogationRoom.UI
 
         private void SetCursorFor(RoundPhase phase, bool requiresPointer)
         {
-            if (_developerMenuOpen)
-            {
-                UnityEngine.Cursor.visible = true;
-                UnityEngine.Cursor.lockState = CursorLockMode.None;
-                return;
-            }
-
-            var lockForGameplay = phase == RoundPhase.Round && !requiresPointer;
-            UnityEngine.Cursor.visible = !lockForGameplay;
-            UnityEngine.Cursor.lockState = lockForGameplay ? CursorLockMode.Locked : CursorLockMode.None;
+            PlayerInputGate.SetUiInputBlocked(
+                ShouldReleaseCursor(phase, _developerMenuOpen, requiresPointer));
         }
     }
 }

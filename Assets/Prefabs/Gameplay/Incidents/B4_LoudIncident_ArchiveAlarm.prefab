@@ -342,6 +342,8 @@ MonoBehaviour:
   oneShot: 0
   anchorId: archive-alarm-panel
   effectVisual: {fileID: 1497131692301011453}
+  effectAudioSource: {fileID: 196572540967986165}
+  effectAudioClip: {fileID: 8300000, guid: 55462452cb80442b6acf85f10b161e13, type: 3}
   incidentIdPrefix: archive-alarm
   incidentKind: 0
   effectId: uruchomiony-alarm
@@ -358,7 +360,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 55462452cb80442b6acf85f10b161e13, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -367,11 +369,11 @@ AudioSource:
   Spatialize: 0
   SpatializePostEffects: 0
   Priority: 128
-  DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 15
+  DopplerLevel: 0
+  MinDistance: 2
+  MaxDistance: 40
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0

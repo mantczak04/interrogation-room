@@ -4,6 +4,7 @@ using InterrogationRoom.Gameplay.Characters;
 using InterrogationRoom.Gameplay.Interaction;
 using InterrogationRoom.Gameplay.Weapons;
 using InterrogationRoom.Networking;
+using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
@@ -102,7 +103,7 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort
     private static readonly int DanceParameter = Animator.StringToHash("Dance");
     private int nextPunchVariant;
 
-    public static bool CursorReleased { get; private set; } = true;
+    public static bool CursorReleased => PlayerInputGate.CursorReleased;
 
     public bool IsSeated => isSeated;
     public bool IsDead => isDead;
@@ -297,9 +298,7 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort
 
     public static void SetCursorReleased(bool released)
     {
-        CursorReleased = released;
-        Cursor.lockState = released ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible = released;
+        PlayerInputGate.SetPlayerCursorReleased(released);
     }
 
     public bool TryRequestStand()

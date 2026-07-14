@@ -1,4 +1,5 @@
 using System;
+using InterrogationRoom.Networking;
 using Mirror;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
@@ -291,7 +292,8 @@ namespace InterrogationRoom.Gameplay.Interaction
 
             if (interactable is INetworkTimedInteractable timedInteractable)
             {
-                if (targetIdentity == null ||
+                if (!AllowsTimedRoundInteraction() ||
+                    targetIdentity == null ||
                     !timedInteractable.TryBeginInteractionServer(netIdentity))
                 {
                     return;
@@ -324,6 +326,12 @@ namespace InterrogationRoom.Gameplay.Interaction
             if (activeTimedTarget == null)
                 return;
 
+            if (!AllowsTimedRoundInteraction())
+            {
+                CancelActiveTimedInteractionServer(TimedInteractionCancellationReason.ValidationFailed);
+                return;
+            }
+
             Component targetComponent = activeTimedTarget as Component;
             if (targetComponent == null || activeTimedTargetIdentity == null ||
                 playerController == null || playerController.IsDead || playerController.IsSeated)
@@ -350,6 +358,13 @@ namespace InterrogationRoom.Gameplay.Interaction
                     netIdentity,
                     TimedInteractionCancellationReason.CompletionRejected);
             EndActiveTimedInteractionServer(completed);
+        }
+
+        private static bool AllowsTimedRoundInteraction()
+        {
+            NetworkRoundCoordinator coordinator =
+                UnityEngine.Object.FindFirstObjectByType<NetworkRoundCoordinator>();
+            return coordinator != null && coordinator.AllowsPhysicalRoundActions;
         }
 
         [Server]

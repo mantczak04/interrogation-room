@@ -154,6 +154,12 @@ namespace InterrogationRoom.Networking
     {
     }
 
+    /// <summary>Public lobby state. Contains no role, Alibi, objective, or Incident data.</summary>
+    public struct RoundLobbyStateMessage : NetworkMessage
+    {
+        public int PlayerCount;
+    }
+
     public struct AlibiEntryMessage
     {
         public string FactId;
@@ -410,7 +416,9 @@ namespace InterrogationRoom.Networking
                 && Writer<RoundIntentRejectedMessage>.write != null
                 && Reader<RoundIntentRejectedMessage>.read != null
                 && Writer<RoundLobbyResetMessage>.write != null
-                && Reader<RoundLobbyResetMessage>.read != null)
+                && Reader<RoundLobbyResetMessage>.read != null
+                && Writer<RoundLobbyStateMessage>.write != null
+                && Reader<RoundLobbyStateMessage>.read != null)
                 return;
 
             Writer<RoundIntentMessage>.write = WriteRoundIntent;
@@ -421,6 +429,8 @@ namespace InterrogationRoom.Networking
             Reader<RoundIntentRejectedMessage>.read = ReadRoundIntentRejected;
             Writer<RoundLobbyResetMessage>.write = WriteRoundLobbyReset;
             Reader<RoundLobbyResetMessage>.read = ReadRoundLobbyReset;
+            Writer<RoundLobbyStateMessage>.write = WriteRoundLobbyState;
+            Reader<RoundLobbyStateMessage>.read = ReadRoundLobbyState;
             _registered = true;
         }
 
@@ -568,6 +578,14 @@ namespace InterrogationRoom.Networking
 
         public static RoundLobbyResetMessage ReadRoundLobbyReset(this NetworkReader reader) =>
             new RoundLobbyResetMessage();
+
+        public static void WriteRoundLobbyState(this NetworkWriter writer, RoundLobbyStateMessage message)
+        {
+            writer.WriteInt(message.PlayerCount);
+        }
+
+        public static RoundLobbyStateMessage ReadRoundLobbyState(this NetworkReader reader) =>
+            new RoundLobbyStateMessage { PlayerCount = reader.ReadInt() };
 
         public static void WriteRoundView(this NetworkWriter writer, RoundViewMessage message)
         {

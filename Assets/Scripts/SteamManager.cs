@@ -22,6 +22,14 @@ using Steamworks;
 [DefaultExecutionOrder(-2000)] // SteamAPI must be initialized before SteamLobby picks a transport.
 public class SteamManager : MonoBehaviour
 {
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void EnsurePersistentInstance()
+    {
+#if !DISABLESTEAMWORKS
+        _ = Instance;
+#endif
+    }
+
 #if !DISABLESTEAMWORKS
     protected static bool s_EverInitialized = false;
 
@@ -43,6 +51,7 @@ public class SteamManager : MonoBehaviour
     public static bool Initialized => Instance.m_bInitialized;
 
     protected SteamAPIWarningMessageHook_t m_SteamAPIWarningMessageHook;
+    private Callback<GameLobbyJoinRequested_t> m_GameLobbyJoinRequested;
 
     [AOT.MonoPInvokeCallback(typeof(SteamAPIWarningMessageHook_t))]
     protected static void SteamAPIDebugTextHook(int nSeverity, System.Text.StringBuilder pchDebugText)
@@ -132,6 +141,17 @@ public class SteamManager : MonoBehaviour
             m_SteamAPIWarningMessageHook = new SteamAPIWarningMessageHook_t(SteamAPIDebugTextHook);
             SteamClient.SetWarningMessageHook(m_SteamAPIWarningMessageHook);
         }
+
+        if (m_GameLobbyJoinRequested == null)
+        {
+            m_GameLobbyJoinRequested =
+                Callback<GameLobbyJoinRequested_t>.Create(OnGameLobbyJoinRequested);
+        }
+    }
+
+    private static void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
+    {
+        GameLaunchRequest.SetSteamLobbyJoin(callback.m_steamIDLobby.m_SteamID);
     }
 
     protected virtual void OnDestroy()
@@ -142,6 +162,9 @@ public class SteamManager : MonoBehaviour
         }
 
         s_instance = null;
+
+        m_GameLobbyJoinRequested?.Dispose();
+        m_GameLobbyJoinRequested = null;
 
         if (!m_bInitialized)
         {

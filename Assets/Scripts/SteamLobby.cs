@@ -80,7 +80,6 @@ public class SteamLobby : MonoBehaviour
 
 #if !DISABLESTEAMWORKS
     Callback<LobbyCreated_t> lobbyCreated;
-    Callback<GameLobbyJoinRequested_t> gameLobbyJoinRequested;
     Callback<LobbyEnter_t> lobbyEntered;
     Callback<GameOverlayActivated_t> gameOverlayActivated;
 
@@ -102,13 +101,17 @@ public class SteamLobby : MonoBehaviour
         }
 
         lobbyCreated = Callback<LobbyCreated_t>.Create(OnLobbyCreated);
-        gameLobbyJoinRequested = Callback<GameLobbyJoinRequested_t>.Create(OnGameLobbyJoinRequested);
         lobbyEntered = Callback<LobbyEnter_t>.Create(OnLobbyEntered);
         gameOverlayActivated = Callback<GameOverlayActivated_t>.Create(OnGameOverlayActivated);
 
         Debug.Log($"[SteamLobby] Overlay enabled: {OverlayEnabled}");
 
-        TryJoinFromCommandLine();
+        TryJoinPendingLaunchRequest();
+    }
+
+    void Update()
+    {
+        TryJoinPendingLaunchRequest();
     }
 
     void OnDestroy()
@@ -248,17 +251,6 @@ public class SteamLobby : MonoBehaviour
         manager.StartHost();
     }
 
-    void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
-    {
-        if (NetworkServer.active || NetworkClient.active)
-        {
-            return;
-        }
-
-        lobbyPending = true;
-        SteamMatchmaking.JoinLobby(callback.m_steamIDLobby);
-    }
-
     void OnLobbyEntered(LobbyEnter_t callback)
     {
         lobbyPending = false;
@@ -281,24 +273,25 @@ public class SteamLobby : MonoBehaviour
         manager.StartClient();
     }
 
-    // Steam passes "+connect_lobby <id>" when the game is launched from a friend invite.
-    void TryJoinFromCommandLine()
+    void TryJoinPendingLaunchRequest()
     {
-        if (!SteamAvailable || NetworkServer.active || NetworkClient.active)
+        if (!GameLaunchRequest.HasPendingSteamLobbyJoin)
         {
             return;
         }
 
-        string[] args = Environment.GetCommandLineArgs();
-        for (int i = 0; i < args.Length - 1; i++)
+        if (NetworkServer.active || NetworkClient.active)
         {
-            if (args[i] == "+connect_lobby" && ulong.TryParse(args[i + 1], out ulong lobbyId) && lobbyId != 0)
-            {
-                lobbyPending = true;
-                SteamMatchmaking.JoinLobby(new CSteamID(lobbyId));
-                return;
-            }
+            GameLaunchRequest.TryConsumeSteamLobbyJoin(out _);
+            return;
         }
+
+        if (!SteamAvailable || lobbyPending ||
+            !GameLaunchRequest.TryConsumeSteamLobbyJoin(out ulong lobbyId))
+            return;
+
+        lobbyPending = true;
+        SteamMatchmaking.JoinLobby(new CSteamID(lobbyId));
     }
 #else
     public bool LobbyPending => false;

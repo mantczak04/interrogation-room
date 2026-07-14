@@ -13,7 +13,7 @@ public class MainMenuSetup
     {
         string scenePath = "Assets/Scenes/MainMenu.unity";
         Scene newScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-        
+
         // Add Main Camera
         GameObject cameraObj = new GameObject("Main Camera");
         Camera cam = cameraObj.AddComponent<Camera>();
@@ -40,7 +40,7 @@ public class MainMenuSetup
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
         canvasObj.AddComponent<GraphicRaycaster>();
-        
+
         // Add MainMenuManager
         MainMenuManager manager = canvasObj.AddComponent<MainMenuManager>();
 
@@ -61,7 +61,7 @@ public class MainMenuSetup
         bgImage.rectTransform.anchorMax = Vector2.one;
         bgImage.rectTransform.sizeDelta = Vector2.zero;
         bgImage.color = new Color(0.1f, 0.1f, 0.1f, 1f); // Fallback color
-        
+
         Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>(texPath);
         if (bgSprite != null)
         {

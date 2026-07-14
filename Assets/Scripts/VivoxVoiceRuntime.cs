@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Mirror;
 using Unity.Services.Authentication;
@@ -11,6 +14,15 @@ using UnityEngine.UI;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
+
+internal struct VivoxVoiceSessionRequestMessage : NetworkMessage
+{
+}
+
+internal struct VivoxVoiceSessionResponseMessage : NetworkMessage
+{
+    public string SessionId;
+}
 
 [DisallowMultipleComponent]
 public sealed class VivoxVoiceRuntime : MonoBehaviour
@@ -28,6 +40,8 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     }
 
     private const string PlayerIdPrefix = "mirror-";
+    private const float SessionRequestRetrySeconds = 1f;
+    private const float SessionResolutionTimeoutSeconds = 10f;
 
     [Header("Session")]
     [SerializeField] private string channelPrefix = "interrogation-room";
@@ -47,13 +61,19 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private readonly Dictionary<string, VivoxParticipant> pendingParticipants = new();
 
     private GameObject localPlayer;
+    private string activeSessionId;
     private string activeChannelName;
+    private string hostSessionId;
     private float nextPositionUpdate;
+    private bool wasServerActive;
+    private bool serverHandlerRegistered;
+    private bool clientHandlerRegistered;
     private bool isMuted;
     private bool isReady;
     private bool isJoining;
     private bool isDisconnecting;
     private bool isShuttingDown;
+    private TaskCompletionSource<string> pendingSessionId;
 
     public VoiceConnectionState ConnectionState { get; private set; } = VoiceConnectionState.WaitingForNetwork;
 
@@ -70,9 +90,14 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private void Update()
     {
+        RefreshNetworkMessageHandlers();
         HandleMuteInput();
 
-        if (isReady && (localPlayer == null || !NetworkClient.active))
+        if (isReady &&
+            (localPlayer == null ||
+             !NetworkClient.active ||
+             NetworkClient.localPlayer == null ||
+             NetworkClient.localPlayer.gameObject != localPlayer))
         {
             _ = DisconnectAndWaitForReconnectAsync();
             return;
@@ -117,11 +142,14 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             }
 
             localPlayer = NetworkClient.localPlayer.gameObject;
-            activeChannelName = BuildChannelName();
+            uint localNetId = NetworkClient.localPlayer.netId;
+            activeSessionId = await ResolveSessionIdAsync();
+            activeChannelName = BuildChannelName(channelPrefix, activeSessionId);
+            string playerId = BuildPlayerId(activeSessionId, localNetId);
 
             SetConnectionState(VoiceConnectionState.InitializingServices);
             var initializationOptions = new InitializationOptions()
-                .SetProfile(BuildPlayerId(NetworkClient.localPlayer.netId));
+                .SetProfile(BuildServicesProfileId(activeSessionId, localNetId));
             await UnityServices.InitializeAsync(initializationOptions);
 
             if (!AuthenticationService.Instance.IsSignedIn)
@@ -141,16 +169,18 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
                 Debug.LogWarning("[Vivox] No microphone input device is available. Receiving voice remains enabled.", this);
             }
 
-            if (!VivoxService.Instance.IsLoggedIn)
+            if (VivoxService.Instance.IsLoggedIn)
             {
-                var loginOptions = new LoginOptions
-                {
-                    PlayerId = BuildPlayerId(NetworkClient.localPlayer.netId),
-                    DisplayName = $"Player {NetworkClient.localPlayer.netId}"
-                };
-
-                await VivoxService.Instance.LoginAsync(loginOptions);
+                await VivoxService.Instance.LogoutAsync();
             }
+
+            var loginOptions = new LoginOptions
+            {
+                PlayerId = playerId,
+                DisplayName = $"Player {localNetId}"
+            };
+
+            await VivoxService.Instance.LoginAsync(loginOptions);
 
             VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
             VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
@@ -182,11 +212,49 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         }
     }
 
-    private string BuildChannelName()
+    private async Task<string> ResolveSessionIdAsync()
     {
-        SteamLobby steamLobby = FindFirstObjectByType<SteamLobby>();
-        string sessionId = steamLobby != null ? steamLobby.VoiceSessionId : "local";
-        return $"{channelPrefix}-{sessionId}";
+        RefreshNetworkMessageHandlers();
+
+        if (NetworkServer.active)
+        {
+            return EnsureHostSessionId();
+        }
+
+        if (!NetworkClient.active)
+        {
+            throw new InvalidOperationException("A connected Mirror client is required to resolve the Vivox session.");
+        }
+
+        var sessionIdCompletion =
+            new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        pendingSessionId = sessionIdCompletion;
+        float timeoutAt = Time.realtimeSinceStartup + SessionResolutionTimeoutSeconds;
+        float nextRequestAt = float.NegativeInfinity;
+
+        while (!isShuttingDown && NetworkClient.active && !sessionIdCompletion.Task.IsCompleted)
+        {
+            if (Time.realtimeSinceStartup >= nextRequestAt)
+            {
+                NetworkClient.Send(new VivoxVoiceSessionRequestMessage());
+                nextRequestAt = Time.realtimeSinceStartup + SessionRequestRetrySeconds;
+            }
+
+            if (Time.realtimeSinceStartup >= timeoutAt)
+            {
+                sessionIdCompletion.TrySetException(
+                    new TimeoutException("The host did not provide a Vivox session identifier."));
+            }
+
+            await Task.Yield();
+        }
+
+        if (!sessionIdCompletion.Task.IsCompleted)
+        {
+            sessionIdCompletion.TrySetCanceled();
+        }
+
+        return await sessionIdCompletion.Task;
     }
 
     private void OnParticipantAdded(VivoxParticipant participant)
@@ -254,13 +322,11 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             TryCreateParticipantTap(snapshot[index]);
     }
 
-    private static bool TryGetNetworkIdentity(string playerId, out NetworkIdentity identity)
+    private bool TryGetNetworkIdentity(string playerId, out NetworkIdentity identity)
     {
         identity = null;
 
-        if (string.IsNullOrEmpty(playerId) ||
-            !playerId.StartsWith(PlayerIdPrefix, StringComparison.Ordinal) ||
-            !uint.TryParse(playerId[PlayerIdPrefix.Length..], out uint netId))
+        if (!TryParsePlayerId(activeSessionId, playerId, out uint netId))
         {
             return false;
         }
@@ -268,9 +334,60 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         return NetworkClient.spawned.TryGetValue(netId, out identity);
     }
 
-    private static string BuildPlayerId(uint netId)
+    internal static string BuildChannelName(string prefix, string sessionId)
     {
-        return $"{PlayerIdPrefix}{netId}";
+        if (string.IsNullOrWhiteSpace(prefix))
+        {
+            throw new ArgumentException("A Vivox channel prefix is required.", nameof(prefix));
+        }
+
+        return $"{prefix}-{BuildSessionKey(sessionId)}";
+    }
+
+    internal static string BuildPlayerId(string sessionId, uint netId)
+    {
+        return $"{PlayerIdPrefix}{BuildSessionKey(sessionId)}-{netId.ToString(CultureInfo.InvariantCulture)}";
+    }
+
+    internal static bool TryParsePlayerId(string sessionId, string playerId, out uint netId)
+    {
+        netId = 0;
+        if (string.IsNullOrWhiteSpace(sessionId) || string.IsNullOrEmpty(playerId))
+        {
+            return false;
+        }
+
+        string expectedPrefix = $"{PlayerIdPrefix}{BuildSessionKey(sessionId)}-";
+        return playerId.StartsWith(expectedPrefix, StringComparison.Ordinal) &&
+            uint.TryParse(
+                playerId[expectedPrefix.Length..],
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out netId);
+    }
+
+    private static string BuildServicesProfileId(string sessionId, uint netId)
+    {
+        string sessionKey = BuildSessionKey(sessionId);
+        return $"voice-{sessionKey[..12]}-{netId.ToString(CultureInfo.InvariantCulture)}";
+    }
+
+    private static string BuildSessionKey(string sessionId)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            throw new ArgumentException("A Vivox session identifier is required.", nameof(sessionId));
+        }
+
+        using SHA256 sha256 = SHA256.Create();
+        byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(sessionId));
+        var builder = new StringBuilder(16);
+        for (int index = 0; index < 8; index++)
+        {
+            builder.Append(hash[index].ToString("x2", CultureInfo.InvariantCulture));
+        }
+
+        return builder.ToString();
     }
 
     private void HandleMuteInput()
@@ -316,7 +433,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private async Task DisconnectAndWaitForReconnectAsync()
     {
-        await DisconnectAsync(logout: false);
+        await DisconnectAsync(logout: true);
 
         if (!isShuttingDown)
         {
@@ -359,6 +476,9 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         {
             participantTaps.Clear();
             pendingParticipants.Clear();
+            pendingSessionId?.TrySetCanceled();
+            pendingSessionId = null;
+            activeSessionId = null;
             activeChannelName = null;
             localPlayer = null;
             isDisconnecting = false;
@@ -370,7 +490,86 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private async void OnDestroy()
     {
         isShuttingDown = true;
+        UnregisterNetworkMessageHandlers();
         await DisconnectAsync(logout: true);
+    }
+
+    private void RefreshNetworkMessageHandlers()
+    {
+        bool serverActive = NetworkServer.active;
+        if (wasServerActive && !serverActive)
+        {
+            hostSessionId = null;
+        }
+
+        wasServerActive = serverActive;
+
+        if (serverActive && !serverHandlerRegistered)
+        {
+            NetworkServer.ReplaceHandler<VivoxVoiceSessionRequestMessage>(OnSessionIdRequested);
+            serverHandlerRegistered = true;
+        }
+        else if (!serverActive)
+        {
+            serverHandlerRegistered = false;
+        }
+
+        if (NetworkClient.active && !clientHandlerRegistered)
+        {
+            NetworkClient.ReplaceHandler<VivoxVoiceSessionResponseMessage>(OnSessionIdReceived);
+            clientHandlerRegistered = true;
+        }
+        else if (!NetworkClient.active)
+        {
+            clientHandlerRegistered = false;
+        }
+    }
+
+    private void UnregisterNetworkMessageHandlers()
+    {
+        if (serverHandlerRegistered)
+        {
+            NetworkServer.UnregisterHandler<VivoxVoiceSessionRequestMessage>();
+            serverHandlerRegistered = false;
+        }
+
+        if (clientHandlerRegistered)
+        {
+            NetworkClient.UnregisterHandler<VivoxVoiceSessionResponseMessage>();
+            clientHandlerRegistered = false;
+        }
+    }
+
+    private void OnSessionIdRequested(
+        NetworkConnectionToClient connection,
+        VivoxVoiceSessionRequestMessage message)
+    {
+        connection.Send(new VivoxVoiceSessionResponseMessage
+        {
+            SessionId = EnsureHostSessionId()
+        });
+    }
+
+    private void OnSessionIdReceived(VivoxVoiceSessionResponseMessage message)
+    {
+        if (!string.IsNullOrWhiteSpace(message.SessionId))
+        {
+            pendingSessionId?.TrySetResult(message.SessionId);
+        }
+    }
+
+    private string EnsureHostSessionId()
+    {
+        if (!string.IsNullOrEmpty(hostSessionId))
+        {
+            return hostSessionId;
+        }
+
+        SteamLobby steamLobby = FindFirstObjectByType<SteamLobby>();
+        hostSessionId = steamLobby != null && steamLobby.InLobby
+            ? $"steam-{steamLobby.VoiceSessionId}"
+            : $"kcp-{Guid.NewGuid():N}";
+        return hostSessionId;
     }
 
     private void SetMicColor(Color color)

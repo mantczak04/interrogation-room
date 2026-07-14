@@ -6,23 +6,37 @@ public class MainMenuManager : MonoBehaviour
     [Header("Scenes")]
     [SerializeField] private string gameSceneName = "Room"; // Zmienić w razie innej nazwy sceny
 
+    private bool loadingGameScene;
+
     private void Start()
     {
-        if (GameLaunchRequest.WasStartedFromSteamInvite())
-        {
-            GameLaunchRequest.Set(GameLaunchMode.Join);
-            SceneManager.LoadScene(gameSceneName);
-        }
+        TryOpenPendingSteamLobby();
+    }
+
+    private void Update()
+    {
+        TryOpenPendingSteamLobby();
+    }
+
+    private void TryOpenPendingSteamLobby()
+    {
+        if (loadingGameScene || !GameLaunchRequest.HasPendingSteamLobbyJoin)
+            return;
+
+        loadingGameScene = true;
+        SceneManager.LoadScene(gameSceneName);
     }
 
     public void HostGame()
     {
+        loadingGameScene = true;
         GameLaunchRequest.Set(GameLaunchMode.Host);
         SceneManager.LoadScene(gameSceneName);
     }
 
     public void JoinServer()
     {
+        loadingGameScene = true;
         GameLaunchRequest.Set(GameLaunchMode.Join);
         SceneManager.LoadScene(gameSceneName);
     }

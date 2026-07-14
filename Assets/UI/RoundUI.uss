@@ -51,6 +51,8 @@
 .character-arrow { width: 64px; height: 58px; font-size: 38px; background-color: rgba(62, 68, 75, 0.92); }
 .character-name { flex-grow: 1; font-size: 28px; -unity-font-style: bold; -unity-text-align: middle-center; color: rgb(240, 224, 190); }
 .lobby-case { margin-top: 8px; }
+.lobby-toggle { margin-top: 12px; }
+.lobby-toggle-summary { font-size: 13px; color: rgb(180, 180, 180); margin-top: 4px; }
 .secondary-button { height: 42px; font-size: 16px; margin-top: 12px; background-color: rgb(61, 67, 75); }
 .lobby-start { height: 52px; font-size: 19px; }
 .lobby-help { font-size: 13px; color: rgb(180, 180, 180); white-space: normal; margin-top: 10px; }

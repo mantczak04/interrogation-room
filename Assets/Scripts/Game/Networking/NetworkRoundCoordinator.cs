@@ -42,6 +42,8 @@ namespace InterrogationRoom.Networking
         private bool _serverHandlerRegistered;
         private bool _clientHandlersRegistered;
         private bool _hostAllowsSecretObjective = true;
+        private int _publicLobbyPlayerCount;
+        private int _lastBroadcastLobbyPlayerCount = -1;
         private double _roundDeadline;
         private double _roundStartedAtNetworkTime;
         private RoundDeveloperPlan _developerPlan;
@@ -50,6 +52,12 @@ namespace InterrogationRoom.Networking
         public double CurrentRoundEndsAtNetworkTime { get; private set; }
         public bool IsLocalHost => NetworkServer.activeHost;
         public int ConnectedPlayerCount => _connectionsByPlayerId.Count;
+        public int PublicLobbyPlayerCount => NetworkServer.active
+            ? ConnectedPlayerCount
+            : _publicLobbyPlayerCount;
+        public bool AllowsPhysicalRoundActions => NetworkServer.active
+            ? _phase == RoundPhase.Round
+            : CurrentView?.Phase == RoundPhase.Round;
         public int SelectedCaseIndex { get; private set; }
         public bool HostAllowsSecretObjective => _hostAllowsSecretObjective;
         public static bool DeveloperToolsAvailable => Application.isEditor || Debug.isDebugBuild;
@@ -99,12 +107,14 @@ namespace InterrogationRoom.Networking
                 NetworkClient.UnregisterHandler<RoundViewMessage>();
                 NetworkClient.UnregisterHandler<RoundIntentRejectedMessage>();
                 NetworkClient.UnregisterHandler<RoundLobbyResetMessage>();
+                NetworkClient.UnregisterHandler<RoundLobbyStateMessage>();
             }
 
             ResetServerRuntime();
             _clientHandlersRegistered = false;
             CurrentView = null;
             CurrentRoundEndsAtNetworkTime = 0d;
+            _publicLobbyPlayerCount = 0;
         }
 
         public void RequestStartRound()
@@ -121,55 +131,6 @@ namespace InterrogationRoom.Networking
         {
             SendIntent(RoundIntentMessage.ReturnToLobby());
         }
-
-        public void RequestAdvancePrivateObjective(
-            PrivateObjectiveId objectiveId,
-            PrivateObjectiveStepId stepId) =>
-            SendIntent(RoundIntentMessage.AdvancePrivateObjective(objectiveId, stepId));
-
-        public void RequestRegisterIncident(
-            IncidentId incidentId,
-            IncidentKind kind,
-            IncidentEffectId effect,
-            IncidentLocationId location,
-            PrivateObjectiveStepReference objectiveStep = null) =>
-            SendIntent(RoundIntentMessage.RegisterIncident(
-                incidentId,
-                kind,
-                effect,
-                location,
-                objectiveStep));
-
-        public void RequestDiscoverQuietIncident(IncidentId incidentId) =>
-            SendIntent(RoundIntentMessage.DiscoverQuietIncident(incidentId));
-
-        public void RequestAcquireAlibiClue(
-            AlibiClueId clueId,
-            IncidentId incidentId,
-            IncidentKind kind,
-            IncidentEffectId effect,
-            IncidentLocationId location) =>
-            SendIntent(RoundIntentMessage.AcquireAlibiClue(
-                clueId,
-                incidentId,
-                kind,
-                effect,
-                location));
-
-        public void RequestPrepareEscape(EscapePlanId planId, EscapeStepId stepId) =>
-            SendIntent(RoundIntentMessage.PrepareEscape(planId, stepId));
-
-        public void RequestBeginEscape(
-            EscapePlanId planId,
-            EscapeExitId exitId,
-            IncidentId incidentId) =>
-            SendIntent(RoundIntentMessage.BeginEscape(planId, exitId, incidentId));
-
-        public void RequestInterruptEscape(EscapePlanId planId, EscapeExitId exitId) =>
-            SendIntent(RoundIntentMessage.InterruptEscape(planId, exitId));
-
-        public void RequestCompleteEscape(EscapePlanId planId, EscapeExitId exitId) =>
-            SendIntent(RoundIntentMessage.CompleteEscape(planId, exitId));
 
         public bool TrySelectCase(int index)
         {
@@ -460,6 +421,7 @@ namespace InterrogationRoom.Networking
             if (!NetworkClient.active)
             {
                 _clientHandlersRegistered = false;
+                _publicLobbyPlayerCount = 0;
                 return;
             }
 
@@ -469,6 +431,7 @@ namespace InterrogationRoom.Networking
             NetworkClient.RegisterHandler<RoundViewMessage>(OnClientView);
             NetworkClient.RegisterHandler<RoundIntentRejectedMessage>(OnClientIntentRejected);
             NetworkClient.RegisterHandler<RoundLobbyResetMessage>(OnClientLobbyReset);
+            NetworkClient.RegisterHandler<RoundLobbyStateMessage>(OnClientLobbyState);
             _clientHandlersRegistered = true;
         }
 
@@ -515,6 +478,9 @@ namespace InterrogationRoom.Networking
                 _connectionsByPlayerId.Remove(disconnectedId);
             }
             _rejectedLateJoiners.RemoveWhere(id => !connectedIds.Contains(id));
+
+            if (_phase == RoundPhase.Lobby)
+                BroadcastLobbyState();
         }
 
         private void OnServerIntent(NetworkConnectionToClient sender, RoundIntentMessage message)
@@ -653,6 +619,8 @@ namespace InterrogationRoom.Networking
                 if (connection != null && connection.isAuthenticated)
                     connection.Send(new RoundLobbyResetMessage());
             }
+
+            BroadcastLobbyState(force: true);
         }
 
         private IReadOnlyList<CaseAsset> AvailableCases()
@@ -879,6 +847,27 @@ namespace InterrogationRoom.Networking
                 _phase == RoundPhase.Round ? _roundDeadline : 0d));
         }
 
+        private void BroadcastLobbyState(bool force = false)
+        {
+            int playerCount = ConnectedPlayerCount;
+            if (!force && playerCount == _lastBroadcastLobbyPlayerCount)
+                return;
+
+            var message = new RoundLobbyStateMessage { PlayerCount = playerCount };
+            foreach (var connection in _connectionsByPlayerId.Values)
+            {
+                if (connection != null &&
+                    connection.isAuthenticated &&
+                    !ReferenceEquals(connection, NetworkServer.localConnection))
+                {
+                    connection.Send(message);
+                }
+            }
+
+            _publicLobbyPlayerCount = playerCount;
+            _lastBroadcastLobbyPlayerCount = playerCount;
+        }
+
         private static PlayerId ConnectionToPlayerId(NetworkConnectionToClient connection)
         {
             // This is intentionally the only Mirror connection -> PlayerId map.
@@ -927,6 +916,11 @@ namespace InterrogationRoom.Networking
             LobbyResetReceived?.Invoke();
         }
 
+        private void OnClientLobbyState(RoundLobbyStateMessage message)
+        {
+            _publicLobbyPlayerCount = Math.Max(0, message.PlayerCount);
+        }
+
         private void ResetServerRuntime()
         {
             foreach (var playerId in _hitSourcesByPlayerId.Keys.ToArray())
@@ -939,6 +933,8 @@ namespace InterrogationRoom.Networking
             _phase = RoundPhase.Lobby;
             _developerPlan = null;
             _hostAllowsSecretObjective = true;
+            _publicLobbyPlayerCount = 0;
+            _lastBroadcastLobbyPlayerCount = -1;
             _roundDeadline = 0d;
             _roundStartedAtNetworkTime = 0d;
         }
