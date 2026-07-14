@@ -13,8 +13,20 @@ using UnityEngine.InputSystem;
 #endif
 
 [DisallowMultipleComponent]
-public sealed class VivoxTest : MonoBehaviour
+public sealed class VivoxVoiceRuntime : MonoBehaviour
 {
+    public enum VoiceConnectionState
+    {
+        WaitingForNetwork,
+        InitializingServices,
+        NoInputDevice,
+        JoiningChannel,
+        Ready,
+        Recovering,
+        Disconnected,
+        Faulted
+    }
+
     private const string PlayerIdPrefix = "mirror-";
 
     [Header("Session")]
@@ -32,6 +44,7 @@ public sealed class VivoxTest : MonoBehaviour
     [SerializeField] private Color micMutedColor = Color.red;
 
     private readonly Dictionary<string, GameObject> participantTaps = new();
+    private readonly Dictionary<string, VivoxParticipant> pendingParticipants = new();
 
     private GameObject localPlayer;
     private string activeChannelName;
@@ -41,6 +54,13 @@ public sealed class VivoxTest : MonoBehaviour
     private bool isJoining;
     private bool isDisconnecting;
     private bool isShuttingDown;
+
+    public VoiceConnectionState ConnectionState { get; private set; } = VoiceConnectionState.WaitingForNetwork;
+
+    public int ActiveAttenuatedSpeakerCount => participantTaps.Values.Count(tap =>
+        tap != null &&
+        tap.TryGetComponent(out VivoxVoiceOcclusion occlusion) &&
+        occlusion.IsActivelyAttenuated);
 
     private async void Start()
     {
@@ -63,6 +83,8 @@ public sealed class VivoxTest : MonoBehaviour
             return;
         }
 
+        RetryPendingParticipants();
+
         if (Time.unscaledTime >= nextPositionUpdate)
         {
             VivoxService.Instance.Set3DPosition(localPlayer, activeChannelName);
@@ -80,6 +102,7 @@ public sealed class VivoxTest : MonoBehaviour
         }
 
         isJoining = true;
+        SetConnectionState(VoiceConnectionState.WaitingForNetwork);
 
         try
         {
@@ -96,7 +119,10 @@ public sealed class VivoxTest : MonoBehaviour
             localPlayer = NetworkClient.localPlayer.gameObject;
             activeChannelName = BuildChannelName();
 
-            await UnityServices.InitializeAsync();
+            SetConnectionState(VoiceConnectionState.InitializingServices);
+            var initializationOptions = new InitializationOptions()
+                .SetProfile(BuildPlayerId(NetworkClient.localPlayer.netId));
+            await UnityServices.InitializeAsync(initializationOptions);
 
             if (!AuthenticationService.Instance.IsSignedIn)
             {
@@ -106,6 +132,13 @@ public sealed class VivoxTest : MonoBehaviour
             if (VivoxService.Instance.InitializationState == VivoxInitializationState.Uninitialized)
             {
                 await VivoxService.Instance.InitializeAsync();
+            }
+
+            SubscribeConnectionEvents();
+            if (VivoxService.Instance.AvailableInputDevices.Count == 0)
+            {
+                SetConnectionState(VoiceConnectionState.NoInputDevice);
+                Debug.LogWarning("[Vivox] No microphone input device is available. Receiving voice remains enabled.", this);
             }
 
             if (!VivoxService.Instance.IsLoggedIn)
@@ -122,6 +155,7 @@ public sealed class VivoxTest : MonoBehaviour
             VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
             VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
 
+            SetConnectionState(VoiceConnectionState.JoiningChannel);
             await VivoxService.Instance.JoinPositionalChannelAsync(
                 activeChannelName,
                 ChatCapability.AudioOnly,
@@ -130,10 +164,15 @@ public sealed class VivoxTest : MonoBehaviour
             VivoxService.Instance.Set3DPosition(localPlayer, activeChannelName);
             nextPositionUpdate = Time.unscaledTime + positionUpdateInterval;
             isReady = true;
+            SetConnectionState(
+                VivoxService.Instance.AvailableInputDevices.Count == 0
+                    ? VoiceConnectionState.NoInputDevice
+                    : VoiceConnectionState.Ready);
             Debug.Log($"[Vivox] Joined positional channel '{activeChannelName}'.");
         }
         catch (Exception exception)
         {
+            SetConnectionState(VoiceConnectionState.Faulted);
             Debug.LogException(exception, this);
             SetMicColor(micMutedColor);
         }
@@ -157,10 +196,18 @@ public sealed class VivoxTest : MonoBehaviour
             return;
         }
 
+        if (!TryCreateParticipantTap(participant))
+            pendingParticipants[participant.PlayerId] = participant;
+    }
+
+    private bool TryCreateParticipantTap(VivoxParticipant participant)
+    {
+        if (participantTaps.ContainsKey(participant.PlayerId))
+            return true;
+
         if (!TryGetNetworkIdentity(participant.PlayerId, out NetworkIdentity identity))
         {
-            Debug.LogWarning($"[Vivox] Cannot map participant '{participant.PlayerId}' to a Mirror player.");
-            return;
+            return false;
         }
 
         GameObject tapObject = participant.CreateVivoxParticipantTap(
@@ -179,10 +226,13 @@ public sealed class VivoxTest : MonoBehaviour
         occlusion.Configure(localPlayer.transform, identity.transform, audioSource, occlusionMask);
 
         participantTaps[participant.PlayerId] = tapObject;
+        pendingParticipants.Remove(participant.PlayerId);
+        return true;
     }
 
     private void OnParticipantRemoved(VivoxParticipant participant)
     {
+        pendingParticipants.Remove(participant.PlayerId);
         if (!participantTaps.Remove(participant.PlayerId, out GameObject tapObject))
         {
             return;
@@ -192,6 +242,16 @@ public sealed class VivoxTest : MonoBehaviour
         {
             Destroy(tapObject);
         }
+    }
+
+    private void RetryPendingParticipants()
+    {
+        if (pendingParticipants.Count == 0)
+            return;
+
+        VivoxParticipant[] snapshot = pendingParticipants.Values.ToArray();
+        for (int index = 0; index < snapshot.Length; index++)
+            TryCreateParticipantTap(snapshot[index]);
     }
 
     private static bool TryGetNetworkIdentity(string playerId, out NetworkIdentity identity)
@@ -276,6 +336,7 @@ public sealed class VivoxTest : MonoBehaviour
         isReady = false;
         VivoxService.Instance.ParticipantAddedToChannel -= OnParticipantAdded;
         VivoxService.Instance.ParticipantRemovedFromChannel -= OnParticipantRemoved;
+        UnsubscribeConnectionEvents();
 
         try
         {
@@ -297,9 +358,12 @@ public sealed class VivoxTest : MonoBehaviour
         finally
         {
             participantTaps.Clear();
+            pendingParticipants.Clear();
             activeChannelName = null;
             localPlayer = null;
             isDisconnecting = false;
+            if (!isShuttingDown)
+                SetConnectionState(VoiceConnectionState.Disconnected);
         }
     }
 
@@ -315,5 +379,49 @@ public sealed class VivoxTest : MonoBehaviour
         {
             micIcon.color = color;
         }
+    }
+
+    private void SubscribeConnectionEvents()
+    {
+        VivoxService.Instance.ConnectionRecovering -= OnConnectionRecovering;
+        VivoxService.Instance.ConnectionRecovered -= OnConnectionRecovered;
+        VivoxService.Instance.ConnectionFailedToRecover -= OnConnectionFailedToRecover;
+        VivoxService.Instance.ConnectionRecovering += OnConnectionRecovering;
+        VivoxService.Instance.ConnectionRecovered += OnConnectionRecovered;
+        VivoxService.Instance.ConnectionFailedToRecover += OnConnectionFailedToRecover;
+    }
+
+    private void UnsubscribeConnectionEvents()
+    {
+        VivoxService.Instance.ConnectionRecovering -= OnConnectionRecovering;
+        VivoxService.Instance.ConnectionRecovered -= OnConnectionRecovered;
+        VivoxService.Instance.ConnectionFailedToRecover -= OnConnectionFailedToRecover;
+    }
+
+    private void OnConnectionRecovering()
+    {
+        SetConnectionState(VoiceConnectionState.Recovering);
+    }
+
+    private void OnConnectionRecovered()
+    {
+        SetConnectionState(
+            VivoxService.Instance.AvailableInputDevices.Count == 0
+                ? VoiceConnectionState.NoInputDevice
+                : VoiceConnectionState.Ready);
+    }
+
+    private void OnConnectionFailedToRecover()
+    {
+        SetConnectionState(VoiceConnectionState.Faulted);
+    }
+
+    private void SetConnectionState(VoiceConnectionState state)
+    {
+        if (ConnectionState == state)
+            return;
+
+        ConnectionState = state;
+        Debug.Log($"[Vivox] State: {state}; attenuated speakers: {ActiveAttenuatedSpeakerCount}.", this);
     }
 }

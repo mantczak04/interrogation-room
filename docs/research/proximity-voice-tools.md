@@ -2,6 +2,8 @@
 
 Stan researchu: **2026-07-10**. Zakres: Unity 6, Mirror, FizzySteamworks i Steamworks.NET; rozmowa zawsze przestrzenna, z osłabieniem przez ściany i zamknięte drzwi oraz możliwością podsłuchiwania z bliska.
 
+> **Decyzja po researchu (2026-07-14):** właściciel projektu zatwierdził Vivox dla B6 ze względu na istniejący pakiet i spike oraz darmowy próg do 5000 PCU. Poniższa rekomendacja Dissonance pozostaje historycznym zapisem researchu, a nie bieżącą decyzją implementacyjną.
+
 ## Wniosek
 
 Do pierwszego prototypu wybrałbym **Dissonance Voice Chat 9.0.9, z integracją Mirror działającą przez istniejący FizzySteamworks**, a tłumienie ścian i drzwi zrobił jako małą, własną warstwę akustyczną na każdym odtwarzanym głosie.

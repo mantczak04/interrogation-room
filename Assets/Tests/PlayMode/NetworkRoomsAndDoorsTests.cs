@@ -95,6 +95,32 @@ namespace InterrogationRoom.Gameplay.Tests
             Assert.That(currentRoomId.GetValue(tracker), Is.EqualTo(string.Empty));
         }
 
+        [Test]
+        public void VoicePathDistinguishesSameRoomOpenDoorClosedDoorAndWall()
+        {
+            Type doorType = FindAssemblyCSharpType("InterrogationRoom.Gameplay.Interaction.NetworkDoor");
+            Type occlusionType = FindAssemblyCSharpType("VivoxVoiceOcclusion");
+            Component door = CreateDoor("Acoustic portal", doorType);
+            SetField(door, "roomAId", "interview");
+            SetField(door, "roomBId", "corridor");
+            MethodInfo resolve = occlusionType.GetMethod("ResolvePortalState");
+            PropertyInfo portals = FindAssemblyCSharpType("InterrogationRoom.Gameplay.Interaction.RoomPortalRegistry")
+                .GetProperty("ActivePortals");
+
+            object sameRoom = resolve.Invoke(null, new[] { "interview", "interview", portals.GetValue(null) });
+            object closedDoor = resolve.Invoke(null, new[] { "interview", "corridor", portals.GetValue(null) });
+            object wall = resolve.Invoke(null, new[] { "interview", "evidence", portals.GetValue(null) });
+
+            SetServerActive(true);
+            doorType.GetMethod("SetOpenServer").Invoke(door, new object[] { true });
+            object openDoor = resolve.Invoke(null, new[] { "interview", "corridor", portals.GetValue(null) });
+
+            Assert.That(sameRoom.ToString(), Is.EqualTo("SameRoom"));
+            Assert.That(openDoor.ToString(), Is.EqualTo("OpenPortalPath"));
+            Assert.That(closedDoor.ToString(), Is.EqualTo("ClosedPortalPath"));
+            Assert.That(wall.ToString(), Is.EqualTo("Wall"));
+        }
+
         private Component CreateDoor(string name, Type doorType)
         {
             GameObject root = CreateObject(name);
