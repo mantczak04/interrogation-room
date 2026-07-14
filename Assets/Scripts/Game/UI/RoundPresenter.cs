@@ -112,6 +112,8 @@ namespace InterrogationRoom.UI
         private DropdownField _caseSelection;
         private Button _endPreparationButton;
         private Button _returnToLobbyButton;
+        private bool _lobbyMenuVisible;
+        private bool _developerMenuOpen;
 
         private void Reset()
         {
@@ -203,6 +205,18 @@ namespace InterrogationRoom.UI
             return (float)Math.Max(0d, roundEndsAtNetworkTime - currentNetworkTime);
         }
 
+        public void SetLobbyMenuVisible(bool visible)
+        {
+            _lobbyMenuVisible = visible;
+            if (_view == null || _view.Phase == RoundPhase.Lobby)
+                SetVisible(_lobbyPanel, visible);
+        }
+
+        public void SetDeveloperMenuOpen(bool open)
+        {
+            _developerMenuOpen = open;
+        }
+
         public static RoundUiState BuildState(PlayerRoundView view, float remainingSeconds, bool isHost)
         {
             if (view == null)
@@ -267,7 +281,7 @@ namespace InterrogationRoom.UI
 
         private void RenderLobby()
         {
-            SetVisible(_lobbyPanel, true);
+            SetVisible(_lobbyPanel, _lobbyMenuVisible);
             SetVisible(_preparationPanel, false);
             SetVisible(_hudPanel, false);
             SetVisible(_resultPanel, false);
@@ -288,7 +302,8 @@ namespace InterrogationRoom.UI
             _startButton.text = canStart
                 ? "Start Rundy"
                 : $"Start Rundy ({coordinator.ConnectedPlayerCount}/{RoundEngine.MinPlayers})";
-            SetCursorFor(RoundPhase.Lobby, false);
+            if (_lobbyMenuVisible)
+                SetCursorFor(RoundPhase.Lobby, false);
         }
 
         private void BindVisualTree()
@@ -548,8 +563,15 @@ namespace InterrogationRoom.UI
                 element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        private static void SetCursorFor(RoundPhase phase, bool requiresPointer)
+        private void SetCursorFor(RoundPhase phase, bool requiresPointer)
         {
+            if (_developerMenuOpen)
+            {
+                UnityEngine.Cursor.visible = true;
+                UnityEngine.Cursor.lockState = CursorLockMode.None;
+                return;
+            }
+
             var lockForGameplay = phase == RoundPhase.Round && !requiresPointer;
             UnityEngine.Cursor.visible = !lockForGameplay;
             UnityEngine.Cursor.lockState = lockForGameplay ? CursorLockMode.Locked : CursorLockMode.None;

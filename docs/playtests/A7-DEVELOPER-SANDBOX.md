@@ -7,14 +7,14 @@ Nie jest to zamiennik pełnego A7. Rozmowy, prywatność między ekranami, Egzek
 ## Uruchomienie
 
 1. Otwórz scenę `Room` i Play Mode.
-2. W launcherze wybierz `Host (Server + Client)`.
-3. Poczekaj na spawn postaci. Panel `A7a — SANDBOX RUNDY` pojawi się po prawej stronie.
+2. Naciśnij `Esc`, wybierz `Sieć / Host`, a następnie `Host (Server + Client)`.
+3. Wróć do `Menu` i wybierz `Sandbox Rundy` albo użyj skrótu `F8`. Panel `A7a — SANDBOX RUNDY` pojawi się po prawej stronie.
 4. Wybierz testowanego prawdziwego gracza, docelowy skład 4/5/6 i scenariusz.
 5. W Przygotowaniu sprawdź prywatny widok, a następnie kliknij `Zakończ Przygotowanie`.
 6. Podejdź do wskazanego obiektu i przytrzymaj `E`. Panel pokazuje bieżący krok.
 7. Po wyniku kliknij `Wróć do lobby i zresetuj świat`, zanim uruchomisz kolejny scenariusz.
 
-Panel można zwinąć przyciskiem `—` albo klawiszem `F8`. Normalny przycisk Start Rundy nadal wymaga 4–6 prawdziwych graczy.
+Wszystkie menu są domyślnie ukryte. `Esc` otwiera wybór między siecią, zwykłą Rundą i sandboxem; `F8` bezpośrednio pokazuje lub ukrywa sandbox. Po skonfigurowaniu scenariusza wybierz `Graj z panelem`, żeby przypiąć instrukcję, schować kursor i wrócić do chodzenia. `F8` ponownie otwiera obsługę albo ukrywa przypięty panel. Panel można dodatkowo zwinąć przyciskiem `—`. Normalny przycisk Start Rundy nadal wymaga 4–6 prawdziwych graczy.
 
 ## Scenariusze fizyczne
 

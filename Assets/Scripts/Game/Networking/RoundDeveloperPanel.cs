@@ -17,6 +17,7 @@ namespace InterrogationRoom.Debugging
     {
         [SerializeField] private NetworkRoundCoordinator coordinator;
 
+        private bool _isVisible;
         private bool _expanded = true;
         private int _targetPlayerCount = RoundEngine.MinPlayers;
         private int _controlledPlayerId;
@@ -40,14 +41,14 @@ namespace InterrogationRoom.Debugging
 
         private void OnGUI()
         {
-            if (!NetworkRoundCoordinator.DeveloperToolsAvailable || coordinator == null)
+            if (!_isVisible || !NetworkRoundCoordinator.DeveloperToolsAvailable || coordinator == null)
                 return;
 
             InitializeStyles();
-            HandleToggleKey();
 
             const float panelWidth = 440f;
-            float panelHeight = Mathf.Min(Screen.height - 24f, 690f);
+            const float shortcutStripHeight = 68f;
+            float panelHeight = Mathf.Min(Screen.height - 24f - shortcutStripHeight, 690f);
             var area = new Rect(Screen.width - panelWidth - 12f, 12f, panelWidth, panelHeight);
             GUILayout.BeginArea(area, _boxStyle);
             GUILayout.BeginHorizontal();
@@ -67,6 +68,11 @@ namespace InterrogationRoom.Debugging
             DrawContents();
             GUILayout.EndScrollView();
             GUILayout.EndArea();
+        }
+
+        public void SetVisible(bool visible)
+        {
+            _isVisible = visible;
         }
 
         private void DrawContents()
@@ -352,14 +358,5 @@ namespace InterrogationRoom.Debugging
             };
         }
 
-        private void HandleToggleKey()
-        {
-            var current = Event.current;
-            if (current.type != EventType.KeyDown || current.keyCode != KeyCode.F8)
-                return;
-
-            _expanded = !_expanded;
-            current.Use();
-        }
     }
 }

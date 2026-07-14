@@ -8,7 +8,7 @@ Poza pierwszym slice'em pozostają: Prywatne Cele, Incydenty, Plan Ucieczki, Tro
 
 ## Playground po pivocie
 
-Scena `Room` pozostaje technicznym playgroundem, a nie prezentacją docelowej pętli Rundy. Widoczny jest wyłącznie developerski launcher sieciowy potrzebny do prostego uruchomienia hosta i klienta. Pickup broni, strzelanie oraz integracja Vivox pozostają w kodzie i scenie jako działające spike'i, ale nie są jeszcze podpięte do reguł Rundy. Docelowo Detektyw otrzymuje pistolet od początku Rundy; obecny ogólnodostępny pickup nie jest zatwierdzonym przepływem gameplayowym.
+Scena `Room` pozostaje technicznym playgroundem, a nie prezentacją docelowej pętli Rundy. Developerskie panele są domyślnie ukryte; `Esc` otwiera jedno menu wyboru prowadzące osobno do launchera sieciowego, lobby zwykłej Rundy albo sandboxa Rundy. Pickup broni, strzelanie oraz integracja Vivox pozostają w kodzie i scenie jako działające spike'i, ale nie są jeszcze podpięte do reguł Rundy. Docelowo Detektyw otrzymuje pistolet od początku Rundy; obecny ogólnodostępny pickup nie jest zatwierdzonym przepływem gameplayowym.
 
 Canvas z ikoną stanu mikrofonu jest domyślnie ukryty, a komponenty `VivoxTest` i `NetworkRoundCoordinator` są wyłączone w scenie. To celowa decyzja produktowa, nie sygnał do usunięcia voice chatu ani Rundy. Można je ponownie włączyć dopiero po skonfigurowaniu projektu Unity/Vivox i uzgodnieniu przepływu Rundy. Do lokalnego uruchamiania playgroundu można wymusić KCP argumentem `-force-kcp`, bez usuwania istniejącej ścieżki Steam/FizzySteamworks.
 

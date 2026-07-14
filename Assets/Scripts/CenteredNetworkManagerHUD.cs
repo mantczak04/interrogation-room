@@ -1,4 +1,8 @@
 using Mirror;
+using InterrogationRoom.Debugging;
+using InterrogationRoom.Domain;
+using InterrogationRoom.Networking;
+using InterrogationRoom.UI;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -8,8 +12,20 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(NetworkManager))]
 public class CenteredNetworkManagerHUD : MonoBehaviour
 {
+    private enum MenuPage
+    {
+        Home,
+        Network,
+        NormalRound,
+        Sandbox
+    }
+
     NetworkManager manager;
     SteamLobby steamLobby;
+    NetworkRoundCoordinator roundCoordinator;
+    RoundDeveloperPanel developerPanel;
+
+    [SerializeField] RoundPresenter roundPresenter;
 
     public int offsetX;
     public int offsetY;
@@ -22,27 +38,82 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     GUIStyle buttonStyle;
     GUIStyle labelStyle;
     GUIStyle textFieldStyle;
+    GUIStyle homeButtonStyle;
+    GUIStyle homeDescriptionStyle;
     bool stylesInitialized;
-    bool isVisible = true;
+    bool isVisible;
+    bool sandboxPinned;
+    MenuPage currentPage = MenuPage.Home;
+
+    public static bool HandlesEscape { get; private set; }
 
     void Awake()
     {
         manager = GetComponent<NetworkManager>();
         steamLobby = GetComponent<SteamLobby>();
+        roundCoordinator = GetComponent<NetworkRoundCoordinator>();
+    }
+
+    void OnEnable()
+    {
+        HandlesEscape = true;
+        ApplyPageVisibility();
+    }
+
+    void OnDisable()
+    {
+        HandlesEscape = false;
+        sandboxPinned = false;
+        if (roundPresenter != null)
+        {
+            roundPresenter.SetDeveloperMenuOpen(false);
+        }
+        SetExternalMenusVisible(false, false);
+    }
+
+    void OnValidate()
+    {
+        if (roundPresenter == null)
+        {
+            Debug.LogError("[CenteredNetworkManagerHUD] RoundPresenter reference is required.", this);
+        }
     }
 
     bool SteamMode => steamLobby != null && steamLobby.SteamAvailable;
 
     void Update()
     {
+        if (isVisible
+            && currentPage == MenuPage.NormalRound
+            && roundCoordinator != null
+            && roundCoordinator.CurrentView?.Phase == RoundPhase.Round)
+        {
+            SetMenuVisible(false, MenuPage.Home);
+            return;
+        }
+
 #if ENABLE_INPUT_SYSTEM
-        bool togglePressed = Keyboard.current != null && Keyboard.current.pKey.wasPressedThisFrame;
+        bool togglePressed = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+        bool sandboxPressed = Keyboard.current != null && Keyboard.current.f8Key.wasPressedThisFrame;
 #else
-        bool togglePressed = Input.GetKeyDown(KeyCode.P);
+        bool togglePressed = Input.GetKeyDown(KeyCode.Escape);
+        bool sandboxPressed = Input.GetKeyDown(KeyCode.F8);
 #endif
         if (togglePressed)
         {
-            isVisible = !isVisible;
+            SetMenuVisible(!isVisible, MenuPage.Home);
+        }
+        else if (sandboxPressed)
+        {
+            if (sandboxPinned || (isVisible && currentPage == MenuPage.Sandbox))
+            {
+                sandboxPinned = false;
+                SetMenuVisible(false, MenuPage.Home);
+            }
+            else
+            {
+                SetMenuVisible(true, MenuPage.Sandbox);
+            }
         }
     }
 
@@ -74,6 +145,17 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             alignment = TextAnchor.MiddleCenter
         };
 
+        homeButtonStyle = new GUIStyle(buttonStyle)
+        {
+            fontSize = Mathf.Min(fontSize, 20),
+            fixedHeight = 44f
+        };
+
+        homeDescriptionStyle = new GUIStyle(labelStyle)
+        {
+            fontSize = Mathf.Min(fontSize, 16)
+        };
+
         stylesInitialized = true;
     }
 
@@ -88,7 +170,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         float screenWidth = Screen.width / scale;
         float screenHeight = Screen.height / scale;
         GUILayout.BeginArea(new Rect(0f, screenHeight - 44f, screenWidth, 40f));
-        GUILayout.Label("P: show / hide UI     V: mute / unmute voice chat", labelStyle);
+        GUILayout.Label("Esc: menu     F8: sandbox Rundy     V: mute / unmute voice chat", labelStyle);
         GUILayout.EndArea();
 
         if (!isVisible)
@@ -97,11 +179,28 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             return;
         }
 
+        if (currentPage == MenuPage.NormalRound || currentPage == MenuPage.Sandbox)
+        {
+            DrawPageHeader(screenWidth);
+            GUI.matrix = previousMatrix;
+            return;
+        }
+
         float scaledWidth = panelWidth;
-        float scaledHeight = 420f;
+        float scaledHeight = currentPage == MenuPage.Home ? 400f : 420f;
         float x = (screenWidth - scaledWidth) * 0.5f + offsetX;
         float y = (screenHeight - scaledHeight) * 0.5f + offsetY;
         GUILayout.BeginArea(new Rect(x, y, scaledWidth, scaledHeight));
+
+        if (currentPage == MenuPage.Home)
+        {
+            DrawHomeMenu();
+            GUILayout.EndArea();
+            GUI.matrix = previousMatrix;
+            return;
+        }
+
+        DrawInlineBackButton("SIEĆ / HOST");
 
         if (!NetworkClient.isConnected && !NetworkServer.active)
         {
@@ -128,6 +227,136 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
         GUILayout.EndArea();
         GUI.matrix = previousMatrix;
+    }
+
+    void DrawHomeMenu()
+    {
+        GUILayout.Label("MENU", labelStyle);
+        GUILayout.Label("Wybierz jedną sekcję. Pozostałe panele pozostaną ukryte.", homeDescriptionStyle);
+
+        if (GUILayout.Button("Sieć / Host", homeButtonStyle))
+        {
+            SetMenuVisible(true, MenuPage.Network);
+        }
+        GUILayout.Label("Uruchom hosta, klienta albo sprawdź stan połączenia.", homeDescriptionStyle);
+
+        if (GUILayout.Button("Zwykła Runda", homeButtonStyle))
+        {
+            SetMenuVisible(true, MenuPage.NormalRound);
+        }
+        GUILayout.Label("Najpierw połącz się przez Sieć / Host; potem uruchom Rundę dla 4–6 graczy.", homeDescriptionStyle);
+
+        GUI.enabled = NetworkRoundCoordinator.DeveloperToolsAvailable;
+        if (GUILayout.Button("Sandbox Rundy", homeButtonStyle))
+        {
+            SetMenuVisible(true, MenuPage.Sandbox);
+        }
+        GUI.enabled = true;
+        GUILayout.Label("Jednoosobowe scenariusze developerskie. Skrót: F8.", homeDescriptionStyle);
+
+        if (GUILayout.Button("Zamknij menu", homeButtonStyle))
+        {
+            SetMenuVisible(false, MenuPage.Home);
+        }
+    }
+
+    void DrawInlineBackButton(string title)
+    {
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("← Menu", buttonStyle, GUILayout.Width(150f)))
+        {
+            SetMenuVisible(true, MenuPage.Home);
+        }
+        GUILayout.Label(title, labelStyle);
+        GUILayout.EndHorizontal();
+    }
+
+    void DrawPageHeader(float screenWidth)
+    {
+        string title = currentPage == MenuPage.NormalRound ? "ZWYKŁA RUNDA" : "SANDBOX RUNDY";
+        float headerHeight = currentPage == MenuPage.Sandbox ? 180f : 120f;
+        GUILayout.BeginArea(new Rect(12f, 12f, Mathf.Min(190f, screenWidth - 24f), headerHeight));
+        GUILayout.Label(title, labelStyle);
+        if (GUILayout.Button("← Menu", buttonStyle, GUILayout.Width(150f)))
+        {
+            SetMenuVisible(true, MenuPage.Home);
+        }
+        if (currentPage == MenuPage.Sandbox
+            && GUILayout.Button("Graj z panelem", buttonStyle, GUILayout.Width(170f)))
+        {
+            PinSandboxAndCloseMenu();
+        }
+        GUILayout.EndArea();
+    }
+
+    void SetMenuVisible(bool visible, MenuPage page)
+    {
+        if (visible && page != MenuPage.Sandbox)
+        {
+            sandboxPinned = false;
+        }
+
+        isVisible = visible;
+        currentPage = visible ? page : MenuPage.Home;
+        if (roundPresenter != null)
+        {
+            roundPresenter.SetDeveloperMenuOpen(visible);
+        }
+        ApplyPageVisibility();
+
+        if (visible)
+        {
+            PlayerController.SetCursorReleased(true);
+            return;
+        }
+
+        SetCursorForClosedMenu();
+    }
+
+    void PinSandboxAndCloseMenu()
+    {
+        sandboxPinned = true;
+        isVisible = false;
+        currentPage = MenuPage.Home;
+        if (roundPresenter != null)
+        {
+            roundPresenter.SetDeveloperMenuOpen(false);
+        }
+        ApplyPageVisibility();
+        SetCursorForClosedMenu();
+    }
+
+    void SetCursorForClosedMenu()
+    {
+        bool roundNeedsPointer = roundCoordinator != null
+                                 && roundCoordinator.CurrentView != null
+                                 && roundCoordinator.CurrentView.Phase != RoundPhase.Round;
+        PlayerController.SetCursorReleased(roundNeedsPointer || NetworkClient.localPlayer == null);
+    }
+
+    void ApplyPageVisibility()
+    {
+        SetExternalMenusVisible(
+            isVisible && currentPage == MenuPage.NormalRound,
+            sandboxPinned || (isVisible && currentPage == MenuPage.Sandbox));
+    }
+
+    void SetExternalMenusVisible(bool normalRoundVisible, bool sandboxVisible)
+    {
+        if (roundPresenter != null)
+        {
+            roundPresenter.SetLobbyMenuVisible(normalRoundVisible);
+        }
+
+        if (roundCoordinator != null && developerPanel == null)
+        {
+            developerPanel = roundCoordinator.GetComponent<RoundDeveloperPanel>();
+        }
+
+        if (developerPanel != null)
+        {
+            developerPanel.SetVisible(sandboxVisible);
+        }
     }
 
     void StartButtons()
@@ -286,7 +515,6 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     {
         if (NetworkServer.active && NetworkClient.isConnected)
         {
-            GUILayout.BeginHorizontal();
 #if UNITY_WEBGL
             if (GUILayout.Button("Stop Single Player", buttonStyle))
             {
@@ -297,13 +525,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             {
                 StopHostAndLobby();
             }
-
-            if (GUILayout.Button("Stop Client", buttonStyle))
-            {
-                StopClientAndLobby();
-            }
 #endif
-            GUILayout.EndHorizontal();
         }
         else if (NetworkClient.isConnected)
         {

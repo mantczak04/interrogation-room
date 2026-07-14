@@ -197,7 +197,7 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort
             return;
         }
 
-        if (WasCursorTogglePressed())
+        if (WasCursorTogglePressed() && !CenteredNetworkManagerHUD.HandlesEscape)
         {
             SetCursorReleased(!CursorReleased);
         }
