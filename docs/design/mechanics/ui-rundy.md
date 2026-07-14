@@ -1,6 +1,6 @@
 # UI Rundy (`RoundPresenter`)
 
-**Status:** ❌ Do zaimplementowania
+**Status:** 🔶 Kod i assety bazowego UI istnieją; pełne spięcie sceny oraz UI rozszerzenia pozostają do implementacji
 **Priorytet:** Must-have (MVP) — krok 4 kolejności implementacji
 **Docelowy kod:** `Assets/Scripts/Game/UI/RoundPresenter.cs`
 
@@ -14,14 +14,16 @@ Cienka warstwa prezentacji: renderuje otrzymany `PlayerRoundView` i wysyła inte
 
 1. **Lobby**: lista graczy, przycisk „Start Rundy" u hosta (aktywny przy 4–6 graczach). Dziś istnieje tylko `CenteredNetworkManagerHUD` (połączenie) — start Rundy trzeba dodać.
 2. **Przygotowanie**: karta z rolą gracza, jawnym Przestępstwem i właściwą wersją Alibi (Detektyw: rola + Przestępstwo + instrukcja, bez Alibi). Odliczanie do końca Przygotowania. Po zakończeniu karta znika trwale (ADR-0007).
-3. **Runda (HUD)**: pozostały Limit Rundy, własna rola (dyskretnie), jawne Przestępstwo (podręcznie, np. pod klawiszem), prompt interakcji „[E]", ewentualny Sekretny Cel właściciela.
-4. **Wynik**: kto został poddany Egzekucji, rola ofiary, wynik Detektywa, indywidualny wynik lokalnego gracza (Przetrwanie / Sekretny Cel). Przycisk powrotu do lobby u hosta.
+3. **Runda (HUD)**: pozostały Limit Rundy, własna rola (dyskretnie), jawne Przestępstwo (podręcznie, np. pod klawiszem), prompt interakcji „[E]" oraz prywatny podgląd aktualnego kroku Celu. Detektyw zamiast Celu ma prywatny Rejestr Incydentów.
+4. **Wynik**: przyczyna zakończenia, role, Prywatne Cele i ich postęp, właściciel i Cel Wrobienia, działania Planu Ucieczki, zdobyte Tropy do Alibi, prawdziwi autorzy Incydentów oraz indywidualne wyniki. Przycisk powrotu do lobby u hosta.
 
 ### Zasady
 
 - UI czyta wyłącznie własny `PlayerRoundView`; zmiana widoku = przerysowanie. Zero lokalnych wniosków o cudzych rolach.
 - Intencje (start, koniec Przygotowania, Egzekucja z fallbacku UI) idą do `NetworkRoundCoordinator`; serwer i tak waliduje, UI tylko ukrywa niedozwolone akcje.
 - Alibi po Przygotowaniu: komponent niszczy treść (nie `SetActive(false)`).
+- Prywatny Cel pozostaje dostępny właścicielowi podczas Rundy, ale klient nie otrzymuje cudzych Celów ani postępu. Nie istnieje funkcja mechanicznego pokazania własnego Celu innemu graczowi.
+- Rejestr Incydentów pokazuje Detektywowi skutek, miejsce i czas zgłoszenia lub odkrycia, bez sprawcy, roli, motywu i rzeczywistego czasu cichej akcji.
 - Kursor: odblokowany na kartach pełnoekranowych (Lobby, Przygotowanie, Wynik), zablokowany w HUD Rundy — wymaga koordynacji z `PlayerController`.
 
 ## Zależności
@@ -33,8 +35,11 @@ Cienka warstwa prezentacji: renderuje otrzymany `PlayerRoundView` i wysyła inte
 - Trzy instancje (Detektyw + 2 Podejrzanych) pokazują różne, poprawne karty Przygotowania.
 - Po `EndPreparation` nie da się w żaden sposób wrócić do treści Alibi (także po reconnect).
 - Ekran wyników pokazuje różne wyniki indywidualne Niewinnych (gdy jeden zginął).
+- Właściciel widzi wyłącznie aktualny krok własnego Prywatnego Celu, a Detektyw widzi wyłącznie dozwolone wpisy Rejestru Incydentów.
+- Po Rundzie ujawnienie odtwarza prawdziwy przebieg Celów, Incydentów, Tropów i Ucieczki bez wycieku tych danych wcześniej.
 
 ## Otwarte pytania
 
 - Forma Notatek Detektywa (tablica/kartka/panel) — nierozstrzygnięta, poza MVP; slice zakłada notatki poza grą (kartka papieru u gracza) albo najprostszy panel tekstowy dopiero po decyzji.
 - Prezentacja Alibi: lista vs narracja ([alibi-i-redagowanie.md](./alibi-i-redagowanie.md)).
+- Forma podglądu Prywatnego Celu oraz to, czy wynik ujawnia pełne Alibi ([OPEN-QUESTIONS.md](../OPEN-QUESTIONS.md)).

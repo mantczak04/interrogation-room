@@ -1,6 +1,6 @@
 # Limit Rundy (wspólny timer)
 
-**Status:** ❌ Do zaimplementowania
+**Status:** 🔶 Rozstrzygnięcie domenowe zaimplementowane; zegar runtime i HUD wymagają pełnego spięcia
 **Priorytet:** Must-have (MVP)
 **Docelowy kod:** logika w `RoundEngine` (rozstrzygnięcie) + `NetworkRoundCoordinator` (zegar) + HUD (render)
 
@@ -20,13 +20,13 @@ Jeden wspólny budżet czasu na całą Rundę (ADR-0004). Detektyw sam gospodaru
 
 - Limit startuje w chwili wejścia w fazę Rundy (koniec Przygotowania), nie w Lobby.
 - Przygotowanie ma osobny, krótki czas (parametr konfiguracyjny) — nie konsumuje Limitu Rundy.
-- Egzekucja zatrzymuje zegar definitywnie (Runda kończy się natychmiast, ADR-0003).
+- Egzekucja albo skuteczna Ucieczka zatrzymuje zegar definitywnie, ponieważ Runda kończy się natychmiast.
 - Wyścig „Egzekucja vs upływ czasu" rozstrzyga kolejność komend na serwerze — `RoundEngine` przyjmie pierwszą, drugą odrzuci; obie ścieżki są poprawne i deterministyczne.
 - Brak pauzy w MVP (rozłączenia nie zatrzymują zegara).
 
 ### Konfiguracja
 
-- Długość Limitu Rundy: parametr konfiguracji Rundy ustawiany przez hosta (rozsądny default do playtestu: 15–20 min dla 5 graczy; do strojenia).
+- Długość Limitu Rundy: parametr konfiguracji Rundy ustawiany przez hosta. Nie zatwierdzono stałego defaultu; pierwszy playtest ma dobrać go do obecnej, małej mapy i czasu realnych przesłuchań.
 - Długość Przygotowania: osobny parametr (default 60–120 s).
 
 ## Widoczność

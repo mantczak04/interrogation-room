@@ -1,6 +1,6 @@
 # Content sprawy (`CaseAsset` → `CaseDefinition`)
 
-**Status:** ❌ Do zaimplementowania
+**Status:** ✅ Bazowe `CaseAsset` i `CaseDefinition` zaimplementowane; authoring Tropów do Alibi zatwierdzony do rozszerzenia
 **Priorytet:** Must-have (MVP) — krok 2 kolejności implementacji
 **Docelowy kod:** `Assets/Scripts/Game/Content/CaseAsset.cs`, `Assets/Scripts/Game/Domain/CaseDefinition.cs`
 
@@ -28,6 +28,13 @@ Sprawy (Przestępstwo + Alibi) są **ręcznie autorowane** (ADR-0010) — żadne
   - Przestępstwo: absurdalny, publicznie znany czyn (rama wspólna, nie wskazuje Winnego).
   - Alibi: 6–10 krótkich faktów opisujących, co grupa robiła w czasie Przestępstwa.
   - 2–3 fakty oznaczone jako możliwe do ukrycia.
+
+### Rozszerzenie: Tropy do Alibi
+
+- Każdy Trop jest ręcznie napisany dla konkretnej Sprawy i powiązany ze stabilnym identyfikatorem ukrywalnego faktu.
+- Trop zawiera materiał do interpretacji, nie kopię tekstu faktu ani automatyczne rozwiązanie.
+- Wielokrotnie używane Osobiste Sprawy, Wrobienia i Plany Ucieczki pozostają osobnymi modułami mapy; tylko Tropy do Alibi rozszerzają content konkretnego `CaseAsset`.
+- Dokładny format assetu i nazwy klas są propozycją do ustalenia przy implementacji, zgodnie ze [specyfikacją rozszerzenia](./prywatne-cele-incydenty-i-ucieczka.md).
 
 ## Zasady
 

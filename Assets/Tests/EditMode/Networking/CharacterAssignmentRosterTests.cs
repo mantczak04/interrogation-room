@@ -8,19 +8,19 @@ namespace InterrogationRoom.Networking.Tests
     public sealed class CharacterAssignmentRosterTests
     {
         [Test]
-        public void FirstFourAssignmentsAreUnique()
+        public void FirstFiveAssignmentsAreUnique()
         {
             var roster = CreateRoster();
 
-            CharacterId[] assignments = Enumerable.Range(1, 4)
+            CharacterId[] assignments = Enumerable.Range(1, 5)
                 .Select(connectionId => roster.Acquire(connectionId))
                 .ToArray();
 
-            Assert.That(assignments.Distinct().Count(), Is.EqualTo(4));
+            Assert.That(assignments.Distinct().Count(), Is.EqualTo(5));
         }
 
         [Test]
-        public void FifthAndSixthAssignmentsRemainValidAfterUniquePoolIsExhausted()
+        public void SixthAssignmentRemainsValidAfterUniquePoolIsExhausted()
         {
             var roster = CreateRoster();
 
@@ -29,7 +29,7 @@ namespace InterrogationRoom.Networking.Tests
                 .ToArray();
 
             Assert.That(
-                assignments.Skip(4),
+                assignments.Skip(5),
                 Is.All.Matches<CharacterId>(CharacterAssignmentRoster.DefaultCharacters.Contains));
         }
 
@@ -38,7 +38,7 @@ namespace InterrogationRoom.Networking.Tests
         {
             var roster = CreateRoster();
             var assignments = new Dictionary<int, CharacterId>();
-            for (int connectionId = 1; connectionId <= 4; connectionId++)
+            for (int connectionId = 1; connectionId <= 5; connectionId++)
             {
                 assignments.Add(connectionId, roster.Acquire(connectionId));
             }
@@ -46,7 +46,7 @@ namespace InterrogationRoom.Networking.Tests
             CharacterId released = assignments[2];
             Assert.That(roster.Release(2), Is.True);
 
-            Assert.That(roster.Acquire(5), Is.EqualTo(released));
+            Assert.That(roster.Acquire(6), Is.EqualTo(released));
         }
 
         [Test]
@@ -71,6 +71,23 @@ namespace InterrogationRoom.Networking.Tests
         {
             Assert.That(
                 CharacterActionRules.CanPunch(isDead, isSeated, hasWeapon),
+                Is.EqualTo(expected));
+        }
+
+        [TestCase(false, false, false, true, true)]
+        [TestCase(true, false, false, true, false)]
+        [TestCase(false, true, false, true, false)]
+        [TestCase(false, false, true, true, false)]
+        [TestCase(false, false, false, false, false)]
+        public void DanceEligibilityRequiresAnAliveStandingUnarmedSupportedCharacter(
+            bool isDead,
+            bool isSeated,
+            bool hasWeapon,
+            bool supportsDance,
+            bool expected)
+        {
+            Assert.That(
+                CharacterActionRules.CanDance(isDead, isSeated, hasWeapon, supportsDance),
                 Is.EqualTo(expected));
         }
 

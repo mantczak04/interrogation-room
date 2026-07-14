@@ -20,6 +20,7 @@ public class PlayerController : NetworkBehaviour
         public GameObject modelRoot;
         public RuntimeAnimatorController animatorController;
         public Avatar avatar;
+        public bool supportsDance;
     }
 
     [Header("Movement")]
@@ -81,6 +82,9 @@ public class PlayerController : NetworkBehaviour
     [SyncVar(hook = nameof(OnDeadChanged))]
     private bool isDead;
 
+    [SyncVar(hook = nameof(OnDancingChanged))]
+    private bool isDancing;
+
     private const float InputSystemMouseScale = 0.1f;
     private const float LookAtDistance = 5f;
     private const float LookTargetSmoothSpeed = 25f;
@@ -93,7 +97,10 @@ public class PlayerController : NetworkBehaviour
     private static readonly int LookPitchParameter = Animator.StringToHash("LookPitch");
     private static readonly int IsSeatedParameter = Animator.StringToHash("IsSeated");
     private static readonly int PunchParameter = Animator.StringToHash("Punch");
+    private static readonly int PunchVariantParameter = Animator.StringToHash("PunchVariant");
     private static readonly int IsDeadParameter = Animator.StringToHash("IsDead");
+    private static readonly int DanceParameter = Animator.StringToHash("Dance");
+    private int nextPunchVariant;
 
     public static bool CursorReleased { get; private set; } = true;
 
@@ -211,6 +218,11 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        if (WasDancePressed())
+        {
+            CmdToggleDance();
+        }
+
         if (WasPunchPressed() && CharacterActionRules.CanPunch(
                 isDead,
                 isSeated,
@@ -273,6 +285,7 @@ public class PlayerController : NetworkBehaviour
         }
 
         activeSeat = seat;
+        isDancing = false;
         isSeated = true;
         seatedSeatSurfaceHeight = seat.SeatSurfaceHeight;
         seatedBackrestOffset = seat.BackrestOffset;
@@ -298,7 +311,7 @@ public class PlayerController : NetworkBehaviour
     }
 
     /// <summary>
-    /// Testing shortcut: keys 1-4 switch the character directly, bypassing the
+    /// Testing shortcut: keys 1-5 switch the character directly, bypassing the
     /// swap stations' uniqueness guarantee.
     /// </summary>
     [Command]
@@ -316,6 +329,7 @@ public class PlayerController : NetworkBehaviour
             return false;
         }
 
+        isDancing = false;
         characterId = newCharacter;
         return true;
     }
@@ -344,13 +358,48 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
-        RpcPlayPunch();
+        isDancing = false;
+        int variant = nextPunchVariant;
+        nextPunchVariant = 1 - nextPunchVariant;
+        RpcPlayPunch(variant);
     }
 
     [ClientRpc]
-    private void RpcPlayPunch()
+    private void RpcPlayPunch(int variant)
     {
-        animator?.SetTrigger(PunchParameter);
+        if (animator == null)
+        {
+            return;
+        }
+
+        if (HasAnimatorParameter(PunchVariantParameter, AnimatorControllerParameterType.Int))
+        {
+            animator.SetInteger(PunchVariantParameter, variant);
+        }
+
+        animator.SetTrigger(PunchParameter);
+    }
+
+    [Command]
+    private void CmdToggleDance()
+    {
+        bool hasWeapon = playerWeaponController != null && playerWeaponController.HasWeapon;
+        if (isDancing)
+        {
+            isDancing = false;
+            return;
+        }
+
+        if (CharacterActionRules.CanDance(isDead, isSeated, hasWeapon, SupportsDance(characterId)))
+        {
+            isDancing = true;
+        }
+    }
+
+    [Command]
+    private void CmdStopDance()
+    {
+        isDancing = false;
     }
 
     [Server]
@@ -412,6 +461,11 @@ public class PlayerController : NetworkBehaviour
             animator.SetBool(IsSeatedParameter, seated);
         }
 
+        if (seated)
+        {
+            SetDancingLocally(false);
+        }
+
         if (characterController != null)
         {
             characterController.enabled = !seated && (isLocalPlayer || isServer);
@@ -468,6 +522,7 @@ public class PlayerController : NetworkBehaviour
             SetMovementAnimationIdle();
             animator.SetBool(IsSeatedParameter, isSeated);
             animator.SetBool(IsDeadParameter, isDead);
+            SetDancingLocally(isDancing && selected.supportsDance);
         }
 
         RefreshPlayerRenderers();
@@ -540,6 +595,7 @@ public class PlayerController : NetworkBehaviour
 
         if (dead)
         {
+            SetDancingLocally(false);
             ResetLookAtIkState();
         }
 
@@ -572,6 +628,7 @@ public class PlayerController : NetworkBehaviour
             StandServer();
         }
 
+        isDancing = false;
         isDead = true;
         verticalVelocity = 0f;
     }
@@ -662,6 +719,12 @@ public class PlayerController : NetworkBehaviour
 
         Vector2 moveInput = GetMoveInput();
 
+        if (isDancing && moveInput.sqrMagnitude > 0.01f)
+        {
+            SetDancingLocally(false);
+            CmdStopDance();
+        }
+
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         move = Vector3.ClampMagnitude(move, 1f);
 
@@ -672,6 +735,12 @@ public class PlayerController : NetworkBehaviour
 
         if (characterController.isGrounded && WasJumpPressed())
         {
+            if (isDancing)
+            {
+                SetDancingLocally(false);
+                CmdStopDance();
+            }
+
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
@@ -686,6 +755,45 @@ public class PlayerController : NetworkBehaviour
     private void SetMovementAnimationIdle()
     {
         animator?.SetFloat(SpeedParameter, 0f);
+    }
+
+    private void OnDancingChanged(bool _, bool dancing)
+    {
+        SetDancingLocally(dancing);
+    }
+
+    private void SetDancingLocally(bool dancing)
+    {
+        if (animator != null && HasAnimatorParameter(DanceParameter, AnimatorControllerParameterType.Bool))
+        {
+            animator.SetBool(DanceParameter, dancing);
+        }
+    }
+
+    private bool SupportsDance(CharacterId candidate)
+    {
+        foreach (CharacterVisualDefinition visual in characterVisuals)
+        {
+            if (visual != null && visual.characterId == candidate)
+            {
+                return visual.supportsDance;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasAnimatorParameter(int parameterHash, AnimatorControllerParameterType parameterType)
+    {
+        foreach (AnimatorControllerParameter parameter in animator.parameters)
+        {
+            if (parameter.nameHash == parameterHash && parameter.type == parameterType)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void LateUpdate()
@@ -1064,11 +1172,13 @@ public class PlayerController : NetworkBehaviour
         if (Keyboard.current.digit2Key.wasPressedThisFrame) return CharacterId.Wieprz;
         if (Keyboard.current.digit3Key.wasPressedThisFrame) return CharacterId.Jak;
         if (Keyboard.current.digit4Key.wasPressedThisFrame) return CharacterId.Karton;
+        if (Keyboard.current.digit5Key.wasPressedThisFrame) return CharacterId.Ptaku;
 #else
         if (Input.GetKeyDown(KeyCode.Alpha1)) return CharacterId.Malpa;
         if (Input.GetKeyDown(KeyCode.Alpha2)) return CharacterId.Wieprz;
         if (Input.GetKeyDown(KeyCode.Alpha3)) return CharacterId.Jak;
         if (Input.GetKeyDown(KeyCode.Alpha4)) return CharacterId.Karton;
+        if (Input.GetKeyDown(KeyCode.Alpha5)) return CharacterId.Ptaku;
 #endif
         return null;
     }
@@ -1079,6 +1189,15 @@ public class PlayerController : NetworkBehaviour
         return Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
 #else
         return Input.GetMouseButtonDown(0);
+#endif
+    }
+
+    private bool WasDancePressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null && Keyboard.current.tKey.wasPressedThisFrame;
+#else
+        return Input.GetKeyDown(KeyCode.T);
 #endif
     }
 }

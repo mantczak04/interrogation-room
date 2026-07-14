@@ -1,6 +1,6 @@
 # Prywatne widoki sieciowe (`NetworkRoundCoordinator` + `PlayerRoundView`)
 
-**Status:** ❌ Do zaimplementowania
+**Status:** ✅ Bazowy `NetworkRoundCoordinator`, wiadomości i `PlayerRoundView` zaimplementowane; rozszerzenie oraz test end-to-end pozostają do wykonania
 **Priorytet:** Must-have (MVP) — krok 3 kolejności implementacji
 **Docelowy kod:** `Assets/Scripts/Game/Networking/NetworkRoundCoordinator.cs`, `RoundMessages.cs`
 
@@ -27,7 +27,8 @@ Jedyny most między światem Mirror a domeną: mapuje połączenia na `PlayerId`
 
 - `RoundViewMessage { PlayerRoundView view }` — serwer → konkretny klient.
 - `RoundIntentMessage` (start, koniec Przygotowania, Egzekucja z celem) — klient → serwer.
-- Widok zawiera: fazę, rolę odbiorcy, kto jest Detektywem, jawne Przestępstwo, wersję Alibi (tylko w Przygotowaniu), pozostały czas, wynik po zakończeniu, ewentualny Sekretny Cel odbiorcy.
+- Widok bazowy zawiera: fazę, rolę odbiorcy, kto jest Detektywem, jawne Przestępstwo, wersję Alibi (tylko w Przygotowaniu), pozostały czas i wynik po zakończeniu.
+- Rozszerzony widok Podejrzanego zawiera wyłącznie jego Prywatny Cel, aktualny krok, własny postęp oraz — dla Winnego — zdobyte Tropy i dozwolone dane Planu Ucieczki. Widok Detektywa zawiera jego Rejestr Incydentów. Cudze Cele, prawdziwi autorzy Incydentów i ukryty postęp nigdy nie są wysyłane przed końcem Rundy.
 
 ## Zasady bezpieczeństwa (twarde)
 
@@ -45,3 +46,4 @@ Jedyny most między światem Mirror a domeną: mapuje połączenia na `PlayerId`
 - Egzekucja wysłana przez klienta-Niewinnego jest odrzucona serwerowo.
 - Reconnect w fazie Rundy dostaje aktualny widok bez Alibi.
 - Late-join do trwającej Rundy: MVP — odrzucany do lobby (obserwator poza zakresem).
+- Klienci nie dostają cudzych Prywatnych Celów, postępu, autorów Incydentów, Tropów ani stanu przygotowania Ucieczki przed ujawnieniem po Rundzie.

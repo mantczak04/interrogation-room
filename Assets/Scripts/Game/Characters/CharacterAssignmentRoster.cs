@@ -11,7 +11,8 @@ namespace InterrogationRoom.Gameplay.Characters
             CharacterId.Malpa,
             CharacterId.Wieprz,
             CharacterId.Jak,
-            CharacterId.Karton
+            CharacterId.Karton,
+            CharacterId.Ptaku
         };
 
         private readonly Dictionary<int, CharacterId> assignments = new();

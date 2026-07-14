@@ -1,6 +1,6 @@
 # Alibi i redagowanie faktów
 
-**Status:** ❌ Do zaimplementowania (część `RoundEngine` + prezentacja)
+**Status:** ✅ Bazowe Alibi i redagowanie zaimplementowane; Tropy do Alibi zatwierdzone do rozszerzenia
 **Priorytet:** Must-have (MVP)
 **Docelowy kod:** `Assets/Scripts/Game/Domain/` (dane i filtrowanie), `Assets/Scripts/Game/UI/` (prezentacja)
 
@@ -35,6 +35,13 @@ Alibi to wspólna, prawdziwa wersja wydarzeń — punkt odniesienia dla wszystki
 ### Przestępstwo (jawne)
 
 - Treść Przestępstwa jest jawna dla wszystkich przez cały czas — wchodzi do publicznej części każdego widoku i może wisieć w HUD.
+
+### Tropy do Alibi (rozszerzenie po slice)
+
+- Trop jest ręcznie przygotowany dla konkretnej Sprawy i wskazuje jeden ukrywalny fakt Alibi.
+- Ma postać pośredniego dowodu, na przykład paragonu, zdjęcia albo wiadomości. Winny musi sam wyciągnąć wniosek; system nie pokazuje gotowego brakującego zdania.
+- Zdobyte Tropy pozostają prywatne dla Winnego i hosta do końca Rundy. Nie przywracają ekranu Alibi ani nie pozwalają automatycznie odzyskać wszystkich braków.
+- Zdobycie Tropu wymaga ryzykownej interakcji i pozostawia Incydent zgodnie ze [specyfikacją Prywatnych Celów, Incydentów i Ucieczki](./prywatne-cele-incydenty-i-ucieczka.md).
 
 ## Zależności
 

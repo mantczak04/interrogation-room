@@ -1,12 +1,12 @@
 # Silnik Rundy (`RoundEngine`)
 
-**Status:** ❌ Do zaimplementowania — **najważniejsza brakująca mechanika**
-**Priorytet:** Must-have (MVP) — krok 1 kolejności implementacji z [MVP-ARCHITECTURE.md](../../architecture/MVP-ARCHITECTURE.md)
+**Status:** ✅ Bazowy vertical slice zaimplementowany; rozszerzenie o Prywatne Cele, Incydenty i Ucieczkę zatwierdzone do implementacji
+**Priorytet:** Must-have (MVP) dla obecnego rdzenia; następny filar po slice dla [rozszerzenia](./prywatne-cele-incydenty-i-ucieczka.md)
 **Docelowy kod:** `Assets/Scripts/Game/Domain/` (osobne asmdef bez Unity/Mirror)
 
 ## Cel
 
-Czysty moduł C# będący jedynym źródłem reguł Rundy: fazy, role, dostęp do Alibi, Limit Rundy, Egzekucja, rozstrzygnięcie wyników. Wszystko inne (sieć, UI, broń, głos) jest adapterem wokół niego. Bez tego modułu żadna mechanika „rundowa" nie ma się do czego podpiąć.
+Czysty moduł C# będący jedynym źródłem reguł Rundy: fazy, role, dostęp do Alibi, Limit Rundy, Egzekucja i rozstrzygnięcie wyników. Zatwierdzone rozszerzenie doda do tej samej domeny przypisanie i postęp Prywatnych Celów, Tropy do Alibi oraz Ucieczkę. Wszystko inne (sieć, UI, broń, głos i interakcje scenowe) pozostaje adapterem wokół niego.
 
 ## Zasada działania
 
@@ -27,10 +27,10 @@ Lobby → Przygotowanie → Runda → Zakończona
 ```
 
 - **Przygotowanie**: Podejrzani widzą swoje wersje Alibi; Detektyw nie widzi nic z Alibi. Kończy się komendą (host/timer) — po tym Alibi znika bezpowrotnie (ADR-0007).
-- **Runda**: swobodna rozgrywka; działa Limit Rundy; dozwolona dokładnie jedna Egzekucja.
-- **Zakończona**: po Egzekucji albo upływie Limitu Rundy; wszystkie komendy poza odczytem wyników są odrzucane.
+- **Runda**: swobodna rozgrywka; działa Limit Rundy; dozwolona jest jedna Egzekucja, a po rozszerzeniu także wykonywanie Celów i próba Ucieczki.
+- **Zakończona**: po Egzekucji, skutecznej Ucieczce albo upływie Limitu Rundy; wszystkie komendy poza odczytem wyników są odrzucane.
 
-### Komendy MVP (`RoundCommand`)
+### Obecne komendy bazowego slice (`RoundCommand`)
 
 | Komenda | Dozwolona w | Efekt |
 |---|---|---|
@@ -41,6 +41,8 @@ Lobby → Przygotowanie → Runda → Zakończona
 
 Komenda niedozwolona w bieżącym stanie zwraca odrzucenie (bez wyjątku, bez zmiany stanu).
 
+Komendy postępu Celów, odkrycia Incydentu i Ucieczki zostaną zaprojektowane przy implementacji zatwierdzonego rozszerzenia. Ich dokładne nazwy nie są jeszcze publicznym API; reguły opisuje [osobna specyfikacja](./prywatne-cele-incydenty-i-ucieczka.md).
+
 ### Reguły egzekwowane przez moduł (niezmienniki)
 
 1. Skład Rundy: 4–6 graczy, dokładnie 1 Detektyw, 1 Winny, 2–4 Niewinnych (ADR-0001).
@@ -48,8 +50,9 @@ Komenda niedozwolona w bieżącym stanie zwraca odrzucenie (bez wyjątku, bez zm
 3. Alibi niedostępne po Przygotowaniu — `ViewFor` po prostu przestaje je zwracać (ADR-0007).
 4. Najwyżej jedna Egzekucja; druga jest odrzucana (ADR-0003).
 5. Egzekucja Winnego → wygrana Detektywa; Niewinnego → przegrana Detektywa; upływ Limitu → przegrana Detektywa (ADR-0003/0004).
-6. Wyniki Niewinnych są indywidualne: Przetrwanie per gracz; przy włączonym Sekretnym Celu — przetrwanie właściciela **i** eliminacja Celu (ADR-0002).
+6. Wyniki Niewinnych są indywidualne: każdy potrzebuje ukończenia własnego Prywatnego Celu i Przetrwania. Sekretny Cel dodatkowo wymaga ukończonego Wrobienia i Egzekucji wskazanego Celu (ADR-0013).
 7. Detektyw nie może być celem Egzekucji; egzekucja samego siebie odrzucana.
+8. Skuteczna Ucieczka Winnego kończy Rundę jego zwycięstwem i przegraną Detektywa; nie odbiera zwycięstwa Niewinnym, którzy ukończyli Cel i Przetrwali.
 
 ### Determinizm i czas
 
@@ -73,7 +76,8 @@ Komenda niedozwolona w bieżącym stanie zwraca odrzucenie (bez wyjątku, bez zm
 7. Druga Egzekucja oraz komendy po zakończeniu Rundy są odrzucane.
 8. Upływ Limitu Rundy bez Egzekucji kończy Rundę przegraną Detektywa.
 
-## Otwarte pytania (nie blokują implementacji)
+## Następne rozszerzenie
 
-- Sekretne Cele: liczba domyślna nierozstrzygnięta ([OPEN-QUESTIONS.md](../OPEN-QUESTIONS.md)) — moduł powinien przyjmować konfigurację `0..N`, z `0` jako bezpiecznym MVP.
-- Bunt — poza zakresem; nie projektować pod niego seamów na zapas.
+- Każdy Niewinny otrzymuje dokładnie jeden Prywatny Cel. Przy 4 graczach liczba Sekretnych Celów jest wymuszona na `0`; przy 5–6 domyślnie wynosi `1`, a host może wybrać `0`.
+- Bunt nie otrzymuje osobnych komend ani stanu. Jest emergentnym skutkiem indywidualnych wyników i Ucieczki.
+- Dokładne typy komend oraz definicji contentu należy ustalić przy implementacji bez naruszania istniejących publicznych seamów `Handle` i `ViewFor`.

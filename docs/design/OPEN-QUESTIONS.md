@@ -1,11 +1,5 @@
 # Otwarte pytania projektowe
 
-## Liczba Sekretnych Celów
-
-Liczba Sekretnych Celów ma być konfigurowalna w ustawieniach rozgrywki. Nie ustalono jeszcze wartości domyślnej ani zależności od liczby graczy.
-
-Hipoteza do przetestowania: przy czterech graczach Sekretny Cel może generować zbyt mało czytelną rundę, natomiast przy co najmniej pięciu graczach jeden Sekretny Cel może wzbogacać przesłuchanie.
-
 ## Forma Notatek Detektywa
 
 Notatki Detektywa są ręcznie wpisywanym zwykłym tekstem, ale ich reprezentacja pozostaje otwarta. Do porównania podczas projektowania interfejsu: fizyczna tablica, kartka lub clipboard oraz prosty panel tekstowy.
@@ -14,10 +8,18 @@ Notatki Detektywa są ręcznie wpisywanym zwykłym tekstem, ale ich reprezentacj
 
 Nie ustalono, czy Alibi jest podczas Przygotowania prezentowane jako lista krótkich faktów, czy narracyjny akapit. Lista ułatwia zapamiętywanie, modularne składanie i ukrywanie wybranych informacji, ale ostateczna forma wymaga rozmowy z zespołem i playtestu.
 
-## Bunt i Sygnał Buntu
+## Forma podglądu Prywatnego Celu
 
-Cały mechanizm Buntu wymaga rozmowy z zespołem i nie jest zatwierdzoną częścią gry.
+Prywatny Cel pozostaje dostępny właścicielowi przez całą Rundę, ale nie ustalono jeszcze jego docelowej prezentacji: osobna kartka, telefon, clipboard albo prosty panel. Interfejs musi pokazywać wyłącznie aktualny krok i własny postęp, nie może też umożliwiać mechanicznego pokazania Celu innym graczom.
 
-Dotychczasowy wariant roboczy zakładał, że wszyscy Podejrzani znają niezwiązane z Alibi hasło, Detektyw rozpoznaje je wyłącznie ze słuchu, a wypowiadający przytrzymuje ukryty przycisk podczas transmisji głosu. System rejestrowałby intencję rozpoczęcia Buntu bez automatycznego rozpoznawania treści wypowiedzi.
+## Ujawnienie pełnego Alibi po Rundzie
 
-Do rozstrzygnięcia pozostają przede wszystkim: sens Buntu przy jednym Winnym, warunki i moment aktywacji, ryzyko Inicjatora, legalne cele Detektywa, dostęp do broni, sposób zakończenia Buntu oraz zabezpieczenie przed uruchamianiem go natychmiast po rozpoczęciu Rundy.
+Po zakończeniu Rundy ujawniamy role, Prywatne Cele, ich postęp, autorów Incydentów, działania Planu Ucieczki, zdobyte Tropy do Alibi i indywidualne wyniki. Nadal nie ustalono, czy ten ekran powinien pokazywać również pełne Alibi.
+
+## Rozłączenie kluczowej roli
+
+Nie ustalono jeszcze, czy rozłączenie Detektywa albo Winnego podczas Rundy kończy ją bez rozstrzygnięcia, pozwala na powrót gracza, czy uruchamia inny fallback. Nie implementować trwałego wyniku dla tej sytuacji bez osobnej decyzji.
+
+## Parametry do playtestu Prywatnych Celów i Ucieczki
+
+Koncepcja jest zatwierdzona, ale strojenia wymagają: czasy interakcji i finałowej Ucieczki, liczba logicznych punktów ukrycia i możliwych wyjść, liczba oraz trudność Tropów do Alibi, ewentualne dopuszczenie dwóch Sekretnych Celów przy sześciu graczach oraz potrzeba powiększenia mapy. Prototyp ma najpierw korzystać z obecnej mapy i domyślnego jednego Sekretnego Celu przy pięciu–sześciu graczach.

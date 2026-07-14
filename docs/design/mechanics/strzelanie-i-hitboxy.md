@@ -35,8 +35,8 @@ W pełni server-authoritative: klient wysyła tylko kierunek; pozycja startowa, 
 
 1. **Skutek trafienia gracza** — `ShotHitbox` na graczu zgłasza event, ale nikt go nie konsumuje. Docelowo: trafienie gracza przez Detektywa = intencja Egzekucji przekazana do `RoundEngine` ([egzekucja.md](./egzekucja.md)). Nie budować osobnego systemu HP — zatwierdzone reguły nie przewidują obrażeń, tylko jedną Egzekucję.
 2. **Hitboxy na prefabie gracza** — do weryfikacji w scenie: czy prefab `Player` ma skonfigurowany `ShotHitbox` z `HitKind.Player` (konfiguracja edytorowa, przez Unity MCP).
-3. **Amunicja** — brak i **celowo**: pistolet z jedną kulą to naturalna reprezentacja „dokładnie jednej Egzekucji". Rozstrzygnąć przy projekcie Egzekucji.
-4. **Friendly fire / strzały poza Egzekucją** — co się dzieje, gdy strzał trafi ścianę albo nie-cel? Dziś: tylko efekt wizualny. To dobra baza: strzał „w powietrze" jest tani, ale słyszalny.
+3. **Egzekucja konsumowana trafieniem, nie strzałem** — Detektyw może oddawać kolejne strzały w świat. Dopiero pierwsze trafienie żywego Podejrzanego jest jedyną Egzekucją i kończy Rundę.
+4. **Strzały poza trafieniem gracza** — nie zmieniają wyniku, ale pozostają Hałaśliwymi Incydentami: są widoczne i słyszalne w przestrzeni.
 
 ## Kryteria akceptacji
 
@@ -44,3 +44,4 @@ W pełni server-authoritative: klient wysyła tylko kierunek; pozycja startowa, 
 - Tracer/impact/dźwięk widoczne u strzelca, ofiary i obserwatora (3 instancje).
 - Trigger bez `IShotHitReceiver` nie zatrzymuje pocisku; ściana zatrzymuje.
 - `ShotHitbox.HitReceivedServer` odpala wyłącznie na serwerze, dokładnie raz na trafienie.
+- Dowolna liczba pudeł nie zużywa Egzekucji; pierwsze trafienie żywego Podejrzanego kończy Rundę.

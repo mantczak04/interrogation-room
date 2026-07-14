@@ -28,11 +28,16 @@ Before changing code, read only the documents required for the current task:
 - A `Runda` is continuous and free-roaming, with no formal interrogation turns.
 - The `Detektyw` has one shared `Limit Rundy` and exactly one `Egzekucja`.
 - Executing the `Winny` gives the `Detektyw` a win. Executing a `Niewinny`, or failing to execute before time expires, is a loss.
-- `Niewinny` players have individual outcomes. Their primary interest is their own `Przetrwanie`, not a shared result with the `Detektyw`.
-- When enabled, a `Sekretny Cel` requires both the owner's survival and the elimination of the designated `Niewinny`. The number of such objectives is unresolved.
+- The `Detektyw` starts the Round with a pistol that suspects cannot take or use. Misses do not consume the `Egzekucja`; the first hit on a living suspect does.
+- `Niewinny` players have individual outcomes and win only by completing exactly one `Prywatny Cel` plus achieving `Przetrwanie`.
+- An `Osobista Sprawa` is the default `Prywatny Cel`. A `Sekretny Cel` replaces it and requires `Wrobienie`, the designated `Niewinny`'s elimination, and the owner's survival.
+- `Sekretny Cel` is disabled for four players. For five or six players, one is enabled by default and the host may disable it in the lobby.
+- The `Winny` may combine case-authored `Trop do Alibi` clues with preparation of a visible final `Ucieczka`; clues support testimony without restoring every hidden fact. The `Winny` wins by avoiding a correct Execution or completing the Escape.
+- Suspicious actions are readable but motives remain ambiguous. Loud Incidents report immediately; quiet Incidents enter the Detective's private registry only after personal discovery.
+- `Bunt` is an emergent alignment of individual interests after private goals are completed. It has no phrase, signal, button, dedicated action, or separate Round phase.
 - Crimes and alibis use hand-authored modules; do not generate runtime case content with AI.
 - Voice is always spatial. Privacy comes from distance, rooms, and doors, not private voice channels.
-- The Rebellion mechanic, final Detective Notes UI, Alibi presentation, and default Secret Objective count are unresolved. Do not treat them as approved MVP scope.
+- The final Detective Notes UI and Alibi presentation remain unresolved. Exact objective timings, content volume, and map expansion are playtest tuning, not approved fixed values.
 
 If code or a request contradicts these rules, identify the conflict before changing the domain model.
 
@@ -44,6 +49,7 @@ If code or a request contradicts these rules, identify the conflict before chang
 - [ADR-0002](./docs/adr/0002-innocents-play-for-their-own-survival.md) — individual Innocent outcomes.
 - [ADR-0003](./docs/adr/0003-one-execution-ends-the-round.md) — one Execution ends the Round.
 - [ADR-0004](./docs/adr/0004-one-time-limit-for-the-whole-round.md) — one time limit for the whole Round.
+- [ADR-0013](./docs/adr/0013-private-goals-and-emergent-rebellion.md) — mandatory private goals and emergent Rebellion.
 
 ### Flow and information
 
@@ -58,6 +64,7 @@ If code or a request contradicts these rules, identify the conflict before chang
 - [ADR-0010](./docs/adr/0010-authored-modular-case-content.md) — hand-authored modular cases.
 - [ADR-0011](./docs/adr/0011-server-owns-secrets-and-exposes-private-views.md) — server-owned secrets and private player views.
 - [ADR-0012](./docs/adr/0012-steam-lobby-with-runtime-transport-fallback.md) — Steam lobbies with runtime transport fallback to KCP.
+- [ADR-0014](./docs/adr/0014-readable-actions-ambiguous-motives.md) — readable actions with ambiguous motives, incidents, and Escape.
 
 ## Files and Directories: Do Not Read or Edit
 
@@ -170,7 +177,7 @@ After the change:
 
 - Round rules belong to the pure `RoundEngine` module; it must not depend on Unity, Mirror, Steamworks, or UI.
 - `NetworkRoundCoordinator` is the single Mirror adapter for a Round and the only place that maps connections to `PlayerId`.
-- The host owns roles, complete Alibi data, hidden facts, and Secret Objectives.
+- The host owns roles, complete Alibi data, hidden facts, all `Prywatny Cel` assignments and progress, Alibi clues, Incident authors, and Escape progress.
 - Never synchronize secrets through global `SyncVar` fields. A client receives only its own `PlayerRoundView` through a targeted message.
 - `CaseAsset` is for authoring; immutable `CaseDefinition` data enters the domain.
 - UI renders a received view and sends intentions; it does not resolve rules.
