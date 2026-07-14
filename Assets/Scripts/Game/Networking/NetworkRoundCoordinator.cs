@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using InterrogationRoom.Content;
+using InterrogationRoom.Debugging;
 using InterrogationRoom.Domain;
 using Mirror;
 using UnityEngine;
@@ -15,6 +16,9 @@ namespace InterrogationRoom.Networking
     [DisallowMultipleComponent]
     public sealed class NetworkRoundCoordinator : MonoBehaviour
     {
+        private static readonly AlibiClueId DeveloperPhysicalClueId =
+            new AlibiClueId("paragon-cztery-kompoty");
+
         [SerializeField]
         [Tooltip("Sprawa converted to an immutable CaseDefinition when the host starts the Runda.")]
         private CaseAsset caseAsset;
@@ -40,6 +44,7 @@ namespace InterrogationRoom.Networking
         private bool _hostAllowsSecretObjective = true;
         private double _roundDeadline;
         private double _roundStartedAtNetworkTime;
+        private RoundDeveloperPlan _developerPlan;
 
         public PlayerRoundView CurrentView { get; private set; }
         public double CurrentRoundEndsAtNetworkTime { get; private set; }
@@ -47,6 +52,16 @@ namespace InterrogationRoom.Networking
         public int ConnectedPlayerCount => _connectionsByPlayerId.Count;
         public int SelectedCaseIndex { get; private set; }
         public bool HostAllowsSecretObjective => _hostAllowsSecretObjective;
+        public static bool DeveloperToolsAvailable => Application.isEditor || Debug.isDebugBuild;
+        public RoundDeveloperPlan ActiveDeveloperPlan => DeveloperToolsAvailable ? _developerPlan : null;
+        public PlayerRoundView DeveloperControlledView =>
+            DeveloperToolsAvailable && _developerPlan != null
+                ? _engine.ViewFor(_developerPlan.ControlledPlayer)
+                : null;
+        public IReadOnlyList<PlayerId> ConnectedPlayers => _connectionsByPlayerId.Keys
+            .OrderBy(id => id)
+            .Select(id => new PlayerId(id))
+            .ToArray();
         public int EffectiveSecretObjectiveCount => RoundLobbyRules.ResolveSecretObjectiveCount(
             ConnectedPlayerCount,
             _hostAllowsSecretObjective);
@@ -65,6 +80,8 @@ namespace InterrogationRoom.Networking
         private void Awake()
         {
             RoundMessageSerialization.Register();
+            if (DeveloperToolsAvailable && GetComponent<RoundDeveloperPanel>() == null)
+                gameObject.AddComponent<RoundDeveloperPanel>();
         }
 
         private void Update()
@@ -173,6 +190,104 @@ namespace InterrogationRoom.Networking
             return true;
         }
 
+        public bool TryStartDeveloperScenario(
+            RoundDeveloperScenario scenario,
+            int targetPlayerCount,
+            PlayerId controlledPlayer,
+            out string rejectionReason)
+        {
+            rejectionReason = null;
+            if (!DeveloperToolsAvailable)
+                return RejectDeveloper("Developer scenarios are disabled in release builds.", out rejectionReason);
+            if (!NetworkServer.activeHost || !IsLocalHost)
+                return RejectDeveloper("A developer scenario can be started only by the local host.", out rejectionReason);
+            if (_phase != RoundPhase.Lobby)
+                return RejectDeveloper("Return to the lobby before starting another developer scenario.", out rejectionReason);
+
+            var cases = AvailableCases();
+            if (cases.Count == 0 || SelectedCaseIndex < 0 || SelectedCaseIndex >= cases.Count)
+                return RejectDeveloper("Select a valid CaseAsset first.", out rejectionReason);
+            if (!HasCompletePhysicalRoster())
+                return RejectDeveloper("Wait until every connected player has spawned its physical Runda components.", out rejectionReason);
+
+            CaseDefinition definition;
+            try
+            {
+                definition = cases[SelectedCaseIndex].ToDefinition();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[NetworkRoundCoordinator] Developer CaseAsset is invalid: {exception}", cases[SelectedCaseIndex]);
+                return RejectDeveloper("The selected CaseAsset is invalid.", out rejectionReason);
+            }
+
+            if (!RoundDeveloperScenarioPlanner.TryCreate(
+                    definition,
+                    ConnectedPlayers,
+                    controlledPlayer,
+                    targetPlayerCount,
+                    scenario,
+                    DeveloperPhysicalClueId,
+                    out var plan,
+                    out rejectionReason))
+            {
+                return false;
+            }
+
+            _developerPlan = plan;
+            if (Submit(null, new RoundCommand.StartRound(
+                    definition,
+                    plan.Players,
+                    plan.Seed,
+                    plan.SecretObjectiveCount)))
+            {
+                return true;
+            }
+
+            _developerPlan = null;
+            return RejectDeveloper("RoundEngine rejected the prepared developer scenario.", out rejectionReason);
+        }
+
+        public bool TryFinishDeveloperScenario(
+            RoundDeveloperFinish finish,
+            out string rejectionReason)
+        {
+            rejectionReason = null;
+            if (!DeveloperToolsAvailable || _developerPlan == null)
+                return RejectDeveloper("No developer scenario is active.", out rejectionReason);
+            if (!NetworkServer.activeHost || _phase != RoundPhase.Round)
+                return RejectDeveloper("A developer ending is available only to the local host during Runda.", out rejectionReason);
+
+            if (finish == RoundDeveloperFinish.TimeExpired)
+                return SubmitDeveloper(new RoundCommand.TimeExpired(), out rejectionReason);
+
+            PlayerId? target = null;
+            if (finish == RoundDeveloperFinish.ExecuteSecretTarget)
+            {
+                target = _engine.ViewFor(_developerPlan.ControlledPlayer)
+                    ?.PrivateObjective?.Target;
+            }
+            else
+            {
+                var requestedRole = finish == RoundDeveloperFinish.ExecuteGuilty
+                    ? RoundRole.Guilty
+                    : RoundRole.Innocent;
+                foreach (var player in _developerPlan.Players)
+                {
+                    if (_engine.ViewFor(player)?.Role != requestedRole)
+                        continue;
+
+                    target = player;
+                    break;
+                }
+            }
+
+            if (!target.HasValue)
+                return RejectDeveloper("The selected developer execution target is unavailable.", out rejectionReason);
+
+            return SubmitDeveloper(new RoundCommand.Execute(target.Value), out rejectionReason);
+        }
+
         [Server]
         public bool TryAdvancePhysicalObjective(
             NetworkIdentity actor,
@@ -203,8 +318,10 @@ namespace InterrogationRoom.Networking
             out bool objectiveAdvanced)
         {
             objectiveAdvanced = false;
-            if (!TryGetPhysicalActor(actor, out var playerId))
+            if (!TryGetPhysicalActor(actor, out var physicalPlayerId))
                 return false;
+
+            var playerId = ResolveDeveloperIncidentAuthor(physicalPlayerId);
 
             var before = _engine.ViewFor(playerId)?.PrivateObjective;
             PrivateObjectiveStepReference objectiveStep = null;
@@ -525,6 +642,7 @@ namespace InterrogationRoom.Networking
 
             _engine = new RoundEngine();
             _phase = RoundPhase.Lobby;
+            _developerPlan = null;
             _hostAllowsSecretObjective = true;
             _roundDeadline = 0d;
             _roundStartedAtNetworkTime = 0d;
@@ -819,9 +937,41 @@ namespace InterrogationRoom.Networking
             _rejectedLateJoiners.Clear();
             _engine = new RoundEngine();
             _phase = RoundPhase.Lobby;
+            _developerPlan = null;
             _hostAllowsSecretObjective = true;
             _roundDeadline = 0d;
             _roundStartedAtNetworkTime = 0d;
+        }
+
+        private PlayerId ResolveDeveloperIncidentAuthor(PlayerId physicalPlayer)
+        {
+            if (!DeveloperToolsAvailable
+                || _developerPlan?.Scenario != RoundDeveloperScenario.DetectiveIncidents
+                || physicalPlayer != _developerPlan.ControlledPlayer
+                || _engine.ViewFor(physicalPlayer)?.Role != RoundRole.Detective)
+            {
+                return physicalPlayer;
+            }
+
+            return _developerPlan.Players.First(player =>
+                player != physicalPlayer && _engine.ViewFor(player)?.Role != RoundRole.Detective);
+        }
+
+        private bool SubmitDeveloper(RoundCommand command, out string rejectionReason)
+        {
+            if (Submit(null, command))
+            {
+                rejectionReason = null;
+                return true;
+            }
+
+            return RejectDeveloper("RoundEngine rejected the developer action.", out rejectionReason);
+        }
+
+        private static bool RejectDeveloper(string reason, out string rejectionReason)
+        {
+            rejectionReason = reason;
+            return false;
         }
     }
 }
