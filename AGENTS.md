@@ -21,7 +21,7 @@ Before changing code, read only the documents required for the current task:
 
 ## Approved Product Rules
 
-- Round composition: 4–6 players, primarily balanced for 5; exactly 1 `Detektyw`, 1 `Winny`, and 2–4 `Niewinny` players.
+- Round composition: 3–6 players, primarily balanced for 5; exactly 1 `Detektyw`, 1 `Winny`, and 1–4 `Niewinny` players.
 - The `Winny` committed a public absurd `Przestępstwo` and receives the true `Alibi` with selected facts hidden.
 - `Niewinny` players see the complete `Alibi`; the `Detektyw` never sees it.
 - Suspects see the `Alibi` only during `Przygotowanie`. They cannot reopen it afterward.
@@ -31,7 +31,7 @@ Before changing code, read only the documents required for the current task:
 - The `Detektyw` starts the Round with a pistol that suspects cannot take or use. Misses do not consume the `Egzekucja`; the first hit on a living suspect does.
 - `Niewinny` players have individual outcomes and win only by completing exactly one `Prywatny Cel` plus achieving `Przetrwanie`.
 - An `Osobista Sprawa` is the default `Prywatny Cel`. A `Sekretny Cel` replaces it and requires `Wrobienie`, the designated `Niewinny`'s elimination, and the owner's survival.
-- `Sekretny Cel` is disabled for four players. For five or six players, one is enabled by default and the host may disable it in the lobby.
+- `Sekretny Cel` is disabled for three or four players. For five or six players, one is enabled by default and the host may disable it in the lobby.
 - The `Winny` may combine case-authored `Trop do Alibi` clues with preparation of a visible final `Ucieczka`; clues support testimony without restoring every hidden fact. The `Winny` wins by avoiding a correct Execution or completing the Escape.
 - Suspicious actions are readable but motives remain ambiguous. Loud Incidents report immediately; quiet Incidents enter the Detective's private registry only after personal discovery.
 - `Bunt` is an emergent alignment of individual interests after private goals are completed. It has no phrase, signal, button, dedicated action, or separate Round phase.

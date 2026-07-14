@@ -2,7 +2,7 @@
 
 ## Cel
 
-Pierwszy slice ma pozwolić 4–6 graczom połączyć się lokalnie, rozpocząć Rundę, otrzymać prywatne role i wersje Alibi, przejść przez Przygotowanie, swobodnie poruszać się podczas wspólnego Limitu Rundy oraz zakończyć rozgrywkę jedną Egzekucją albo upływem czasu.
+Pierwszy slice ma pozwolić 3–6 graczom połączyć się lokalnie, rozpocząć Rundę, otrzymać prywatne role i wersje Alibi, przejść przez Przygotowanie, swobodnie poruszać się podczas wspólnego Limitu Rundy oraz zakończyć rozgrywkę jedną Egzekucją albo upływem czasu.
 
 Poza pierwszym slice'em pozostają: Prywatne Cele, Incydenty, Plan Ucieczki, Tropy do Alibi, finalna forma Notatek Detektywa, docelowa biblioteka contentu, dopracowana broń i prezentacja wyników. Bunt jest zatwierdzonym skutkiem emergentnym indywidualnych interesów graczy, a nie osobnym systemem do implementacji. Rozszerzenie po slice opisuje specyfikacja [Prywatnych Celów, Incydentów i Ucieczki](../design/mechanics/prywatne-cele-incydenty-i-ucieczka.md). Głos Przestrzenny jest osobnym spike'em integracyjnym opisanym w [researchu narzędzi](../research/proximity-voice-tools.md).
 

@@ -45,7 +45,7 @@ Komendy postępu Celów, odkrycia Incydentu i Ucieczki zostaną zaprojektowane p
 
 ### Reguły egzekwowane przez moduł (niezmienniki)
 
-1. Skład Rundy: 4–6 graczy, dokładnie 1 Detektyw, 1 Winny, 2–4 Niewinnych (ADR-0001).
+1. Skład Rundy: 3–6 graczy, dokładnie 1 Detektyw, 1 Winny, 1–4 Niewinnych (ADR-0001).
 2. Alibi: pełne dla Niewinnych, zredagowane dla Winnego, żadne dla Detektywa (ADR-0006).
 3. Alibi niedostępne po Przygotowaniu — `ViewFor` po prostu przestaje je zwracać (ADR-0007).
 4. Najwyżej jedna Egzekucja; druga jest odrzucana (ADR-0003).
@@ -78,6 +78,6 @@ Komendy postępu Celów, odkrycia Incydentu i Ucieczki zostaną zaprojektowane p
 
 ## Następne rozszerzenie
 
-- Każdy Niewinny otrzymuje dokładnie jeden Prywatny Cel. Przy 4 graczach liczba Sekretnych Celów jest wymuszona na `0`; przy 5–6 domyślnie wynosi `1`, a host może wybrać `0`.
+- Każdy Niewinny otrzymuje dokładnie jeden Prywatny Cel. Przy 3–4 graczach liczba Sekretnych Celów jest wymuszona na `0`; przy 5–6 domyślnie wynosi `1`, a host może wybrać `0`.
 - Bunt nie otrzymuje osobnych komend ani stanu. Jest emergentnym skutkiem indywidualnych wyników i Ucieczki.
 - Dokładne typy komend oraz definicji contentu należy ustalić przy implementacji bez naruszania istniejących publicznych seamów `Handle` i `ViewFor`.

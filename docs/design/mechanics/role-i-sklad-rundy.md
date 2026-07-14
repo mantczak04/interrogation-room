@@ -6,13 +6,13 @@
 
 ## Cel
 
-Każda Runda potrzebuje poprawnego, tajnego przydziału ról: dokładnie jeden Detektyw, dokładnie jeden Winny, 2–4 Niewinnych, przy 4–6 graczach (balans główny: 5). Przydział jest sercem asymetrii informacyjnej — jego wyciek psuje całą Rundę.
+Każda Runda potrzebuje poprawnego, tajnego przydziału ról: dokładnie jeden Detektyw, dokładnie jeden Winny, 1–4 Niewinnych, przy 3–6 graczach (balans główny: 5). Przydział jest sercem asymetrii informacyjnej — jego wyciek psuje całą Rundę.
 
 ## Zasada działania
 
 ### Walidacja Składu Rundy
 
-- `StartRound` odrzuca skład < 4 lub > 6 graczy.
+- `StartRound` odrzuca skład < 3 lub > 6 graczy.
 - Role przydziela `RoundEngine` z seeda (deterministycznie testowalne): 1 × Detektyw, 1 × Winny, reszta Niewinni.
 - Warianty do rozważenia (decyzja użytkownika, nie MVP): Detektyw wybierany chętnym/rotacją zamiast losowo. MVP: pełna losowość z seeda.
 
@@ -32,7 +32,7 @@ Każda Runda potrzebuje poprawnego, tajnego przydziału ról: dokładnie jeden D
 - Podstawowym wariantem jest Osobista Sprawa. Sekretny Cel zastępuje Osobistą Sprawę, zamiast być dodatkowym zadaniem.
 - Sekretny Cel wymaga ukończenia dwukrokowego Wrobienia, Egzekucji wskazanego Celu i Przetrwania właściciela.
 - Winny nigdy nie jest Celem. Cel nie wie, że jest czyimś Celem; właściciel wie, że wskazana osoba jest Niewinna.
-- Przy 4 graczach konfiguracja wymusza `0` Sekretnych Celów. Przy 5–6 domyślnie przydzielany jest `1`, a host może wyłączyć go w lobby. Ewentualne `2` przy 6 graczach pozostaje parametrem do przyszłego playtestu.
+- Przy 3–4 graczach konfiguracja wymusza `0` Sekretnych Celów. Przy 5–6 domyślnie przydzielany jest `1`, a host może wyłączyć go w lobby. Ewentualne `2` przy 6 graczach pozostaje parametrem do przyszłego playtestu.
 - Przypisanie, postęp i ukończenie zna wyłącznie właściciel oraz host. Pełne reguły opisuje [specyfikacja Prywatnych Celów](./prywatne-cele-incydenty-i-ucieczka.md).
 
 ## Zależności
@@ -51,5 +51,5 @@ Każda Runda potrzebuje poprawnego, tajnego przydziału ról: dokładnie jeden D
 - `ViewFor(Niewinny)` nigdy nie zawiera roli innego Podejrzanego.
 - `ViewFor(Detektyw)` nigdy nie zawiera żadnej treści Alibi ani roli Winnego.
 - Skład 3 i 7 graczy odrzucony.
-- Przy 4 graczach próba ustawienia Sekretnego Celu jest normalizowana albo odrzucana zgodnie z kontraktem konfiguracji, ale nigdy nie prowadzi do przydziału.
+- Przy 3–4 graczach próba ustawienia Sekretnego Celu jest normalizowana albo odrzucana zgodnie z kontraktem konfiguracji, ale nigdy nie prowadzi do przydziału.
 - Przy 5–6 graczach konfiguracja domyślna przydziela dokładnie jeden Sekretny Cel, a ustawienie hosta pozwala uruchomić Rundę z zerem.

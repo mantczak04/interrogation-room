@@ -36620,7 +36620,10 @@ MonoBehaviour:
   m_Name: NetworkRoundCoordinator
   m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Networking.NetworkRoundCoordinator
   caseAsset: {fileID: 11400000, guid: 34772311517764248bce5cf9cf5b6fd4, type: 2}
-  additionalCases: []
+  additionalCases:
+  - {fileID: 11400000, guid: 42900947aaf34404d9d50ed61580f0e2, type: 2}
+  - {fileID: 11400000, guid: 89f989bbde91f0844861213aa266666d, type: 2}
+  - {fileID: 11400000, guid: 34af0443961845e4fb0a2db05fcf2706, type: 2}
   roundLimitSeconds: 600
 --- !u!114 &1864596227
 MonoBehaviour:

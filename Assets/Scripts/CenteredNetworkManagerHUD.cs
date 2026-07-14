@@ -282,7 +282,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         {
             SetMenuVisible(true, MenuPage.NormalRound);
         }
-        GUILayout.Label("Najpierw połącz się przez Sieć / Host; potem uruchom Rundę dla 4–6 graczy.", homeDescriptionStyle);
+        GUILayout.Label("Najpierw połącz się przez Sieć / Host; potem uruchom Rundę dla 3–6 graczy.", homeDescriptionStyle);
 
         GUI.enabled = NetworkRoundCoordinator.DeveloperToolsAvailable;
         if (GUILayout.Button("Sandbox Rundy", homeButtonStyle))

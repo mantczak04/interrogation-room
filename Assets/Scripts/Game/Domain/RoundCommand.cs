@@ -22,7 +22,7 @@ namespace InterrogationRoom.Domain
         {
             public CaseDefinition Case { get; }
 
-            /// <summary>Skład Rundy — 4 to 6 distinct players.</summary>
+            /// <summary>Skład Rundy — 3 to 6 distinct players.</summary>
             public IReadOnlyList<PlayerId> Players { get; }
 
             /// <summary>Seed for role assignment and hidden-fact selection; makes the Runda replayable in tests.</summary>
@@ -30,7 +30,7 @@ namespace InterrogationRoom.Domain
 
             /// <summary>
             /// Requested number of Sekretny Cel assignments. Null selects the
-            /// approved default: 0 for four players and 1 for five or six.
+            /// approved default: 0 for three or four players and 1 for five or six.
             /// </summary>
             public int? SecretObjectiveCount { get; }
 

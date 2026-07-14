@@ -82,6 +82,19 @@ namespace InterrogationRoom.Domain.Tests
         }
 
         [Test]
+        public void StartRound_ThreePlayers_HasOnePlayerInEachRole([Range(0, 19)] int seed)
+        {
+            var players = Enumerable.Range(1, 3).Select(value => new PlayerId(value)).ToArray();
+            var engine = StartedEngine(players, seed);
+
+            var roles = players.Select(player => engine.ViewFor(player).Role).ToList();
+
+            Assert.That(roles.Count(role => role == RoundRole.Detective), Is.EqualTo(1));
+            Assert.That(roles.Count(role => role == RoundRole.Guilty), Is.EqualTo(1));
+            Assert.That(roles.Count(role => role == RoundRole.Innocent), Is.EqualTo(1));
+        }
+
+        [Test]
         public void StartRound_SameSeed_IsDeterministic()
         {
             var first = StartedEngine(seed: 42);
@@ -116,7 +129,7 @@ namespace InterrogationRoom.Domain.Tests
         public void StartRound_InvalidComposition_IsRejected()
         {
             var tooFew = new RoundEngine().Handle(new RoundCommand.StartRound(
-                TestCase(), FivePlayers.Take(3), seed: 1));
+                TestCase(), FivePlayers.Take(2), seed: 1));
             var tooMany = new RoundEngine().Handle(new RoundCommand.StartRound(
                 TestCase(), Enumerable.Range(1, 7).Select(i => new PlayerId(i)), seed: 1));
             var duplicates = new RoundEngine().Handle(new RoundCommand.StartRound(
@@ -376,6 +389,7 @@ namespace InterrogationRoom.Domain.Tests
             }
         }
 
+        [TestCase(3, 0)]
         [TestCase(4, 0)]
         [TestCase(5, 1)]
         [TestCase(6, 1)]
@@ -408,14 +422,17 @@ namespace InterrogationRoom.Domain.Tests
         }
 
         [Test]
-        public void StartRound_FourPlayersNeverGetSecretObjectiveEvenWhenRequested()
+        public void StartRound_ThreeOrFourPlayersNeverGetSecretObjectiveEvenWhenRequested()
         {
-            var players = Enumerable.Range(1, 4).Select(value => new PlayerId(value)).ToArray();
+            foreach (var playerCount in new[] { 3, 4 })
+            {
+                var players = Enumerable.Range(1, playerCount).Select(value => new PlayerId(value)).ToArray();
 
-            var engine = StartedEngine(players, secretObjectives: 1);
+                var engine = StartedEngine(players, secretObjectives: 1);
 
-            Assert.That(players.Select(player => engine.ViewFor(player))
-                .Any(view => view.PrivateObjective?.Kind == PrivateObjectiveKind.SecretObjective), Is.False);
+                Assert.That(players.Select(player => engine.ViewFor(player))
+                    .Any(view => view.PrivateObjective?.Kind == PrivateObjectiveKind.SecretObjective), Is.False);
+            }
         }
 
         [Test]

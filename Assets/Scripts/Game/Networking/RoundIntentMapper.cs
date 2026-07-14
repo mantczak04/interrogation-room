@@ -5,7 +5,9 @@ namespace InterrogationRoom.Networking
     public static class RoundLobbyRules
     {
         public static int ResolveSecretObjectiveCount(int playerCount, bool hostAllowsSecretObjective) =>
-            playerCount >= 5 && playerCount <= RoundEngine.MaxPlayers && hostAllowsSecretObjective
+            playerCount >= RoundEngine.MinPlayersForSecretObjective
+            && playerCount <= RoundEngine.MaxPlayers
+            && hostAllowsSecretObjective
                 ? 1
                 : 0;
     }

@@ -102,8 +102,9 @@ namespace InterrogationRoom.Networking
                 return Reject($"Developer roster must contain {RoundEngine.MinPlayers}-{RoundEngine.MaxPlayers} players.", out rejectionReason);
             if (connected.Length > targetPlayerCount)
                 return Reject("The selected roster is smaller than the number of connected players.", out rejectionReason);
-            if (scenario == RoundDeveloperScenario.SecretObjective && targetPlayerCount == RoundEngine.MinPlayers)
-                return Reject("Sekretny Cel is disabled for four-player Rundy.", out rejectionReason);
+            if (scenario == RoundDeveloperScenario.SecretObjective
+                && targetPlayerCount < RoundEngine.MinPlayersForSecretObjective)
+                return Reject("Sekretny Cel is disabled for three- and four-player Rundy.", out rejectionReason);
 
             AlibiClueDefinition requiredClue = null;
             if (scenario == RoundDeveloperScenario.GuiltyEscape)

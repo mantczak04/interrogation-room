@@ -30,7 +30,7 @@ Nowy model ma równocześnie:
 
 - Każdy Niewinny zawsze ma dokładnie jeden obowiązkowy Prywatny Cel i wygrywa tylko przez `ukończenie Celu + Przetrwanie`.
 - Osobista Sprawa jest podstawowym Prywatnym Celem. Sekretny Cel zastępuje ją, zamiast tworzyć dodatkowy obowiązek.
-- Przy 4 graczach Sekretny Cel jest niedozwolony. Przy 5–6 graczach domyślnie występuje jeden, a host może go wyłączyć.
+- Przy 3–4 graczach Sekretny Cel jest niedozwolony. Przy 5–6 graczach domyślnie występuje jeden, a host może go wyłączyć.
 - Sekretny Cel wymaga dwukrokowego Wrobienia, Przetrwania właściciela i Egzekucji wskazanego Niewinnego.
 - Niewinny, który ukończył Cel i Przetrwał, wygrywa także po Ucieczce Winnego. Może zatem zacząć sprzyjać Ucieczce; jest to emergentny Bunt.
 - Winny może mieszać przygotowanie Ucieczki ze zdobywaniem Tropów do Alibi. Nie otrzymuje jednego losowo narzuconego trybu.
@@ -168,7 +168,7 @@ Wielokrotnie używane Osobiste Sprawy, Wrobienia i Plany Ucieczki powinny powsta
 ## Kryteria akceptacji
 
 1. Każdy Niewinny otrzymuje dokładnie jeden Prywatny Cel; jego ukończenie i Przetrwanie są wymagane do zwycięstwa.
-2. Konfiguracja 4 graczy wymusza 0 Sekretnych Celów; konfiguracja 5–6 domyślnie przydziela 1 i pozwala hostowi wybrać 0.
+2. Konfiguracja 3–4 graczy wymusza 0 Sekretnych Celów; konfiguracja 5–6 domyślnie przydziela 1 i pozwala hostowi wybrać 0.
 3. Żaden klient nie otrzymuje cudzych Celów, postępu, autora Incydentu ani informacji o Planie Winnego przed końcem Rundy.
 4. Konkretna widoczna akcja ma co najmniej dwa prawdopodobne motywy i nie potwierdza roli systemowo.
 5. Anulowana kilkusekundowa akcja nie zmienia świata ani postępu Celu.

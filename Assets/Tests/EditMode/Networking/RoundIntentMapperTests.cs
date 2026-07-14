@@ -8,6 +8,8 @@ namespace InterrogationRoom.Networking.Tests
 {
     public sealed class RoundIntentMapperTests
     {
+        [TestCase(3, true, 0)]
+        [TestCase(3, false, 0)]
         [TestCase(4, true, 0)]
         [TestCase(4, false, 0)]
         [TestCase(5, true, 1)]

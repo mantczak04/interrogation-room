@@ -22,7 +22,7 @@ _Avoid_: Prywatny Kanał, Proximity Chat
 ## Role
 
 **Skład Rundy**:
-Od czterech do sześciu graczy: zawsze jeden Detektyw, jeden Winny oraz od dwóch do czterech Niewinnych. Główną konfiguracją balansową jest pięciu graczy.
+Od trzech do sześciu graczy: zawsze jeden Detektyw, jeden Winny oraz od jednego do czterech Niewinnych. Główną konfiguracją balansową jest pięciu graczy.
 
 **Detektyw**:
 Gracz prowadzący przesłuchanie i próbujący rozpoznać Winnego wśród Podejrzanych bez dostępu do prawdziwego Alibi. Alibi rekonstruuje wyłącznie z zeznań graczy, a zeznania porównuje z osobiście zauważonym stanem świata i Rejestrem Incydentów.

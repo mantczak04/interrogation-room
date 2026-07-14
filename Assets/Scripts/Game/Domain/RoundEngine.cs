@@ -13,8 +13,9 @@ namespace InterrogationRoom.Domain
     /// </summary>
     public sealed class RoundEngine
     {
-        public const int MinPlayers = 4;
+        public const int MinPlayers = 3;
         public const int MaxPlayers = 6;
+        public const int MinPlayersForSecretObjective = 5;
 
         private RoundPhase _phase = RoundPhase.Lobby;
         private CaseDefinition _case;
@@ -191,7 +192,7 @@ namespace InterrogationRoom.Domain
                 return Reject("SecretObjectiveCount cannot be negative.");
 
             int secretObjectiveCount;
-            if (players.Count == MinPlayers)
+            if (players.Count < MinPlayersForSecretObjective)
             {
                 secretObjectiveCount = 0;
             }

@@ -131,14 +131,14 @@ namespace InterrogationRoom.Debugging
 
             GUILayout.Label("Scenariusz", _headerStyle);
             DrawStartButton("Niewinny — Osobista Sprawa", RoundDeveloperScenario.PersonalMatter);
-            GUI.enabled = _targetPlayerCount > RoundEngine.MinPlayers;
+            GUI.enabled = _targetPlayerCount >= RoundEngine.MinPlayersForSecretObjective;
             DrawStartButton("Niewinny — Sekretny Cel", RoundDeveloperScenario.SecretObjective);
             GUI.enabled = true;
             DrawStartButton("Winny — Trop i Ucieczka", RoundDeveloperScenario.GuiltyEscape);
             DrawStartButton("Detektyw — Incydenty", RoundDeveloperScenario.DetectiveIncidents);
 
             GUILayout.Label(
-                "Normalny przycisk Start Rundy nadal wymaga 4–6 prawdziwych klientów. Ten panel działa tylko w Editorze i Development Buildzie.",
+                "Normalny przycisk Start Rundy nadal wymaga 3–6 prawdziwych klientów. Ten panel działa tylko w Editorze i Development Buildzie.",
                 _labelStyle);
         }
 

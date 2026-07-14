@@ -26,6 +26,7 @@ namespace InterrogationRoom.Networking.Tests
                     "Paragon z dopisaną pozycją.")
             });
 
+        [TestCase(3)]
         [TestCase(4)]
         [TestCase(5)]
         [TestCase(6)]
@@ -50,7 +51,7 @@ namespace InterrogationRoom.Networking.Tests
             Assert.That(plan.Players, Does.Contain(connected[0]));
         }
 
-        [TestCase(RoundDeveloperScenario.PersonalMatter, 4, RoundRole.Innocent, PrivateObjectiveKind.PersonalMatter)]
+        [TestCase(RoundDeveloperScenario.PersonalMatter, 3, RoundRole.Innocent, PrivateObjectiveKind.PersonalMatter)]
         [TestCase(RoundDeveloperScenario.SecretObjective, 5, RoundRole.Innocent, PrivateObjectiveKind.SecretObjective)]
         [TestCase(RoundDeveloperScenario.GuiltyEscape, 4, RoundRole.Guilty, null)]
         [TestCase(RoundDeveloperScenario.DetectiveIncidents, 4, RoundRole.Detective, null)]
@@ -140,14 +141,17 @@ namespace InterrogationRoom.Networking.Tests
         }
 
         [Test]
-        public void Create_RejectsFourPlayerSecretObjectiveAndUnknownController()
+        public void Create_RejectsThreeAndFourPlayerSecretObjectiveAndUnknownController()
         {
             var connected = new[] { new PlayerId(1) };
 
-            Assert.That(RoundDeveloperScenarioPlanner.TryCreate(
-                TestCase(), connected, connected[0], 4, RoundDeveloperScenario.SecretObjective,
-                out _, out var fourPlayerReason), Is.False);
-            Assert.That(fourPlayerReason, Does.Contain("four-player"));
+            foreach (var playerCount in new[] { 3, 4 })
+            {
+                Assert.That(RoundDeveloperScenarioPlanner.TryCreate(
+                    TestCase(), connected, connected[0], playerCount, RoundDeveloperScenario.SecretObjective,
+                    out _, out var reason), Is.False);
+                Assert.That(reason, Does.Contain("three- and four-player"));
+            }
 
             Assert.That(RoundDeveloperScenarioPlanner.TryCreate(
                 TestCase(), connected, new PlayerId(99), 5, RoundDeveloperScenario.PersonalMatter,
