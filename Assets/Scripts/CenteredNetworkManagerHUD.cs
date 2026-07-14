@@ -52,12 +52,39 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         manager = GetComponent<NetworkManager>();
         steamLobby = GetComponent<SteamLobby>();
         roundCoordinator = GetComponent<NetworkRoundCoordinator>();
+        if (roundPresenter != null)
+        {
+            LobbyCharacterPresenter lobbyPresenter = roundPresenter.GetComponent<LobbyCharacterPresenter>();
+            if (lobbyPresenter == null)
+                lobbyPresenter = roundPresenter.gameObject.AddComponent<LobbyCharacterPresenter>();
+            lobbyPresenter.Configure(roundCoordinator, steamLobby);
+        }
     }
 
     void OnEnable()
     {
         HandlesEscape = true;
         ApplyPageVisibility();
+    }
+
+    void Start()
+    {
+        GameLaunchMode launchMode = GameLaunchRequest.Consume();
+        switch (launchMode)
+        {
+            case GameLaunchMode.Host:
+                if (roundPresenter != null)
+                    roundPresenter.SetLobbyMenuVisible(true);
+                PlayerController.SetCursorReleased(true);
+                if (SteamMode)
+                    steamLobby.HostLobby();
+                else
+                    manager.StartHost();
+                break;
+            case GameLaunchMode.Join:
+                SetMenuVisible(true, MenuPage.Network);
+                break;
+        }
     }
 
     void OnDisable()
@@ -83,6 +110,12 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void Update()
     {
+        if (isVisible && currentPage == MenuPage.Network && NetworkClient.localPlayer != null)
+        {
+            SetMenuVisible(false, MenuPage.Home);
+            return;
+        }
+
         if (isVisible
             && currentPage == MenuPage.NormalRound
             && roundCoordinator != null
@@ -169,9 +202,14 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
         float screenWidth = Screen.width / scale;
         float screenHeight = Screen.height / scale;
-        GUILayout.BeginArea(new Rect(0f, screenHeight - 44f, screenWidth, 40f));
-        GUILayout.Label("Esc: menu     F8: sandbox Rundy     V: mute / unmute voice chat", labelStyle);
-        GUILayout.EndArea();
+        bool automaticLobbyVisible = (NetworkClient.isConnected || NetworkServer.active)
+                                     && (roundCoordinator == null || roundCoordinator.CurrentView == null);
+        if (!automaticLobbyVisible)
+        {
+            GUILayout.BeginArea(new Rect(0f, screenHeight - 44f, screenWidth, 40f));
+            GUILayout.Label("Esc: menu     F8: sandbox Rundy     V: mute / unmute voice chat", labelStyle);
+            GUILayout.EndArea();
+        }
 
         if (!isVisible)
         {

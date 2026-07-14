@@ -6,17 +6,25 @@ public class MainMenuManager : MonoBehaviour
     [Header("Scenes")]
     [SerializeField] private string gameSceneName = "Room"; // Zmienić w razie innej nazwy sceny
 
+    private void Start()
+    {
+        if (GameLaunchRequest.WasStartedFromSteamInvite())
+        {
+            GameLaunchRequest.Set(GameLaunchMode.Join);
+            SceneManager.LoadScene(gameSceneName);
+        }
+    }
+
     public void HostGame()
     {
-        Debug.Log("Host Game clicked! Loading game scene...");
-        // W przyszłości tu wepniemy logikę z SteamLobby
+        GameLaunchRequest.Set(GameLaunchMode.Host);
         SceneManager.LoadScene(gameSceneName);
     }
 
     public void JoinServer()
     {
-        Debug.Log("Join Server clicked! (Not implemented yet)");
-        // W przyszłości otwieranie nakładki Steam lub UI do wpisywania IP
+        GameLaunchRequest.Set(GameLaunchMode.Join);
+        SceneManager.LoadScene(gameSceneName);
     }
 
     public void OpenSettings()

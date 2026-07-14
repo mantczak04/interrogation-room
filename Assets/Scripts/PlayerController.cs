@@ -109,6 +109,38 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort
     public bool IsEliminated => isDead;
     public CharacterId CharacterId => characterId;
 
+    public GameObject CreateCharacterPreview(CharacterId selectedCharacter, Transform parent)
+    {
+        CharacterVisualDefinition selected = null;
+        foreach (CharacterVisualDefinition visual in characterVisuals)
+        {
+            if (visual != null && visual.characterId == selectedCharacter)
+            {
+                selected = visual;
+                break;
+            }
+        }
+
+        if (selected?.modelRoot == null || selected.animatorController == null || selected.avatar == null)
+            return null;
+
+        GameObject preview = Instantiate(selected.modelRoot, parent, false);
+        preview.name = $"{selectedCharacter} Lobby Preview";
+        preview.SetActive(true);
+
+        Animator previewAnimator = preview.GetComponent<Animator>();
+        if (previewAnimator == null)
+            previewAnimator = preview.AddComponent<Animator>();
+        previewAnimator.runtimeAnimatorController = selected.animatorController;
+        previewAnimator.avatar = selected.avatar;
+        previewAnimator.applyRootMotion = false;
+        previewAnimator.Rebind();
+        previewAnimator.Update(0f);
+        foreach (Renderer previewRenderer in preview.GetComponentsInChildren<Renderer>(true))
+            previewRenderer.enabled = true;
+        return preview;
+    }
+
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
@@ -320,7 +352,7 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort
     /// swap stations' uniqueness guarantee.
     /// </summary>
     [Command]
-    private void CmdSelectCharacter(CharacterId selectedCharacter)
+    public void CmdSelectCharacter(CharacterId selectedCharacter)
     {
         TrySwapCharacterServer(selectedCharacter, out _);
     }

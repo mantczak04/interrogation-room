@@ -110,6 +110,7 @@ namespace InterrogationRoom.UI
         private Label _rejectionLabel;
         private Button _startButton;
         private DropdownField _caseSelection;
+        private Label _playerCountLabel;
         private Button _endPreparationButton;
         private Button _returnToLobbyButton;
         private bool _lobbyMenuVisible;
@@ -281,7 +282,8 @@ namespace InterrogationRoom.UI
 
         private void RenderLobby()
         {
-            SetVisible(_lobbyPanel, _lobbyMenuVisible);
+            bool connected = NetworkClient.isConnected || NetworkServer.active;
+            SetVisible(_lobbyPanel, _lobbyMenuVisible || connected);
             SetVisible(_preparationPanel, false);
             SetVisible(_hudPanel, false);
             SetVisible(_resultPanel, false);
@@ -302,7 +304,9 @@ namespace InterrogationRoom.UI
             _startButton.text = canStart
                 ? "Start Rundy"
                 : $"Start Rundy ({coordinator.ConnectedPlayerCount}/{RoundEngine.MinPlayers})";
-            if (_lobbyMenuVisible)
+            _playerCountLabel.text = $"Gracze w lobby: {coordinator.ConnectedPlayerCount}/6";
+
+            if (_lobbyMenuVisible || connected)
                 SetCursorFor(RoundPhase.Lobby, false);
         }
 
@@ -327,6 +331,7 @@ namespace InterrogationRoom.UI
             _rejectionLabel = Required<Label>(root, "rejection-label");
             _startButton = Required<Button>(root, "start-button");
             _caseSelection = Required<DropdownField>(root, "case-selection");
+            _playerCountLabel = Required<Label>(root, "player-count-label");
             _endPreparationButton = Required<Button>(root, "end-preparation-button");
             _returnToLobbyButton = Required<Button>(root, "return-to-lobby-button");
         }

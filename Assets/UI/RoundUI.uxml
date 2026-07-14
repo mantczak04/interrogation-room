@@ -1,11 +1,29 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <ui:Style src="project://database/Assets/UI/RoundUI.uss" />
     <ui:VisualElement name="round-ui-root" class="round-ui">
-        <ui:VisualElement name="lobby-panel" class="screen-card">
-            <ui:Label text="Przesłuchanie" class="title" />
-            <ui:Label text="Połącz 4–6 graczy, aby rozpocząć Rundę." class="subtitle" />
-            <ui:DropdownField name="case-selection" label="Sprawa" />
-            <ui:Button name="start-button" text="Start Rundy" class="primary-button" />
+        <ui:VisualElement name="lobby-panel" class="lobby-screen">
+            <ui:VisualElement class="lobby-shade" />
+            <ui:VisualElement class="lobby-layout">
+                <ui:VisualElement class="lobby-controls">
+                    <ui:Label text="PRZESŁUCHANIE" class="lobby-title" />
+                    <ui:Label text="LOBBY" class="lobby-kicker" />
+                    <ui:Label name="player-count-label" text="Gracze w lobby: 0/6" class="lobby-player-count" />
+                    <ui:Label text="Wybierz postać" class="section-title" />
+                    <ui:VisualElement class="character-selector">
+                        <ui:Button name="previous-character-button" text="‹" class="character-arrow" />
+                        <ui:Label name="character-name-label" text="Małpa" class="character-name" />
+                        <ui:Button name="next-character-button" text="›" class="character-arrow" />
+                    </ui:VisualElement>
+                    <ui:DropdownField name="case-selection" label="Sprawa" class="lobby-case" />
+                    <ui:Button name="invite-button" text="Zaproś znajomych" class="secondary-button" />
+                    <ui:Button name="start-button" text="Start Rundy" class="primary-button lobby-start" />
+                    <ui:Label text="Host uruchamia Rundę po dołączeniu 4–6 graczy." class="lobby-help" />
+                </ui:VisualElement>
+                <ui:VisualElement class="preview-column">
+                    <ui:Image name="character-preview" class="character-preview" scale-mode="ScaleToFit" />
+                    <ui:Label text="Postać jest kosmetyczna i nie zdradza roli." class="preview-caption" />
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="preparation-panel" class="screen-card">
             <ui:Label text="Przygotowanie" class="title" />
