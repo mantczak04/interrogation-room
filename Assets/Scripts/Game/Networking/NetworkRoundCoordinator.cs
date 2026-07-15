@@ -62,6 +62,7 @@ namespace InterrogationRoom.Networking
         public bool HostAllowsSecretObjective => _hostAllowsSecretObjective;
         public static bool DeveloperToolsAvailable => Application.isEditor || Debug.isDebugBuild;
         public RoundDeveloperPlan ActiveDeveloperPlan => DeveloperToolsAvailable ? _developerPlan : null;
+        public bool IsDeveloperRoundUnlimited => DeveloperToolsAvailable && _developerPlan != null;
         public PlayerRoundView DeveloperControlledView =>
             DeveloperToolsAvailable && _developerPlan != null
                 ? _engine.ViewFor(_developerPlan.ControlledPlayer)
@@ -815,17 +816,24 @@ namespace InterrogationRoom.Networking
 
         private void UpdateRoundTimer()
         {
-            if (_phase != RoundPhase.Round)
+            if (!ShouldExpireRound(
+                    _phase,
+                    IsDeveloperRoundUnlimited,
+                    NetworkTime.time,
+                    _roundDeadline))
                 return;
 
-            var now = NetworkTime.time;
-            if (now >= _roundDeadline)
-            {
-                Submit(null, new RoundCommand.TimeExpired());
-                return;
-            }
-
+            Submit(null, new RoundCommand.TimeExpired());
         }
+
+        public static bool ShouldExpireRound(
+            RoundPhase phase,
+            bool developerRoundUnlimited,
+            double now,
+            double deadline) =>
+            phase == RoundPhase.Round &&
+            !developerRoundUnlimited &&
+            now >= deadline;
 
         private void DeliverAllViews()
         {
@@ -844,7 +852,9 @@ namespace InterrogationRoom.Networking
 
             connection.Send(RoundViewMessage.FromView(
                 view,
-                _phase == RoundPhase.Round ? _roundDeadline : 0d));
+                _phase == RoundPhase.Round && !IsDeveloperRoundUnlimited
+                    ? _roundDeadline
+                    : 0d));
         }
 
         private void BroadcastLobbyState(bool force = false)

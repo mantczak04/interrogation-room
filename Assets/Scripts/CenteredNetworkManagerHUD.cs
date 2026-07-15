@@ -72,6 +72,10 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         GameLaunchMode launchMode = GameLaunchRequest.Consume();
         switch (launchMode)
         {
+            case GameLaunchMode.None:
+                if (NetworkRoundCoordinator.DeveloperToolsAvailable)
+                    OpenDeveloperMode();
+                break;
             case GameLaunchMode.Host:
                 if (roundPresenter != null)
                     roundPresenter.SetLobbyMenuVisible(true);
@@ -285,12 +289,12 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         GUILayout.Label("Najpierw połącz się przez Sieć / Host; potem uruchom Rundę dla 3–6 graczy.", homeDescriptionStyle);
 
         GUI.enabled = NetworkRoundCoordinator.DeveloperToolsAvailable;
-        if (GUILayout.Button("Sandbox Rundy", homeButtonStyle))
+        if (GUILayout.Button("Tryb developerski (DEBUG)", homeButtonStyle))
         {
-            SetMenuVisible(true, MenuPage.Sandbox);
+            OpenDeveloperMode();
         }
         GUI.enabled = true;
-        GUILayout.Label("Jednoosobowe scenariusze developerskie. Skrót: F8.", homeDescriptionStyle);
+        GUILayout.Label("Sam uruchamia hosta. Wybór roli, zadań i Runda bez limitu czasu. Skrót: F8.", homeDescriptionStyle);
 
         if (GUILayout.Button("Zamknij menu", homeButtonStyle))
         {
@@ -309,9 +313,25 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         GUILayout.EndHorizontal();
     }
 
+    void OpenDeveloperMode()
+    {
+        if (!NetworkRoundCoordinator.DeveloperToolsAvailable)
+            return;
+
+        if (!NetworkClient.active && !NetworkServer.active)
+        {
+            if (SteamMode)
+                steamLobby.HostLobby();
+            else
+                manager.StartHost();
+        }
+
+        SetMenuVisible(true, MenuPage.Sandbox);
+    }
+
     void DrawPageHeader(float screenWidth)
     {
-        string title = currentPage == MenuPage.NormalRound ? "ZWYKŁA RUNDA" : "SANDBOX RUNDY";
+        string title = currentPage == MenuPage.NormalRound ? "ZWYKŁA RUNDA" : "TRYB DEVELOPERSKI";
         float headerHeight = currentPage == MenuPage.Sandbox ? 180f : 120f;
         GUILayout.BeginArea(new Rect(12f, 12f, Mathf.Min(190f, screenWidth - 24f), headerHeight));
         GUILayout.Label(title, labelStyle);

@@ -85,6 +85,31 @@ namespace InterrogationRoom.UI.Tests
                 Is.Zero);
         }
 
+        [TestCase(RoundPhase.Round, 0d, true)]
+        [TestCase(RoundPhase.Round, -1d, true)]
+        [TestCase(RoundPhase.Round, 10d, false)]
+        [TestCase(RoundPhase.Preparation, 0d, false)]
+        public void IsUnlimitedRound_UsesZeroDeadlineOnlyDuringRunda(
+            RoundPhase phase,
+            double deadline,
+            bool expected)
+        {
+            Assert.That(RoundPresenter.IsUnlimitedRound(phase, deadline), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void BuildState_DeveloperRound_ShowsUnlimitedTime()
+        {
+            var state = RoundPresenter.BuildState(
+                View(RoundPhase.Round, RoundRole.Innocent, alibi: null),
+                remainingSeconds: 0f,
+                isHost: true,
+                unlimitedTime: true);
+
+            Assert.That(state.TimerVisible, Is.True);
+            Assert.That(state.UnlimitedTime, Is.True);
+        }
+
         [TestCase(RoundPhase.Lobby, false, false, true)]
         [TestCase(RoundPhase.Preparation, false, false, true)]
         [TestCase(RoundPhase.Round, false, false, false)]
