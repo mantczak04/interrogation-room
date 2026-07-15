@@ -52,7 +52,7 @@ namespace InterrogationRoom.Debugging
             var area = new Rect(Screen.width - panelWidth - 12f, 12f, panelWidth, panelHeight);
             GUILayout.BeginArea(area, _boxStyle);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("A7a — SANDBOX RUNDY", _headerStyle);
+            GUILayout.Label("TRYB DEVELOPERSKI — BEZ LIMITU", _headerStyle);
             if (GUILayout.Button(_expanded ? "—" : "+", _buttonStyle, GUILayout.Width(42f)))
                 _expanded = !_expanded;
             GUILayout.EndHorizontal();
@@ -138,7 +138,7 @@ namespace InterrogationRoom.Debugging
             DrawStartButton("Detektyw — Incydenty", RoundDeveloperScenario.DetectiveIncidents);
 
             GUILayout.Label(
-                "Normalny przycisk Start Rundy nadal wymaga 3–6 prawdziwych klientów. Ten panel działa tylko w Editorze i Development Buildzie.",
+                "Wybór scenariusza wymusza rolę testowanego gracza. Runda nie kończy się automatycznie po czasie. Panel działa tylko w Editorze i Development Buildzie.",
                 _labelStyle);
         }
 

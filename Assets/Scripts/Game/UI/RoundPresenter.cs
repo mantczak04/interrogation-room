@@ -33,6 +33,7 @@ namespace InterrogationRoom.UI
         public bool EndPreparationVisible { get; }
         public bool TimerVisible { get; }
         public float RemainingSeconds { get; }
+        public bool UnlimitedTime { get; }
         public bool ExecutionVisible { get; }
         public IReadOnlyList<ExecutionTargetView> ExecutionTargets { get; }
         public bool PrivatePanelVisible { get; }
@@ -51,6 +52,7 @@ namespace InterrogationRoom.UI
             bool endPreparationVisible,
             bool timerVisible,
             float remainingSeconds,
+            bool unlimitedTime,
             bool executionVisible,
             IReadOnlyList<ExecutionTargetView> executionTargets,
             bool privatePanelVisible,
@@ -68,6 +70,7 @@ namespace InterrogationRoom.UI
             EndPreparationVisible = endPreparationVisible;
             TimerVisible = timerVisible;
             RemainingSeconds = remainingSeconds;
+            UnlimitedTime = unlimitedTime;
             ExecutionVisible = executionVisible;
             ExecutionTargets = executionTargets;
             PrivatePanelVisible = privatePanelVisible;
@@ -117,6 +120,7 @@ namespace InterrogationRoom.UI
         private Button _returnToLobbyButton;
         private bool _lobbyMenuVisible;
         private bool _developerMenuOpen;
+        private bool _unlimitedRound;
 
         private void Reset()
         {
@@ -192,6 +196,12 @@ namespace InterrogationRoom.UI
 
             if (_view.Phase == RoundPhase.Round)
             {
+                if (_unlimitedRound)
+                {
+                    _timerLabel.text = "∞";
+                    return;
+                }
+
                 var remaining = CalculateRemainingSeconds(
                     _roundEndsAtNetworkTime,
                     NetworkTime.time,
@@ -217,6 +227,9 @@ namespace InterrogationRoom.UI
             bool requiresPointer) =>
             developerMenuOpen || phase != RoundPhase.Round || requiresPointer;
 
+        public static bool IsUnlimitedRound(RoundPhase phase, double roundEndsAtNetworkTime) =>
+            phase == RoundPhase.Round && roundEndsAtNetworkTime <= 0d;
+
         public void SetLobbyMenuVisible(bool visible)
         {
             _lobbyMenuVisible = visible;
@@ -227,9 +240,15 @@ namespace InterrogationRoom.UI
         public void SetDeveloperMenuOpen(bool open)
         {
             _developerMenuOpen = open;
+            if (_view != null)
+                SetCursorFor(_view.Phase, requiresPointer: false);
         }
 
-        public static RoundUiState BuildState(PlayerRoundView view, float remainingSeconds, bool isHost)
+        public static RoundUiState BuildState(
+            PlayerRoundView view,
+            float remainingSeconds,
+            bool isHost,
+            bool unlimitedTime = false)
         {
             if (view == null)
                 throw new ArgumentNullException(nameof(view));
@@ -246,6 +265,7 @@ namespace InterrogationRoom.UI
                 view.Phase == RoundPhase.Preparation && isHost,
                 view.Phase == RoundPhase.Round,
                 Mathf.Max(0f, remainingSeconds),
+                unlimitedTime,
                 executionVisible: false,
                 Array.Empty<ExecutionTargetView>(),
                 view.Phase == RoundPhase.Round,
@@ -260,12 +280,14 @@ namespace InterrogationRoom.UI
         {
             _view = view;
             _roundEndsAtNetworkTime = Math.Max(0d, roundEndsAtNetworkTime);
+            _unlimitedRound = IsUnlimitedRound(view.Phase, _roundEndsAtNetworkTime);
             _rejectionLabel.text = string.Empty;
             SetVisible(_rejectionLabel, false);
             Render(BuildState(
                 view,
                 CalculateRemainingSeconds(_roundEndsAtNetworkTime, NetworkTime.time, view.Phase),
-                coordinator.IsLocalHost));
+                coordinator.IsLocalHost,
+                _unlimitedRound));
         }
 
         private void Render(RoundUiState state)
@@ -281,7 +303,7 @@ namespace InterrogationRoom.UI
             _alibiLabel.text = state.AlibiText ?? string.Empty;
             SetVisible(_alibiSection, state.AlibiVisible);
             SetVisible(_endPreparationButton, state.EndPreparationVisible);
-            _timerLabel.text = FormatTimer(state.RemainingSeconds);
+            _timerLabel.text = state.UnlimitedTime ? "∞" : FormatTimer(state.RemainingSeconds);
             SetVisible(_timerLabel, state.TimerVisible);
             SetVisible(_privatePanel, state.PrivatePanelVisible);
             _privateTitleLabel.text = state.PrivateTitle ?? string.Empty;
@@ -382,6 +404,7 @@ namespace InterrogationRoom.UI
         {
             _view = null;
             _roundEndsAtNetworkTime = 0d;
+            _unlimitedRound = false;
             _rejectionLabel.text = string.Empty;
             SetVisible(_rejectionLabel, false);
             RenderLobby();

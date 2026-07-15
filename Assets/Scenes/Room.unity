@@ -5768,13 +5768,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 328940136}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.055, y: 1.053, z: -3.6}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: -4, y: 1.053, z: -2.6}
   m_LocalScale: {x: 0.05, y: 2.1, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 121257290}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!23 &328940138
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5875,6 +5875,7 @@ MonoBehaviour:
   doorLeaf: {fileID: 328940137}
   blockingCollider: {fileID: 328940139}
   openLocalEulerAngles: {x: 0, y: 90, z: 0}
+  hingeLocalOffset: {x: 0, y: 0, z: 0}
   animationDuration: 0.2
   audioSource: {fileID: 328940143}
   openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
@@ -15199,7 +15200,7 @@ Transform:
   m_GameObject: {fileID: 813735451}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 6.97, y: 1.053, z: 0.31}
+  m_LocalPosition: {x: 8.5, y: 1.053, z: 0.1}
   m_LocalScale: {x: 0.05, y: 2.1, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -15305,6 +15306,7 @@ MonoBehaviour:
   doorLeaf: {fileID: 813735452}
   blockingCollider: {fileID: 813735454}
   openLocalEulerAngles: {x: 0, y: 90, z: 0}
+  hingeLocalOffset: {x: 0, y: 0, z: 0}
   animationDuration: 0.2
   audioSource: {fileID: 813735458}
   openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
@@ -32502,7 +32504,7 @@ Transform:
   m_GameObject: {fileID: 1718422806}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -2.53, y: 1.053, z: 0.31}
+  m_LocalPosition: {x: -1, y: 1.053, z: 0.1}
   m_LocalScale: {x: 0.05, y: 2.1, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -32608,6 +32610,7 @@ MonoBehaviour:
   doorLeaf: {fileID: 1718422807}
   blockingCollider: {fileID: 1718422809}
   openLocalEulerAngles: {x: 0, y: 90, z: 0}
+  hingeLocalOffset: {x: 0, y: 0, z: 0}
   animationDuration: 0.2
   audioSource: {fileID: 1718422813}
   openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
@@ -39243,7 +39246,7 @@ Transform:
   m_GameObject: {fileID: 2002963096}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -0.53, y: 1.053, z: -2.81}
+  m_LocalPosition: {x: 1, y: 1.053, z: -2.6}
   m_LocalScale: {x: 0.05, y: 2.1, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -39349,6 +39352,7 @@ MonoBehaviour:
   doorLeaf: {fileID: 2002963097}
   blockingCollider: {fileID: 2002963099}
   openLocalEulerAngles: {x: 0, y: 90, z: 0}
+  hingeLocalOffset: {x: 0, y: 0, z: 0}
   animationDuration: 0.2
   audioSource: {fileID: 2002963103}
   openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}

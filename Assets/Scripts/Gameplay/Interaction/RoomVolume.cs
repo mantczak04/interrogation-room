@@ -70,6 +70,26 @@ namespace InterrogationRoom.Gameplay.Interaction
             return best != null ? best.RoomId : string.Empty;
         }
 
+        public static bool TryGetCenter(string targetRoomId, out Vector3 worldCenter)
+        {
+            foreach (RoomVolume candidate in ActiveVolumes)
+            {
+                if (candidate == null ||
+                    !string.Equals(candidate.RoomId, targetRoomId, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                worldCenter = candidate.volumeCollider != null
+                    ? candidate.volumeCollider.bounds.center
+                    : candidate.transform.position;
+                return true;
+            }
+
+            worldCenter = default;
+            return false;
+        }
+
         private void OnValidate()
         {
             if (volumeCollider == null)
