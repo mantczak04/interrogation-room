@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace InterrogationRoom.Gameplay.Interaction
 {
@@ -12,6 +13,8 @@ namespace InterrogationRoom.Gameplay.Interaction
         string RoomBId { get; }
 
         bool IsOpen { get; }
+
+        Vector3 PortalPosition { get; }
     }
 
     public static class RoomPortalRegistry

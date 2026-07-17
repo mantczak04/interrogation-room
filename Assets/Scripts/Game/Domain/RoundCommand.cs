@@ -34,7 +34,10 @@ namespace InterrogationRoom.Domain
             /// </summary>
             public int? SecretObjectiveCount { get; }
 
-            /// <summary>Map-authored Plan Ucieczki; defaults to the first prototype contract.</summary>
+            /// <summary>Available authored Osobiste Sprawy. The engine rotates the seeded pool when exhausted.</summary>
+            public IReadOnlyList<PersonalMatterDefinition> PersonalMatters { get; }
+
+            /// <summary>Optional explicit Plan Ucieczki; null selects a seeded authored plan.</summary>
             public EscapePlanDefinition EscapePlan { get; }
 
             public StartRound(
@@ -42,13 +45,15 @@ namespace InterrogationRoom.Domain
                 IEnumerable<PlayerId> players,
                 int seed,
                 int? secretObjectiveCount = null,
-                EscapePlanDefinition escapePlan = null)
+                EscapePlanDefinition escapePlan = null,
+                IEnumerable<PersonalMatterDefinition> personalMatters = null)
             {
                 Case = caseDefinition;
                 Players = players?.ToArray() ?? throw new ArgumentNullException(nameof(players));
                 Seed = seed;
                 SecretObjectiveCount = secretObjectiveCount;
-                EscapePlan = escapePlan ?? EscapePlanDefinitions.Prototype;
+                EscapePlan = escapePlan;
+                PersonalMatters = personalMatters?.ToArray() ?? Array.Empty<PersonalMatterDefinition>();
             }
         }
 
@@ -58,6 +63,21 @@ namespace InterrogationRoom.Domain
         /// </summary>
         public sealed class EndPreparation : RoundCommand
         {
+        }
+
+        /// <summary>
+        /// One player's irreversible declaration of readiness during
+        /// Przygotowanie. Readiness never blocks the Runda; the adapter owns
+        /// the preparation deadline and may only shorten it when all are ready.
+        /// </summary>
+        public sealed class MarkPlayerReady : RoundCommand
+        {
+            public PlayerId Player { get; }
+
+            public MarkPlayerReady(PlayerId player)
+            {
+                Player = player;
+            }
         }
 
         /// <summary>

@@ -10,7 +10,8 @@ namespace InterrogationRoom.Gameplay.Interaction
         PerformerUnavailable,
         CompletionRejected,
         ServerInterruption,
-        BeginRejected
+        BeginRejected,
+        MinigameFailed
     }
 
     public readonly struct NetworkInteractionCompletion
@@ -53,14 +54,13 @@ namespace InterrogationRoom.Gameplay.Interaction
         public TimedInteractionCancellationReason Reason { get; }
     }
 
-    public interface INetworkTimedInteractable : INetworkInteractable
+    public interface INetworkTimedInteractable : INetworkInteractable, IPhysicalObjectiveCompletionSource
     {
         string ActionId { get; }
         string CompletionPayloadId { get; }
         float InteractionDuration { get; }
         bool HasActiveInteractor { get; }
 
-        event Action<NetworkInteractionCompletion> CompletedServer;
         event Action<NetworkInteractionCancellation> CancelledServer;
 
         bool TryBeginInteractionServer(NetworkIdentity interactor);

@@ -69,6 +69,12 @@ namespace InterrogationRoom.Domain
         /// <summary>Complete approved reveal, non-null only after the Runda ends.</summary>
         public RoundRevealView RoundReveal { get; }
 
+        /// <summary>Public readiness count; non-zero only during Przygotowanie.</summary>
+        public int ReadyPlayerCount { get; }
+
+        /// <summary>Whether the viewer already declared Gotowość; irreversible.</summary>
+        public bool IsReady { get; }
+
         /// <summary>
         /// Compatibility projection for the pre-A1 networking contract. The
         /// canonical model is <see cref="PrivateObjective"/>.
@@ -96,7 +102,9 @@ namespace InterrogationRoom.Domain
             IReadOnlyList<IncidentRevealView> revealedIncidents = null,
             IReadOnlyList<AlibiClueView> acquiredAlibiClues = null,
             EscapePlanView escapePlan = null,
-            RoundRevealView roundReveal = null)
+            RoundRevealView roundReveal = null,
+            int readyPlayerCount = 0,
+            bool isReady = false)
             : this(
                 viewer,
                 phase,
@@ -111,7 +119,9 @@ namespace InterrogationRoom.Domain
                 revealedIncidents,
                 acquiredAlibiClues,
                 escapePlan,
-                roundReveal)
+                roundReveal,
+                readyPlayerCount,
+                isReady)
         {
         }
 
@@ -129,7 +139,9 @@ namespace InterrogationRoom.Domain
             IReadOnlyList<IncidentRevealView> revealedIncidents = null,
             IReadOnlyList<AlibiClueView> acquiredAlibiClues = null,
             EscapePlanView escapePlan = null,
-            RoundRevealView roundReveal = null)
+            RoundRevealView roundReveal = null,
+            int readyPlayerCount = 0,
+            bool isReady = false)
         {
             Viewer = viewer;
             Phase = phase;
@@ -144,6 +156,8 @@ namespace InterrogationRoom.Domain
             AcquiredAlibiClues = acquiredAlibiClues;
             EscapePlan = escapePlan;
             RoundReveal = roundReveal;
+            ReadyPlayerCount = readyPlayerCount;
+            IsReady = isReady;
             Result = result;
         }
 
@@ -153,10 +167,15 @@ namespace InterrogationRoom.Domain
                 return null;
 
             var definition = PrivateObjectiveDefinitions.SecretObjective;
+            var firstStep = definition.Steps[0];
             return new PrivateObjectiveView(
                 definition.Id,
                 definition.Kind,
-                definition.Steps[0].Id,
+                definition.Title,
+                definition.Motive,
+                firstStep.AnchorActionId,
+                firstStep.Description,
+                firstStep.LocationHint,
                 completedStepCount: 0,
                 definition.Steps.Count,
                 isCompleted: false,
@@ -221,7 +240,11 @@ namespace InterrogationRoom.Domain
     {
         public PrivateObjectiveId Id { get; }
         public PrivateObjectiveKind Kind { get; }
+        public string Title { get; }
+        public string Motive { get; }
         public PrivateObjectiveStepId? CurrentStep { get; }
+        public string CurrentStepDescription { get; }
+        public string CurrentStepLocationHint { get; }
         public int CompletedStepCount { get; }
         public int TotalStepCount { get; }
         public bool IsCompleted { get; }
@@ -235,10 +258,41 @@ namespace InterrogationRoom.Domain
             int totalStepCount,
             bool isCompleted,
             PlayerId? target)
+            : this(
+                id,
+                kind,
+                id.Value,
+                id.Value,
+                currentStep,
+                currentStep?.Value,
+                null,
+                completedStepCount,
+                totalStepCount,
+                isCompleted,
+                target)
+        {
+        }
+
+        public PrivateObjectiveView(
+            PrivateObjectiveId id,
+            PrivateObjectiveKind kind,
+            string title,
+            string motive,
+            PrivateObjectiveStepId? currentStep,
+            string currentStepDescription,
+            string currentStepLocationHint,
+            int completedStepCount,
+            int totalStepCount,
+            bool isCompleted,
+            PlayerId? target)
         {
             Id = id;
             Kind = kind;
+            Title = title;
+            Motive = motive;
             CurrentStep = currentStep;
+            CurrentStepDescription = currentStepDescription;
+            CurrentStepLocationHint = currentStepLocationHint;
             CompletedStepCount = completedStepCount;
             TotalStepCount = totalStepCount;
             IsCompleted = isCompleted;

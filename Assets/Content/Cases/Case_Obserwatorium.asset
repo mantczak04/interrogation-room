@@ -12,25 +12,56 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
   m_Name: Case_Obserwatorium
   m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
-  title: Incydent w Obserwatorium
+  title: Incydent w obserwatorium
   crimeDescription: "Kto\u015B przyklei\u0142 do teleskopu ogromne rz\u0119sy i skierowa\u0142
     go na komin piekarni."
   alibiFacts:
-  - text: "O 21:12 grupa otrzyma\u0142a niebieskie ochraniacze na buty."
+  - id: ochraniacze-na-buty
+    text: "O 21:12 grupa otrzyma\u0142a niebieskie ochraniacze na buty."
     canBeHidden: 0
-  - text: "Astronom ni\xF3s\u0142 termos w kszta\u0142cie rakiety."
+    variantTexts:
+    - "O 21:12 grupa otrzyma\u0142a niebieskie ochraniacze na buty."
+    - "O 21:12 grupa otrzyma\u0142a zielone ochraniacze na buty."
+    distinctiveDetail: 1
+  - id: termos-rakieta
+    text: "Astronom ni\xF3s\u0142 termos w kszta\u0142cie rakiety."
     canBeHidden: 1
-  - text: "Pierwsz\u0105 obserwowan\u0105 gwiazd\u0105 by\u0142a Wega, wskazana zielonym
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: wega-laser
+    text: "Pierwsz\u0105 obserwowan\u0105 gwiazd\u0105 by\u0142a Wega, wskazana zielonym
       laserem."
     canBeHidden: 1
-  - text: "Projektor zgas\u0142 po komunikacie o b\u0142\u0119dzie numer 17."
-    canBeHidden: 1
-  - text: "Pani Marta znalaz\u0142a srebrny guzik pod obrotowym krzes\u0142em."
-    canBeHidden: 1
-  - text: "W kopule pachnia\u0142o \u015Bwie\u017Cymi dro\u017Cd\u017C\xF3wkami z
-      pobliskiej piekarni."
-    canBeHidden: 1
-  - text: "O 21:46 wszyscy podpisali ksi\u0119g\u0119 go\u015Bci przy wyj\u015Bciu."
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: blad-projektora
+    text: "Projektor zgas\u0142 po komunikacie o b\u0142\u0119dzie numer 17."
     canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: srebrny-guzik
+    text: "Pani Marta znalaz\u0142a srebrny guzik pod obrotowym krzes\u0142em."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: drozdzowki-i-wyjscie
+    text: "W kopule pachnia\u0142o dro\u017Cd\u017C\xF3wkami; o 21:46 wszyscy podpisali
+      ksi\u0119g\u0119 go\u015Bci i odjechali razem nocnym busem."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: zdjecie-termosu
+    linkedFactId: termos-rakieta
+    content: "Fotografia metalowego pojemnika z p\u0142etwami i sto\u017Ckow\u0105
+      nakr\u0119tk\u0105."
+  - id: program-obserwacji
+    linkedFactId: wega-laser
+    content: "Zalany program, kt\xF3rego pierwsze pole zaczyna si\u0119 liter\u0105
+      W i ma zielony \u015Blad wska\u017Anika."
+  - id: woreczek-guzik
+    linkedFactId: srebrny-guzik
+    content: "Woreczek ze srebrnym guzikiem i szkicem okr\u0105g\u0142ej podstawy
+      mebla."
   minHiddenFacts: 2
-  maxHiddenFacts: 2
+  maxHiddenFacts: 3

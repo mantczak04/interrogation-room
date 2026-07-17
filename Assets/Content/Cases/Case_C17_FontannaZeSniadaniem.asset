@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C17_FontannaZeSniadaniem
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: "Fontanna ze \u015Bniadaniem"
+  crimeDescription: "Kto\u015B nape\u0142ni\u0142 fontann\u0119 przed s\u0105dem
+    p\u0142atkami kukurydzianymi i ustawi\u0142 w niej dwumetrow\u0105 srebrn\u0105
+    \u0142y\u017Ck\u0119."
+  alibiFacts:
+  - id: wejscie-repair-cafe
+    text: "O 18:20 grupa przysz\u0142a z zepsutym tosterem do spo\u0142ecznego warsztatu
+      naprawczego."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: stanowisko-sowa-4
+    text: Przydzielono im stanowisko numer 4 oznaczone rysunkiem sowy.
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: zolte-nauszniki
+    text: "Wolontariusz zak\u0142ada\u0142 \u017C\xF3\u0142te nauszniki przed ka\u017Cdym
+      uruchomieniem tostera."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: jazz-i-bezpiecznik
+    text: "Podczas jazzowej audycji w radiu pr\xF3bne grzanie wybi\u0142o bezpiecznik
+      nad sto\u0142em."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: herbata-w-kubkach
+    text: "Czekaj\u0105c na nowy przew\xF3d, wszyscy pili herbat\u0119 z kubk\xF3w
+      w czerwone kropki."
+    canBeHidden: 0
+    variantTexts:
+    - "Czekaj\u0105c na nowy przew\xF3d, wszyscy pili herbat\u0119 z kubk\xF3w w
+      czerwone kropki."
+    - "Czekaj\u0105c na nowy przew\xF3d, wszyscy pili herbat\u0119 z kubk\xF3w w
+      niebieskie paski."
+    distinctiveDetail: 1
+  - id: naprawa-i-tramwaj
+    text: "Po udanej pr\xF3bie tostera grupa wysz\u0142a razem i odjecha\u0142a tramwajem
+      numer 2."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: karta-stanowiska
+    linkedFactId: stanowisko-sowa-4
+    content: "Karta pracy z sow\u0105 i niepe\u0142nym numerem _4, bez nazwy warsztatu."
+  - id: pokrowiec-nausznikow
+    linkedFactId: zolte-nauszniki
+    content: "Pokrowiec z \u017C\xF3\u0142tymi w\u0142\xF3knami i piktogramem ochrony
+      s\u0142uchu."
+  - id: formularz-bezpiecznika
+    linkedFactId: jazz-i-bezpiecznik
+    content: "Formularz awarii z symbolem grza\u0142ki i notatk\u0105 \u201Eaudycja
+      jazzowa w tle\u201D."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

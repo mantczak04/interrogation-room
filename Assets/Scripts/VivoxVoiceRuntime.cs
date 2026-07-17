@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using InterrogationRoom.Voice;
 using Mirror;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
@@ -42,13 +43,16 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private const string PlayerIdPrefix = "mirror-";
     private const float SessionRequestRetrySeconds = 1f;
     private const float SessionResolutionTimeoutSeconds = 10f;
+    private const float MaxAudibleDistance = 18f;
 
     [Header("Session")]
     [SerializeField] private string channelPrefix = "interrogation-room";
     [SerializeField, Min(0.1f)] private float positionUpdateInterval = 0.3f;
 
     [Header("Playback")]
-    [SerializeField, Min(1f)] private float audibleDistance = 32f;
+    [SerializeField, Min(1f)] private float audibleDistance = 15f;
+    [SerializeField, Min(0.5f)] private float conversationalDistance = 2f;
+    [SerializeField, Min(0.1f)] private float audioFadeIntensity = 1.5f;
     [SerializeField] private LayerMask occlusionMask = ~0;
 
     [Header("UI")]
@@ -76,6 +80,8 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private TaskCompletionSource<string> pendingSessionId;
 
     public VoiceConnectionState ConnectionState { get; private set; } = VoiceConnectionState.WaitingForNetwork;
+
+    private float EffectiveAudibleDistance => Mathf.Min(audibleDistance, MaxAudibleDistance);
 
     public int ActiveAttenuatedSpeakerCount => participantTaps.Values.Count(tap =>
         tap != null &&
@@ -181,15 +187,25 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             };
 
             await VivoxService.Instance.LoginAsync(loginOptions);
+            ApplyMuteState();
 
             VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
             VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
 
             SetConnectionState(VoiceConnectionState.JoiningChannel);
+            int channelAudibleDistance = Mathf.Max(2, Mathf.RoundToInt(EffectiveAudibleDistance));
+            int channelConversationalDistance = Mathf.Clamp(
+                Mathf.RoundToInt(conversationalDistance),
+                1,
+                channelAudibleDistance - 1);
             await VivoxService.Instance.JoinPositionalChannelAsync(
                 activeChannelName,
                 ChatCapability.AudioOnly,
-                new Channel3DProperties());
+                new Channel3DProperties(
+                    channelAudibleDistance,
+                    channelConversationalDistance,
+                    audioFadeIntensity,
+                    AudioFadeModel.InverseByDistance));
 
             VivoxService.Instance.Set3DPosition(localPlayer, activeChannelName);
             nextPositionUpdate = Time.unscaledTime + positionUpdateInterval;
@@ -285,10 +301,14 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         tapObject.transform.SetParent(identity.transform, false);
 
         AudioSource audioSource = tapObject.GetComponent<AudioSource>();
+        float maxDistance = EffectiveAudibleDistance;
         audioSource.spatialBlend = 1f;
-        audioSource.rolloffMode = AudioRolloffMode.Linear;
+        audioSource.rolloffMode = AudioRolloffMode.Custom;
         audioSource.minDistance = 1f;
-        audioSource.maxDistance = audibleDistance;
+        audioSource.maxDistance = maxDistance;
+        audioSource.SetCustomCurve(
+            AudioSourceCurveType.CustomRolloff,
+            VoiceAudibilityModel.BuildDistanceRolloffCurve(conversationalDistance, maxDistance));
 
         VivoxVoiceOcclusion occlusion = tapObject.AddComponent<VivoxVoiceOcclusion>();
         occlusion.Configure(localPlayer.transform, identity.transform, audioSource, occlusionMask);
@@ -403,7 +423,11 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         }
 
         isMuted = !isMuted;
+        ApplyMuteState();
+    }
 
+    private void ApplyMuteState()
+    {
         if (isMuted)
         {
             VivoxService.Instance.MuteInputDevice();
@@ -604,6 +628,9 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private void OnConnectionRecovered()
     {
+        if (VivoxService.Instance.IsLoggedIn)
+            ApplyMuteState();
+
         SetConnectionState(
             VivoxService.Instance.AvailableInputDevices.Count == 0
                 ? VoiceConnectionState.NoInputDevice

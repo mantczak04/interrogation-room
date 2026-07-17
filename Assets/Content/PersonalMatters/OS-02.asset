@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce4e87563487f5479f254de01548595, type: 3}
+  m_Name: OS-02
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.PersonalMatterAsset
+  stableId: OS-02
+  title: "Usu\u0144 kompromituj\u0105cy list"
+  motive: "W kartotece znajduje si\u0119 prywatny list, kt\xF3ry mo\u017Ce zniszczy\u0107
+    wa\u017Cn\u0105 relacj\u0119. Musisz wyj\u0105\u0107 go z akt i schowa\u0107
+    w neutralnym miejscu."
+  steps:
+  - stableStepId: OS-02-koperta
+    description: "Odszukaj opisan\u0105 kopert\u0119 w kartotece."
+    locationHint: "archiwum \u2014 szafki na liter\u0119 K"
+    anchorActionId: osobista-sprawa-przygotuj
+    createsIncident: 0
+  - stableStepId: OS-02-skrytka
+    description: "Wyjmij list z koperty i ukryj go w neutralnej skrytce poza swoj\u0105
+      teczk\u0105."
+    locationHint: "archiwum \u2014 wolna skrytka dokumentowa"
+    anchorActionId: osobista-sprawa-zakoncz
+    createsIncident: 1
+  reservedItemIds:
+  - kompromitujacy-list
+  - koperta-kartoteki

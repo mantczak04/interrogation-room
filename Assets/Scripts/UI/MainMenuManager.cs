@@ -1,5 +1,9 @@
+using InterrogationRoom.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 public class MainMenuManager : MonoBehaviour
 {
@@ -10,12 +14,27 @@ public class MainMenuManager : MonoBehaviour
 
     private void Start()
     {
+        PlayerInputGate.SetUiInputBlocked(true);
         TryOpenPendingSteamLobby();
     }
 
     private void Update()
     {
         TryOpenPendingSteamLobby();
+
+        if (WasEscapePressed() && !SettingsMenu.IsOpen && !SettingsMenu.EscapeConsumedThisFrame)
+        {
+            OpenSettings();
+        }
+    }
+
+    private static bool WasEscapePressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+#else
+        return Input.GetKeyDown(KeyCode.Escape);
+#endif
     }
 
     private void TryOpenPendingSteamLobby()
@@ -43,7 +62,7 @@ public class MainMenuManager : MonoBehaviour
 
     public void OpenSettings()
     {
-        Debug.Log("Settings clicked! (Not implemented yet)");
+        SettingsMenu.EnsureInstance().Open();
     }
 
     public void QuitGame()

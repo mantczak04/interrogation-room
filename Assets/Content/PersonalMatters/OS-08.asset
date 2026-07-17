@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce4e87563487f5479f254de01548595, type: 3}
+  m_Name: OS-08
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.PersonalMatterAsset
+  stableId: OS-08
+  title: "Nadpisz kompromituj\u0105ce nagranie"
+  motive: "Na zabezpieczonej kasecie s\u0142ycha\u0107 rozmow\u0119, kt\xF3ra mo\u017Ce
+    Ci zaszkodzi\u0107. Chcesz zniszczy\u0107 tylko jej najbardziej kompromituj\u0105cy
+    fragment."
+  steps:
+  - stableStepId: OS-08-kaseta
+    description: "Zabierz w\u0142a\u015Bciw\u0105 kaset\u0119 z opisanej p\xF3\u0142ki."
+    locationHint: "archiwum nagra\u0144 \u2014 p\xF3\u0142ka kaset"
+    anchorActionId: osobista-sprawa-przygotuj
+    createsIncident: 1
+  - stableStepId: OS-08-nadpisanie
+    description: "W\u0142\xF3\u017C kaset\u0119 do magnetofonu i nadpisz wskazany
+      fragment."
+    locationHint: "pok\xF3j ods\u0142uchowy \u2014 magnetofon"
+    anchorActionId: osobista-sprawa-zakoncz
+    createsIncident: 1
+  reservedItemIds:
+  - kaseta-kompromitujaca
+  - magnetofon-archiwum

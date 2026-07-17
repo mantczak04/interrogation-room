@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce4e87563487f5479f254de01548595, type: 3}
+  m_Name: OS-09
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.PersonalMatterAsset
+  stableId: OS-09
+  title: Odzyskaj leki
+  motive: "Potrzebujesz w\u0142asnych lek\xF3w, kt\xF3re trafi\u0142y do depozytu.
+    Recepta pozwoli Ci odnale\u017A\u0107 w\u0142a\u015Bciwy, oznaczony schowek."
+  steps:
+  - stableStepId: OS-09-recepta
+    description: "Znajd\u017A recept\u0119 w swojej teczce osobowej."
+    locationHint: "archiwum \u2014 teczki osobowe"
+    anchorActionId: osobista-sprawa-przygotuj
+    createsIncident: 0
+  - stableStepId: OS-09-leki
+    description: "U\u017Cyj danych z recepty, aby otworzy\u0107 oznaczon\u0105 szafk\u0119
+      i zabra\u0107 butelk\u0119 lek\xF3w."
+    locationHint: "magazyn dowod\xF3w \u2014 szafki medyczne"
+    anchorActionId: osobista-sprawa-zakoncz
+    createsIncident: 1
+  reservedItemIds:
+  - recepta-osobista
+  - butelka-lekow

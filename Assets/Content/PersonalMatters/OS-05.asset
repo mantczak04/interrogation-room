@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce4e87563487f5479f254de01548595, type: 3}
+  m_Name: OS-05
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.PersonalMatterAsset
+  stableId: OS-05
+  title: "Odzyskaj rodzinne zdj\u0119cie"
+  motive: "W\u015Br\xF3d zabezpieczonych materia\u0142\xF3w jest jedyna odbitka wa\u017Cnego
+    rodzinnego zdj\u0119cia. Chcesz j\u0105 odzyska\u0107, zanim trafi do akt."
+  steps:
+  - stableStepId: OS-05-pudelko
+    description: "Odszukaj oznaczone pude\u0142ko dowodowe i narusz jego plomb\u0119."
+    locationHint: "magazyn dowod\xF3w \u2014 p\xF3\u0142ka z pude\u0142kami fotograficznymi"
+    anchorActionId: osobista-sprawa-przygotuj
+    createsIncident: 1
+  - stableStepId: OS-05-fotografia
+    description: "Wyjmij rodzinn\u0105 fotografi\u0119 i zostaw pust\u0105 przek\u0142adk\u0119."
+    locationHint: "magazyn dowod\xF3w \u2014 st\xF3\u0142 przegl\u0105dowy"
+    anchorActionId: osobista-sprawa-zakoncz
+    createsIncident: 1
+  reservedItemIds:
+  - rodzinna-fotografia
+  - pudelko-fotograficzne

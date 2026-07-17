@@ -18,7 +18,8 @@ namespace InterrogationRoom.Networking
         PrepareEscape,
         BeginEscape,
         InterruptEscape,
-        CompleteEscape
+        CompleteEscape,
+        PlayerReady
     }
 
     /// <summary>
@@ -48,6 +49,9 @@ namespace InterrogationRoom.Networking
 
         public static RoundIntentMessage ReturnToLobby() =>
             Registered(new RoundIntentMessage { Kind = RoundIntentKind.ReturnToLobby });
+
+        public static RoundIntentMessage PlayerReady() =>
+            Registered(new RoundIntentMessage { Kind = RoundIntentKind.PlayerReady });
 
         public static RoundIntentMessage AdvancePrivateObjective(
             PrivateObjectiveId objectiveId,
@@ -213,7 +217,15 @@ namespace InterrogationRoom.Networking
 
         public double RoundEndsAtNetworkTime;
 
-        public static RoundViewMessage FromView(PlayerRoundView view, double roundEndsAtNetworkTime)
+        /// <summary>Adapter-owned public countdown; 0 outside Przygotowanie.</summary>
+        public double PreparationEndsAtNetworkTime;
+        public int ReadyPlayerCount;
+        public bool SelfReady;
+
+        public static RoundViewMessage FromView(
+            PlayerRoundView view,
+            double roundEndsAtNetworkTime,
+            double preparationEndsAtNetworkTime = 0d)
         {
             RoundMessageSerialization.Register();
             if (view == null)
@@ -258,7 +270,10 @@ namespace InterrogationRoom.Networking
                     ? default
                     : RoundRevealMessage.FromView(view.RoundReveal),
                 HasResult = view.Result != null,
-                RoundEndsAtNetworkTime = Math.Max(0d, roundEndsAtNetworkTime)
+                RoundEndsAtNetworkTime = Math.Max(0d, roundEndsAtNetworkTime),
+                PreparationEndsAtNetworkTime = Math.Max(0d, preparationEndsAtNetworkTime),
+                ReadyPlayerCount = view.ReadyPlayerCount,
+                SelfReady = view.IsReady
             };
 
             if (view.Result != null)
@@ -331,7 +346,9 @@ namespace InterrogationRoom.Networking
                     HasRevealedIncidents ? RevealedIncidents.Select(value => value.ToView()).ToArray() : null,
                     HasAcquiredAlibiClues ? AcquiredAlibiClues.Select(value => value.ToView()).ToArray() : null,
                     HasEscapePlan ? EscapePlan.ToView() : null,
-                    HasRoundReveal ? RoundReveal.ToView() : null);
+                    HasRoundReveal ? RoundReveal.ToView() : null,
+                    ReadyPlayerCount,
+                    SelfReady);
             }
 
             return new PlayerRoundView(
@@ -348,7 +365,9 @@ namespace InterrogationRoom.Networking
                 HasRevealedIncidents ? RevealedIncidents.Select(value => value.ToView()).ToArray() : null,
                 HasAcquiredAlibiClues ? AcquiredAlibiClues.Select(value => value.ToView()).ToArray() : null,
                 HasEscapePlan ? EscapePlan.ToView() : null,
-                HasRoundReveal ? RoundReveal.ToView() : null);
+                HasRoundReveal ? RoundReveal.ToView() : null,
+                ReadyPlayerCount,
+                SelfReady);
         }
 
         private static int[] CopyPlayerIds(System.Collections.Generic.IReadOnlyList<PlayerId> players)
@@ -442,6 +461,7 @@ namespace InterrogationRoom.Networking
                 case RoundIntentKind.StartRound:
                 case RoundIntentKind.EndPreparation:
                 case RoundIntentKind.ReturnToLobby:
+                case RoundIntentKind.PlayerReady:
                     break;
 
                 case RoundIntentKind.AdvancePrivateObjective:
@@ -508,6 +528,7 @@ namespace InterrogationRoom.Networking
                 case RoundIntentKind.StartRound:
                 case RoundIntentKind.EndPreparation:
                 case RoundIntentKind.ReturnToLobby:
+                case RoundIntentKind.PlayerReady:
                     break;
 
                 case RoundIntentKind.AdvancePrivateObjective:
@@ -652,6 +673,9 @@ namespace InterrogationRoom.Networking
             }
 
             writer.WriteDouble(message.RoundEndsAtNetworkTime);
+            writer.WriteDouble(message.PreparationEndsAtNetworkTime);
+            writer.WriteInt(message.ReadyPlayerCount);
+            writer.WriteBool(message.SelfReady);
         }
 
         public static RoundViewMessage ReadRoundView(this NetworkReader reader)
@@ -728,6 +752,9 @@ namespace InterrogationRoom.Networking
             }
 
             message.RoundEndsAtNetworkTime = reader.ReadDouble();
+            message.PreparationEndsAtNetworkTime = reader.ReadDouble();
+            message.ReadyPlayerCount = reader.ReadInt();
+            message.SelfReady = reader.ReadBool();
             return message;
         }
 
@@ -735,9 +762,15 @@ namespace InterrogationRoom.Networking
         {
             writer.WriteString(message.Id);
             writer.WriteByte((byte)message.Kind);
+            writer.WriteString(message.Title);
+            writer.WriteString(message.Motive);
             writer.WriteBool(message.HasCurrentStep);
             if (message.HasCurrentStep)
+            {
                 writer.WriteString(message.CurrentStepId);
+                writer.WriteString(message.CurrentStepDescription);
+                writer.WriteString(message.CurrentStepLocationHint);
+            }
             writer.WriteInt(message.CompletedStepCount);
             writer.WriteInt(message.TotalStepCount);
             writer.WriteBool(message.IsCompleted);
@@ -752,10 +785,16 @@ namespace InterrogationRoom.Networking
             {
                 Id = reader.ReadString(),
                 Kind = (PrivateObjectiveKind)reader.ReadByte(),
+                Title = reader.ReadString(),
+                Motive = reader.ReadString(),
                 HasCurrentStep = reader.ReadBool()
             };
             if (message.HasCurrentStep)
+            {
                 message.CurrentStepId = reader.ReadString();
+                message.CurrentStepDescription = reader.ReadString();
+                message.CurrentStepLocationHint = reader.ReadString();
+            }
             message.CompletedStepCount = reader.ReadInt();
             message.TotalStepCount = reader.ReadInt();
             message.IsCompleted = reader.ReadBool();
@@ -891,9 +930,15 @@ namespace InterrogationRoom.Networking
         private static void WriteEscapePlan(NetworkWriter writer, EscapePlanMessage message)
         {
             writer.WriteString(message.Id);
+            writer.WriteString(message.Title);
+            writer.WriteString(message.Motive);
             writer.WriteBool(message.HasCurrentStep);
             if (message.HasCurrentStep)
+            {
                 writer.WriteString(message.CurrentStepId);
+                writer.WriteString(message.CurrentStepDescription);
+                writer.WriteString(message.CurrentStepLocationHint);
+            }
             writer.WriteInt(message.CompletedCommonStepCount);
             writer.WriteInt(message.TotalCommonStepCount);
             writer.WriteBool(message.IsPrepared);
@@ -908,6 +953,8 @@ namespace InterrogationRoom.Networking
                 writer.WriteString(option.Id);
                 writer.WriteString(option.PreparationStepId);
                 writer.WriteString(option.LocationId);
+                writer.WriteString(option.Description);
+                writer.WriteString(option.LocationHint);
                 writer.WriteBool(option.IsPrepared);
             }
         }
@@ -917,10 +964,16 @@ namespace InterrogationRoom.Networking
             var message = new EscapePlanMessage
             {
                 Id = reader.ReadString(),
+                Title = reader.ReadString(),
+                Motive = reader.ReadString(),
                 HasCurrentStep = reader.ReadBool()
             };
             if (message.HasCurrentStep)
+            {
                 message.CurrentStepId = reader.ReadString();
+                message.CurrentStepDescription = reader.ReadString();
+                message.CurrentStepLocationHint = reader.ReadString();
+            }
             message.CompletedCommonStepCount = reader.ReadInt();
             message.TotalCommonStepCount = reader.ReadInt();
             message.IsPrepared = reader.ReadBool();
@@ -937,6 +990,8 @@ namespace InterrogationRoom.Networking
                     Id = reader.ReadString(),
                     PreparationStepId = reader.ReadString(),
                     LocationId = reader.ReadString(),
+                    Description = reader.ReadString(),
+                    LocationHint = reader.ReadString(),
                     IsPrepared = reader.ReadBool()
                 };
             }

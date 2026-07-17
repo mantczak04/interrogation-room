@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce4e87563487f5479f254de01548595, type: 3}
+  m_Name: OS-15
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.PersonalMatterAsset
+  stableId: OS-15
+  title: "Ukryj kompromituj\u0105c\u0105 fotografi\u0119"
+  motive: "Jedna fotografia mo\u017Ce wywo\u0142a\u0107 skandal niezwi\u0105zany
+    ze Spraw\u0105. Chcesz wyj\u0105\u0107 j\u0105 z materia\u0142\xF3w i pozostawi\u0107
+    neutraln\u0105 odbitk\u0119."
+  steps:
+  - stableStepId: OS-15-fotografia
+    description: "Zabierz kompromituj\u0105ce zdj\u0119cie z koperty dowodowej."
+    locationHint: "magazyn dowod\xF3w \u2014 koperty fotograficzne"
+    anchorActionId: osobista-sprawa-przygotuj
+    createsIncident: 1
+  - stableStepId: OS-15-podmiana
+    description: "W\u0142\xF3\u017C neutraln\u0105 odbitk\u0119 do koperty zamiast
+      orygina\u0142u."
+    locationHint: "magazyn dowod\xF3w \u2014 st\xF3\u0142 przegl\u0105dowy"
+    anchorActionId: osobista-sprawa-zakoncz
+    createsIncident: 1
+  reservedItemIds:
+  - kompromitujaca-fotografia
+  - neutralna-odbitka

@@ -1,4 +1,6 @@
 using System;
+using InterrogationRoom.Gameplay.Items;
+using InterrogationRoom.Gameplay.Minigames;
 using InterrogationRoom.Networking;
 using Mirror;
 using UnityEngine;
@@ -31,8 +33,11 @@ namespace InterrogationRoom.Gameplay.Interaction
         private INetworkInteractable hoveredInteractable;
         private INetworkTimedInteractable activeTimedTarget;
         private NetworkIdentity activeTimedTargetIdentity;
+        private MinigameSpec activeMinigameSpec;
         private double activeTimedEndsAt;
         private bool localTimedInteractionActive;
+        private bool localMinigameInteractionActive;
+        private bool localMinigameCompletionPending;
         private double localTimedInteractionStartedAt;
         private double localTimedInteractionEndsAt;
         private string localTimedInteractionPrompt;
@@ -47,6 +52,8 @@ namespace InterrogationRoom.Gameplay.Interaction
         public string HoveredPrompt => hoveredInteractable?.InteractionPrompt;
         public bool IsMovementLocked => interactionMovementLocked;
         public bool HasActiveTimedInteraction => localTimedInteractionActive;
+        public NetworkCarryableItem HeldItem => NetworkCarryableItem.FindCarriedBy(netIdentity);
+        public bool HasHeldItem => HeldItem != null;
         public string ActiveTimedInteractionPrompt => localTimedInteractionPrompt;
         public float TimedInteractionProgress01 => !localTimedInteractionActive
             ? 0f
@@ -91,9 +98,23 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
+            if (localMinigameCompletionPending && NetworkTime.time >= localTimedInteractionEndsAt)
+            {
+                localMinigameCompletionPending = false;
+                CmdCompleteMinigame();
+            }
+
+            if (!PlayerController.CursorReleased &&
+                !localTimedInteractionActive &&
+                WasDropPressed() &&
+                (playerController == null || (!playerController.IsDead && !playerController.IsSeated)))
+            {
+                CmdDropCarriedItem();
+            }
+
             if (PlayerController.CursorReleased)
             {
-                if (localTimedInteractionActive)
+                if (localTimedInteractionActive && !localMinigameInteractionActive)
                 {
                     ClearLocalTimedInteraction();
                     CmdCancelTimedInteraction();
@@ -105,7 +126,7 @@ namespace InterrogationRoom.Gameplay.Interaction
 
             RefreshHoveredTarget();
 
-            if (localTimedInteractionActive && WasInteractReleased())
+            if (localTimedInteractionActive && !localMinigameInteractionActive && WasInteractReleased())
             {
                 ClearLocalTimedInteraction();
                 CmdCancelTimedInteraction();
@@ -282,6 +303,52 @@ namespace InterrogationRoom.Gameplay.Interaction
             CancelActiveTimedInteractionServer(TimedInteractionCancellationReason.Explicit);
         }
 
+        [Command]
+        private void CmdDropCarriedItem()
+        {
+            NetworkCarryableItem.FindCarriedBy(netIdentity)?.DropServer();
+        }
+
+        [Command]
+        private void CmdCompleteMinigame()
+        {
+            TryCompleteMinigameServer();
+        }
+
+        [Server]
+        private bool TryCompleteMinigameServer()
+        {
+            if (activeTimedTarget == null || activeMinigameSpec == null ||
+                NetworkTime.time < activeTimedEndsAt)
+            {
+                return false;
+            }
+
+            NetworkIdentity actor = GetComponent<NetworkIdentity>();
+            bool completed = activeTimedTarget.TryCompleteInteractionServer(actor);
+            if (!completed)
+            {
+                activeTimedTarget.CancelInteractionServer(
+                    actor,
+                    TimedInteractionCancellationReason.CompletionRejected);
+            }
+            EndActiveTimedInteractionServer(completed);
+            return completed;
+        }
+
+        [Command]
+        private void CmdFailMinigame()
+        {
+            if (activeTimedTarget == null || activeMinigameSpec == null)
+                return;
+
+            activeMinigameSpec.ApplyFailureConsequenceServer(netIdentity);
+            activeTimedTarget.CancelInteractionServer(
+                netIdentity,
+                TimedInteractionCancellationReason.MinigameFailed);
+            EndActiveTimedInteractionServer(false);
+        }
+
         [Server]
         private void TryBeginOrCompleteInstantServer(
             NetworkIdentity targetIdentity,
@@ -306,14 +373,23 @@ namespace InterrogationRoom.Gameplay.Interaction
 
                 activeTimedTarget = timedInteractable;
                 activeTimedTargetIdentity = targetIdentity;
-                activeTimedEndsAt = NetworkTime.time + Math.Max(0.05d, timedInteractable.InteractionDuration);
+                Component timedComponent = timedInteractable as Component;
+                activeMinigameSpec = timedComponent != null
+                    ? timedComponent.GetComponent<MinigameSpec>()
+                    : null;
+                float minimumDuration = activeMinigameSpec != null
+                    ? activeMinigameSpec.MinimumPlausibleDuration
+                    : timedInteractable.InteractionDuration;
+                activeTimedEndsAt = NetworkTime.time + Math.Max(0.05d, minimumDuration);
                 interactionMovementLocked = true;
                 SetInteractionAnimation(true);
                 TargetBeginTimedInteraction(
                     connectionToClient,
+                    targetIdentity.netId,
                     activeTimedEndsAt,
-                    timedInteractable.InteractionDuration,
-                    timedInteractable.InteractionPrompt);
+                    minimumDuration,
+                    timedInteractable.InteractionPrompt,
+                    activeMinigameSpec != null);
                 return;
             }
 
@@ -334,6 +410,7 @@ namespace InterrogationRoom.Gameplay.Interaction
 
             Component targetComponent = activeTimedTarget as Component;
             if (targetComponent == null || activeTimedTargetIdentity == null ||
+                !activeTimedTarget.HasActiveInteractor ||
                 playerController == null || playerController.IsDead || playerController.IsSeated)
             {
                 CancelActiveTimedInteractionServer(TimedInteractionCancellationReason.PerformerUnavailable);
@@ -349,7 +426,7 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
-            if (NetworkTime.time < activeTimedEndsAt)
+            if (activeMinigameSpec != null || NetworkTime.time < activeTimedEndsAt)
                 return;
 
             bool completed = activeTimedTarget.TryCompleteInteractionServer(netIdentity);
@@ -379,24 +456,50 @@ namespace InterrogationRoom.Gameplay.Interaction
         {
             activeTimedTarget = null;
             activeTimedTargetIdentity = null;
+            activeMinigameSpec = null;
             activeTimedEndsAt = 0d;
             interactionMovementLocked = false;
             SetInteractionAnimation(false);
-            if (connectionToClient != null)
-                TargetEndTimedInteraction(connectionToClient, completed);
+            NetworkIdentity identity = GetComponent<NetworkIdentity>();
+            NetworkConnectionToClient targetConnection = identity != null
+                ? identity.connectionToClient
+                : null;
+            if (targetConnection != null)
+                TargetEndTimedInteraction(targetConnection, completed);
         }
 
         [TargetRpc]
         private void TargetBeginTimedInteraction(
             NetworkConnection target,
+            uint targetNetId,
             double endsAt,
             float duration,
-            string prompt)
+            string prompt,
+            bool hasMinigame)
         {
             localTimedInteractionActive = true;
+            localMinigameInteractionActive = hasMinigame;
+            localMinigameCompletionPending = false;
             localTimedInteractionEndsAt = endsAt;
             localTimedInteractionStartedAt = endsAt - Math.Max(0.05d, duration);
             localTimedInteractionPrompt = prompt;
+
+            if (!hasMinigame)
+                return;
+
+            MinigameSpec spec = ResolveClientMinigameSpec(targetNetId);
+            if (spec == null)
+            {
+                ClearLocalTimedInteraction();
+                CmdCancelTimedInteraction();
+                return;
+            }
+
+            MinigamePanelHost.Open(
+                spec,
+                OnLocalMinigameSucceeded,
+                OnLocalMinigameFailed,
+                OnLocalMinigameCancelled);
         }
 
         [TargetRpc]
@@ -405,12 +508,55 @@ namespace InterrogationRoom.Gameplay.Interaction
             ClearLocalTimedInteraction();
         }
 
+        private void OnLocalMinigameSucceeded()
+        {
+            if (!localMinigameInteractionActive || localMinigameCompletionPending)
+                return;
+
+            if (NetworkTime.time < localTimedInteractionEndsAt)
+            {
+                localMinigameCompletionPending = true;
+                return;
+            }
+
+            CmdCompleteMinigame();
+        }
+
+        private void OnLocalMinigameFailed()
+        {
+            if (!localMinigameInteractionActive)
+                return;
+
+            ClearLocalTimedInteraction();
+            CmdFailMinigame();
+        }
+
+        private void OnLocalMinigameCancelled()
+        {
+            if (!localMinigameInteractionActive)
+                return;
+
+            ClearLocalTimedInteraction();
+            CmdCancelTimedInteraction();
+        }
+
+        private static MinigameSpec ResolveClientMinigameSpec(uint targetNetId)
+        {
+            return targetNetId != 0 &&
+                   NetworkClient.spawned.TryGetValue(targetNetId, out NetworkIdentity identity)
+                ? identity.GetComponent<MinigameSpec>()
+                : null;
+        }
+
         private void ClearLocalTimedInteraction()
         {
             localTimedInteractionActive = false;
+            localMinigameInteractionActive = false;
+            localMinigameCompletionPending = false;
             localTimedInteractionStartedAt = 0d;
             localTimedInteractionEndsAt = 0d;
             localTimedInteractionPrompt = null;
+            MinigamePanelHost.Close(notifyCancellation: false);
         }
 
         private void OnInteractionMovementLockedChanged(bool _, bool locked)
@@ -516,6 +662,15 @@ namespace InterrogationRoom.Gameplay.Interaction
         private static bool IsFinite(float value)
         {
             return !float.IsNaN(value) && !float.IsInfinity(value);
+        }
+
+        private static bool WasDropPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return Keyboard.current != null && Keyboard.current.gKey.wasPressedThisFrame;
+#else
+            return Input.GetKeyDown(KeyCode.G);
+#endif
         }
 
         private static bool WasInteractPressed()

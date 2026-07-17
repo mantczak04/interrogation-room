@@ -50,6 +50,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         public Vector3 InteractionPosition => interactionPoint != null
             ? interactionPoint.position
             : transform.position + transform.up;
+        public Vector3 PortalPosition => InteractionPosition;
         public string InteractionPrompt => isOpen ? openPrompt : closedPrompt;
 
         private void Awake()

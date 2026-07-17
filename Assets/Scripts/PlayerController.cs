@@ -4,6 +4,7 @@ using InterrogationRoom.Gameplay.Characters;
 using InterrogationRoom.Gameplay.Interaction;
 using InterrogationRoom.Gameplay.Weapons;
 using InterrogationRoom.Networking;
+using InterrogationRoom.Settings;
 using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
@@ -215,12 +216,23 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort
             }
         }
 
+        GameSettings settings = GameSettingsService.Current;
+        settings.SetMouseSensitivityFallback(mouseSensitivity);
+        mouseSensitivity = settings.MouseSensitivity;
+        settings.Changed += ApplyGameSettings;
+
         SetCursorReleased(false);
     }
 
     public override void OnStopLocalPlayer()
     {
+        GameSettingsService.Current.Changed -= ApplyGameSettings;
         SetCursorReleased(true);
+    }
+
+    private void ApplyGameSettings()
+    {
+        mouseSensitivity = GameSettingsService.Current.MouseSensitivity;
     }
 
     private void Update()
@@ -230,7 +242,10 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort
             return;
         }
 
-        if (WasCursorTogglePressed() && !CenteredNetworkManagerHUD.HandlesEscape)
+        if (WasCursorTogglePressed()
+            && !CenteredNetworkManagerHUD.HandlesEscape
+            && !SettingsMenu.IsOpen
+            && !SettingsMenu.EscapeConsumedThisFrame)
         {
             SetCursorReleased(!CursorReleased);
         }

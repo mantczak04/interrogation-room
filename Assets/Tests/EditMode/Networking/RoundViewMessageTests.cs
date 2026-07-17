@@ -26,7 +26,14 @@ namespace InterrogationRoom.Networking.Tests
                     new AlibiFact("f0", "Spotkaliśmy się o dziewiętnastej.", false),
                     new AlibiFact("f1", "Kelner pomylił rachunek.", true),
                     new AlibiFact("f2", "Na chwilę zgasło światło.", true),
-                    new AlibiFact("f3", "Wróciliśmy razem tramwajem.", false)
+                    new AlibiFact("f3", "Wróciliśmy razem tramwajem.", false),
+                    new AlibiFact("f4", "Przed wyjściem zamówiliśmy herbatę.", false),
+                    new AlibiFact(
+                        "f5",
+                        "Kelner miał zieloną muchę.",
+                        false,
+                        new[] { "Kelner miał zieloną muchę.", "Kelner miał granatową muchę." },
+                        distinctiveDetail: true)
                 },
                 minHiddenFacts: 1,
                 maxHiddenFacts: 1);
@@ -99,6 +106,48 @@ namespace InterrogationRoom.Networking.Tests
             Assert.That(message.ToView().Alibi, Is.Null);
             Assert.That(message.ToView().PrivateObjective, Is.Not.Null,
                 "Reconnect restores the owner's current Cel but never the hidden Alibi.");
+        }
+
+        [Test]
+        public void FromView_RedeliveredAfterAllReadyEndPreparation_CarriesNoAlibiOrReadiness()
+        {
+            var engine = StartedEngine();
+            var suspect = Players.First(player => engine.ViewFor(player).Role != RoundRole.Detective);
+            foreach (var player in Players)
+                Assert.That(engine.Handle(new RoundCommand.MarkPlayerReady(player)).Accepted, Is.True);
+            engine.Handle(new RoundCommand.EndPreparation());
+
+            var restored = RoundTrip(RoundViewMessage.FromView(
+                engine.ViewFor(suspect),
+                roundEndsAtNetworkTime: 190d));
+
+            Assert.That(restored.HasAlibi, Is.False);
+            Assert.That(restored.AlibiEntries, Is.Empty);
+            Assert.That(restored.ToView().Alibi, Is.Null,
+                "The Alibi is irrecoverable after Przygotowanie, even on re-delivery.");
+            Assert.That(restored.PreparationEndsAtNetworkTime, Is.Zero);
+            Assert.That(restored.ReadyPlayerCount, Is.Zero);
+            Assert.That(restored.SelfReady, Is.False);
+        }
+
+        [Test]
+        public void MirrorSerialization_RoundTripsPreparationCountdownAndPublicReadiness()
+        {
+            var engine = StartedEngine();
+            var suspect = Players.First(player => engine.ViewFor(player).Role != RoundRole.Detective);
+            Assert.That(engine.Handle(new RoundCommand.MarkPlayerReady(suspect)).Accepted, Is.True);
+
+            var restored = RoundTrip(RoundViewMessage.FromView(
+                engine.ViewFor(suspect),
+                roundEndsAtNetworkTime: 0d,
+                preparationEndsAtNetworkTime: 141.25d));
+            var view = restored.ToView();
+
+            Assert.That(restored.PreparationEndsAtNetworkTime, Is.EqualTo(141.25d));
+            Assert.That(restored.ReadyPlayerCount, Is.EqualTo(1));
+            Assert.That(restored.SelfReady, Is.True);
+            Assert.That(view.ReadyPlayerCount, Is.EqualTo(1));
+            Assert.That(view.IsReady, Is.True);
         }
 
         [Test]

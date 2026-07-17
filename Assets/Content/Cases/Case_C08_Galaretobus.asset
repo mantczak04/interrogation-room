@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C08_Galaretobus
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: Galaretobus
+  crimeDescription: "Kto\u015B nape\u0142ni\u0142 autobus miejski zielon\u0105 galaret\u0105,
+    zatopi\u0142 w niej ogromn\u0105 marchew i wystawi\u0142 pojazd przed ratuszem
+    jako \u201Enajwi\u0119ksz\u0105 zimn\u0105 n\xF3\u017Ck\u0119 \u015Bwiata\u201D."
+  alibiFacts:
+  - id: fartuchy-w-pracowni
+    text: "Grupa przysz\u0142a na ostatnie zaj\u0119cia do pracowni ceramicznej,
+      gdzie instruktorka rozda\u0142a im szare fartuchy."
+    canBeHidden: 0
+    variantTexts:
+    - "Grupa przysz\u0142a na ostatnie zaj\u0119cia do pracowni ceramicznej, gdzie
+      instruktorka rozda\u0142a im szare fartuchy."
+    - "Grupa przysz\u0142a na ostatnie zaj\u0119cia do pracowni ceramicznej, gdzie
+      instruktorka rozda\u0142a im be\u017Cowe fartuchy."
+    distinctiveDetail: 1
+  - id: ryby-z-gliny
+    text: "Ka\u017Cdy ulepi\u0142 z bia\u0142ej gliny ryb\u0119."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: prognoza-i-szkliwo
+    text: "Podczas prognozy pogody w radiu niebieskie szkliwo rozla\u0142o si\u0119
+      obok sto\u0142u."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: zolta-gabka
+    text: "Wytarli rozlane szkliwo du\u017C\u0105 \u017C\xF3\u0142t\u0105 g\u0105bk\u0105."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: druga-polka-pieca
+    text: "Instruktorka ustawi\u0142a prace na drugiej p\xF3\u0142ce pieca."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: podpisane-etykiety
+    text: "Przed wyj\u015Bciem wszyscy podpisali papierowe etykiety inicja\u0142ami."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: szkice-ryb
+    linkedFactId: ryby-z-gliny
+    content: "Kartka z podobnymi sylwetkami p\u0142etw i odciskami bia\u0142ej gliny."
+  - id: odcisk-w-szkliwie
+    linkedFactId: prognoza-i-szkliwo
+    content: "Nak\u0142adka z odciskiem podeszwy przeci\u0119tym kobaltow\u0105 smug\u0105."
+  - id: karta-zaladunku
+    linkedFactId: druga-polka-pieca
+    content: "Karta za\u0142adunku z glinianymi \u0142uskami zaznaczonymi na drugim
+      poziomie."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

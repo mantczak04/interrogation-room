@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce4e87563487f5479f254de01548595, type: 3}
+  m_Name: OS-07
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.PersonalMatterAsset
+  stableId: OS-07
+  title: "Odzyskaj pier\u015Bcionek"
+  motive: "Pier\u015Bcionek zosta\u0142 zdeponowany razem z rzeczami osobistymi.
+    Nie chcesz ryzykowa\u0107, \u017Ce zniknie w policyjnym magazynie."
+  steps:
+  - stableStepId: OS-07-klucz
+    description: "Zabierz ma\u0142y klucz z opisanej koperty depozytowej."
+    locationHint: "magazyn dowod\xF3w \u2014 przegr\xF3dki z kluczami"
+    anchorActionId: osobista-sprawa-przygotuj
+    createsIncident: 1
+  - stableStepId: OS-07-pierscionek
+    description: "Otw\xF3rz w\u0142a\u015Bciw\u0105 kasetk\u0119 i zabierz pier\u015Bcionek."
+    locationHint: "magazyn dowod\xF3w \u2014 kasetki rzeczy osobistych"
+    anchorActionId: osobista-sprawa-zakoncz
+    createsIncident: 1
+  reservedItemIds:
+  - klucz-kasetki-pierscionek
+  - pierscionek-osobisty

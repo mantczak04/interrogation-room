@@ -22,7 +22,13 @@ namespace InterrogationRoom.UI.Tests
 
             Assert.That(state.AlibiVisible, Is.False);
             Assert.That(state.AlibiText, Is.Null);
-            Assert.That(state.EndPreparationVisible, Is.True);
+            Assert.That(state.PreparationInstructionText, Does.Contain("Przesłuchaj każdego Podejrzanego"));
+            Assert.That(state.PreparationInstructionText, Does.Contain("jedną Egzekucję"));
+            Assert.That(state.PreparationInstructionText, Does.Not.Contain("Alibi składa"),
+                "The Detective must not learn the private Alibi's shape.");
+            Assert.That(state.ReadyButtonVisible, Is.True,
+                "Every player, including the Detektyw, gets the Gotowy button.");
+            Assert.That(state.ReadyButtonEnabled, Is.True);
             Assert.That(state.ExecutionVisible, Is.False);
         }
 
@@ -41,9 +47,10 @@ namespace InterrogationRoom.UI.Tests
                 isHost: false);
 
             Assert.That(state.AlibiVisible, Is.True);
-            Assert.That(state.AlibiText, Does.Contain("Jawny fakt."));
-            Assert.That(state.AlibiText, Does.Contain("UKRYTY FAKT"));
-            Assert.That(state.EndPreparationVisible, Is.False);
+            Assert.That(state.AlibiText, Does.Contain("1. Jawny fakt."));
+            Assert.That(state.AlibiText, Does.Contain("2. [Brak w Twojej wersji Alibi]"));
+            Assert.That(state.PreparationInstructionText, Does.Contain("nie będzie można jej ponownie otworzyć"));
+            Assert.That(state.ReadyButtonVisible, Is.True);
         }
 
         [Test]
@@ -72,6 +79,77 @@ namespace InterrogationRoom.UI.Tests
         }
 
         [Test]
+        public void BuildState_AfterPreparation_ClearsAlibiEvenIfViewStillCarriesOne()
+        {
+            var alibi = new AlibiView(new[] { new AlibiEntry("f1", false, "Jawny fakt.") });
+
+            var roundState = RoundPresenter.BuildState(
+                View(RoundPhase.Round, RoundRole.Innocent, alibi),
+                remainingSeconds: 60f,
+                isHost: false);
+            var finishedState = RoundPresenter.BuildState(
+                View(RoundPhase.Finished, RoundRole.Innocent, alibi,
+                    result: new PlayerResultView(false, true, false, RoundEndCause.TimeExpired, null)),
+                remainingSeconds: 0f,
+                isHost: false);
+
+            Assert.That(roundState.AlibiVisible, Is.False);
+            Assert.That(roundState.AlibiText, Is.Null);
+            Assert.That(roundState.ReadyButtonVisible, Is.False);
+            Assert.That(finishedState.AlibiVisible, Is.False);
+            Assert.That(finishedState.AlibiText, Is.Null);
+        }
+
+        [Test]
+        public void BuildState_Preparation_RendersReadyCountAndIrreversibleSelfReadiness()
+        {
+            var readyView = new PlayerRoundView(
+                new PlayerId(1),
+                RoundPhase.Preparation,
+                RoundRole.Innocent,
+                "Ktoś przemalował pomnik.",
+                new AlibiView(new[] { new AlibiEntry("f1", false, "Jawny fakt.") }),
+                secretObjective: null,
+                result: null,
+                Players,
+                new PlayerId(1),
+                readyPlayerCount: 2,
+                isReady: true);
+
+            var state = RoundPresenter.BuildState(
+                readyView,
+                remainingSeconds: 0f,
+                isHost: false,
+                unlimitedTime: false,
+                preparationRemainingSeconds: 12.4f);
+
+            Assert.That(state.ReadyButtonVisible, Is.True);
+            Assert.That(state.ReadyButtonEnabled, Is.False,
+                "Gotowość is irreversible — the button stays disabled after clicking.");
+            Assert.That(state.ReadyCountText, Is.EqualTo("Gotowi: 2/4"));
+            Assert.That(state.PreparationTimerVisible, Is.True);
+            Assert.That(state.PreparationRemainingSeconds, Is.EqualTo(12.4f));
+        }
+
+        [Test]
+        public void CalculatePreparationRemainingSeconds_CountsDownOnlyDuringPreparation()
+        {
+            Assert.That(
+                RoundPresenter.CalculatePreparationRemainingSeconds(130.5d, 100.25d, RoundPhase.Preparation),
+                Is.EqualTo(30.25f));
+            Assert.That(
+                RoundPresenter.CalculatePreparationRemainingSeconds(130.5d, 200d, RoundPhase.Preparation),
+                Is.Zero);
+            Assert.That(
+                RoundPresenter.CalculatePreparationRemainingSeconds(0d, 100d, RoundPhase.Preparation),
+                Is.Zero,
+                "A developer scenario has no preparation deadline to render.");
+            Assert.That(
+                RoundPresenter.CalculatePreparationRemainingSeconds(130.5d, 100.25d, RoundPhase.Round),
+                Is.Zero);
+        }
+
+        [Test]
         public void CalculateRemainingSeconds_UsesSharedNetworkDeadlineWithoutAccumulatingTicks()
         {
             Assert.That(
@@ -95,6 +173,15 @@ namespace InterrogationRoom.UI.Tests
             bool expected)
         {
             Assert.That(RoundPresenter.IsUnlimitedRound(phase, deadline), Is.EqualTo(expected));
+        }
+
+        [TestCase(60f, false)]
+        [TestCase(59.99f, true)]
+        [TestCase(1f, true)]
+        [TestCase(0f, false)]
+        public void IsCriticalRoundTime_UsesApprovedFinalMinuteWindow(float remaining, bool expected)
+        {
+            Assert.That(RoundPresenter.IsCriticalRoundTime(remaining), Is.EqualTo(expected));
         }
 
         [Test]
@@ -172,6 +259,9 @@ namespace InterrogationRoom.UI.Tests
             Assert.That(state.ResultText, Does.Contain("Przegrana"));
             Assert.That(state.ResultText, Does.Contain("Egzekucja"));
             Assert.That(state.ResultText, Does.Contain("Gracz 2"));
+            Assert.That(state.ResultVerdictText, Is.EqualTo("PRZEGRANA"));
+            Assert.That(state.ResultReasonText, Is.EqualTo("Egzekucja została wykonana na Tobie."));
+            Assert.That(state.ResultIsLoss, Is.True);
         }
 
         [Test]
@@ -202,7 +292,44 @@ namespace InterrogationRoom.UI.Tests
             Assert.That(state.PrivatePanelVisible, Is.True);
             Assert.That(state.PrivateTitle, Does.Contain("Rejestr"));
             Assert.That(state.PrivateText, Does.Contain("01:05"));
-            Assert.That(state.PrivateText, Does.Contain("archive-alarm"));
+            Assert.That(state.PrivateText, Does.Contain("Archive alarm"));
+            Assert.That(state.PrivateText, Does.Not.Contain("Gracz"));
+        }
+
+        [Test]
+        public void BuildState_DetectiveRegistry_ListsNewestIncidentFirstWithoutTechnicalIds()
+        {
+            var view = new PlayerRoundView(
+                new PlayerId(1),
+                RoundPhase.Round,
+                RoundRole.Detective,
+                "Publiczne Przestępstwo",
+                alibi: null,
+                privateObjective: null,
+                result: null,
+                Players,
+                new PlayerId(1),
+                incidentRegistry: new[]
+                {
+                    new IncidentRegistryEntryView(
+                        new IncidentId("older-id"),
+                        IncidentKind.Quiet,
+                        new IncidentEffectId("otwarte-akta"),
+                        new IncidentLocationId("archiwum"),
+                        new IncidentTimestamp(15000)),
+                    new IncidentRegistryEntryView(
+                        new IncidentId("newer-id"),
+                        IncidentKind.Loud,
+                        new IncidentEffectId("alarm-drzwi"),
+                        new IncidentLocationId("magazyn-dowodow"),
+                        new IncidentTimestamp(65000))
+                });
+
+            RoundUiState state = RoundPresenter.BuildState(view, 120f, isHost: false);
+
+            Assert.That(state.PrivateText.IndexOf("01:05"), Is.LessThan(state.PrivateText.IndexOf("00:15")));
+            Assert.That(state.PrivateText, Does.Contain("Magazyn dowodow"));
+            Assert.That(state.PrivateText, Does.Not.Contain("newer-id"));
             Assert.That(state.PrivateText, Does.Not.Contain("Gracz"));
         }
 
@@ -230,10 +357,10 @@ namespace InterrogationRoom.UI.Tests
 
             RoundUiState state = RoundPresenter.BuildState(view, 120f, isHost: false);
 
-            Assert.That(state.PrivateText, Does.Contain("wrobienie-podloz"));
-            Assert.That(state.PrivateText, Does.Contain("1/2"));
+            Assert.That(state.PrivateStep, Does.Contain("wrobienie-podloz"));
+            Assert.That(state.PrivateProgress, Does.Contain("1/2"));
             Assert.That(state.PrivateText, Does.Contain("Gracz 3"));
-            Assert.That(state.PrivateText, Does.Not.Contain("osobista-sprawa-zakoncz"));
+            Assert.That(state.PrivateStep, Does.Not.Contain("osobista-sprawa-zakoncz"));
         }
 
         [Test]
@@ -304,10 +431,15 @@ namespace InterrogationRoom.UI.Tests
 
             Assert.That(state.ResultText, Does.Contain("Ucieczka Winnego"));
             Assert.That(state.ResultText, Does.Contain("Cel Wrobienia: Gracz 3"));
-            Assert.That(state.ResultText, Does.Contain("hidden-fact"));
+            Assert.That(state.ResultText, Does.Contain("Interpretacyjny Trop"));
             Assert.That(state.ResultText, Does.Contain("autor Gracz 2"));
-            Assert.That(state.ResultText, Does.Contain("escape-exit-a"));
+            Assert.That(state.ResultText, Does.Contain("przygotowany punkt Ucieczki"));
+            Assert.That(state.ResultText, Does.Not.Contain("hidden-fact"));
+            Assert.That(state.ResultText, Does.Not.Contain("escape-exit-a"));
             Assert.That(state.ResultText, Does.Not.Contain("Pełne Alibi"));
+            Assert.That(state.ResultVerdictText, Is.EqualTo("WYGRANA"));
+            Assert.That(state.ResultReasonText, Is.EqualTo("Winny ukończył Ucieczkę."));
+            Assert.That(state.ResultIsLoss, Is.False);
             Assert.That(state.ReturnToLobbyVisible, Is.True);
         }
 

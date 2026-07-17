@@ -16,6 +16,9 @@ namespace InterrogationRoom.Networking
     [DisallowMultipleComponent]
     public sealed class NetworkRoundCoordinator : MonoBehaviour
     {
+        public const float PreparationLimitSeconds = 30f;
+        public const float AllReadyPreparationSeconds = 3f;
+
         private static readonly AlibiClueId DeveloperPhysicalClueId =
             new AlibiClueId("paragon-cztery-kompoty");
 
@@ -26,6 +29,10 @@ namespace InterrogationRoom.Networking
         [SerializeField]
         [Tooltip("Additional hand-authored Sprawy available to the host in the lobby.")]
         private List<CaseAsset> additionalCases = new List<CaseAsset>();
+
+        [SerializeField]
+        [Tooltip("Authorowane Osobiste Sprawy losowane i przypisywane Niewinnym przez RoundEngine.")]
+        private List<PersonalMatterAsset> personalMatterAssets = new List<PersonalMatterAsset>();
 
         [SerializeField, Min(1f)]
         [Tooltip("Limit Rundy measured authoritatively by the server, in seconds.")]
@@ -46,10 +53,12 @@ namespace InterrogationRoom.Networking
         private int _lastBroadcastLobbyPlayerCount = -1;
         private double _roundDeadline;
         private double _roundStartedAtNetworkTime;
+        private double _preparationDeadline;
         private RoundDeveloperPlan _developerPlan;
 
         public PlayerRoundView CurrentView { get; private set; }
         public double CurrentRoundEndsAtNetworkTime { get; private set; }
+        public double CurrentPreparationEndsAtNetworkTime { get; private set; }
         public bool IsLocalHost => NetworkServer.activeHost;
         public int ConnectedPlayerCount => _connectionsByPlayerId.Count;
         public int PublicLobbyPlayerCount => NetworkServer.active
@@ -58,7 +67,6 @@ namespace InterrogationRoom.Networking
         public bool AllowsPhysicalRoundActions => NetworkServer.active
             ? _phase == RoundPhase.Round
             : CurrentView?.Phase == RoundPhase.Round;
-        public int SelectedCaseIndex { get; private set; }
         public bool HostAllowsSecretObjective => _hostAllowsSecretObjective;
         public static bool DeveloperToolsAvailable => Application.isEditor || Debug.isDebugBuild;
         public RoundDeveloperPlan ActiveDeveloperPlan => DeveloperToolsAvailable ? _developerPlan : null;
@@ -75,16 +83,13 @@ namespace InterrogationRoom.Networking
             ConnectedPlayerCount,
             _hostAllowsSecretObjective);
 
-        /// <summary>Public lobby data only. Never exposes Alibi facts or hidden-fact flags.</summary>
-        public IReadOnlyList<string> AvailableCaseTitles => AvailableCases()
-            .Select(asset => string.IsNullOrWhiteSpace(asset.title) ? asset.name : asset.title.Trim())
-            .ToArray();
-
         public event Action<PlayerRoundView, double> ViewReceived;
         public event Action<string> IntentRejected;
         public event Action LobbyResetReceived;
         public event Action ServerRoundReset;
         public event Action<NetworkIdentity> ServerExecutionAccepted;
+        public event Action ServerGameplayRoundStarted;
+        public event Action ServerGameplayRoundEnded;
 
         private void Awake()
         {
@@ -115,6 +120,7 @@ namespace InterrogationRoom.Networking
             _clientHandlersRegistered = false;
             CurrentView = null;
             CurrentRoundEndsAtNetworkTime = 0d;
+            CurrentPreparationEndsAtNetworkTime = 0d;
             _publicLobbyPlayerCount = 0;
         }
 
@@ -128,19 +134,14 @@ namespace InterrogationRoom.Networking
             SendIntent(RoundIntentMessage.EndPreparation());
         }
 
+        public void RequestPlayerReady()
+        {
+            SendIntent(RoundIntentMessage.PlayerReady());
+        }
+
         public void RequestReturnToLobby()
         {
             SendIntent(RoundIntentMessage.ReturnToLobby());
-        }
-
-        public bool TrySelectCase(int index)
-        {
-            var cases = AvailableCases();
-            if (!IsLocalHost || _phase != RoundPhase.Lobby || index < 0 || index >= cases.Count)
-                return false;
-
-            SelectedCaseIndex = index;
-            return true;
         }
 
         public bool TrySetSecretObjectiveEnabled(bool enabled)
@@ -167,21 +168,25 @@ namespace InterrogationRoom.Networking
                 return RejectDeveloper("Return to the lobby before starting another developer scenario.", out rejectionReason);
 
             var cases = AvailableCases();
-            if (cases.Count == 0 || SelectedCaseIndex < 0 || SelectedCaseIndex >= cases.Count)
-                return RejectDeveloper("Select a valid CaseAsset first.", out rejectionReason);
+            var caseIndex = SelectRandomValidCaseIndex(cases, _ => 0);
+            if (caseIndex < 0)
+                return RejectDeveloper("No configured CaseAsset passes validation.", out rejectionReason);
             if (!HasCompletePhysicalRoster())
                 return RejectDeveloper("Wait until every connected player has spawned its physical Runda components.", out rejectionReason);
 
             CaseDefinition definition;
             try
             {
-                definition = cases[SelectedCaseIndex].ToDefinition();
+                definition = cases[caseIndex].ToDefinition();
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[NetworkRoundCoordinator] Developer CaseAsset is invalid: {exception}", cases[SelectedCaseIndex]);
+                Debug.LogError($"[NetworkRoundCoordinator] Developer CaseAsset is invalid: {exception}", cases[caseIndex]);
                 return RejectDeveloper("The selected CaseAsset is invalid.", out rejectionReason);
             }
+
+            if (!TryBuildPersonalMatterPool(out var personalMatters, out var personalMatterError))
+                return RejectDeveloper(personalMatterError, out rejectionReason);
 
             if (!RoundDeveloperScenarioPlanner.TryCreate(
                     definition,
@@ -201,7 +206,8 @@ namespace InterrogationRoom.Networking
                     definition,
                     plan.Players,
                     plan.Seed,
-                    plan.SecretObjectiveCount)))
+                    plan.SecretObjectiveCount,
+                    personalMatters: personalMatters)))
             {
                 return true;
             }
@@ -550,13 +556,16 @@ namespace InterrogationRoom.Networking
         private void StartRound(NetworkConnectionToClient sender)
         {
             var cases = AvailableCases();
-            if (cases.Count == 0 || SelectedCaseIndex < 0 || SelectedCaseIndex >= cases.Count)
+            var caseIndex = SelectRandomValidCaseIndex(
+                cases,
+                count => UnityEngine.Random.Range(0, count));
+            if (caseIndex < 0)
             {
-                Reject(sender, "The host has not selected a CaseAsset.");
+                Reject(sender, "No configured CaseAsset passes validation.");
                 return;
             }
 
-            var selectedCase = cases[SelectedCaseIndex];
+            var selectedCase = cases[caseIndex];
 
             CaseDefinition definition;
             try
@@ -567,6 +576,12 @@ namespace InterrogationRoom.Networking
             {
                 Debug.LogError($"[NetworkRoundCoordinator] Selected CaseAsset is invalid: {exception}", selectedCase);
                 Reject(sender, "The selected CaseAsset is invalid.");
+                return;
+            }
+
+            if (!TryBuildPersonalMatterPool(out var personalMatters, out var personalMatterError))
+            {
+                Reject(sender, personalMatterError);
                 return;
             }
 
@@ -585,7 +600,8 @@ namespace InterrogationRoom.Networking
                 definition,
                 players,
                 seed,
-                EffectiveSecretObjectiveCount));
+                EffectiveSecretObjectiveCount,
+                personalMatters: personalMatters));
         }
 
         private void ReturnToLobby(NetworkConnectionToClient sender)
@@ -613,6 +629,8 @@ namespace InterrogationRoom.Networking
             _hostAllowsSecretObjective = true;
             _roundDeadline = 0d;
             _roundStartedAtNetworkTime = 0d;
+            _preparationDeadline = 0d;
+            ServerGameplayRoundEnded?.Invoke();
             ServerRoundReset?.Invoke();
 
             foreach (var connection in _connectionsByPlayerId.Values)
@@ -622,6 +640,87 @@ namespace InterrogationRoom.Networking
             }
 
             BroadcastLobbyState(force: true);
+        }
+
+        /// <summary>
+        /// The Sprawa is drawn by the server, never picked by the host. Only
+        /// cases whose authoring validation is clean can be drawn; returns -1
+        /// when no case qualifies.
+        /// </summary>
+        public static int SelectRandomValidCaseIndex(
+            IReadOnlyList<CaseAsset> cases,
+            Func<int, int> pickIndex)
+        {
+            var validIndices = new List<int>();
+            for (var index = 0; index < cases.Count; index++)
+            {
+                if (cases[index] != null && cases[index].Validate().Count == 0)
+                    validIndices.Add(index);
+            }
+
+            if (validIndices.Count == 0)
+                return -1;
+
+            var picked = pickIndex(validIndices.Count);
+            if (picked < 0 || picked >= validIndices.Count)
+                return -1;
+
+            return validIndices[picked];
+        }
+
+        private bool TryBuildPersonalMatterPool(
+            out IReadOnlyList<PersonalMatterDefinition> definitions,
+            out string rejectionReason)
+        {
+            var converted = new List<PersonalMatterDefinition>();
+            var configured = personalMatterAssets ?? new List<PersonalMatterAsset>();
+            var invalid = false;
+            foreach (var asset in configured)
+            {
+                if (asset == null)
+                {
+                    Debug.LogError("[NetworkRoundCoordinator] Personal matter list contains a missing asset reference.", this);
+                    invalid = true;
+                    continue;
+                }
+
+                var errors = asset.Validate();
+                if (errors.Count > 0)
+                {
+                    foreach (var error in errors)
+                    {
+                        Debug.LogError(
+                            $"[NetworkRoundCoordinator] PersonalMatterAsset '{asset.name}': {error}",
+                            asset);
+                    }
+                    invalid = true;
+                    continue;
+                }
+
+                try
+                {
+                    converted.Add(asset.ToDefinition());
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(
+                        $"[NetworkRoundCoordinator] PersonalMatterAsset '{asset.name}' is invalid: {exception}",
+                        asset);
+                    invalid = true;
+                }
+            }
+
+            if (converted.Select(definition => definition.Id).Distinct().Count() != converted.Count)
+            {
+                Debug.LogError("[NetworkRoundCoordinator] Personal matter pool contains duplicate stable ids.", this);
+                invalid = true;
+            }
+
+            definitions = converted;
+            rejectionReason = invalid
+                ? "At least one configured PersonalMatterAsset is invalid."
+                : null;
+            return !invalid;
         }
 
         private IReadOnlyList<CaseAsset> AvailableCases()
@@ -655,7 +754,23 @@ namespace InterrogationRoom.Networking
                     Debug.LogError($"[NetworkRoundCoordinator] CaseAsset '{authoredCase.name}': {error}", authoredCase);
             }
 
-            SelectedCaseIndex = Mathf.Clamp(SelectedCaseIndex, 0, cases.Count - 1);
+            var configuredPersonalMatters = personalMatterAssets ?? new List<PersonalMatterAsset>();
+            foreach (var personalMatter in configuredPersonalMatters)
+            {
+                if (personalMatter == null)
+                {
+                    Debug.LogError("[NetworkRoundCoordinator] Personal matter list contains a missing asset reference.", this);
+                    continue;
+                }
+
+                foreach (var error in personalMatter.Validate())
+                {
+                    Debug.LogError(
+                        $"[NetworkRoundCoordinator] PersonalMatterAsset '{personalMatter.name}': {error}",
+                        personalMatter);
+                }
+            }
+
         }
 
         private bool Submit(NetworkConnectionToClient sender, RoundCommand command)
@@ -671,16 +786,30 @@ namespace InterrogationRoom.Networking
             _phase = transition.State.Phase;
             if (command is RoundCommand.StartRound)
             {
+                _preparationDeadline = IsDeveloperRoundUnlimited
+                    ? 0d
+                    : NetworkTime.time + PreparationLimitSeconds;
                 ConfigureRoundWeapons();
+            }
+            else if (command is RoundCommand.MarkPlayerReady
+                     && transition.State.ReadyPlayerCount == transition.State.Players.Count)
+            {
+                _preparationDeadline = ShortenedPreparationDeadline(
+                    _preparationDeadline,
+                    NetworkTime.time,
+                    AllReadyPreparationSeconds);
             }
             else if (command is RoundCommand.EndPreparation)
             {
+                _preparationDeadline = 0d;
                 _roundStartedAtNetworkTime = NetworkTime.time;
                 _roundDeadline = _roundStartedAtNetworkTime + roundLimitSeconds;
+                ServerGameplayRoundStarted?.Invoke();
             }
             else if (_phase == RoundPhase.Finished)
             {
                 _roundDeadline = 0d;
+                ServerGameplayRoundEnded?.Invoke();
             }
 
             DeliverAllViews();
@@ -816,6 +945,16 @@ namespace InterrogationRoom.Networking
 
         private void UpdateRoundTimer()
         {
+            if (ShouldEndPreparation(
+                    _phase,
+                    IsDeveloperRoundUnlimited,
+                    NetworkTime.time,
+                    _preparationDeadline))
+            {
+                Submit(null, new RoundCommand.EndPreparation());
+                return;
+            }
+
             if (!ShouldExpireRound(
                     _phase,
                     IsDeveloperRoundUnlimited,
@@ -834,6 +973,24 @@ namespace InterrogationRoom.Networking
             phase == RoundPhase.Round &&
             !developerRoundUnlimited &&
             now >= deadline;
+
+        /// <summary>Missing Gotowość never blocks the Runda: the deadline always ends Przygotowanie.</summary>
+        public static bool ShouldEndPreparation(
+            RoundPhase phase,
+            bool developerRoundUnlimited,
+            double now,
+            double deadline) =>
+            phase == RoundPhase.Preparation &&
+            !developerRoundUnlimited &&
+            deadline > 0d &&
+            now >= deadline;
+
+        /// <summary>All-ready only shortens the deadline; it is never extended.</summary>
+        public static double ShortenedPreparationDeadline(
+            double deadline,
+            double now,
+            double allReadySeconds) =>
+            deadline <= 0d ? deadline : Math.Min(deadline, now + allReadySeconds);
 
         private void DeliverAllViews()
         {
@@ -854,6 +1011,9 @@ namespace InterrogationRoom.Networking
                 view,
                 _phase == RoundPhase.Round && !IsDeveloperRoundUnlimited
                     ? _roundDeadline
+                    : 0d,
+                _phase == RoundPhase.Preparation && !IsDeveloperRoundUnlimited
+                    ? _preparationDeadline
                     : 0d));
         }
 
@@ -911,6 +1071,7 @@ namespace InterrogationRoom.Networking
         {
             CurrentView = message.ToView();
             CurrentRoundEndsAtNetworkTime = message.RoundEndsAtNetworkTime;
+            CurrentPreparationEndsAtNetworkTime = message.PreparationEndsAtNetworkTime;
             ViewReceived?.Invoke(CurrentView, CurrentRoundEndsAtNetworkTime);
         }
 
@@ -923,6 +1084,7 @@ namespace InterrogationRoom.Networking
         {
             CurrentView = null;
             CurrentRoundEndsAtNetworkTime = 0d;
+            CurrentPreparationEndsAtNetworkTime = 0d;
             LobbyResetReceived?.Invoke();
         }
 
@@ -947,6 +1109,7 @@ namespace InterrogationRoom.Networking
             _lastBroadcastLobbyPlayerCount = -1;
             _roundDeadline = 0d;
             _roundStartedAtNetworkTime = 0d;
+            _preparationDeadline = 0d;
         }
 
         private PlayerId ResolveDeveloperIncidentAuthor(PlayerId physicalPlayer)

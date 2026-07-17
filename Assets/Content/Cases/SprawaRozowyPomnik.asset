@@ -13,44 +13,61 @@ MonoBehaviour:
   m_Name: SprawaRozowyPomnik
   m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
   title: "R\xF3\u017Cowy pomnik burmistrza"
-  crimeDescription: "Wczoraj wieczorem kto\u015B przemalowa\u0142 pomnik burmistrza
-    na r\xF3\u017Cowo i przyklei\u0142 mu w\u0105sy z waty cukrowej. Sprawca dzia\u0142a\u0142
-    w czasie, gdy ca\u0142a grupa by\u0142a razem na kolacji."
+  crimeDescription: "Kto\u015B przemalowa\u0142 pomnik burmistrza na r\xF3\u017Cowo
+    i przyklei\u0142 mu w\u0105sy z waty cukrowej, gdy ca\u0142a grupa by\u0142a
+    razem na kolacji."
   alibiFacts:
   - id: spotkanie-pizzeria
     text: "O 19:00 wszyscy spotkali si\u0119 w pizzerii \u201EU Grubego\u201D przy
       rynku."
     canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
   - id: trzy-pizze
-    text: "Zam\xF3wili\u015Bmy trzy pizze: hawajsk\u0105, capriccios\u0119 i podw\xF3jny
+    text: "Zam\xF3wili trzy pizze: hawajsk\u0105, capriccios\u0119 i podw\xF3jny
       ser."
     canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
   - id: bledny-rachunek
-    text: "Kelner pomyli\u0142 rachunek \u2014 doliczy\u0142 cztery kompoty, kt\xF3rych
+    text: "Kelner pomyli\u0142 rachunek i doliczy\u0142 cztery kompoty, kt\xF3rych
       nikt nie zamawia\u0142."
     canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
   - id: awaria-swiatla
     text: "Oko\u0142o 19:40 na kilka minut zgas\u0142o \u015Bwiat\u0142o w ca\u0142ym
       lokalu."
     canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
   - id: dowcip-kucharza
     text: "Kucharz opowiedzia\u0142 dowcip o stra\u017Caku, z kt\xF3rego nikt si\u0119
       nie za\u015Bmia\u0142."
     canBeHidden: 1
-  - id: rzutki-deser
-    text: "Po kolacji grali\u015Bmy w rzutki; zwyci\u0119zca dosta\u0142 darmowy
-      deser."
+    variantTexts:
+    - "Kucharz opowiedzia\u0142 dowcip o stra\u017Caku, z kt\xF3rego nikt si\u0119
+      nie za\u015Bmia\u0142."
+    - "Kucharz opowiedzia\u0142 dowcip o policjancie, z kt\xF3rego nikt si\u0119
+      nie za\u015Bmia\u0142."
+    distinctiveDetail: 1
+  - id: wspolny-powrot
+    text: "Po 21:00 wszyscy wyszli razem, min\u0119li patrol stra\u017Cy miejskiej
+      i doszli do przystanku przy fontannie."
     canBeHidden: 0
-  - id: wyjscie-przystanek
-    text: "Wyszli\u015Bmy po 21:00 i razem doszli\u015Bmy do przystanku przy fontannie."
-    canBeHidden: 0
-  - id: patrol-strazy
-    text: "W drodze powrotnej min\u0119li\u015Bmy patrol stra\u017Cy miejskiej."
-    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
   alibiClues:
   - id: paragon-cztery-kompoty
     linkedFactId: bledny-rachunek
-    content: "Zmi\u0119ty paragon z czterema kompotami dopisanymi innym charakterem
-      pisma."
+    content: "Paragon z czterema kompotami dopisanymi do rachunku, mimo \u017Ce nikt
+      ich nie zamawia\u0142."
+  - id: paragon-trzy-pizze
+    linkedFactId: trzy-pizze
+    content: "Naderwany paragon z pozycjami HAW, CAP i 2\xD7SER."
+  - id: kartka-kucharza
+    linkedFactId: dowcip-kucharza
+    content: "Kartka kucharza z he\u0142mem stra\u017Cackim i skre\u015Blonym zako\u0144czeniem
+      \u017Cartu."
   minHiddenFacts: 2
   maxHiddenFacts: 3

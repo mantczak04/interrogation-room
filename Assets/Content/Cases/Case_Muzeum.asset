@@ -16,20 +16,53 @@ MonoBehaviour:
   crimeDescription: "Kto\u015B zamieni\u0142 woskow\u0105 figur\u0119 burmistrza
     na gigantyczny ser."
   alibiFacts:
-  - text: "O 20:10 grupa wesz\u0142a do muzeum bocznym wej\u015Bciem przy szatni."
+  - id: boczne-wejscie
+    text: "O 20:10 grupa wesz\u0142a do muzeum bocznym wej\u015Bciem przy szatni."
     canBeHidden: 0
-  - text: "Przewodniczka mia\u0142a czerwony parasol, mimo \u017Ce nie pada\u0142o."
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: parasol-przewodniczki
+    text: "Przewodniczka mia\u0142a czerwony parasol, mimo \u017Ce nie pada\u0142o."
     canBeHidden: 1
-  - text: "W sali zegar\xF3w rozleg\u0142 si\u0119 alarm dok\u0142adnie o 20:24."
+    variantTexts:
+    - "Przewodniczka mia\u0142a czerwony parasol, mimo \u017Ce nie pada\u0142o."
+    - "Przewodniczka mia\u0142a turkusowy parasol, mimo \u017Ce nie pada\u0142o."
+    distinctiveDetail: 1
+  - id: alarm-zegarow
+    text: "W sali zegar\xF3w rozleg\u0142 si\u0119 alarm dok\u0142adnie o 20:24."
     canBeHidden: 1
-  - text: "Pan Leon upu\u015Bci\u0142 bilet obok gabloty z mechaniczn\u0105 kaczk\u0105."
-    canBeHidden: 1
-  - text: "Grupa zrobi\u0142a zdj\u0119cie przy szkielecie wieloryba w papierowej
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: bilet-przy-kaczce
+    text: "Pan Leon upu\u015Bci\u0142 bilet obok gabloty z mechaniczn\u0105 kaczk\u0105."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: zdjecie-wieloryba
+    text: "Grupa zrobi\u0142a zdj\u0119cie przy szkielecie wieloryba w papierowej
       koronie."
     canBeHidden: 1
-  - text: "Kustosz pocz\u0119stowa\u0142 wszystkich mi\u0119towymi cukierkami."
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: cukierki-i-wyjscie
+    text: "Kustosz pocz\u0119stowa\u0142 wszystkich mi\u0119towymi cukierkami; o
+      20:41 grupa wysz\u0142a przez sklep i razem wsiad\u0142a do autobusu naprzeciw
+      muzeum."
     canBeHidden: 0
-  - text: "O 20:41 wszyscy wyszli razem przez sklep z pami\u0105tkami."
-    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: kwit-parasola
+    linkedFactId: parasol-przewodniczki
+    content: "Kwit szatni z czerwonym parasolem i such\u0105 piecz\u0105tk\u0105
+      pogodow\u0105."
+  - id: log-alarmu
+    linkedFactId: alarm-zegarow
+    content: "Papierowy log z godzin\u0105 20:24, ikon\u0105 dzwonka i nieczytelnym
+      kodem sali."
+  - id: negatyw-wieloryba
+    linkedFactId: zdjecie-wieloryba
+    content: "Negatyw z \u017Cebrami wielkiego szkieletu, papierowym z\u0119bem korony
+      i sylwetkami bez twarzy."
   minHiddenFacts: 2
-  maxHiddenFacts: 2
+  maxHiddenFacts: 3

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using InterrogationRoom.Domain;
+using InterrogationRoom.Gameplay.Items;
 using InterrogationRoom.Networking;
 using Mirror;
 using UnityEngine;
@@ -30,8 +31,12 @@ namespace InterrogationRoom.Gameplay.Interaction
             new List<NetworkEscapeExitAction>();
         private readonly List<QuietIncidentDiscoveryProbe> discoveryProbes =
             new List<QuietIncidentDiscoveryProbe>();
+        private readonly List<NetworkCarryableItem> carryableItems =
+            new List<NetworkCarryableItem>();
+        private readonly List<NetworkItemSlot> itemSlots =
+            new List<NetworkItemSlot>();
 
-        public int BoundActionCount => timedActions.Count;
+        public int BoundActionCount => timedActions.Count + itemSlots.Count;
 
         private void Reset()
         {
@@ -80,6 +85,8 @@ namespace InterrogationRoom.Gameplay.Interaction
             clueActions.AddRange(root.GetComponentsInChildren<NetworkAlibiClueAction>(true));
             escapeExits.AddRange(root.GetComponentsInChildren<NetworkEscapeExitAction>(true));
             discoveryProbes.AddRange(root.GetComponentsInChildren<QuietIncidentDiscoveryProbe>(true));
+            carryableItems.AddRange(root.GetComponentsInChildren<NetworkCarryableItem>(true));
+            itemSlots.AddRange(root.GetComponentsInChildren<NetworkItemSlot>(true));
 
             foreach (NetworkObjectiveWorldAction action in objectiveActions)
             {
@@ -98,6 +105,8 @@ namespace InterrogationRoom.Gameplay.Interaction
             }
             foreach (QuietIncidentDiscoveryProbe probe in discoveryProbes)
                 probe.DiscoveryCandidateServer += OnQuietDiscoveryCandidateServer;
+            foreach (NetworkItemSlot slot in itemSlots)
+                slot.CompletedServer += OnItemPlacedServer;
         }
 
         private void UnsubscribeActions()
@@ -130,6 +139,11 @@ namespace InterrogationRoom.Gameplay.Interaction
                 if (probe != null)
                     probe.DiscoveryCandidateServer -= OnQuietDiscoveryCandidateServer;
             }
+            foreach (NetworkItemSlot slot in itemSlots)
+            {
+                if (slot != null)
+                    slot.CompletedServer -= OnItemPlacedServer;
+            }
 
             timedActions.Clear();
             objectiveActions.Clear();
@@ -137,32 +151,41 @@ namespace InterrogationRoom.Gameplay.Interaction
             clueActions.Clear();
             escapeExits.Clear();
             discoveryProbes.Clear();
+            carryableItems.Clear();
+            itemSlots.Clear();
         }
 
         private void OnObjectiveActionCompletedServer(NetworkInteractionCompletion completion)
         {
-            var action = completion.Target != null
-                ? completion.Target.GetComponent<NetworkObjectiveWorldAction>()
-                : null;
-            bool accepted;
+            bool accepted = TrySubmitObjectiveCompletion(completion);
+            if (!accepted && completion.Target != null)
+            {
+                completion.Target.GetComponent<NetworkObjectiveWorldAction>()
+                    ?.ReleaseActorCompletionServer(completion.Actor);
+            }
+        }
+
+        private void OnItemPlacedServer(NetworkInteractionCompletion completion)
+        {
+            TrySubmitObjectiveCompletion(completion);
+        }
+
+        private bool TrySubmitObjectiveCompletion(NetworkInteractionCompletion completion)
+        {
             if (IsEscapePreparationStep(completion.PayloadId))
             {
-                accepted = coordinator.TryPreparePhysicalEscape(
+                bool accepted = coordinator.TryPreparePhysicalEscape(
                     completion.Actor,
                     EscapePlanDefinitions.Prototype.Id.Value,
                     completion.PayloadId);
                 if (accepted)
                     AuthorizePreparedExitRetry(completion.PayloadId);
-            }
-            else
-            {
-                accepted = coordinator.TryAdvancePhysicalObjective(
-                    completion.Actor,
-                    completion.PayloadId);
+                return accepted;
             }
 
-            if (!accepted)
-                action?.ReleaseActorCompletionServer(completion.Actor);
+            return coordinator.TryAdvancePhysicalObjective(
+                completion.Actor,
+                completion.PayloadId);
         }
 
         private void OnIncidentRaisedServer(PhysicalIncidentSignal signal)
@@ -253,6 +276,10 @@ namespace InterrogationRoom.Gameplay.Interaction
 
             foreach (NetworkTimedInteractable action in timedActions)
                 action.ResetInteractionStateServer();
+            foreach (NetworkItemSlot slot in itemSlots)
+                slot.ResetInteractionStateServer();
+            foreach (NetworkCarryableItem item in carryableItems)
+                item.ResetInteractionStateServer();
             foreach (QuietIncidentDiscoveryProbe probe in discoveryProbes)
                 probe.ResetDiscoveryStateServer();
         }

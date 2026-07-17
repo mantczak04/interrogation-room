@@ -88,6 +88,40 @@ namespace InterrogationRoom.Networking.Tests
         }
 
         [Test]
+        public void MapperAcceptsPlayerReadyForTheAuthenticatedSenderOnly()
+        {
+            var sender = new PlayerId(42);
+
+            Assert.That(
+                RoundIntentMapper.TryMap(
+                    RoundIntentMessage.PlayerReady(),
+                    sender,
+                    new IncidentTimestamp(0),
+                    out var command,
+                    out var reason),
+                Is.True);
+            Assert.That(reason, Is.Null);
+            var markReady = command as RoundCommand.MarkPlayerReady;
+            Assert.That(markReady, Is.Not.Null);
+            Assert.That(markReady.Player, Is.EqualTo(sender),
+                "Gotowość is always attributed to the sender connection, never a payload identity.");
+        }
+
+        [Test]
+        public void MirrorSerialization_RoundTripsPlayerReadyIntent()
+        {
+            RoundIntentMessage restored;
+            using (var writer = NetworkWriterPool.Get())
+            {
+                writer.Write(RoundIntentMessage.PlayerReady());
+                using (var reader = NetworkReaderPool.Get(writer.ToArraySegment()))
+                    restored = reader.Read<RoundIntentMessage>();
+            }
+
+            Assert.That(restored.Kind, Is.EqualTo(RoundIntentKind.PlayerReady));
+        }
+
+        [Test]
         public void MirrorSerialization_RoundTripsEveryPhysicalIntentPayload()
         {
             var messages = new[]

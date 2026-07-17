@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using InterrogationRoom.Domain;
 using InterrogationRoom.Networking;
@@ -30,7 +29,12 @@ namespace InterrogationRoom.UI
         public string CrimeText { get; }
         public bool AlibiVisible { get; }
         public string AlibiText { get; }
-        public bool EndPreparationVisible { get; }
+        public string PreparationInstructionText { get; }
+        public bool ReadyButtonVisible { get; }
+        public bool ReadyButtonEnabled { get; }
+        public string ReadyCountText { get; }
+        public bool PreparationTimerVisible { get; }
+        public float PreparationRemainingSeconds { get; }
         public bool TimerVisible { get; }
         public float RemainingSeconds { get; }
         public bool UnlimitedTime { get; }
@@ -38,8 +42,15 @@ namespace InterrogationRoom.UI
         public IReadOnlyList<ExecutionTargetView> ExecutionTargets { get; }
         public bool PrivatePanelVisible { get; }
         public string PrivateTitle { get; }
+        public string PrivateMotive { get; }
+        public string PrivateStep { get; }
+        public string PrivateLocation { get; }
+        public string PrivateProgress { get; }
         public string PrivateText { get; }
         public bool ResultVisible { get; }
+        public string ResultVerdictText { get; }
+        public string ResultReasonText { get; }
+        public bool ResultIsLoss { get; }
         public string ResultText { get; }
         public bool ReturnToLobbyVisible { get; }
 
@@ -49,7 +60,12 @@ namespace InterrogationRoom.UI
             string crimeText,
             bool alibiVisible,
             string alibiText,
-            bool endPreparationVisible,
+            string preparationInstructionText,
+            bool readyButtonVisible,
+            bool readyButtonEnabled,
+            string readyCountText,
+            bool preparationTimerVisible,
+            float preparationRemainingSeconds,
             bool timerVisible,
             float remainingSeconds,
             bool unlimitedTime,
@@ -57,8 +73,15 @@ namespace InterrogationRoom.UI
             IReadOnlyList<ExecutionTargetView> executionTargets,
             bool privatePanelVisible,
             string privateTitle,
+            string privateMotive,
+            string privateStep,
+            string privateLocation,
+            string privateProgress,
             string privateText,
             bool resultVisible,
+            string resultVerdictText,
+            string resultReasonText,
+            bool resultIsLoss,
             string resultText,
             bool returnToLobbyVisible)
         {
@@ -67,7 +90,12 @@ namespace InterrogationRoom.UI
             CrimeText = crimeText;
             AlibiVisible = alibiVisible;
             AlibiText = alibiText;
-            EndPreparationVisible = endPreparationVisible;
+            PreparationInstructionText = preparationInstructionText;
+            ReadyButtonVisible = readyButtonVisible;
+            ReadyButtonEnabled = readyButtonEnabled;
+            ReadyCountText = readyCountText;
+            PreparationTimerVisible = preparationTimerVisible;
+            PreparationRemainingSeconds = preparationRemainingSeconds;
             TimerVisible = timerVisible;
             RemainingSeconds = remainingSeconds;
             UnlimitedTime = unlimitedTime;
@@ -75,8 +103,15 @@ namespace InterrogationRoom.UI
             ExecutionTargets = executionTargets;
             PrivatePanelVisible = privatePanelVisible;
             PrivateTitle = privateTitle;
+            PrivateMotive = privateMotive;
+            PrivateStep = privateStep;
+            PrivateLocation = privateLocation;
+            PrivateProgress = privateProgress;
             PrivateText = privateText;
             ResultVisible = resultVisible;
+            ResultVerdictText = resultVerdictText;
+            ResultReasonText = resultReasonText;
+            ResultIsLoss = resultIsLoss;
             ResultText = resultText;
             ReturnToLobbyVisible = returnToLobbyVisible;
         }
@@ -95,7 +130,9 @@ namespace InterrogationRoom.UI
 
         private PlayerRoundView _view;
         private double _roundEndsAtNetworkTime;
+        private double _preparationEndsAtNetworkTime;
         private VisualElement _lobbyPanel;
+        private VisualElement _root;
         private VisualElement _preparationPanel;
         private VisualElement _hudPanel;
         private VisualElement _resultPanel;
@@ -105,22 +142,34 @@ namespace InterrogationRoom.UI
         private Label _hudCrimeLabel;
         private VisualElement _alibiSection;
         private Label _alibiLabel;
+        private Label _preparationInstructionLabel;
+        private Label _preparationTimerLabel;
+        private Label _readyCountLabel;
+        private Button _readyButton;
         private Label _timerLabel;
         private VisualElement _privatePanel;
+        private VisualElement _privateContent;
+        private Button _privateToggleButton;
         private Label _privateTitleLabel;
+        private Label _privateMotiveLabel;
+        private Label _privateStepLabel;
+        private Label _privateLocationLabel;
+        private Label _privateProgressLabel;
         private Label _privateLabel;
         private Label _resultLabel;
+        private Label _resultVerdictLabel;
+        private Label _resultReasonLabel;
         private Label _rejectionLabel;
         private Button _startButton;
-        private DropdownField _caseSelection;
         private Label _playerCountLabel;
         private Toggle _secretObjectiveToggle;
         private Label _secretObjectiveSummary;
-        private Button _endPreparationButton;
         private Button _returnToLobbyButton;
         private bool _lobbyMenuVisible;
         private bool _developerMenuOpen;
         private bool _unlimitedRound;
+        private bool _privatePanelExpanded = true;
+        private RoundPhase? _lastRenderedPhase;
 
         private void Reset()
         {
@@ -148,6 +197,7 @@ namespace InterrogationRoom.UI
                 return;
             }
 
+            ConfigurePanelScaling(uiDocument.panelSettings);
             BindVisualTree();
             _rejectionLabel.text = string.Empty;
             SetVisible(_rejectionLabel, false);
@@ -155,9 +205,10 @@ namespace InterrogationRoom.UI
             coordinator.IntentRejected += OnIntentRejected;
             coordinator.LobbyResetReceived += OnLobbyResetReceived;
             _startButton.clicked += OnStartClicked;
-            _caseSelection.RegisterValueChangedCallback(OnCaseSelectionChanged);
             _secretObjectiveToggle.RegisterValueChangedCallback(OnSecretObjectiveChanged);
-            _endPreparationButton.clicked += OnEndPreparationClicked;
+            _readyButton.clicked += OnReadyClicked;
+            _privateToggleButton.clicked += TogglePrivatePanel;
+            _root.RegisterCallback<KeyDownEvent>(OnRootKeyDown);
             _returnToLobbyButton.clicked += OnReturnToLobbyClicked;
 
             if (coordinator.CurrentView != null)
@@ -176,12 +227,14 @@ namespace InterrogationRoom.UI
             }
             if (_startButton != null)
                 _startButton.clicked -= OnStartClicked;
-            if (_caseSelection != null)
-                _caseSelection.UnregisterValueChangedCallback(OnCaseSelectionChanged);
             if (_secretObjectiveToggle != null)
                 _secretObjectiveToggle.UnregisterValueChangedCallback(OnSecretObjectiveChanged);
-            if (_endPreparationButton != null)
-                _endPreparationButton.clicked -= OnEndPreparationClicked;
+            if (_readyButton != null)
+                _readyButton.clicked -= OnReadyClicked;
+            if (_privateToggleButton != null)
+                _privateToggleButton.clicked -= TogglePrivatePanel;
+            if (_root != null)
+                _root.UnregisterCallback<KeyDownEvent>(OnRootKeyDown);
             if (_returnToLobbyButton != null)
                 _returnToLobbyButton.clicked -= OnReturnToLobbyClicked;
         }
@@ -194,11 +247,21 @@ namespace InterrogationRoom.UI
                 return;
             }
 
+            if (_view.Phase == RoundPhase.Preparation)
+            {
+                _preparationTimerLabel.text = FormatTimer(CalculatePreparationRemainingSeconds(
+                    _preparationEndsAtNetworkTime,
+                    NetworkTime.time,
+                    _view.Phase));
+                return;
+            }
+
             if (_view.Phase == RoundPhase.Round)
             {
                 if (_unlimitedRound)
                 {
                     _timerLabel.text = "∞";
+                    _timerLabel.EnableInClassList("timer--critical", false);
                     return;
                 }
 
@@ -207,6 +270,7 @@ namespace InterrogationRoom.UI
                     NetworkTime.time,
                     _view.Phase);
                 _timerLabel.text = FormatTimer(remaining);
+                _timerLabel.EnableInClassList("timer--critical", IsCriticalRoundTime(remaining));
             }
         }
 
@@ -221,6 +285,17 @@ namespace InterrogationRoom.UI
             return (float)Math.Max(0d, roundEndsAtNetworkTime - currentNetworkTime);
         }
 
+        public static float CalculatePreparationRemainingSeconds(
+            double preparationEndsAtNetworkTime,
+            double currentNetworkTime,
+            RoundPhase phase)
+        {
+            if (phase != RoundPhase.Preparation || preparationEndsAtNetworkTime <= 0d)
+                return 0f;
+
+            return (float)Math.Max(0d, preparationEndsAtNetworkTime - currentNetworkTime);
+        }
+
         public static bool ShouldReleaseCursor(
             RoundPhase phase,
             bool developerMenuOpen,
@@ -229,6 +304,20 @@ namespace InterrogationRoom.UI
 
         public static bool IsUnlimitedRound(RoundPhase phase, double roundEndsAtNetworkTime) =>
             phase == RoundPhase.Round && roundEndsAtNetworkTime <= 0d;
+
+        public static bool IsCriticalRoundTime(float remainingSeconds) =>
+            remainingSeconds > 0f && remainingSeconds < 60f;
+
+        private static void ConfigurePanelScaling(PanelSettings panelSettings)
+        {
+            if (panelSettings == null)
+                return;
+
+            panelSettings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+            panelSettings.referenceResolution = new Vector2Int(1920, 1080);
+            panelSettings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+            panelSettings.match = 1f;
+        }
 
         public void SetLobbyMenuVisible(bool visible)
         {
@@ -248,13 +337,22 @@ namespace InterrogationRoom.UI
             PlayerRoundView view,
             float remainingSeconds,
             bool isHost,
-            bool unlimitedTime = false)
+            bool unlimitedTime = false,
+            float preparationRemainingSeconds = 0f)
         {
             if (view == null)
                 throw new ArgumentNullException(nameof(view));
 
-            var alibiVisible = view.Phase == RoundPhase.Preparation && view.Alibi != null;
-            BuildPrivatePanel(view, out string privateTitle, out string privateText);
+            var preparation = view.Phase == RoundPhase.Preparation;
+            var alibiVisible = preparation && view.Alibi != null;
+            BuildPrivatePanel(
+                view,
+                out string privateTitle,
+                out string privateMotive,
+                out string privateStep,
+                out string privateLocation,
+                out string privateProgress,
+                out string privateText);
 
             return new RoundUiState(
                 view.Phase,
@@ -262,7 +360,12 @@ namespace InterrogationRoom.UI
                 view.CrimeDescription,
                 alibiVisible,
                 alibiVisible ? FormatAlibi(view.Alibi) : null,
-                view.Phase == RoundPhase.Preparation && isHost,
+                preparation ? FormatPreparationInstruction(view.Role) : null,
+                preparation,
+                preparation && !view.IsReady,
+                preparation ? $"Gotowi: {view.ReadyPlayerCount}/{view.Players.Count}" : null,
+                preparation && preparationRemainingSeconds > 0f,
+                Mathf.Max(0f, preparationRemainingSeconds),
                 view.Phase == RoundPhase.Round,
                 Mathf.Max(0f, remainingSeconds),
                 unlimitedTime,
@@ -270,8 +373,15 @@ namespace InterrogationRoom.UI
                 Array.Empty<ExecutionTargetView>(),
                 view.Phase == RoundPhase.Round,
                 privateTitle,
+                privateMotive,
+                privateStep,
+                privateLocation,
+                privateProgress,
                 privateText,
                 view.Phase == RoundPhase.Finished,
+                view.Phase == RoundPhase.Finished ? FormatResultVerdict(view.Result) : null,
+                view.Phase == RoundPhase.Finished ? FormatResultReason(view.Role, view.Result) : null,
+                view.Phase == RoundPhase.Finished && view.Result != null && !view.Result.Won,
                 view.Phase == RoundPhase.Finished ? FormatResult(view.Result, view.RoundReveal) : null,
                 view.Phase == RoundPhase.Finished && isHost);
         }
@@ -280,6 +390,7 @@ namespace InterrogationRoom.UI
         {
             _view = view;
             _roundEndsAtNetworkTime = Math.Max(0d, roundEndsAtNetworkTime);
+            _preparationEndsAtNetworkTime = Math.Max(0d, coordinator.CurrentPreparationEndsAtNetworkTime);
             _unlimitedRound = IsUnlimitedRound(view.Phase, _roundEndsAtNetworkTime);
             _rejectionLabel.text = string.Empty;
             SetVisible(_rejectionLabel, false);
@@ -287,11 +398,21 @@ namespace InterrogationRoom.UI
                 view,
                 CalculateRemainingSeconds(_roundEndsAtNetworkTime, NetworkTime.time, view.Phase),
                 coordinator.IsLocalHost,
-                _unlimitedRound));
+                _unlimitedRound,
+                CalculatePreparationRemainingSeconds(
+                    _preparationEndsAtNetworkTime,
+                    NetworkTime.time,
+                    view.Phase)));
         }
 
         private void Render(RoundUiState state)
         {
+            if (_lastRenderedPhase != state.Phase)
+            {
+                _privatePanelExpanded = true;
+                _lastRenderedPhase = state.Phase;
+            }
+
             SetVisible(_lobbyPanel, false);
             SetVisible(_preparationPanel, state.Phase == RoundPhase.Preparation);
             SetVisible(_hudPanel, state.Phase == RoundPhase.Round);
@@ -301,16 +422,43 @@ namespace InterrogationRoom.UI
             _hudRoleLabel.text = $"Rola: {state.RoleText}";
             _hudCrimeLabel.text = $"Przestępstwo: {state.CrimeText}";
             _alibiLabel.text = state.AlibiText ?? string.Empty;
+            _preparationInstructionLabel.text = state.PreparationInstructionText ?? string.Empty;
             SetVisible(_alibiSection, state.AlibiVisible);
-            SetVisible(_endPreparationButton, state.EndPreparationVisible);
+            SetVisible(_preparationInstructionLabel, !string.IsNullOrWhiteSpace(state.PreparationInstructionText));
+            SetVisible(_readyButton, state.ReadyButtonVisible);
+            _readyButton.SetEnabled(state.ReadyButtonEnabled);
+            _readyButton.text = state.ReadyButtonEnabled ? "Gotowy" : "GOTOWY";
+            _readyCountLabel.text = state.ReadyCountText ?? string.Empty;
+            SetVisible(_readyCountLabel, state.ReadyButtonVisible);
+            _preparationTimerLabel.text = FormatTimer(state.PreparationRemainingSeconds);
+            SetVisible(_preparationTimerLabel, state.PreparationTimerVisible);
             _timerLabel.text = state.UnlimitedTime ? "∞" : FormatTimer(state.RemainingSeconds);
+            _timerLabel.EnableInClassList(
+                "timer--critical",
+                !state.UnlimitedTime && IsCriticalRoundTime(state.RemainingSeconds));
             SetVisible(_timerLabel, state.TimerVisible);
             SetVisible(_privatePanel, state.PrivatePanelVisible);
+            _privatePanel.EnableInClassList("private-card--registry", state.PrivateTitle == "Rejestr Incydentów");
             _privateTitleLabel.text = state.PrivateTitle ?? string.Empty;
+            _privateMotiveLabel.text = state.PrivateMotive ?? string.Empty;
+            _privateStepLabel.text = state.PrivateStep ?? string.Empty;
+            _privateLocationLabel.text = state.PrivateLocation ?? string.Empty;
+            _privateProgressLabel.text = state.PrivateProgress ?? string.Empty;
             _privateLabel.text = state.PrivateText ?? string.Empty;
+            SetVisible(_privateMotiveLabel, !string.IsNullOrWhiteSpace(state.PrivateMotive));
+            SetVisible(_privateStepLabel, !string.IsNullOrWhiteSpace(state.PrivateStep));
+            SetVisible(_privateLocationLabel, !string.IsNullOrWhiteSpace(state.PrivateLocation));
+            SetVisible(_privateProgressLabel, !string.IsNullOrWhiteSpace(state.PrivateProgress));
+            SetVisible(_privateLabel, !string.IsNullOrWhiteSpace(state.PrivateText));
+            ApplyPrivatePanelExpansion();
+            _resultVerdictLabel.text = state.ResultVerdictText ?? string.Empty;
+            _resultReasonLabel.text = state.ResultReasonText ?? string.Empty;
+            _resultPanel.EnableInClassList("result-card--loss", state.ResultIsLoss);
             _resultLabel.text = state.ResultText ?? string.Empty;
             SetVisible(_returnToLobbyButton, state.ReturnToLobbyVisible);
             SetCursorFor(state.Phase, requiresPointer: false);
+            if (state.Phase == RoundPhase.Round)
+                _root.Focus();
         }
 
         private void RenderLobby()
@@ -326,24 +474,21 @@ namespace InterrogationRoom.UI
                 && playerCount >= RoundEngine.MinPlayers
                 && playerCount <= RoundEngine.MaxPlayers;
             SetVisible(_startButton, coordinator.IsLocalHost);
-            SetVisible(_caseSelection, coordinator.IsLocalHost);
             SetVisible(_secretObjectiveToggle, coordinator.IsLocalHost);
             SetVisible(_secretObjectiveSummary, coordinator.IsLocalHost);
-            var caseTitles = coordinator.AvailableCaseTitles.ToList();
-            _caseSelection.choices = caseTitles;
-            _caseSelection.SetEnabled(caseTitles.Count > 1);
-            if (caseTitles.Count == 0)
-                _caseSelection.SetValueWithoutNotify(string.Empty);
-            else
-                _caseSelection.SetValueWithoutNotify(caseTitles[Mathf.Clamp(coordinator.SelectedCaseIndex, 0, caseTitles.Count - 1)]);
             _startButton.SetEnabled(canStart);
             _startButton.text = canStart
                 ? "Start Rundy"
                 : $"Start Rundy ({playerCount}/{RoundEngine.MinPlayers})";
             _playerCountLabel.text = $"Gracze w lobby: {playerCount}/{RoundEngine.MaxPlayers}";
             _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
-            _secretObjectiveSummary.text =
-                $"Efektywna liczba Sekretnych Celów: {coordinator.EffectiveSecretObjectiveCount}";
+            bool secretObjectiveAvailable = playerCount >= 5;
+            _secretObjectiveToggle.SetEnabled(coordinator.IsLocalHost && secretObjectiveAvailable);
+            _secretObjectiveSummary.text = secretObjectiveAvailable
+                ? coordinator.HostAllowsSecretObjective
+                    ? "Sekretny Cel będzie użyty w tej Rundzie."
+                    : "Sekretny Cel jest wyłączony przez hosta."
+                : "Sekretny Cel jest dostępny od 5 graczy.";
 
             if (_lobbyMenuVisible || connected)
                 SetCursorFor(RoundPhase.Lobby, false);
@@ -352,6 +497,8 @@ namespace InterrogationRoom.UI
         private void BindVisualTree()
         {
             var root = uiDocument.rootVisualElement;
+            _root = root;
+            _root.focusable = true;
             _lobbyPanel = Required<VisualElement>(root, "lobby-panel");
             _preparationPanel = Required<VisualElement>(root, "preparation-panel");
             _hudPanel = Required<VisualElement>(root, "round-hud");
@@ -362,28 +509,32 @@ namespace InterrogationRoom.UI
             _hudCrimeLabel = Required<Label>(root, "hud-crime-label");
             _alibiSection = Required<VisualElement>(root, "alibi-section");
             _alibiLabel = Required<Label>(root, "alibi-label");
+            _preparationInstructionLabel = Required<Label>(root, "preparation-instruction-label");
+            _preparationTimerLabel = Required<Label>(root, "preparation-timer-label");
+            _readyCountLabel = Required<Label>(root, "ready-count-label");
+            _readyButton = Required<Button>(root, "ready-button");
             _timerLabel = Required<Label>(root, "timer-label");
             _privatePanel = Required<VisualElement>(root, "private-panel");
+            _privateContent = Required<VisualElement>(root, "private-content");
+            _privateToggleButton = Required<Button>(root, "private-toggle-button");
             _privateTitleLabel = Required<Label>(root, "private-title-label");
+            _privateMotiveLabel = Required<Label>(root, "private-motive-label");
+            _privateStepLabel = Required<Label>(root, "private-step-label");
+            _privateLocationLabel = Required<Label>(root, "private-location-label");
+            _privateProgressLabel = Required<Label>(root, "private-progress-label");
             _privateLabel = Required<Label>(root, "private-label");
             _resultLabel = Required<Label>(root, "result-label");
+            _resultVerdictLabel = Required<Label>(root, "result-verdict-label");
+            _resultReasonLabel = Required<Label>(root, "result-reason-label");
             _rejectionLabel = Required<Label>(root, "rejection-label");
             _startButton = Required<Button>(root, "start-button");
-            _caseSelection = Required<DropdownField>(root, "case-selection");
             _playerCountLabel = Required<Label>(root, "player-count-label");
             _secretObjectiveToggle = Required<Toggle>(root, "secret-objective-toggle");
             _secretObjectiveSummary = Required<Label>(root, "secret-objective-summary");
-            _endPreparationButton = Required<Button>(root, "end-preparation-button");
             _returnToLobbyButton = Required<Button>(root, "return-to-lobby-button");
         }
 
         private void OnStartClicked() => coordinator.RequestStartRound();
-
-        private void OnCaseSelectionChanged(ChangeEvent<string> changeEvent)
-        {
-            if (_caseSelection.index >= 0)
-                coordinator.TrySelectCase(_caseSelection.index);
-        }
 
         private void OnSecretObjectiveChanged(ChangeEvent<bool> changeEvent)
         {
@@ -397,13 +548,50 @@ namespace InterrogationRoom.UI
             RenderLobby();
         }
 
-        private void OnEndPreparationClicked() => coordinator.RequestEndPreparation();
+        private void OnReadyClicked()
+        {
+            _readyButton.SetEnabled(false);
+            coordinator.RequestPlayerReady();
+        }
+
+        private void TogglePrivatePanel()
+        {
+            if (_view == null || _view.Phase != RoundPhase.Round)
+                return;
+
+            _privatePanelExpanded = !_privatePanelExpanded;
+            ApplyPrivatePanelExpansion();
+        }
+
+        private void OnRootKeyDown(KeyDownEvent keyEvent)
+        {
+            if (keyEvent.keyCode != KeyCode.I)
+                return;
+
+            TogglePrivatePanel();
+            keyEvent.StopPropagation();
+        }
+
+        private void ApplyPrivatePanelExpansion()
+        {
+            if (_privateContent == null || _privateToggleButton == null)
+                return;
+
+            SetVisible(_privateContent, _privatePanelExpanded);
+            _privatePanel.EnableInClassList("private-card--collapsed", !_privatePanelExpanded);
+            bool registry = _privatePanel.ClassListContains("private-card--registry");
+            _privateToggleButton.text = _privatePanelExpanded
+                ? "Zwiń [I]"
+                : registry ? "Rejestr [I]" : "Cel [I]";
+        }
+
         private void OnReturnToLobbyClicked() => coordinator.RequestReturnToLobby();
 
         private void OnLobbyResetReceived()
         {
             _view = null;
             _roundEndsAtNetworkTime = 0d;
+            _preparationEndsAtNetworkTime = 0d;
             _unlimitedRound = false;
             _rejectionLabel.text = string.Empty;
             SetVisible(_rejectionLabel, false);
@@ -419,16 +607,40 @@ namespace InterrogationRoom.UI
         private static string FormatAlibi(AlibiView alibi)
         {
             var builder = new StringBuilder();
-            foreach (var entry in alibi.Entries)
-                builder.AppendLine(entry.IsHidden ? "• [UKRYTY FAKT]" : $"• {entry.Text}");
+            for (int index = 0; index < alibi.Entries.Count; index++)
+            {
+                AlibiEntry entry = alibi.Entries[index];
+                builder.AppendLine(entry.IsHidden
+                    ? $"{index + 1}. [Brak w Twojej wersji Alibi]"
+                    : $"{index + 1}. {entry.Text}");
+            }
             return builder.ToString().TrimEnd();
+        }
+
+        private static string FormatPreparationInstruction(RoundRole role)
+        {
+            if (role != RoundRole.Detective)
+                return "Zapamiętaj swoją wersję Alibi. Po Przygotowaniu nie będzie można jej ponownie otworzyć.";
+
+            return "1. Przesłuchaj każdego Podejrzanego.\n" +
+                   "2. Porównuj zeznania z tym, co widzisz, oraz z Rejestrem Incydentów.\n" +
+                   "3. Masz jedną Egzekucję — pierwsze trafienie żywego Podejrzanego kończy Rundę.";
         }
 
         private static void BuildPrivatePanel(
             PlayerRoundView view,
             out string title,
+            out string motive,
+            out string step,
+            out string location,
+            out string progress,
             out string text)
         {
+            motive = null;
+            step = null;
+            location = null;
+            progress = null;
+            text = null;
             var builder = new StringBuilder();
             switch (view.Role)
             {
@@ -440,16 +652,32 @@ namespace InterrogationRoom.UI
                         return;
                     }
 
-                    foreach (IncidentRegistryEntryView incident in view.IncidentRegistry)
+                    for (int index = view.IncidentRegistry.Count - 1; index >= 0; index--)
                     {
+                        IncidentRegistryEntryView incident = view.IncidentRegistry[index];
                         builder.AppendLine(
-                            $"• {FormatTimestamp(incident.ReportedAt)} — {incident.Effect.Value} / " +
-                            $"{incident.Location.Value} ({FormatIncidentKind(incident.Kind)})");
+                            $"{FormatTimestamp(incident.ReportedAt)}\n" +
+                            $"{HumanizeIdentifier(incident.Location.Value)}\n" +
+                            $"{HumanizeIdentifier(incident.Effect.Value)} — {FormatIncidentKind(incident.Kind)}\n");
                     }
-                    break;
+                    text = builder.ToString().TrimEnd();
+                    return;
 
                 case RoundRole.Guilty:
                     title = "Tropy do Alibi i Plan Ucieczki";
+                    if (view.EscapePlan != null)
+                    {
+                        motive = $"Cel: {view.EscapePlan.Title}\n{view.EscapePlan.Motive}";
+                        step = view.EscapePlan.CurrentStep.HasValue
+                            ? $"Szukasz: {view.EscapePlan.CurrentStepDescription}"
+                            : "Szukasz: wybierz i przygotuj punkt końcowy Ucieczki.";
+                        location = view.EscapePlan.CurrentStep.HasValue
+                            ? $"Gdzie: {view.EscapePlan.CurrentStepLocationHint}"
+                            : "Gdzie: jeden z opisanych punktów końcowych";
+                        progress = $"Postęp: {view.EscapePlan.CompletedCommonStepCount}/" +
+                                   $"{view.EscapePlan.TotalCommonStepCount} kroków przygotowania";
+                    }
+
                     builder.AppendLine("Tropy:");
                     if (view.AcquiredAlibiClues == null || view.AcquiredAlibiClues.Count == 0)
                         builder.AppendLine("• brak");
@@ -461,42 +689,41 @@ namespace InterrogationRoom.UI
 
                     if (view.EscapePlan != null)
                     {
-                        builder.AppendLine($"Plan: {view.EscapePlan.CompletedCommonStepCount}/" +
-                                           $"{view.EscapePlan.TotalCommonStepCount} kroków wspólnych");
-                        builder.AppendLine(view.EscapePlan.CurrentStep.HasValue
-                            ? $"Aktualny krok: {view.EscapePlan.CurrentStep.Value.Value}"
-                            : "Kroki wspólne ukończone.");
+                        builder.AppendLine("Wyjścia:");
                         foreach (EscapeExitOptionView option in view.EscapePlan.ExitOptions)
                         {
                             builder.AppendLine(
-                                $"• {option.Location.Value}: " +
+                                $"• {option.Description}\n  Gdzie: {option.LocationHint} — " +
                                 (option.IsPrepared ? "przygotowane" : "nieprzygotowane"));
                         }
                         if (view.EscapePlan.ActiveExit.HasValue)
-                            builder.AppendLine($"Aktywna Ucieczka: {view.EscapePlan.ActiveExit.Value.Value}");
+                            builder.AppendLine("Finał Ucieczki jest gotowy.");
                     }
-                    break;
+                    text = builder.ToString().TrimEnd();
+                    return;
 
                 default:
-                    title = "Prywatny Cel";
                     if (view.PrivateObjective == null)
                     {
+                        title = "Prywatny Cel";
                         text = "Brak przypisanego Celu.";
                         return;
                     }
 
                     PrivateObjectiveView objective = view.PrivateObjective;
-                    builder.AppendLine(
-                        $"Postęp: {objective.CompletedStepCount}/{objective.TotalStepCount}");
-                    builder.AppendLine(objective.CurrentStep.HasValue
-                        ? $"Aktualny krok: {objective.CurrentStep.Value.Value}"
-                        : "Cel ukończony.");
+                    title = $"Cel: {objective.Title}";
+                    motive = objective.Motive;
+                    step = objective.CurrentStep.HasValue
+                        ? $"Szukasz: {objective.CurrentStepDescription}"
+                        : "Szukasz: Cel ukończony.";
+                    location = objective.CurrentStep.HasValue
+                        ? $"Gdzie: {objective.CurrentStepLocationHint}"
+                        : null;
+                    progress = $"Postęp: {objective.CompletedStepCount}/{objective.TotalStepCount}";
                     if (objective.Target.HasValue)
-                        builder.AppendLine($"Cel Wrobienia: Gracz {objective.Target.Value.Value}");
-                    break;
+                        text = $"Cel Wrobienia: Gracz {objective.Target.Value.Value}";
+                    return;
             }
-
-            text = builder.ToString().TrimEnd();
         }
 
         private static string FormatResult(PlayerResultView result, RoundRevealView reveal)
@@ -522,6 +749,30 @@ namespace InterrogationRoom.UI
             return builder.ToString().TrimEnd();
         }
 
+        private static string FormatResultVerdict(PlayerResultView result) =>
+            result == null ? "BRAK ROZSTRZYGNIĘCIA" : result.Won ? "WYGRANA" : "PRZEGRANA";
+
+        private static string FormatResultReason(RoundRole role, PlayerResultView result)
+        {
+            if (result == null)
+                return "Runda zakończyła się bez dostępnego wyniku.";
+            if (result.EndCause == RoundEndCause.Execution)
+            {
+                if (!result.ExecutedPlayer.HasValue)
+                    return "Runda zakończyła się Egzekucją.";
+                if (!result.Survived)
+                    return "Egzekucja została wykonana na Tobie.";
+                return result.DetectiveWon
+                    ? "Detektyw poprawnie rozpoznał Winnego."
+                    : "Detektyw wykonał Egzekucję na Niewinnym.";
+            }
+            if (result.EndCause == RoundEndCause.Escape)
+                return role == RoundRole.Guilty
+                    ? "Ucieczka Winnego zakończyła Rundę."
+                    : "Winny ukończył Ucieczkę.";
+            return "Limit Rundy upłynął bez Egzekucji Winnego.";
+        }
+
         private static void AppendRoundReveal(StringBuilder builder, RoundRevealView reveal)
         {
             builder.AppendLine();
@@ -533,7 +784,7 @@ namespace InterrogationRoom.UI
                 if (player.PrivateObjective != null)
                 {
                     builder.Append(
-                        $"; Cel {player.PrivateObjective.Id.Value} " +
+                        $"; Cel „{player.PrivateObjective.Title}” " +
                         $"{player.PrivateObjective.CompletedStepCount}/{player.PrivateObjective.TotalStepCount}");
                     if (player.PrivateObjective.Target.HasValue)
                         builder.Append($"; Cel Wrobienia: Gracz {player.PrivateObjective.Target.Value.Value}");
@@ -547,20 +798,17 @@ namespace InterrogationRoom.UI
             if (reveal.AcquiredAlibiClues.Count == 0)
                 builder.AppendLine("• brak");
             foreach (AlibiClueRevealView clue in reveal.AcquiredAlibiClues)
-                builder.AppendLine($"• {clue.Id.Value} → {clue.LinkedFactId}: {clue.Content}");
+                builder.AppendLine($"• {clue.Content}");
 
             builder.AppendLine("Plan Ucieczki:");
             if (reveal.EscapePlan.Actions.Count == 0)
                 builder.AppendLine("• brak działań");
             foreach (EscapeActionRevealView action in reveal.EscapePlan.Actions)
             {
-                string detail = action.StepId.HasValue
-                    ? action.StepId.Value.Value
-                    : action.ExitId.HasValue ? action.ExitId.Value.Value : string.Empty;
-                builder.AppendLine($"• {action.Kind}: {detail}".TrimEnd());
+                builder.AppendLine($"• {FormatEscapeAction(action.Kind)}");
             }
             builder.AppendLine(reveal.EscapePlan.SuccessfulExit.HasValue
-                ? $"Udane wyjście: {reveal.EscapePlan.SuccessfulExit.Value.Value}"
+                ? "Udane wyjście: przygotowany punkt Ucieczki"
                 : "Udane wyjście: brak");
 
             builder.AppendLine("Incydenty i autorzy:");
@@ -569,7 +817,7 @@ namespace InterrogationRoom.UI
             foreach (IncidentRevealView incident in reveal.Incidents)
             {
                 builder.AppendLine(
-                    $"• {incident.Id.Value}: {incident.Effect.Value} / {incident.Location.Value}; " +
+                    $"• {HumanizeIdentifier(incident.Effect.Value)} / {HumanizeIdentifier(incident.Location.Value)}; " +
                     $"autor Gracz {incident.Author.Value} ({FormatIncidentKind(incident.Kind)})");
             }
         }
@@ -582,6 +830,29 @@ namespace InterrogationRoom.UI
 
         private static string FormatIncidentKind(IncidentKind kind) =>
             kind == IncidentKind.Loud ? "głośny" : "cichy";
+
+        private static string FormatEscapeAction(EscapeActionKind kind)
+        {
+            switch (kind)
+            {
+                case EscapeActionKind.Completed: return "ukończono Ucieczkę";
+                case EscapeActionKind.PreparedCommonStep: return "przygotowano element Planu Ucieczki";
+                case EscapeActionKind.PreparedExit: return "przygotowano punkt Ucieczki";
+                case EscapeActionKind.AttemptStarted: return "rozpoczęto finał Ucieczki";
+                case EscapeActionKind.AttemptInterrupted: return "przerwano finał Ucieczki";
+                default: return "wykonano działanie Planu Ucieczki";
+            }
+        }
+
+        private static string HumanizeIdentifier(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "nieznane";
+            string normalized = value.Replace('-', ' ').Replace('_', ' ').Trim();
+            if (normalized.Length == 0)
+                return "nieznane";
+            return char.ToUpperInvariant(normalized[0]) + normalized.Substring(1);
+        }
 
         private static string FormatEndCause(RoundEndCause cause)
         {

@@ -89,6 +89,9 @@ namespace InterrogationRoom.Domain
         /// <summary>Public final exit; null unless the Runda ended by Ucieczka.</summary>
         public EscapeExitId? SuccessfulEscapeExit { get; }
 
+        /// <summary>Public readiness count; non-zero only during Przygotowanie.</summary>
+        public int ReadyPlayerCount { get; }
+
         public RoundPublicState(
             RoundPhase phase,
             IReadOnlyList<PlayerId> players,
@@ -96,7 +99,8 @@ namespace InterrogationRoom.Domain
             PlayerId? executedPlayer,
             bool? detectiveWon,
             RoundEndCause? endCause,
-            EscapeExitId? successfulEscapeExit = null)
+            EscapeExitId? successfulEscapeExit = null,
+            int readyPlayerCount = 0)
         {
             Phase = phase;
             Players = players;
@@ -105,6 +109,7 @@ namespace InterrogationRoom.Domain
             DetectiveWon = detectiveWon;
             EndCause = endCause;
             SuccessfulEscapeExit = successfulEscapeExit;
+            ReadyPlayerCount = readyPlayerCount;
         }
     }
 

@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C07_KozaJejWysokosc
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: "Koza Jej Wysoko\u015B\u0107"
+  crimeDescription: "Kto\u015B u\u017Cy\u0142 skradzionej miejskiej piecz\u0119ci,
+    by podczas transmisji z rynku koronowa\u0107 koz\u0119 na tymczasow\u0105 burmistrzyni\u0119."
+  alibiFacts:
+  - id: tor-borsuki
+    text: "Grupa wesz\u0142a na ostatni\u0105 godzin\u0119 do kr\u0119gielni \u201EMeteor\u201D
+      i dosta\u0142a tor sz\xF3sty pod nazw\u0105 \u201EBorsuki\u201D."
+    canBeHidden: 0
+    variantTexts:
+    - "Grupa wesz\u0142a na ostatni\u0105 godzin\u0119 do kr\u0119gielni \u201EMeteor\u201D
+      i dosta\u0142a tor sz\xF3sty pod nazw\u0105 \u201EBorsuki\u201D."
+    - "Grupa wesz\u0142a na ostatni\u0105 godzin\u0119 do kr\u0119gielni \u201EMeteor\u201D
+      i dosta\u0142a tor sz\xF3sty pod nazw\u0105 \u201EKrety\u201D."
+    distinctiveDetail: 1
+  - id: niedobrane-sznurowki
+    text: "Dostali bia\u0142o-czerwone buty z niedobranymi sznur\xF3wkami."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: pierwszy-rzut-i-kula
+    text: "Pierwsza kula przewr\xF3ci\u0142a tylko jeden kr\u0119giel, a po awarii
+      podajnika pracownik r\u0119cznie wyci\u0105gn\u0105\u0142 zielon\u0105 kul\u0119."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: ogorki-przy-awarii
+    text: "Gdy podajnik stan\u0105\u0142, zam\xF3wili misk\u0119 kiszonych og\xF3rk\xF3w."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: wynik-77
+    text: "Tablica wynik\xF3w zamar\u0142a na liczbie 77."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: koniec-kolorowych-swiatel
+    text: "Wszyscy wyszli razem, kiedy zgas\u0142y kolorowe \u015Bwiat\u0142a nad
+      torami."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: kartonik-obuwia
+    linkedFactId: niedobrane-sznurowki
+    content: "Kartonik zwrotu obuwia z ko\u0144c\xF3wkami bia\u0142ej i czerwonej
+      sznur\xF3wki."
+  - id: podstawka-ogorki
+    linkedFactId: ogorki-przy-awarii
+    content: "Podstawka z zielonym s\u0142onym zaciekiem, rysunkiem kuli i piecz\u0105tk\u0105
+      obs\u0142ugi podajnika."
+  - id: zdjecie-wyniku
+    linkedFactId: wynik-77
+    content: "Zdj\u0119cie dw\xF3ch czerwonych si\xF3demek i odbicia numeru toru,
+      bez graczy."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

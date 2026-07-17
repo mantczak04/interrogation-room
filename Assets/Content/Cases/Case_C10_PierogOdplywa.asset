@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C10_PierogOdplywa
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: "Pier\xF3g odp\u0142ywa"
+  crimeDescription: "Kto\u015B odwi\u0105za\u0142 ogromny dmuchany pier\xF3g z festynu,
+    za\u0142o\u017Cy\u0142 peruk\u0119 s\u0119dziego i pop\u0142yn\u0105\u0142 na
+    nim rzek\u0105, wydaj\u0105c wyroki mijanym kaczkom."
+  alibiFacts:
+  - id: sektor-c
+    text: "Podczas deszczu grupa pomaga\u0142a w schronisku i zosta\u0142a wpisana
+      do sektora boks\xF3w oznaczonego liter\u0105 C."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: beagle-i-kot
+    text: "Nakarmili starego beagla z niebieskiej miski, po czym czarny kot uciek\u0142
+      do magazynu po\u015Bcieli."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: zabawka-z-pior
+    text: "Pr\xF3bowali wywabi\u0107 kota zabawk\u0105 z pi\xF3r."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: skladanie-kocow
+    text: "Czekaj\u0105c, sk\u0142adali koce w czerwono-bia\u0142\u0105 krat\u0119."
+    canBeHidden: 0
+    variantTexts:
+    - "Czekaj\u0105c, sk\u0142adali koce w czerwono-bia\u0142\u0105 krat\u0119."
+    - "Czekaj\u0105c, sk\u0142adali koce w niebiesko-bia\u0142e pasy."
+    distinctiveDetail: 1
+  - id: przewrocone-wiadro
+    text: "Beagle przewr\xF3ci\u0142 wiadro z wod\u0105."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: zolty-transporter
+    text: "Po z\u0142apaniu kota zamkn\u0119li go w \u017C\xF3\u0142tym transporterze
+      i wyszli razem."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: klips-sektora
+    linkedFactId: sektor-c
+    content: "Klips identyfikatora z wyci\u0119ciem C, kreskami boks\xF3w i logo
+      schroniska."
+  - id: polamane-piora
+    linkedFactId: zabawka-z-pior
+    content: "Zabawka z po\u0142amanymi pi\xF3rami, czarnymi w\u0142osami i \u015Bladami
+      ci\u0105gni\u0119cia."
+  - id: zdjecie-mokrych-lap
+    linkedFactId: przewrocone-wiadro
+    content: "Fotografia mokrych psich \u0142ap, obrysu wiadra i rozlanej wody."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

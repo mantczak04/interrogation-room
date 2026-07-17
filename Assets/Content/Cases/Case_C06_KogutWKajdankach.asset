@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C06_KogutWKajdankach
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: Kogut w kajdankach
+  crimeDescription: "Kto\u015B ukrad\u0142 poz\u0142acanego koguta z szyldu hali
+    drobiowej, sku\u0142 go kajdankami z miejsk\u0105 fontann\u0105 i odczyta\u0142
+    mu prawa zatrzymanego."
+  alibiFacts:
+  - id: ulewa-i-plaszcze
+    text: "Podczas ulewy grupa wesz\u0142a do pralni \u201EB\u0105bel\u201D i w\u0142o\u017Cy\u0142a
+      mokre p\u0142aszcze do kosza ze z\u0142aman\u0105 r\u0105czk\u0105."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: czerwona-skarpetka
+    text: "W pustej pralce znale\u017Ali jedn\u0105 czerwon\u0105 dzieci\u0119c\u0105
+      skarpetk\u0119."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: podwojne-kakao
+    text: "Obs\u0142uguj\u0105ca rozmieni\u0142a banknot na mosi\u0119\u017Cne \u017Cetony,
+      a automat wyda\u0142 dwa kakao po jednym wyborze."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: karty-z-polki
+    text: "Czekaj\u0105c, grali kartami z czerwonym rewersem znalezionymi na p\xF3\u0142ce
+      z czasopismami."
+    canBeHidden: 0
+    variantTexts:
+    - "Czekaj\u0105c, grali kartami z czerwonym rewersem znalezionymi na p\xF3\u0142ce
+      z czasopismami."
+    - "Czekaj\u0105c, grali kartami z niebieskim rewersem znalezionymi na p\xF3\u0142ce
+      z czasopismami."
+    distinctiveDetail: 1
+  - id: trzy-sygnaly-suszarki
+    text: "Suszarka zapiszcza\u0142a trzy razy, lecz pranie zosta\u0142o wilgotne."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: zielony-parasol
+    text: Wszyscy wyszli razem pod jednym zielonym parasolem reklamowym.
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: zdjecie-skarpetki
+    linkedFactId: czerwona-skarpetka
+    content: "Fotografia czerwonej pr\u0105\u017Ckowanej tkaniny przy okr\u0105g\u0142ym
+      stalowym otworze."
+  - id: reklamacja-kakao
+    linkedFactId: podwojne-kakao
+    content: "Reklamacja z jednym symbolem monety i dwiema obr\u0119czami po kubkach."
+  - id: wilgotny-filtr
+    linkedFactId: trzy-sygnaly-suszarki
+    content: "Woreczek z wilgotnym filtrem k\u0142aczk\xF3w i trzema stemplami kontroli."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

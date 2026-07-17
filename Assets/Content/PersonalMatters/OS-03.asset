@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce4e87563487f5479f254de01548595, type: 3}
+  m_Name: OS-03
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.PersonalMatterAsset
+  stableId: OS-03
+  title: Odzyskaj prywatny telefon
+  motive: "Telefon zawiera wiadomo\u015Bci, kt\xF3rych policja nie powinna czyta\u0107.
+    Najpierw ustal numer depozytu, potem odzyskaj urz\u0105dzenie."
+  steps:
+  - stableStepId: OS-03-numer
+    description: "Znajd\u017A \u017Ceton lub numer przypisany do Twojego telefonu
+      w rejestrze depozytu."
+    locationHint: "magazyn dowod\xF3w \u2014 rejestr depozytowy"
+    anchorActionId: osobista-sprawa-przygotuj
+    createsIncident: 0
+  - stableStepId: OS-03-telefon
+    description: "Otw\xF3rz odpowiadaj\u0105c\u0105 numerowi szafk\u0119 i zabierz
+      telefon."
+    locationHint: "magazyn dowod\xF3w \u2014 szafki na elektronik\u0119"
+    anchorActionId: osobista-sprawa-zakoncz
+    createsIncident: 1
+  reservedItemIds:
+  - prywatny-telefon
+  - zeton-depozytowy-telefon

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce4e87563487f5479f254de01548595, type: 3}
+  m_Name: OS-14
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.PersonalMatterAsset
+  stableId: OS-14
+  title: Odzyskaj kwit z lombardu
+  motive: "Kwit mo\u017Ce ujawni\u0107, \u017Ce zastawiony przedmiot nie nale\u017Ca\u0142
+    do Ciebie. Chcesz wyj\u0105\u0107 go z depozytu i schowa\u0107 poza aktami."
+  steps:
+  - stableStepId: OS-14-szafka
+    description: "Przeszukaj oznaczon\u0105 szafk\u0119 z rzeczami osobistymi."
+    locationHint: "magazyn dowod\xF3w \u2014 szafki rzeczy osobistych"
+    anchorActionId: osobista-sprawa-przygotuj
+    createsIncident: 1
+  - stableStepId: OS-14-kwit
+    description: "Wyjmij kwit z lombardu i przenie\u015B go do ksi\u0105\u017Cki
+      pe\u0142ni\u0105cej skrytk\u0119."
+    locationHint: "archiwum \u2014 p\xF3\u0142ka ksi\u0105\u017Cek i formularzy"
+    anchorActionId: osobista-sprawa-zakoncz
+    createsIncident: 1
+  reservedItemIds:
+  - kwit-z-lombardu
+  - ksiazka-skrytka

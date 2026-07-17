@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C14_SmokZaKulisami
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: Smok za kulisami
+  crimeDescription: "Kto\u015B podmieni\u0142 m\u0142otek s\u0119dziego na gumowego
+    kurczaka, kt\xF3ry zapiszcza\u0142 podczas publicznego og\u0142aszania wyroku."
+  alibiFacts:
+  - id: zielony-polksiezyc
+    text: "O 19:15 grupa wesz\u0142a do teatru lalek wej\u015Bciem dla aktor\xF3w,
+      a bileter odbi\u0142 ka\u017Cdemu na prawej d\u0142oni zielony p\xF3\u0142ksi\u0119\u017Cyc."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: brak-zeba-smoka
+    text: "Sceniczny smok nie mia\u0142 lewego filcowego z\u0119ba."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: beben-i-golab
+    text: "Pr\xF3ba zacz\u0119\u0142a si\u0119 od trzech uderze\u0144 w b\u0119ben;
+      potem go\u0142\u0105b usiad\u0142 po lewej stronie balkonu i wszyscy na chwil\u0119
+      zamilkli."
+    canBeHidden: 0
+    variantTexts:
+    - "Pr\xF3ba zacz\u0119\u0142a si\u0119 od trzech uderze\u0144 w b\u0119ben; potem
+      go\u0142\u0105b usiad\u0142 po lewej stronie balkonu i wszyscy na chwil\u0119
+      zamilkli."
+    - "Pr\xF3ba zacz\u0119\u0142a si\u0119 od trzech uderze\u0144 w b\u0119ben; potem
+      go\u0142\u0105b usiad\u0142 po prawej stronie balkonu i wszyscy na chwil\u0119
+      zamilkli."
+    distinctiveDetail: 1
+  - id: herbata-jablkowa
+    text: "W przerwie podano herbat\u0119 jab\u0142kow\u0105 w metalowych kubkach."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: czerwona-kurtyna
+    text: "Grupa pomog\u0142a zwin\u0105\u0107 czerwon\u0105 kurtyn\u0119."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: wyjscie-foyer
+    text: "O 19:52 wszyscy wyszli razem przez g\u0142\xF3wne foyer."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: bibula-polksiezyce
+    linkedFactId: zielony-polksiezyc
+    content: "Zielona bibu\u0142a z rozmazanymi p\xF3\u0142ksi\u0119\u017Cycami i
+      odciskami d\u0142oni."
+  - id: karta-napraw-smoka
+    linkedFactId: brak-zeba-smoka
+    content: "Karta napraw z asymetryczn\u0105 szcz\u0119k\u0105 smoka, pust\u0105
+      kieszeni\u0105 i pr\xF3bk\u0105 filcu."
+  - id: kupon-przerwa
+    linkedFactId: herbata-jablkowa
+    content: "Kupon z jab\u0142kiem, metalowym kubkiem i piecz\u0105tk\u0105 \u201Eprzerwa\u201D,
+      bez nazwy napoju."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

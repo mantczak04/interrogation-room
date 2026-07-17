@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C12_ZupaUrzedowa
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: "Zupa urz\u0119dowa"
+  crimeDescription: "Kto\u015B zast\u0105pi\u0142 wszystkie tabliczki z nazwiskami
+    radnych szkliwionymi talerzami z napisem \u201EZUPA DNIA\u201D."
+  alibiFacts:
+  - id: fartuchy-z-igla
+    text: "O 17:20 grupa wesz\u0142a na warsztaty introligatorskie i dosta\u0142a
+      pomara\u0144czowe fartuchy z naszyt\u0105 ig\u0142\u0105."
+    canBeHidden: 1
+    variantTexts:
+    - "O 17:20 grupa wesz\u0142a na warsztaty introligatorskie i dosta\u0142a pomara\u0144czowe
+      fartuchy z naszyt\u0105 ig\u0142\u0105."
+    - "O 17:20 grupa wesz\u0142a na warsztaty introligatorskie i dosta\u0142a musztardowe
+      fartuchy z naszyt\u0105 ig\u0142\u0105."
+    distinctiveDetail: 1
+  - id: zlamana-korba
+    text: "Instruktorka z\u0142ama\u0142a korb\u0119 pokazowej prasy do papieru."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: kobaltowe-plotno
+    text: "Grupa wybra\u0142a kobaltowe p\u0142\xF3tno na ok\u0142adk\u0119 wsp\xF3lnego
+      albumu."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: slady-kota
+    text: "Czarny kot przeszed\u0142 po stole i zostawi\u0142 \u015Blady \u0142ap
+      w kleju."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: precle-i-notesy
+    text: "Podczas przerwy wszyscy jedli s\u0142one precle, a cztery gotowe notesy
+      ustawili na lewej p\xF3\u0142ce."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: tramwaj-numer-4
+    text: "O 18:02 grupa wysz\u0142a razem na tramwaj numer 4."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: fartuch-z-naszywka
+    linkedFactId: fartuchy-z-igla
+    content: "Fartuch z naszywk\u0105 ig\u0142y, \u015Bladem kleju i numerem garderoby."
+  - id: probka-plotna
+    linkedFactId: kobaltowe-plotno
+    content: "Pr\xF3bka ciemnoniebieskiego p\u0142\xF3tna z kodem K-7 i odciskiem
+      prostok\u0105tnej ok\u0142adki."
+  - id: odciski-w-kleju
+    linkedFactId: slady-kota
+    content: "Zbli\u017Cenie ma\u0142ych odcisk\xF3w w przezroczystym kleju i pojedynczego
+      czarnego w\u0142osa."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

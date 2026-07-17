@@ -1,0 +1,596 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using InterrogationRoom.Minigames;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
+#endif
+
+namespace InterrogationRoom.Gameplay.Minigames
+{
+    public static class MinigamePanelHost
+    {
+        private static MinigamePanelBase activePanel;
+
+        public static bool IsOpen => activePanel != null;
+
+        public static void Open(
+            MinigameSpec spec,
+            Action succeeded,
+            Action failed,
+            Action cancelled)
+        {
+            Close(notifyCancellation: false);
+            if (spec == null)
+                return;
+
+            var panelObject = new GameObject($"MinigamePanel_{spec.Kind}");
+            switch (spec.Kind)
+            {
+                case MinigameKind.CodeLock:
+                    activePanel = panelObject.AddComponent<CodeLockMinigamePanel>();
+                    break;
+                case MinigameKind.RecordsTerminal:
+                    activePanel = panelObject.AddComponent<RecordsTerminalMinigamePanel>();
+                    break;
+                default:
+                    activePanel = panelObject.AddComponent<FileSearchMinigamePanel>();
+                    break;
+            }
+
+            activePanel.Open(spec, succeeded, failed, cancelled);
+        }
+
+        public static void Close(bool notifyCancellation)
+        {
+            if (activePanel == null)
+                return;
+
+            MinigamePanelBase panel = activePanel;
+            activePanel = null;
+            panel.Close(notifyCancellation);
+        }
+
+        internal static void NotifyClosed(MinigamePanelBase panel)
+        {
+            if (ReferenceEquals(activePanel, panel))
+                activePanel = null;
+        }
+    }
+
+    public abstract class MinigamePanelBase : MonoBehaviour
+    {
+        protected static readonly Color ScrimColor = new Color32(0x14, 0x17, 0x15, 0xE6);
+        protected static readonly Color PaperColor = new Color32(0xE8, 0xDC, 0xC5, 0xFF);
+        protected static readonly Color InkColor = new Color32(0x2B, 0x2A, 0x24, 0xFF);
+        protected static readonly Color MutedInkColor = new Color32(0x6E, 0x68, 0x57, 0xFF);
+        protected static readonly Color AccentGreen = new Color32(0x5F, 0x6F, 0x52, 0xFF);
+        protected static readonly Color AccentDark = new Color32(0x46, 0x53, 0x3D, 0xFF);
+        protected static readonly Color ButtonPaper = new Color32(0xD9, 0xCB, 0xAF, 0xFF);
+        protected static readonly Color WarningColor = new Color32(0x8C, 0x53, 0x2B, 0xFF);
+        protected static readonly Color LightText = new Color32(0xF0, 0xE9, 0xD8, 0xFF);
+
+        private Action succeeded;
+        private Action failed;
+        private Action cancelled;
+        private bool cursorWasReleased;
+        private bool closing;
+        private Font font;
+        private Canvas canvas;
+        protected Text StatusLabel { get; private set; }
+        protected Transform ContentRoot { get; private set; }
+        protected MinigameSpec Spec { get; private set; }
+
+        public void Open(
+            MinigameSpec spec,
+            Action succeededCallback,
+            Action failedCallback,
+            Action cancelledCallback)
+        {
+            Spec = spec;
+            succeeded = succeededCallback;
+            failed = failedCallback;
+            cancelled = cancelledCallback;
+            cursorWasReleased = PlayerController.CursorReleased;
+            PlayerController.SetCursorReleased(true);
+            EnsureEventSystem();
+            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            BuildFrame(Title, spec.IntroText);
+            BuildContent(ContentRoot);
+        }
+
+        public void Close(bool notifyCancellation)
+        {
+            if (closing)
+                return;
+
+            closing = true;
+            if (notifyCancellation)
+                cancelled?.Invoke();
+            RestoreCursor();
+            MinigamePanelHost.NotifyClosed(this);
+            Destroy(gameObject);
+        }
+
+        protected abstract string Title { get; }
+        protected abstract void BuildContent(Transform parent);
+
+        protected void Succeed()
+        {
+            if (closing)
+                return;
+            SetStatus("Wynik przyjęty. Oczekiwanie na serwer…", AccentDark);
+            SetButtonsInteractable(false);
+            succeeded?.Invoke();
+        }
+
+        protected void Fail(string message)
+        {
+            if (closing)
+                return;
+            SetStatus(message, WarningColor);
+            SetButtonsInteractable(false);
+            failed?.Invoke();
+        }
+
+        protected void SetStatus(string value, Color color)
+        {
+            StatusLabel.text = value;
+            StatusLabel.color = color;
+        }
+
+        protected virtual void SetButtonsInteractable(bool interactable)
+        {
+            foreach (Button button in GetComponentsInChildren<Button>(true))
+            {
+                if (button.name != "Cancel")
+                    button.interactable = interactable;
+            }
+        }
+
+        protected Text CreateLabel(
+            Transform parent,
+            string name,
+            string value,
+            int fontSize,
+            Color color,
+            TextAnchor alignment,
+            FontStyle style = FontStyle.Normal,
+            float preferredHeight = 32f)
+        {
+            var labelObject = new GameObject(name, typeof(RectTransform));
+            labelObject.transform.SetParent(parent, false);
+            Text label = labelObject.AddComponent<Text>();
+            label.font = font;
+            label.fontSize = fontSize;
+            label.fontStyle = style;
+            label.color = color;
+            label.alignment = alignment;
+            label.text = value;
+            label.raycastTarget = false;
+            LayoutElement element = labelObject.AddComponent<LayoutElement>();
+            element.preferredHeight = preferredHeight;
+            return label;
+        }
+
+        protected Button CreateButton(
+            Transform parent,
+            string name,
+            string label,
+            Action clicked,
+            Color? background = null,
+            Color? textColor = null,
+            float height = 48f)
+        {
+            var buttonObject = new GameObject(name, typeof(RectTransform));
+            buttonObject.transform.SetParent(parent, false);
+            buttonObject.AddComponent<LayoutElement>().preferredHeight = height;
+            Image image = buttonObject.AddComponent<Image>();
+            image.color = background ?? ButtonPaper;
+            Button button = buttonObject.AddComponent<Button>();
+            button.targetGraphic = image;
+            ColorBlock colors = button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(0.92f, 0.92f, 0.92f, 1f);
+            colors.pressedColor = new Color(0.78f, 0.78f, 0.78f, 1f);
+            colors.selectedColor = Color.white;
+            button.colors = colors;
+            button.onClick.AddListener(() => clicked());
+
+            Text buttonLabel = CreateLabel(
+                buttonObject.transform,
+                "Label",
+                label,
+                18,
+                textColor ?? InkColor,
+                TextAnchor.MiddleCenter,
+                FontStyle.Bold,
+                height);
+            RectTransform labelRect = buttonLabel.rectTransform;
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+            return button;
+        }
+
+        private void Update()
+        {
+            if (!closing && WasCancelPressed())
+                Close(notifyCancellation: true);
+        }
+
+        private void OnDestroy()
+        {
+            RestoreCursor();
+            MinigamePanelHost.NotifyClosed(this);
+        }
+
+        private void BuildFrame(string title, string intro)
+        {
+            canvas = gameObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 4500;
+            CanvasScaler scaler = gameObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
+            gameObject.AddComponent<GraphicRaycaster>();
+
+            Image scrim = CreateImage(transform, "Scrim", ScrimColor, true);
+            Stretch(scrim.rectTransform);
+
+            Image panel = CreateImage(transform, "PaperPanel", PaperColor, true);
+            RectTransform panelRect = panel.rectTransform;
+            panelRect.anchorMin = panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.sizeDelta = new Vector2(860f, 0f);
+            VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(36, 36, 28, 28);
+            layout.spacing = 12f;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+            ContentSizeFitter fitter = panel.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            CreateLabel(panel.transform, "Title", title, 34, InkColor, TextAnchor.MiddleLeft, FontStyle.Bold, 46f);
+            Image accent = CreateImage(panel.transform, "Accent", AccentGreen);
+            accent.gameObject.AddComponent<LayoutElement>().preferredHeight = 3f;
+            CreateLabel(panel.transform, "Intro", intro, 18, MutedInkColor, TextAnchor.MiddleLeft, FontStyle.Italic, 54f);
+
+            var contentObject = new GameObject("Content", typeof(RectTransform));
+            contentObject.transform.SetParent(panel.transform, false);
+            ContentRoot = contentObject.transform;
+
+            StatusLabel = CreateLabel(
+                panel.transform,
+                "Status",
+                "",
+                17,
+                MutedInkColor,
+                TextAnchor.MiddleCenter,
+                FontStyle.Bold,
+                30f);
+            CreateButton(
+                panel.transform,
+                "Cancel",
+                "Anuluj",
+                () => Close(notifyCancellation: true),
+                ButtonPaper,
+                InkColor,
+                44f);
+        }
+
+        private void RestoreCursor()
+        {
+            if (!cursorWasReleased)
+                PlayerController.SetCursorReleased(false);
+            cursorWasReleased = true;
+        }
+
+        private static Image CreateImage(
+            Transform parent,
+            string name,
+            Color color,
+            bool raycastTarget = false)
+        {
+            var imageObject = new GameObject(name, typeof(RectTransform));
+            imageObject.transform.SetParent(parent, false);
+            Image image = imageObject.AddComponent<Image>();
+            image.color = color;
+            image.raycastTarget = raycastTarget;
+            return image;
+        }
+
+        private static void Stretch(RectTransform rect)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
+        private static void EnsureEventSystem()
+        {
+            if (FindFirstObjectByType<EventSystem>() != null)
+                return;
+
+            var eventSystemObject = new GameObject("EventSystem", typeof(EventSystem));
+#if ENABLE_INPUT_SYSTEM
+            eventSystemObject.AddComponent<InputSystemUIInputModule>();
+#else
+            eventSystemObject.AddComponent<StandaloneInputModule>();
+#endif
+        }
+
+        private static bool WasCancelPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+#else
+            return Input.GetKeyDown(KeyCode.Escape);
+#endif
+        }
+    }
+
+    public sealed class FileSearchMinigamePanel : MinigamePanelBase
+    {
+        private FileSearchSession session;
+        private Transform gridRoot;
+        private readonly List<Button> folderButtons = new List<Button>();
+
+        protected override string Title => "Przeszukiwanie akt";
+
+        protected override void BuildContent(Transform parent)
+        {
+            session = FileSearchSession.Create(Spec.Seed, Spec.FolderCount, Spec.TargetYear);
+            var layout = parent.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 10f;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandHeight = false;
+
+            CreateLabel(
+                parent,
+                "Criterion",
+                $"Polecenie: znajdź teczkę {session.TargetSignature}",
+                21,
+                InkColor,
+                TextAnchor.MiddleCenter,
+                FontStyle.Bold,
+                38f);
+            var gridObject = new GameObject("FolderGrid", typeof(RectTransform));
+            gridObject.transform.SetParent(parent, false);
+            gridObject.AddComponent<LayoutElement>().preferredHeight = 260f;
+            GridLayoutGroup grid = gridObject.AddComponent<GridLayoutGroup>();
+            grid.cellSize = new Vector2(185f, 56f);
+            grid.spacing = new Vector2(10f, 10f);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 4;
+            grid.childAlignment = TextAnchor.UpperCenter;
+            gridRoot = gridObject.transform;
+            RebuildFolders();
+        }
+
+        private void RebuildFolders()
+        {
+            foreach (Transform child in gridRoot)
+                child.gameObject.SetActive(false);
+            folderButtons.Clear();
+
+            for (int index = 0; index < session.Folders.Count; index++)
+            {
+                int selectedIndex = index;
+                FileFolderOption folder = session.Folders[index];
+                folderButtons.Add(CreateButton(
+                    gridRoot,
+                    $"Folder_{index}",
+                    folder.Label,
+                    () => SelectFolder(selectedIndex),
+                    ButtonPaper,
+                    InkColor,
+                    56f));
+            }
+        }
+
+        private void SelectFolder(int index)
+        {
+            MinigameAttemptResult result = session.Choose(index);
+            if (result == MinigameAttemptResult.Success)
+            {
+                Succeed();
+                return;
+            }
+
+            RebuildFolders();
+            SetStatus($"Nie te akta. Strata {session.PenaltySeconds} s — teczki przełożono.", WarningColor);
+            StartCoroutine(UnlockAfterDelay());
+        }
+
+        private IEnumerator UnlockAfterDelay()
+        {
+            SetButtonsInteractable(false);
+            yield return new WaitForSecondsRealtime(Spec.WrongChoiceDelay);
+            SetButtonsInteractable(true);
+            SetStatus("Spróbuj ponownie.", MutedInkColor);
+        }
+    }
+
+    public sealed class CodeLockMinigamePanel : MinigamePanelBase
+    {
+        private CodeLockSession session;
+        private readonly int[] digits = new int[3];
+        private readonly Text[] digitLabels = new Text[3];
+
+        protected override string Title => "Zamek szyfrowy";
+
+        protected override void BuildContent(Transform parent)
+        {
+            session = new CodeLockSession(Spec.Code, Spec.MaximumCodeAttempts);
+            var layout = parent.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 12f;
+            layout.childControlHeight = true;
+            layout.childForceExpandHeight = false;
+            CreateLabel(
+                parent,
+                "CodeBrief",
+                $"Kod z notatki: {Spec.Code:000}",
+                22,
+                InkColor,
+                TextAnchor.MiddleCenter,
+                FontStyle.Bold,
+                40f);
+
+            var dialsObject = new GameObject("Dials", typeof(RectTransform));
+            dialsObject.transform.SetParent(parent, false);
+            HorizontalLayoutGroup dials = dialsObject.AddComponent<HorizontalLayoutGroup>();
+            dials.spacing = 18f;
+            dials.childControlWidth = true;
+            dials.childControlHeight = true;
+            dials.childForceExpandWidth = true;
+            dials.childForceExpandHeight = false;
+
+            for (int index = 0; index < digits.Length; index++)
+                BuildDial(dialsObject.transform, index);
+
+            CreateButton(parent, "Confirm", "Zatwierdź kod", Confirm, AccentGreen, LightText, 52f);
+        }
+
+        private void BuildDial(Transform parent, int index)
+        {
+            var dialObject = new GameObject($"Dial_{index}", typeof(RectTransform));
+            dialObject.transform.SetParent(parent, false);
+            VerticalLayoutGroup layout = dialObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 5f;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandHeight = false;
+            CreateButton(dialObject.transform, "Plus", "+", () => ChangeDigit(index, 1), ButtonPaper, InkColor, 38f);
+            digitLabels[index] = CreateLabel(
+                dialObject.transform,
+                "Digit",
+                "0",
+                42,
+                AccentDark,
+                TextAnchor.MiddleCenter,
+                FontStyle.Bold,
+                56f);
+            CreateButton(dialObject.transform, "Minus", "−", () => ChangeDigit(index, -1), ButtonPaper, InkColor, 38f);
+        }
+
+        private void ChangeDigit(int index, int delta)
+        {
+            digits[index] = (digits[index] + delta + 10) % 10;
+            digitLabels[index].text = digits[index].ToString();
+        }
+
+        private void Confirm()
+        {
+            int candidate = digits[0] * 100 + digits[1] * 10 + digits[2];
+            MinigameAttemptResult result = session.Enter(candidate);
+            if (result == MinigameAttemptResult.Success)
+            {
+                Succeed();
+                return;
+            }
+
+            if (result == MinigameAttemptResult.Restarted)
+            {
+                Array.Clear(digits, 0, digits.Length);
+                foreach (Text label in digitLabels)
+                    label.text = "0";
+                SetStatus("Limit prób. Zamek zresetował pokrętła — możesz spróbować ponownie.", WarningColor);
+                return;
+            }
+
+            int remaining = session.MaximumAttempts - session.AttemptsInCurrentRun;
+            SetStatus($"Błędny kod. Pozostało prób: {remaining}.", WarningColor);
+        }
+    }
+
+    public sealed class RecordsTerminalMinigamePanel : MinigamePanelBase
+    {
+        private RecordsTerminalSession session;
+
+        protected override string Title => "Terminal kartoteki";
+
+        protected override void BuildContent(Transform parent)
+        {
+            session = RecordsTerminalSession.Create(Spec.Seed, Spec.RecordCount);
+            var layout = parent.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 10f;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandHeight = false;
+            CreateLabel(
+                parent,
+                "Criterion",
+                $"Kryteria: nazwisko {session.TargetSurname}, rok {session.TargetYear}",
+                21,
+                InkColor,
+                TextAnchor.MiddleCenter,
+                FontStyle.Bold,
+                40f);
+
+            var scrollObject = new GameObject("RecordsScroll", typeof(RectTransform));
+            scrollObject.transform.SetParent(parent, false);
+            scrollObject.AddComponent<LayoutElement>().preferredHeight = 280f;
+            Image background = scrollObject.AddComponent<Image>();
+            background.color = new Color32(0xCB, 0xBE, 0xA2, 0xFF);
+            ScrollRect scroll = scrollObject.AddComponent<ScrollRect>();
+            scroll.horizontal = false;
+
+            var viewportObject = new GameObject("Viewport", typeof(RectTransform));
+            viewportObject.transform.SetParent(scrollObject.transform, false);
+            RectTransform viewport = viewportObject.GetComponent<RectTransform>();
+            viewport.anchorMin = Vector2.zero;
+            viewport.anchorMax = Vector2.one;
+            viewport.offsetMin = new Vector2(8f, 8f);
+            viewport.offsetMax = new Vector2(-8f, -8f);
+            viewportObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.02f);
+            viewportObject.AddComponent<Mask>().showMaskGraphic = false;
+
+            var contentObject = new GameObject("Records", typeof(RectTransform));
+            contentObject.transform.SetParent(viewportObject.transform, false);
+            RectTransform content = contentObject.GetComponent<RectTransform>();
+            content.anchorMin = new Vector2(0f, 1f);
+            content.anchorMax = new Vector2(1f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.sizeDelta = Vector2.zero;
+            VerticalLayoutGroup recordsLayout = contentObject.AddComponent<VerticalLayoutGroup>();
+            recordsLayout.spacing = 7f;
+            recordsLayout.childControlWidth = true;
+            recordsLayout.childControlHeight = true;
+            recordsLayout.childForceExpandHeight = false;
+            contentObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scroll.viewport = viewport;
+            scroll.content = content;
+            for (int index = 0; index < session.Records.Count; index++)
+            {
+                int selectedIndex = index;
+                CreateButton(
+                    content,
+                    $"Record_{index}",
+                    session.Records[index].Label,
+                    () => SelectRecord(selectedIndex),
+                    ButtonPaper,
+                    InkColor,
+                    46f);
+            }
+        }
+
+        private void SelectRecord(int index)
+        {
+            if (session.Select(index) == MinigameAttemptResult.Success)
+                Succeed();
+            else
+                Fail("Wybrano błędny rekord. Dostęp przerwany — spróbuj ponownie.");
+        }
+    }
+}

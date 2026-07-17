@@ -8,8 +8,12 @@ namespace InterrogationRoom.Networking
     {
         public string Id;
         public PrivateObjectiveKind Kind;
+        public string Title;
+        public string Motive;
         public bool HasCurrentStep;
         public string CurrentStepId;
+        public string CurrentStepDescription;
+        public string CurrentStepLocationHint;
         public int CompletedStepCount;
         public int TotalStepCount;
         public bool IsCompleted;
@@ -21,8 +25,12 @@ namespace InterrogationRoom.Networking
             {
                 Id = view.Id.Value,
                 Kind = view.Kind,
+                Title = view.Title,
+                Motive = view.Motive,
                 HasCurrentStep = view.CurrentStep.HasValue,
                 CurrentStepId = view.CurrentStep?.Value,
+                CurrentStepDescription = view.CurrentStepDescription,
+                CurrentStepLocationHint = view.CurrentStepLocationHint,
                 CompletedStepCount = view.CompletedStepCount,
                 TotalStepCount = view.TotalStepCount,
                 IsCompleted = view.IsCompleted,
@@ -33,7 +41,11 @@ namespace InterrogationRoom.Networking
         public PrivateObjectiveView ToView() => new PrivateObjectiveView(
             new PrivateObjectiveId(Id),
             Kind,
+            Title,
+            Motive,
             HasCurrentStep ? new PrivateObjectiveStepId(CurrentStepId) : (PrivateObjectiveStepId?)null,
+            CurrentStepDescription,
+            CurrentStepLocationHint,
             CompletedStepCount,
             TotalStepCount,
             IsCompleted,
@@ -108,6 +120,8 @@ namespace InterrogationRoom.Networking
         public string Id;
         public string PreparationStepId;
         public string LocationId;
+        public string Description;
+        public string LocationHint;
         public bool IsPrepared;
 
         public static EscapeExitOptionMessage FromView(EscapeExitOptionView view) =>
@@ -116,6 +130,8 @@ namespace InterrogationRoom.Networking
                 Id = view.Id.Value,
                 PreparationStepId = view.PreparationStepId.Value,
                 LocationId = view.Location.Value,
+                Description = view.Description,
+                LocationHint = view.LocationHint,
                 IsPrepared = view.IsPrepared
             };
 
@@ -123,14 +139,20 @@ namespace InterrogationRoom.Networking
             new EscapeExitId(Id),
             new EscapeStepId(PreparationStepId),
             new IncidentLocationId(LocationId),
+            Description,
+            LocationHint,
             IsPrepared);
     }
 
     public struct EscapePlanMessage
     {
         public string Id;
+        public string Title;
+        public string Motive;
         public bool HasCurrentStep;
         public string CurrentStepId;
+        public string CurrentStepDescription;
+        public string CurrentStepLocationHint;
         public int CompletedCommonStepCount;
         public int TotalCommonStepCount;
         public bool IsPrepared;
@@ -142,8 +164,12 @@ namespace InterrogationRoom.Networking
             new EscapePlanMessage
             {
                 Id = view.Id.Value,
+                Title = view.Title,
+                Motive = view.Motive,
                 HasCurrentStep = view.CurrentStep.HasValue,
                 CurrentStepId = view.CurrentStep?.Value,
+                CurrentStepDescription = view.CurrentStepDescription,
+                CurrentStepLocationHint = view.CurrentStepLocationHint,
                 CompletedCommonStepCount = view.CompletedCommonStepCount,
                 TotalCommonStepCount = view.TotalCommonStepCount,
                 IsPrepared = view.IsPrepared,
@@ -154,7 +180,11 @@ namespace InterrogationRoom.Networking
 
         public EscapePlanView ToView() => new EscapePlanView(
             new EscapePlanId(Id),
+            Title,
+            Motive,
             HasCurrentStep ? new EscapeStepId(CurrentStepId) : (EscapeStepId?)null,
+            CurrentStepDescription,
+            CurrentStepLocationHint,
             CompletedCommonStepCount,
             TotalCommonStepCount,
             IsPrepared,

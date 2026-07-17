@@ -16,8 +16,8 @@ namespace InterrogationRoom.Content
     [CreateAssetMenu(menuName = "Interrogation Room/Case", fileName = "NewCase")]
     public sealed class CaseAsset : ScriptableObject
     {
-        /// <summary>Recommended authored length; shorter cases only warn, they are not blocked.</summary>
-        public const int RecommendedMinFacts = 6;
+        /// <summary>Every Alibi has exactly this many readable points; other lengths are blocked.</summary>
+        public const int RequiredFactCount = CaseDefinition.RequiredAlibiFactCount;
 
         [Tooltip("Tytuł sprawy (roboczy, nie pokazywany graczom).")]
         public string title;
@@ -52,6 +52,12 @@ namespace InterrogationRoom.Content
 
             [Tooltip("możliwyDoUkrycia — tylko takie fakty mogą zostać ukryte Winnemu.")]
             public bool canBeHidden;
+
+            [Tooltip("Zgodne warianty tego samego faktu (kolory, przekąski, przybliżone godziny). Tekst główny musi być jednym z nich; pusta lista wyłącza rotację.")]
+            public List<string> variantTexts = new List<string>();
+
+            [Tooltip("charakterystycznyDetal — zapamiętywalny, ale nieistotny dla przebiegu wydarzeń szczegół.")]
+            public bool distinctiveDetail;
         }
 
         [Serializable]
@@ -85,7 +91,9 @@ namespace InterrogationRoom.Content
                 .Select((fact, index) => new AlibiFact(
                     ResolveFactId(fact, index),
                     fact.text.Trim(),
-                    fact.canBeHidden))
+                    fact.canBeHidden,
+                    fact.variantTexts,
+                    fact.distinctiveDetail))
                 .ToList();
             var clues = (alibiClues ?? new List<AuthoredAlibiClue>())
                 .Select(clue => new AlibiClueDefinition(
@@ -124,10 +132,15 @@ namespace InterrogationRoom.Content
                 errors.Add("Alibi has no facts.");
                 return;
             }
+            if (alibiFacts.Count != RequiredFactCount)
+                errors.Add($"Alibi must have exactly {RequiredFactCount} facts, got {alibiFacts.Count}.");
             if (alibiFacts.Any(f => f == null || string.IsNullOrWhiteSpace(f.text)))
                 errors.Add("Alibi contains an empty fact.");
+            if (!alibiFacts.Any(f => f != null && f.distinctiveDetail))
+                errors.Add("Alibi must mark at least one fact as charakterystycznyDetal.");
             if (minHiddenFacts < 0 || minHiddenFacts > maxHiddenFacts)
                 errors.Add($"Hidden-fact range {minHiddenFacts}..{maxHiddenFacts} is invalid.");
+            CollectVariantErrors(errors);
 
             var hideableCount = alibiFacts.Count(f => f != null && f.canBeHidden);
             if (hideableCount < maxHiddenFacts)
@@ -170,12 +183,63 @@ namespace InterrogationRoom.Content
                     errors.Add($"Alibi clue '{clue.id}' must link to a hideable fact.");
                 if (string.IsNullOrWhiteSpace(linkedFact.id))
                     errors.Add($"Alibi clue '{clue.id}' requires an explicit stable fact id.");
-                if (clue.content.Trim().IndexOf(
-                    linkedFact.text.Trim(),
-                    StringComparison.OrdinalIgnoreCase) >= 0)
+                var possibleTexts = linkedFact.variantTexts == null || linkedFact.variantTexts.Count == 0
+                    ? new List<string> { linkedFact.text }
+                    : linkedFact.variantTexts;
+                if (possibleTexts
+                    .Where(text => !string.IsNullOrWhiteSpace(text))
+                    .Any(text => clue.content.Trim().IndexOf(
+                        text.Trim(),
+                        StringComparison.OrdinalIgnoreCase) >= 0))
                 {
-                    errors.Add($"Alibi clue '{clue.id}' cannot be a copy of its fact text.");
+                    errors.Add($"Alibi clue '{clue.id}' cannot be a copy of any compatible variant text.");
                 }
+            }
+        }
+
+        private void CollectVariantErrors(List<string> errors)
+        {
+            var hasRotatingPool = false;
+            for (var index = 0; index < alibiFacts.Count; index++)
+            {
+                var fact = alibiFacts[index];
+                if (fact == null || fact.variantTexts == null || fact.variantTexts.Count == 0)
+                    continue;
+
+                var factId = ResolveFactId(fact, index);
+                if (fact.variantTexts.Any(string.IsNullOrWhiteSpace))
+                {
+                    errors.Add($"Fact '{factId}' variant pool contains an empty text.");
+                    continue;
+                }
+
+                var normalizedVariants = fact.variantTexts
+                    .Select(text => text.Trim())
+                    .ToArray();
+                if (normalizedVariants.Distinct(StringComparer.OrdinalIgnoreCase).Count()
+                    != normalizedVariants.Length)
+                {
+                    errors.Add($"Fact '{factId}' variant pool contains duplicate texts.");
+                }
+
+                var primaryText = fact.text?.Trim();
+                if (!string.IsNullOrWhiteSpace(primaryText)
+                    && !normalizedVariants.Contains(primaryText, StringComparer.Ordinal))
+                {
+                    errors.Add($"Fact '{factId}' variant pool must include its primary text.");
+                }
+
+                if (normalizedVariants.Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1)
+                    hasRotatingPool = true;
+            }
+
+            if (!hasRotatingPool)
+                errors.Add("Alibi must define at least one rotating variant pool.");
+
+            if (maxHiddenFacts > 0
+                && !alibiFacts.Any(fact => fact != null && fact.canBeHidden && !fact.distinctiveDetail))
+            {
+                errors.Add("Alibi must have a hideable non-distinctive fact so a charakterystycznyDetal is never the only hidden fact.");
             }
         }
 
@@ -187,9 +251,6 @@ namespace InterrogationRoom.Content
             var errors = Validate();
             foreach (var error in errors)
                 Debug.LogError($"CaseAsset '{name}': {error}", this);
-
-            if (alibiFacts != null && alibiFacts.Count > 0 && alibiFacts.Count < RecommendedMinFacts)
-                Debug.LogWarning($"CaseAsset '{name}': {alibiFacts.Count} facts — MVP recommends {RecommendedMinFacts}-10.", this);
         }
     }
 }

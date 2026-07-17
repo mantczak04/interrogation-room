@@ -17,7 +17,9 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         [Header("Hint")]
         [SerializeField] private string hintKey = "[E]";
-        [SerializeField] private string standUpPrompt = "Stand up";
+        [SerializeField] private string standUpPrompt = "Wstań";
+        [SerializeField] private string heldItemPrefix = "Niesiesz";
+        [SerializeField] private string dropHint = "[G] Upuść";
 
         private PlayerInteractor interactor;
         private PlayerController playerController;
@@ -25,6 +27,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         private Image dotImage;
         private RectTransform dotRect;
         private Text hintLabel;
+        private Text heldItemLabel;
         private float currentSize;
 
         private void Awake()
@@ -84,6 +87,13 @@ namespace InterrogationRoom.Gameplay.Interaction
             {
                 hintLabel.enabled = showHint;
             }
+
+            var heldItem = interactor.HeldItem;
+            bool showHeldItem = heldItem != null;
+            if (showHeldItem)
+                heldItemLabel.text = $"■  {heldItemPrefix}: {heldItem.DisplayName}   {dropHint}";
+            if (heldItemLabel.enabled != showHeldItem)
+                heldItemLabel.enabled = showHeldItem;
         }
 
         private string ResolvePrompt(bool targeted, bool timedInteractionActive)
@@ -143,6 +153,21 @@ namespace InterrogationRoom.Gameplay.Interaction
             hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 0.5f);
             hintRect.anchoredPosition = new Vector2(0f, -36f);
             hintRect.sizeDelta = new Vector2(480f, 28f);
+
+            var heldItemObject = new GameObject("HeldItem");
+            heldItemObject.transform.SetParent(canvasObject.transform, false);
+            heldItemLabel = heldItemObject.AddComponent<Text>();
+            heldItemLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            heldItemLabel.fontSize = 17;
+            heldItemLabel.fontStyle = FontStyle.Bold;
+            heldItemLabel.alignment = TextAnchor.MiddleCenter;
+            heldItemLabel.color = new Color32(0xB8, 0xC7, 0xA8, 0xFF);
+            heldItemLabel.raycastTarget = false;
+            heldItemLabel.enabled = false;
+            RectTransform heldItemRect = heldItemLabel.rectTransform;
+            heldItemRect.anchorMin = heldItemRect.anchorMax = new Vector2(0.5f, 0.5f);
+            heldItemRect.anchoredPosition = new Vector2(0f, -68f);
+            heldItemRect.sizeDelta = new Vector2(640f, 26f);
 
             hudCanvas.enabled = false;
         }

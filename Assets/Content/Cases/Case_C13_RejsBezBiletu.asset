@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C13_RejsBezBiletu
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: Rejs bez biletu ulgowego
+  crimeDescription: "Kto\u015B wprowadzi\u0142 furgonetk\u0119 z lodami do sali obrad
+    i przez godzin\u0119 odtwarza\u0142 z niej hymn miasta wspak."
+  alibiFacts:
+  - id: dolny-poklad
+    text: "O 18:05 grupa przesz\u0142a przez bramk\u0119 przystani i usiad\u0142a
+      na dolnym pok\u0142adzie obok pomara\u0144czowego ko\u0142a ratunkowego."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: kobieta-ze-slonecznikiem
+    text: "Naprzeciwko siedzia\u0142a kobieta z du\u017Cym s\u0142onecznikiem."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: dwa-sygnaly
+    text: "Przy czerwonej boi prom zatr\u0105bi\u0142 dwa razy."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: herbata-z-kotwica
+    text: "Wszyscy pili herbat\u0119 z papierowych kubk\xF3w z granatow\u0105 kotwic\u0105."
+    canBeHidden: 0
+    variantTexts:
+    - "Wszyscy pili herbat\u0119 z papierowych kubk\xF3w z granatow\u0105 kotwic\u0105."
+    - "Wszyscy pili herbat\u0119 z papierowych kubk\xF3w z czerwon\u0105 kotwic\u0105."
+    distinctiveDetail: 1
+  - id: melodia-akordeonisty
+    text: "Akordeonista zagra\u0142 melodi\u0119 o dziewczynie id\u0105cej przez
+      las."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: lina-i-wyjscie
+    text: "Marynarz upu\u015Bci\u0142 niebiesk\u0105 lin\u0119 przy trapie, a o 18:38
+      grupa zesz\u0142a razem przy targu rybnym."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: notes-slonecznik
+    linkedFactId: kobieta-ze-slonecznikiem
+    content: "Notes z zasuszonym p\u0142atkiem s\u0142onecznika, fragmentem biletu
+      i szkicem przeciwleg\u0142ych \u0142awek."
+  - id: karta-trasy
+    linkedFactId: dwa-sygnaly
+    content: "Karta trasy z czerwon\u0105 boj\u0105 i dwoma wg\u0142\u0119bieniami
+      przy symbolu rogu."
+  - id: kartka-nutowa
+    linkedFactId: melodia-akordeonisty
+    content: "Kartka nutowa bez tytu\u0142u, z ilustracj\u0105 dziewczyny w lesie
+      i dopiskiem \u201Edolny pok\u0142ad\u201D."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

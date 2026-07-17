@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C16_SyrenaWKapieli
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: "Syrena w k\u0105pieli"
+  crimeDescription: "Kto\u015B ubra\u0142 br\u0105zow\u0105 syren\u0119 z miejskiej
+    fontanny w szlafrok, czepek k\u0105pielowy i ogromne r\xF3\u017Cowe kapcie."
+  alibiFacts:
+  - id: wejscie-do-apteki
+    text: "O 22:10 grupa wesz\u0142a do ca\u0142odobowej apteki po banda\u017C na
+      skr\u0119con\u0105 kostk\u0119."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: muszka-w-kaczki
+    text: "Farmaceuta mia\u0142 granatow\u0105 muszk\u0119 w \u017C\xF3\u0142te kaczki."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: numer-kolejki-8
+    text: "Dostali bilet kolejki numer 8, cho\u0107 poza nimi nikogo nie by\u0142o."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: termometr-dwa-sygnaly
+    text: "Gdy \u015Bwiat\u0142o na chwil\u0119 przygas\u0142o, termometr przy kasie
+      zapiszcza\u0142 dwa razy."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: ziolowe-cukierki
+    text: "Farmaceuta pocz\u0119stowa\u0142 wszystkich mi\u0119towymi cukierkami
+      z zielonego s\u0142oja."
+    canBeHidden: 0
+    variantTexts:
+    - "Farmaceuta pocz\u0119stowa\u0142 wszystkich mi\u0119towymi cukierkami z zielonego
+      s\u0142oja."
+    - "Farmaceuta pocz\u0119stowa\u0142 wszystkich any\u017Cowymi cukierkami z zielonego
+      s\u0142oja."
+    distinctiveDetail: 1
+  - id: wspolna-taksowka
+    text: "Po opatrzeniu kostki o 22:36 wszyscy wyszli i wsiedli do tej samej taks\xF3wki."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: zdjecie-muszki
+    linkedFactId: muszka-w-kaczki
+    content: "Zdj\u0119cie ciemnej muszki z fragmentami \u017C\xF3\u0142tych ptasich
+      sylwetek, bez twarzy w\u0142a\u015Bciciela."
+  - id: bilet-apteczny
+    linkedFactId: numer-kolejki-8
+    content: "Pognieciony bilet z cyfr\u0105 8 i symbolem mo\u017Adzierza, bez adresu
+      plac\xF3wki."
+  - id: wydruk-termometru
+    linkedFactId: termometr-dwa-sygnaly
+    content: "Wydruk urz\u0105dzenia z dwiema kr\xF3tkimi przerwami pomiaru podczas
+      spadku napi\u0119cia."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

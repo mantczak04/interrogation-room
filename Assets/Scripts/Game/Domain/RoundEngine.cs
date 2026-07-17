@@ -22,6 +22,7 @@ namespace InterrogationRoom.Domain
         private PlayerId[] _players = Array.Empty<PlayerId>();
         private readonly Dictionary<PlayerId, RoundRole> _roles = new Dictionary<PlayerId, RoundRole>();
         private readonly HashSet<string> _hiddenFactIds = new HashSet<string>();
+        private readonly Dictionary<string, string> _resolvedFactTexts = new Dictionary<string, string>();
         private readonly Dictionary<PlayerId, PrivateObjectiveState> _privateObjectives =
             new Dictionary<PlayerId, PrivateObjectiveState>();
         private readonly Dictionary<IncidentId, IncidentState> _incidents =
@@ -33,6 +34,7 @@ namespace InterrogationRoom.Domain
             new List<AlibiClueDefinition>();
         private readonly HashSet<AlibiClueId> _acquiredAlibiClueIds =
             new HashSet<AlibiClueId>();
+        private readonly HashSet<PlayerId> _readyPlayers = new HashSet<PlayerId>();
         private EscapePlanState _escapePlan;
         private PlayerId? _detective;
         private PlayerId? _executedPlayer;
@@ -46,6 +48,8 @@ namespace InterrogationRoom.Domain
             {
                 case RoundCommand.StartRound start:
                     return HandleStartRound(start);
+                case RoundCommand.MarkPlayerReady markPlayerReady:
+                    return HandleMarkPlayerReady(markPlayerReady);
                 case RoundCommand.EndPreparation _:
                     return HandleEndPreparation();
                 case RoundCommand.Execute execute:
@@ -142,7 +146,9 @@ namespace InterrogationRoom.Domain
                 revealedIncidents,
                 acquiredAlibiClues,
                 escapePlan,
-                roundReveal);
+                roundReveal,
+                _phase == RoundPhase.Preparation ? _readyPlayers.Count : 0,
+                _phase == RoundPhase.Preparation && _readyPlayers.Contains(viewer));
         }
 
         private RoundTransition HandleStartRound(RoundCommand.StartRound start)
@@ -159,16 +165,27 @@ namespace InterrogationRoom.Domain
                 return Reject("Skład Rundy contains duplicate players.");
 
             var facts = start.Case.AlibiFacts;
-            if (facts.Count == 0)
-                return Reject("Case has no Alibi facts.");
-            if (facts.Select(f => f.Id).Distinct().Count() != facts.Count)
+            if (facts.Count != CaseDefinition.RequiredAlibiFactCount)
+                return Reject($"Case Alibi requires exactly {CaseDefinition.RequiredAlibiFactCount} facts.");
+            if (facts.Any(fact => fact == null))
+                return Reject("Case contains a null Alibi fact.");
+            if (facts.Select(fact => fact.Id).Distinct().Count() != facts.Count)
                 return Reject("Case has duplicate Alibi fact ids.");
+            if (!facts.Any(fact => fact.DistinctiveDetail))
+                return Reject("Case requires a charakterystycznyDetal.");
+            if (!facts.Any(fact => fact.VariantTexts.Count > 1))
+                return Reject("Case requires at least one rotating Alibi variant pool.");
 
-            var hideableCount = facts.Count(f => f.CanBeHidden);
+            var hideableCount = facts.Count(fact => fact.CanBeHidden);
             if (start.Case.MinHiddenFacts < 0
                 || start.Case.MinHiddenFacts > start.Case.MaxHiddenFacts
                 || start.Case.MaxHiddenFacts > hideableCount)
                 return Reject("Case hidden-fact range is invalid for its hideable facts.");
+            if (start.Case.MaxHiddenFacts > 0
+                && !facts.Any(fact => fact.CanBeHidden && !fact.DistinctiveDetail))
+            {
+                return Reject("Case requires a hideable non-distinctive fact.");
+            }
 
             var clues = start.Case.AlibiClues;
             if (clues.Any(clue => clue == null)
@@ -179,14 +196,23 @@ namespace InterrogationRoom.Domain
                 var linkedFact = facts.SingleOrDefault(fact => fact.Id == clue.LinkedFactId);
                 if (linkedFact == null || !linkedFact.CanBeHidden)
                     return Reject("Every Alibi clue must link to an existing hideable fact.");
-                if (clue.Content.Trim().IndexOf(
-                    linkedFact.Text.Trim(),
-                    StringComparison.OrdinalIgnoreCase) >= 0)
-                    return Reject("An Alibi clue cannot copy its linked fact text.");
+                foreach (var variant in linkedFact.VariantTexts)
+                {
+                    if (clue.Content.Trim().IndexOf(
+                        variant.Trim(),
+                        StringComparison.OrdinalIgnoreCase) >= 0)
+                        return Reject("An Alibi clue cannot copy its linked fact text.");
+                }
             }
 
-            if (start.EscapePlan == null)
-                return Reject("StartRound requires an EscapePlanDefinition.");
+            var personalMatterPool = start.PersonalMatters.Count == 0
+                ? new[] { PrivateObjectiveDefinitions.PersonalMatter }
+                : start.PersonalMatters.ToArray();
+            if (personalMatterPool.Any(definition => definition == null))
+                return Reject("Personal matter pool contains a null definition.");
+            if (personalMatterPool.Select(definition => definition.Id).Distinct().Count()
+                != personalMatterPool.Length)
+                return Reject("Personal matter pool contains duplicate ids.");
 
             if (start.SecretObjectiveCount < 0)
                 return Reject("SecretObjectiveCount cannot be negative.");
@@ -215,13 +241,17 @@ namespace InterrogationRoom.Domain
             _players = players.ToArray();
             _roles.Clear();
             _hiddenFactIds.Clear();
+            _resolvedFactTexts.Clear();
             _privateObjectives.Clear();
             _incidents.Clear();
             _incidentOrder.Clear();
             _incidentRegistry.Clear();
             _acquiredAlibiClues.Clear();
             _acquiredAlibiClueIds.Clear();
-            _escapePlan = new EscapePlanState(start.EscapePlan);
+            _readyPlayers.Clear();
+            var selectedEscapePlan = start.EscapePlan
+                ?? EscapePlanDefinitions.AuthoredPlans[rng.Next(EscapePlanDefinitions.AuthoredPlans.Count)];
+            _escapePlan = new EscapePlanState(selectedEscapePlan);
             _executedPlayer = null;
             _detectiveWon = null;
             _endCause = null;
@@ -236,9 +266,23 @@ namespace InterrogationRoom.Domain
             foreach (var innocent in pool)
                 _roles[innocent] = RoundRole.Innocent;
 
+            foreach (var fact in facts)
+            {
+                _resolvedFactTexts[fact.Id] = fact.VariantTexts.Count == 1
+                    ? fact.Text
+                    : fact.VariantTexts[rng.Next(fact.VariantTexts.Count)];
+            }
+
             var hiddenCount = rng.Next(_case.MinHiddenFacts, _case.MaxHiddenFacts + 1);
             var hideable = facts.Where(f => f.CanBeHidden).ToList();
-            for (var i = 0; i < hiddenCount; i++)
+            var hideableWithoutDetail = hideable.Where(f => !f.DistinctiveDetail).ToList();
+            if (hiddenCount > 0 && hideableWithoutDetail.Count > 0)
+            {
+                var anchor = TakeRandom(hideableWithoutDetail, rng);
+                hideable.Remove(anchor);
+                _hiddenFactIds.Add(anchor.Id);
+            }
+            while (_hiddenFactIds.Count < hiddenCount)
                 _hiddenFactIds.Add(TakeRandom(hideable, rng).Id);
 
             var secretOwners = new Dictionary<PlayerId, PlayerId>();
@@ -250,30 +294,47 @@ namespace InterrogationRoom.Domain
                 secretOwners[owner] = candidates[rng.Next(candidates.Count)];
             }
 
+            var personalMatterRotation = personalMatterPool.ToList();
+            Shuffle(personalMatterRotation, rng);
+            var personalMatterIndex = 0;
             foreach (var innocent in pool)
             {
-                if (secretOwners.TryGetValue(innocent, out var target))
+                PrivateObjectiveDefinition definition;
+                PlayerId? target;
+                if (secretOwners.TryGetValue(innocent, out var secretTarget))
                 {
-                    _privateObjectives[innocent] = new PrivateObjectiveState(
-                        PrivateObjectiveDefinitions.SecretObjective,
-                        BuildPrivateObjectiveAssignmentId(
-                            PrivateObjectiveDefinitions.SecretObjective,
-                            innocent),
-                        target);
+                    definition = WrobienieDefinitions.Variants[
+                        rng.Next(WrobienieDefinitions.Variants.Count)];
+                    target = secretTarget;
                 }
                 else
                 {
-                    _privateObjectives[innocent] = new PrivateObjectiveState(
-                        PrivateObjectiveDefinitions.PersonalMatter,
-                        BuildPrivateObjectiveAssignmentId(
-                            PrivateObjectiveDefinitions.PersonalMatter,
-                            innocent),
-                        target: null);
+                    definition = personalMatterRotation[
+                        personalMatterIndex % personalMatterRotation.Count];
+                    personalMatterIndex++;
+                    target = null;
                 }
+
+                _privateObjectives[innocent] = new PrivateObjectiveState(
+                    definition,
+                    BuildPrivateObjectiveAssignmentId(definition, innocent),
+                    target);
             }
 
             _phase = RoundPhase.Preparation;
             return RoundTransition.Accept(BuildPublicState(), new RoundEvent.RoundStarted());
+        }
+
+        private RoundTransition HandleMarkPlayerReady(RoundCommand.MarkPlayerReady markPlayerReady)
+        {
+            if (_phase != RoundPhase.Preparation)
+                return Reject("Gotowość is only allowed during Przygotowanie.");
+            if (!_roles.ContainsKey(markPlayerReady.Player))
+                return Reject("Gotowość can only be declared by a player in the Skład Rundy.");
+            if (!_readyPlayers.Add(markPlayerReady.Player))
+                return Reject("Gotowość has already been declared and cannot be repeated.");
+
+            return RoundTransition.Accept(BuildPublicState());
         }
 
         private RoundTransition HandleEndPreparation()
@@ -646,7 +707,7 @@ namespace InterrogationRoom.Domain
                 return false;
             }
 
-            var expectedStep = objective.Definition.Steps[objective.CompletedStepCount].Id;
+            var expectedStep = objective.Definition.Steps[objective.CompletedStepCount].AnchorActionId;
             if (expectedStep != stepId)
             {
                 rejectionReason = "The reported step is not the current Prywatny Cel step.";
@@ -679,7 +740,7 @@ namespace InterrogationRoom.Domain
             foreach (var fact in _case.AlibiFacts)
             {
                 var hidden = role == RoundRole.Guilty && _hiddenFactIds.Contains(fact.Id);
-                entries.Add(new AlibiEntry(fact.Id, hidden, hidden ? null : fact.Text));
+                entries.Add(new AlibiEntry(fact.Id, hidden, hidden ? null : _resolvedFactTexts[fact.Id]));
             }
 
             return new AlibiView(entries);
@@ -687,13 +748,18 @@ namespace InterrogationRoom.Domain
 
         private static PrivateObjectiveView BuildPrivateObjectiveView(PrivateObjectiveState objective)
         {
-            PrivateObjectiveStepId? currentStep = objective.IsCompleted
-                ? (PrivateObjectiveStepId?)null
-                : objective.Definition.Steps[objective.CompletedStepCount].Id;
+            var currentDefinition = objective.IsCompleted
+                ? null
+                : objective.Definition.Steps[objective.CompletedStepCount];
+            PrivateObjectiveStepId? currentStep = currentDefinition?.AnchorActionId;
             return new PrivateObjectiveView(
                 objective.AssignmentId,
                 objective.Definition.Kind,
+                objective.Definition.Title,
+                objective.Definition.Motive,
                 currentStep,
+                currentDefinition?.Description,
+                currentDefinition?.LocationHint,
                 objective.CompletedStepCount,
                 objective.Definition.Steps.Count,
                 objective.IsCompleted,
@@ -702,19 +768,26 @@ namespace InterrogationRoom.Domain
 
         private EscapePlanView BuildEscapePlanView()
         {
-            EscapeStepId? currentStep = _escapePlan.CommonPreparationComplete
-                ? (EscapeStepId?)null
-                : _escapePlan.Definition.CommonSteps[_escapePlan.CompletedCommonStepCount].Id;
+            var currentDefinition = _escapePlan.CommonPreparationComplete
+                ? null
+                : _escapePlan.Definition.CommonSteps[_escapePlan.CompletedCommonStepCount];
+            EscapeStepId? currentStep = currentDefinition?.Id;
             var exitOptions = _escapePlan.Definition.Exits
                 .Select(exit => new EscapeExitOptionView(
                     exit.Id,
                     exit.PreparationStepId,
                     exit.Location,
+                    exit.Description,
+                    exit.LocationHint,
                     _escapePlan.PreparedExits.Contains(exit.Id)))
                 .ToArray();
             return new EscapePlanView(
                 _escapePlan.Definition.Id,
+                _escapePlan.Definition.Title,
+                _escapePlan.Definition.Motive,
                 currentStep,
+                currentDefinition?.Description,
+                currentDefinition?.LocationHint,
                 _escapePlan.CompletedCommonStepCount,
                 _escapePlan.Definition.CommonSteps.Count,
                 _escapePlan.PreparedExits.Count > 0,
@@ -790,7 +863,8 @@ namespace InterrogationRoom.Domain
                 _executedPlayer,
                 _detectiveWon,
                 _endCause,
-                _successfulEscapeExit);
+                _successfulEscapeExit,
+                _phase == RoundPhase.Preparation ? _readyPlayers.Count : 0);
 
         private RoundTransition Reject(string reason) =>
             RoundTransition.Reject(reason, BuildPublicState());
@@ -801,6 +875,17 @@ namespace InterrogationRoom.Domain
             var item = pool[index];
             pool.RemoveAt(index);
             return item;
+        }
+
+        private static void Shuffle<T>(IList<T> values, Random rng)
+        {
+            for (var index = values.Count - 1; index > 0; index--)
+            {
+                var swapIndex = rng.Next(index + 1);
+                var value = values[index];
+                values[index] = values[swapIndex];
+                values[swapIndex] = value;
+            }
         }
 
         private static PrivateObjectiveId BuildPrivateObjectiveAssignmentId(

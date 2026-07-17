@@ -25,7 +25,16 @@ namespace InterrogationRoom.Domain.Tests
                     new AlibiFact("f3", "Wszyscy śpiewali sto lat panu Henrykowi.", true),
                     new AlibiFact("f4", "Ktoś zgubił klucze pod stołem.", true),
                     new AlibiFact("f5", "Grupa wróciła tramwajem numer 12.", false),
-                    new AlibiFact("f6", "Na przystanku padał deszcz.", false)
+                    new AlibiFact(
+                        "f6",
+                        "Na przystanku padał deszcz.",
+                        false,
+                        new[]
+                        {
+                            "Na przystanku padał deszcz.",
+                            "Na przystanku padała drobna mżawka."
+                        },
+                        distinctiveDetail: true)
                 },
                 minHidden,
                 maxHidden,
@@ -115,6 +124,9 @@ namespace InterrogationRoom.Domain.Tests
                 Assert.That(
                     secondAlibi.Entries.Select(e => e.IsHidden),
                     Is.EqualTo(firstAlibi.Entries.Select(e => e.IsHidden)));
+                Assert.That(
+                    secondAlibi.Entries.Select(e => e.Text),
+                    Is.EqualTo(firstAlibi.Entries.Select(e => e.Text)));
 
                 Assert.That(second.ViewFor(player).PrivateObjective?.Kind,
                     Is.EqualTo(first.ViewFor(player).PrivateObjective?.Kind));
@@ -149,6 +161,46 @@ namespace InterrogationRoom.Domain.Tests
 
             var transition = new RoundEngine().Handle(
                 new RoundCommand.StartRound(impossibleCase, FivePlayers, seed: 1));
+
+            Assert.That(transition.Accepted, Is.False);
+        }
+
+        [Test]
+        public void StartRound_CaseWithoutExactlySixFacts_IsRejected()
+        {
+            var source = TestCase();
+            var fiveFacts = new CaseDefinition(
+                source.Title,
+                source.CrimeDescription,
+                source.AlibiFacts.Take(5),
+                source.MinHiddenFacts,
+                source.MaxHiddenFacts,
+                source.AlibiClues);
+
+            var transition = new RoundEngine().Handle(
+                new RoundCommand.StartRound(fiveFacts, FivePlayers, seed: 1));
+
+            Assert.That(transition.Accepted, Is.False);
+            Assert.That(transition.RejectionReason, Does.Contain("exactly 6"));
+        }
+
+        [Test]
+        public void StartRound_CaseWithoutControlledVariantOrDistinctiveDetail_IsRejected()
+        {
+            var source = TestCase();
+            var fixedFacts = source.AlibiFacts
+                .Select(fact => new AlibiFact(fact.Id, fact.Text, fact.CanBeHidden))
+                .ToArray();
+            var invalid = new CaseDefinition(
+                source.Title,
+                source.CrimeDescription,
+                fixedFacts,
+                source.MinHiddenFacts,
+                source.MaxHiddenFacts,
+                source.AlibiClues);
+
+            var transition = new RoundEngine().Handle(
+                new RoundCommand.StartRound(invalid, FivePlayers, seed: 1));
 
             Assert.That(transition.Accepted, Is.False);
         }
@@ -261,6 +313,85 @@ namespace InterrogationRoom.Domain.Tests
 
             foreach (var player in FivePlayers)
                 Assert.That(engine.ViewFor(player).Alibi, Is.Null);
+        }
+
+        [Test]
+        public void MarkPlayerReady_IsAcceptedOnlyDuringPreparation()
+        {
+            var lobbyTransition = new RoundEngine().Handle(
+                new RoundCommand.MarkPlayerReady(FivePlayers[0]));
+
+            var engine = StartedEngine();
+            var preparationTransition = engine.Handle(
+                new RoundCommand.MarkPlayerReady(FivePlayers[0]));
+            engine.Handle(new RoundCommand.EndPreparation());
+            var roundTransition = engine.Handle(
+                new RoundCommand.MarkPlayerReady(FivePlayers[1]));
+
+            Assert.That(lobbyTransition.Accepted, Is.False);
+            Assert.That(preparationTransition.Accepted, Is.True);
+            Assert.That(preparationTransition.State.ReadyPlayerCount, Is.EqualTo(1));
+            Assert.That(roundTransition.Accepted, Is.False);
+        }
+
+        [Test]
+        public void MarkPlayerReady_UnknownPlayer_IsRejected()
+        {
+            var engine = StartedEngine();
+
+            var transition = engine.Handle(new RoundCommand.MarkPlayerReady(new PlayerId(99)));
+
+            Assert.That(transition.Accepted, Is.False);
+            Assert.That(transition.State.ReadyPlayerCount, Is.Zero);
+        }
+
+        [Test]
+        public void MarkPlayerReady_IsIrreversibleAndRejectsRepeats()
+        {
+            var engine = StartedEngine();
+            Assert.That(engine.Handle(new RoundCommand.MarkPlayerReady(FivePlayers[0])).Accepted, Is.True);
+
+            var repeated = engine.Handle(new RoundCommand.MarkPlayerReady(FivePlayers[0]));
+
+            Assert.That(repeated.Accepted, Is.False);
+            Assert.That(repeated.State.ReadyPlayerCount, Is.EqualTo(1),
+                "A rejected repeat neither clears nor doubles the declared Gotowość.");
+            Assert.That(engine.ViewFor(FivePlayers[0]).IsReady, Is.True);
+        }
+
+        [Test]
+        public void MarkPlayerReady_AllPlayersReady_IsVisibleInPublicStateAndViews()
+        {
+            var engine = StartedEngine();
+
+            RoundTransition last = null;
+            foreach (var player in FivePlayers)
+                last = engine.Handle(new RoundCommand.MarkPlayerReady(player));
+
+            Assert.That(last.Accepted, Is.True);
+            Assert.That(last.State.ReadyPlayerCount, Is.EqualTo(FivePlayers.Length));
+            foreach (var player in FivePlayers)
+            {
+                Assert.That(engine.ViewFor(player).IsReady, Is.True);
+                Assert.That(engine.ViewFor(player).ReadyPlayerCount, Is.EqualTo(FivePlayers.Length));
+            }
+        }
+
+        [Test]
+        public void MarkPlayerReady_ReadyStateIsNotExposedAfterPreparation()
+        {
+            var engine = StartedEngine();
+            foreach (var player in FivePlayers)
+                engine.Handle(new RoundCommand.MarkPlayerReady(player));
+
+            var endTransition = engine.Handle(new RoundCommand.EndPreparation());
+
+            Assert.That(endTransition.State.ReadyPlayerCount, Is.Zero);
+            foreach (var player in FivePlayers)
+            {
+                Assert.That(engine.ViewFor(player).IsReady, Is.False);
+                Assert.That(engine.ViewFor(player).ReadyPlayerCount, Is.Zero);
+            }
         }
 
         // 5. Egzekucja Winnego daje zwycięstwo Detektywowi.

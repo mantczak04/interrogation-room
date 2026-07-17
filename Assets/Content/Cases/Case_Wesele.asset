@@ -12,27 +12,59 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
   m_Name: Case_Wesele
   m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
-  title: Wesele bez Tortu
+  title: Wesele bez tortu
   crimeDescription: "Kto\u015B wystrzeli\u0142 weselny tort z armatki konfetti na
     dach remizy."
   alibiFacts:
-  - text: "O 18:30 wszyscy zaj\u0119li miejsca przy stole obok orkiestry."
+  - id: miejsca-przy-orkiestrze
+    text: "O 18:30 wszyscy zaj\u0119li miejsca przy stole obok orkiestry."
     canBeHidden: 0
-  - text: "\u015Awiadek pana m\u0142odego rozla\u0142 kompot z agrestu na bia\u0142y
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: rozlany-kompot
+    text: "\u015Awiadek pana m\u0142odego rozla\u0142 kompot z agrestu na bia\u0142y
       obrus."
     canBeHidden: 1
-  - text: "Kapela zagra\u0142a polk\u0119, gdy zegar nad barem wskazywa\u0142 18:47."
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: pierwsza-polka
+    text: "Kapela zagra\u0142a polk\u0119, gdy zegar nad barem wskazywa\u0142 18:47."
     canBeHidden: 1
-  - text: "Ciocia Gra\u017Cyna rozdawa\u0142a papierowe korony z napisem Kr\xF3l
-      Parkietu."
-    canBeHidden: 1
-  - text: "Kelner wni\xF3s\u0142 tort na w\xF3zku z jednym skrzypi\u0105cym ko\u0142em."
-    canBeHidden: 1
-  - text: "Przez pi\u0119\u0107 minut zgas\u0142o \u015Bwiat\u0142o, ale muzyka nadal
-      gra\u0142a."
-    canBeHidden: 1
-  - text: "O 19:05 grupa wysz\u0142a przed remiz\u0119 ogl\u0105da\u0107 pokaz zimnych
-      ogni."
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: papierowe-korony
+    text: "Ciocia Gra\u017Cyna rozdawa\u0142a papierowe korony z napisem \u201EKr\xF3l
+      Parkietu\u201D."
     canBeHidden: 0
+    variantTexts:
+    - "Ciocia Gra\u017Cyna rozdawa\u0142a papierowe korony z napisem \u201EKr\xF3l
+      Parkietu\u201D."
+    - "Ciocia Gra\u017Cyna rozdawa\u0142a papierowe korony z napisem \u201EMistrz
+      Wesela\u201D."
+    distinctiveDetail: 1
+  - id: skrzypiacy-wozek
+    text: "Kelner wni\xF3s\u0142 tort na w\xF3zku z jednym skrzypi\u0105cym ko\u0142em."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: awaria-i-wyjscie
+    text: "Przez pi\u0119\u0107 minut nie by\u0142o \u015Bwiat\u0142a, ale muzyka
+      gra\u0142a dalej; o 19:05 grupa wysz\u0142a na zimne ognie, a potem razem czeka\u0142a
+      przy bramie na taks\xF3wk\u0119."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: fotografia-obrusa
+    linkedFactId: rozlany-kompot
+    content: "Fotografia bia\u0142ego obrusa z jasnozielon\u0105 plam\u0105 obok
+      winietki \u015Bwiadka."
+  - id: setlista-1847
+    linkedFactId: pierwsza-polka
+    content: Setlista kapeli z symbolem polki obok godziny 18:47.
+  - id: kwit-wozka
+    linkedFactId: skrzypiacy-wozek
+    content: "Kwit naprawy w\xF3zka z jednym przednim ko\u0142em opisanym jako piszcz\u0105ce
+      pod obci\u0105\u017Ceniem."
   minHiddenFacts: 2
-  maxHiddenFacts: 2
+  maxHiddenFacts: 3

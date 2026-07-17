@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C18_CzekoladoweParkometry
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: Czekoladowe parkometry
+  crimeDescription: "Kto\u015B zast\u0105pi\u0142 monety we wszystkich parkometrach
+    przy ratuszu czekoladowymi kr\u0105\u017Ckami w z\u0142otkach papierkach."
+  alibiFacts:
+  - id: boczna-brama-szklarni
+    text: "O 19:30 grupa wesz\u0142a boczn\u0105 bram\u0105 na wieczorne zwiedzanie
+      miejskiej szklarni."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: konewka-zaba
+    text: "Przewodniczka nios\u0142a zielon\u0105 konewk\u0119 w kszta\u0142cie \u017Caby."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: etykieta-monstery
+    text: "Skroplona para zas\u0142oni\u0142a etykiet\u0119 monstery, wi\u0119c przewodniczka
+      przetar\u0142a j\u0105 r\u0119kawem."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: mgielka-1944
+    text: "O 19:44 automatyczne zraszacze uruchomi\u0142y g\u0119st\u0105 mgie\u0142k\u0119
+      na ca\u0142ej alejce."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: kot-ze-wstazka
+    text: "Szklarniowy kot spa\u0142 pod \u0142awk\u0105 w czerwonej wst\u0105\u017Cce."
+    canBeHidden: 0
+    variantTexts:
+    - "Szklarniowy kot spa\u0142 pod \u0142awk\u0105 w czerwonej wst\u0105\u017Cce."
+    - "Szklarniowy kot spa\u0142 pod \u0142awk\u0105 w fioletowej wst\u0105\u017Cce."
+    distinctiveDetail: 1
+  - id: wyjscie-autobusem-7
+    text: "Po zamkni\u0119ciu zraszaczy wszyscy wyszli g\u0142\xF3wn\u0105 bram\u0105
+      i odjechali autobusem numer 7."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: zdjecie-konewki
+    linkedFactId: konewka-zaba
+    content: "Zdj\u0119cie zielonego pojemnika z wypuk\u0142ymi oczami i wylewk\u0105,
+      bez osoby nios\u0105cej."
+  - id: wilgotna-etykieta
+    linkedFactId: etykieta-monstery
+    content: "Wilgotna etykieta z ko\u0144c\xF3wk\u0105 \u201E-stera\u201D i smug\u0105
+      tkaniny na laminacie."
+  - id: log-zraszaczy
+    linkedFactId: mgielka-1944
+    content: "Log instalacji z godzin\u0105 19:44 i uruchomieniem wszystkich dysz
+      w jednej alejce."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

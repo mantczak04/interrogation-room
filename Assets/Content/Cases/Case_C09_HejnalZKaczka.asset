@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C09_HejnalZKaczka
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: "Hejna\u0142 z kaczk\u0105"
+  crimeDescription: "Kto\u015B podmieni\u0142 nagranie ratuszowego hejna\u0142u,
+    przez co w samo po\u0142udnie z wie\u017Cy przez minut\u0119 rozlega\u0142o si\u0119
+    uroczyste kwakanie."
+  alibiFacts:
+  - id: pokoj-karaoke
+    text: "Po odwo\u0142anym seansie grupa wesz\u0142a do baru karaoke \u201EPod
+      Fa\u0142szem\u201D i wylosowa\u0142a prywatny pok\xF3j numer trzy."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: duet-o-rozach
+    text: "Zacz\u0119li od duetu o bia\u0142ych r\xF3\u017Cach."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: lemoniada-i-mikrofon
+    text: "Kelner przyni\xF3s\u0142 lemoniad\u0119 z plasterkami cytryny na metalowej
+      tacy, a mikrofon zamilk\u0142 przed ostatnim refrenem."
+    canBeHidden: 1
+    variantTexts:
+    - "Kelner przyni\xF3s\u0142 lemoniad\u0119 z plasterkami cytryny na metalowej
+      tacy, a mikrofon zamilk\u0142 przed ostatnim refrenem."
+    - "Kelner przyni\xF3s\u0142 lemoniad\u0119 z plasterkami pomara\u0144czy na metalowej
+      tacy, a mikrofon zamilk\u0142 przed ostatnim refrenem."
+    distinctiveDetail: 1
+  - id: tamburyn
+    text: "Doko\u0144czyli piosenk\u0119 z tamburynem zdj\u0119tym ze \u015Bciany."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: zdjecia-w-budce
+    text: "Potem zrobili wsp\xF3lne zdj\u0119cia w budce."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: niebieskie-stemple
+    text: "Wszyscy wyszli razem z niebieskimi stemplami na d\u0142oniach."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: formularz-duetu
+    linkedFactId: duet-o-rozach
+    content: "Naderwany formularz z dwiema rubrykami wykonawc\xF3w, dwiema r\xF3\u017Cami
+      i liter\u0105 B."
+  - id: blister-baterii
+    linkedFactId: lemoniada-i-mikrofon
+    content: "Blister po bateriach z wykresem d\u017Awi\u0119ku urwanym przed trzecim
+      refrenem."
+  - id: pasek-zdjec
+    linkedFactId: zdjecia-w-budce
+    content: "Ty\u0142 paska zdj\u0119\u0107 z cieniami g\u0142\xF3w i kolejnymi
+      numerami klatek, bez twarzy."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

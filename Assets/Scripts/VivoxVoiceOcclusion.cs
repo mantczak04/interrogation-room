@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using InterrogationRoom.Gameplay.Interaction;
+using InterrogationRoom.Voice;
 using UnityEngine;
 
 public enum VoiceOcclusionState
@@ -20,6 +20,7 @@ public sealed class VivoxVoiceOcclusion : MonoBehaviour
     private const float UpdateInterval = 0.1f;
 
     private readonly RaycastHit[] hits = new RaycastHit[16];
+    private readonly List<VoicePortal> portalSnapshot = new List<VoicePortal>();
 
     private Transform listener;
     private Transform speaker;
@@ -29,18 +30,22 @@ public sealed class VivoxVoiceOcclusion : MonoBehaviour
     private float nextUpdate;
 
     [Header("Acoustic presets")]
-    [SerializeField, Range(0f, 1f)] private float openPortalVolume = 0.8f;
-    [SerializeField, Min(10f)] private float openPortalCutoff = 12000f;
-    [SerializeField, Range(0f, 1f)] private float closedPortalVolume = 0.25f;
-    [SerializeField, Min(10f)] private float closedPortalCutoff = 1800f;
-    [SerializeField, Range(0f, 1f)] private float wallVolume = 0.08f;
-    [SerializeField, Min(10f)] private float wallCutoff = 900f;
-    [SerializeField, Min(0.1f)] private float volumeTransitionSpeed = 5f;
-    [SerializeField, Min(10f)] private float cutoffTransitionSpeed = 60000f;
+    [SerializeField, Range(0f, 1f)] private float openPortalVolume = 0.7f;
+    [SerializeField, Min(10f)] private float openPortalCutoff = 8000f;
+    [SerializeField, Min(0.1f)] private float openPathDetourHalfDistance = 6f;
+    [SerializeField, Range(0f, 1f)] private float closedPortalVolume = 0.18f;
+    [SerializeField, Min(10f)] private float closedPortalCutoff = 1000f;
+    [SerializeField, Min(0.1f)] private float eavesdropRange = 1.75f;
+    [SerializeField, Min(0f)] private float eavesdropFalloff = 1f;
+    [SerializeField, Range(0f, 1f)] private float wallVolume = 0.02f;
+    [SerializeField, Min(10f)] private float wallCutoff = 600f;
+    [SerializeField, Min(0.1f)] private float volumeTransitionSpeed = 1.5f;
+    [SerializeField, Min(10f)] private float cutoffTransitionSpeed = 30000f;
 
     public VoiceOcclusionState CurrentState { get; private set; } = VoiceOcclusionState.Unknown;
 
     public bool IsActivelyAttenuated =>
+        CurrentState == VoiceOcclusionState.OpenPortalPath ||
         CurrentState == VoiceOcclusionState.ClosedPortalPath ||
         CurrentState == VoiceOcclusionState.Wall;
 
@@ -68,17 +73,22 @@ public sealed class VivoxVoiceOcclusion : MonoBehaviour
         nextUpdate = Time.unscaledTime + UpdateInterval;
         string listenerRoom = ResolveRoomId(listener);
         string speakerRoom = ResolveRoomId(speaker);
-        VoiceOcclusionState state = ResolvePortalState(
+        CopyPortalSnapshot(RoomPortalRegistry.ActivePortals, portalSnapshot);
+        VoicePortalPath path = VoicePortalPathModel.Resolve(
             listenerRoom,
             speakerRoom,
-            RoomPortalRegistry.ActivePortals);
+            listener.position,
+            speaker.position,
+            portalSnapshot);
 
+        VoiceOcclusionState state = MapOcclusionState(path.PathKind);
         if (state == VoiceOcclusionState.Unknown)
             state = HasBlockingGeometry(listener.position, speaker.position)
                 ? VoiceOcclusionState.Wall
                 : VoiceOcclusionState.SameRoom;
 
-        ApplySmoothly(state);
+        VoiceAudibility target = VoiceAudibilityModel.Evaluate(BuildQuery(state, path), BuildTuning());
+        ApplySmoothly(state, target);
     }
 
     public static VoiceOcclusionState ResolvePortalState(
@@ -86,58 +96,47 @@ public sealed class VivoxVoiceOcclusion : MonoBehaviour
         string speakerRoom,
         IReadOnlyList<IRoomPortalState> portals)
     {
-        if (string.IsNullOrWhiteSpace(listenerRoom) || string.IsNullOrWhiteSpace(speakerRoom))
-            return VoiceOcclusionState.Unknown;
-        if (string.Equals(listenerRoom, speakerRoom, StringComparison.Ordinal))
-            return VoiceOcclusionState.SameRoom;
-
-        if (HasPortalPath(listenerRoom, speakerRoom, portals, openOnly: true))
-            return VoiceOcclusionState.OpenPortalPath;
-        if (HasPortalPath(listenerRoom, speakerRoom, portals, openOnly: false))
-            return VoiceOcclusionState.ClosedPortalPath;
-
-        return VoiceOcclusionState.Wall;
+        return MapOcclusionState(
+            ResolvePortalPath(listenerRoom, speakerRoom, Vector3.zero, Vector3.zero, portals).PathKind);
     }
 
-    private static bool HasPortalPath(
-        string startRoom,
-        string destinationRoom,
-        IReadOnlyList<IRoomPortalState> portals,
-        bool openOnly)
+    public static VoicePortalPath ResolvePortalPath(
+        string listenerRoom,
+        string speakerRoom,
+        Vector3 listenerPosition,
+        Vector3 speakerPosition,
+        IReadOnlyList<IRoomPortalState> portals)
     {
-        var queue = new Queue<string>();
-        var visited = new HashSet<string>(StringComparer.Ordinal) { startRoom };
-        queue.Enqueue(startRoom);
+        var snapshot = new List<VoicePortal>(portals?.Count ?? 0);
+        CopyPortalSnapshot(portals, snapshot);
+        return VoicePortalPathModel.Resolve(
+            listenerRoom,
+            speakerRoom,
+            listenerPosition,
+            speakerPosition,
+            snapshot);
+    }
 
-        while (queue.Count > 0)
+    private static void CopyPortalSnapshot(
+        IReadOnlyList<IRoomPortalState> portals,
+        List<VoicePortal> destination)
+    {
+        destination.Clear();
+        if (portals == null)
+            return;
+
+        for (int index = 0; index < portals.Count; index++)
         {
-            string currentRoom = queue.Dequeue();
-            for (int index = 0; index < portals.Count; index++)
-            {
-                IRoomPortalState portal = portals[index];
-                if (portal == null || openOnly && !portal.IsOpen)
-                    continue;
+            IRoomPortalState portal = portals[index];
+            if (portal == null)
+                continue;
 
-                string nextRoom = null;
-                if (string.Equals(portal.RoomAId, currentRoom, StringComparison.Ordinal))
-                    nextRoom = portal.RoomBId;
-                else if (string.Equals(portal.RoomBId, currentRoom, StringComparison.Ordinal))
-                    nextRoom = portal.RoomAId;
-
-                if (string.IsNullOrWhiteSpace(nextRoom))
-                    continue;
-
-                if (!visited.Add(nextRoom))
-                    continue;
-
-                if (string.Equals(nextRoom, destinationRoom, StringComparison.Ordinal))
-                    return true;
-
-                queue.Enqueue(nextRoom);
-            }
+            destination.Add(new VoicePortal(
+                portal.RoomAId,
+                portal.RoomBId,
+                portal.IsOpen,
+                portal.PortalPosition));
         }
-
-        return false;
     }
 
     private static string ResolveRoomId(Transform player)
@@ -178,48 +177,84 @@ public sealed class VivoxVoiceOcclusion : MonoBehaviour
         return false;
     }
 
-    private void ApplySmoothly(VoiceOcclusionState state)
+    private VoiceAudibilityQuery BuildQuery(VoiceOcclusionState state, VoicePortalPath path)
+    {
+        return new VoiceAudibilityQuery
+        {
+            PathKind = MapPathKind(state),
+            DirectDistance = Vector3.Distance(listener.position, speaker.position),
+            PortalPathLength = path.PathLength,
+            ClosedPortalCount = path.ClosedPortalCount,
+            ListenerDistanceToNearestClosedPortal = path.ListenerDistanceToFirstClosedPortal
+        };
+    }
+
+    private static VoiceOcclusionState MapOcclusionState(VoicePathKind pathKind)
+    {
+        switch (pathKind)
+        {
+            case VoicePathKind.Clear:
+                return VoiceOcclusionState.SameRoom;
+            case VoicePathKind.OpenPortals:
+                return VoiceOcclusionState.OpenPortalPath;
+            case VoicePathKind.ClosedPortals:
+                return VoiceOcclusionState.ClosedPortalPath;
+            case VoicePathKind.Blocked:
+                return VoiceOcclusionState.Wall;
+            default:
+                return VoiceOcclusionState.Unknown;
+        }
+    }
+
+    private VoiceAudibilityTuning BuildTuning()
+    {
+        return new VoiceAudibilityTuning
+        {
+            ClearCutoff = ClearCutoff,
+            OpenPortalVolume = openPortalVolume,
+            OpenPortalCutoff = openPortalCutoff,
+            OpenPathDetourHalfDistance = openPathDetourHalfDistance,
+            ClosedPortalVolume = closedPortalVolume,
+            ClosedPortalCutoff = closedPortalCutoff,
+            EavesdropRange = eavesdropRange,
+            EavesdropFalloff = eavesdropFalloff,
+            WallVolume = wallVolume,
+            WallCutoff = wallCutoff
+        };
+    }
+
+    private static VoicePathKind MapPathKind(VoiceOcclusionState state)
+    {
+        switch (state)
+        {
+            case VoiceOcclusionState.OpenPortalPath:
+                return VoicePathKind.OpenPortals;
+            case VoiceOcclusionState.ClosedPortalPath:
+                return VoicePathKind.ClosedPortals;
+            case VoiceOcclusionState.Wall:
+                return VoicePathKind.Blocked;
+            default:
+                return VoicePathKind.Clear;
+        }
+    }
+
+    private void ApplySmoothly(VoiceOcclusionState state, VoiceAudibility target)
     {
         CurrentState = state;
-        GetPreset(state, out float targetVolume, out float targetCutoff);
         audioSource.volume = Mathf.MoveTowards(
             audioSource.volume,
-            targetVolume,
+            target.VolumeMultiplier,
             volumeTransitionSpeed * UpdateInterval);
         lowPassFilter.cutoffFrequency = Mathf.MoveTowards(
             lowPassFilter.cutoffFrequency,
-            targetCutoff,
+            target.LowPassCutoff,
             cutoffTransitionSpeed * UpdateInterval);
     }
 
     private void ApplyImmediately(VoiceOcclusionState state)
     {
         CurrentState = state;
-        GetPreset(state, out float targetVolume, out float targetCutoff);
-        audioSource.volume = targetVolume;
-        lowPassFilter.cutoffFrequency = targetCutoff;
-    }
-
-    private void GetPreset(VoiceOcclusionState state, out float volume, out float cutoff)
-    {
-        switch (state)
-        {
-            case VoiceOcclusionState.OpenPortalPath:
-                volume = openPortalVolume;
-                cutoff = openPortalCutoff;
-                break;
-            case VoiceOcclusionState.ClosedPortalPath:
-                volume = closedPortalVolume;
-                cutoff = closedPortalCutoff;
-                break;
-            case VoiceOcclusionState.Wall:
-                volume = wallVolume;
-                cutoff = wallCutoff;
-                break;
-            default:
-                volume = 1f;
-                cutoff = ClearCutoff;
-                break;
-        }
+        audioSource.volume = 1f;
+        lowPassFilter.cutoffFrequency = ClearCutoff;
     }
 }

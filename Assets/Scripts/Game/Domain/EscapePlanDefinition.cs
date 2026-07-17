@@ -64,10 +64,24 @@ namespace InterrogationRoom.Domain
     public sealed class EscapeStepDefinition
     {
         public EscapeStepId Id { get; }
+        public string Description { get; }
+        public string LocationHint { get; }
 
         public EscapeStepDefinition(EscapeStepId id)
+            : this(id, id.Value, "posterunek")
         {
+        }
+
+        public EscapeStepDefinition(EscapeStepId id, string description, string locationHint)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+                throw new ArgumentException("Escape step description cannot be empty.", nameof(description));
+            if (string.IsNullOrWhiteSpace(locationHint))
+                throw new ArgumentException("Escape step location hint cannot be empty.", nameof(locationHint));
+
             Id = id;
+            Description = description.Trim();
+            LocationHint = locationHint.Trim();
         }
     }
 
@@ -77,15 +91,34 @@ namespace InterrogationRoom.Domain
         public EscapeExitId Id { get; }
         public EscapeStepId PreparationStepId { get; }
         public IncidentLocationId Location { get; }
+        public string Description { get; }
+        public string LocationHint { get; }
 
         public EscapeExitDefinition(
             EscapeExitId id,
             EscapeStepId preparationStepId,
             IncidentLocationId location)
+            : this(id, preparationStepId, location, preparationStepId.Value, location.Value)
         {
+        }
+
+        public EscapeExitDefinition(
+            EscapeExitId id,
+            EscapeStepId preparationStepId,
+            IncidentLocationId location,
+            string description,
+            string locationHint)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+                throw new ArgumentException("Escape exit description cannot be empty.", nameof(description));
+            if (string.IsNullOrWhiteSpace(locationHint))
+                throw new ArgumentException("Escape exit location hint cannot be empty.", nameof(locationHint));
+
             Id = id;
             PreparationStepId = preparationStepId;
             Location = location;
+            Description = description.Trim();
+            LocationHint = locationHint.Trim();
         }
     }
 
@@ -96,6 +129,8 @@ namespace InterrogationRoom.Domain
     public sealed class EscapePlanDefinition
     {
         public EscapePlanId Id { get; }
+        public string Title { get; }
+        public string Motive { get; }
         public IReadOnlyList<EscapeStepDefinition> CommonSteps { get; }
         public IReadOnlyList<EscapeExitDefinition> Exits { get; }
 
@@ -103,7 +138,21 @@ namespace InterrogationRoom.Domain
             EscapePlanId id,
             IEnumerable<EscapeStepDefinition> commonSteps,
             IEnumerable<EscapeExitDefinition> exits)
+            : this(id, id.Value, id.Value, commonSteps, exits)
         {
+        }
+
+        public EscapePlanDefinition(
+            EscapePlanId id,
+            string title,
+            string motive,
+            IEnumerable<EscapeStepDefinition> commonSteps,
+            IEnumerable<EscapeExitDefinition> exits)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+                throw new ArgumentException("Escape plan title cannot be empty.", nameof(title));
+            if (string.IsNullOrWhiteSpace(motive))
+                throw new ArgumentException("Escape plan motive cannot be empty.", nameof(motive));
             if (commonSteps == null) throw new ArgumentNullException(nameof(commonSteps));
             if (exits == null) throw new ArgumentNullException(nameof(exits));
             var copiedSteps = commonSteps.ToArray();
@@ -123,35 +172,98 @@ namespace InterrogationRoom.Domain
                 throw new ArgumentException("Exit preparation ids cannot duplicate common step ids.", nameof(exits));
 
             Id = id;
+            Title = title.Trim();
+            Motive = motive.Trim();
             CommonSteps = Array.AsReadOnly(copiedSteps);
             Exits = Array.AsReadOnly(copiedExits);
         }
     }
 
-    /// <summary>Stable first-prototype contract handed to physical gameplay.</summary>
     public static class EscapePlanDefinitions
     {
         public static readonly IncidentEffectId FinalEffect =
             new IncidentEffectId("escape-final-alarm");
 
-        public static readonly EscapePlanDefinition Prototype = new EscapePlanDefinition(
-            new EscapePlanId("escape-prototype"),
-            new[]
-            {
-                new EscapeStepDefinition(new EscapeStepId("escape-find-tool")),
-                new EscapeStepDefinition(new EscapeStepId("escape-open-route"))
-            },
-            new[]
-            {
-                new EscapeExitDefinition(
-                    new EscapeExitId("escape-exit-a"),
-                    new EscapeStepId("escape-prepare-exit-a"),
-                    new IncidentLocationId("escape-exit-a")),
-                new EscapeExitDefinition(
-                    new EscapeExitId("escape-exit-b"),
-                    new EscapeStepId("escape-prepare-exit-b"),
-                    new IncidentLocationId("escape-exit-b"))
-            });
+        public static readonly EscapePlanDefinition Prototype = Create(
+            "Klucz i dokumenty służbowe",
+            "Zdobądź klucz oraz dokument potrzebny do przygotowania jednej z dwóch dróg wyjścia.",
+            "Zabierz właściwy klucz z listwy.",
+            "magazyn dowodów — listwa kluczy",
+            "Wyjmij dokument z archiwum, aby ustalić bezpieczną trasę.",
+            "archiwum — szafa dokumentów służbowych",
+            "Przygotuj tylne wyjście i pozostaw je gotowe do głośnej próby Ucieczki.",
+            "zaplecze posterunku — tylne wyjście",
+            "Przygotuj wyjście techniczne i pozostaw je gotowe do głośnej próby Ucieczki.",
+            "korytarz techniczny — punkt końcowy");
+
+        public static readonly EscapePlanDefinition DepositRoute = Create(
+            "Depozyt i droga serwisowa",
+            "Sprawdź depozyt, zdobądź narzędzie i przygotuj jedną z dróg serwisowych.",
+            "Przeszukaj oznaczoną szafkę depozytową i znajdź małe narzędzie.",
+            "magazyn dowodów — szafki depozytowe",
+            "Użyj narzędzia przy zamknięciu drogi serwisowej.",
+            "zaplecze — przejście serwisowe",
+            "Przygotuj drzwi na dziedziniec do finałowej próby Ucieczki.",
+            "dziedziniec — drzwi od zaplecza",
+            "Przygotuj wyjście przez garaż do finałowej próby Ucieczki.",
+            "garaż — brama serwisowa");
+
+        public static readonly EscapePlanDefinition TelephoneRoute = Create(
+            "Telefon i zmiana posterunku",
+            "Zdobądź informacje o obsadzie posterunku, a następnie przygotuj wybrane wyjście.",
+            "Znajdź kartę z numerem służbowym potrzebnym do wykonania telefonu.",
+            "archiwum — książka kontaktów",
+            "Użyj telefonu stacjonarnego i sprawdź, która droga pozostanie bez nadzoru.",
+            "biuro dyżurnego — telefon stacjonarny",
+            "Przygotuj wyjście od strony dziedzińca.",
+            "dziedziniec — punkt końcowy",
+            "Przygotuj wyjście od strony garażu.",
+            "garaż — punkt końcowy");
+
+        public static readonly IReadOnlyList<EscapePlanDefinition> AuthoredPlans =
+            Array.AsReadOnly(new[] { Prototype, DepositRoute, TelephoneRoute });
+
+        private static EscapePlanDefinition Create(
+            string title,
+            string motive,
+            string firstDescription,
+            string firstLocation,
+            string secondDescription,
+            string secondLocation,
+            string exitADescription,
+            string exitALocation,
+            string exitBDescription,
+            string exitBLocation) =>
+            new EscapePlanDefinition(
+                new EscapePlanId("escape-prototype"),
+                title,
+                motive,
+                new[]
+                {
+                    new EscapeStepDefinition(
+                        new EscapeStepId("escape-find-tool"),
+                        firstDescription,
+                        firstLocation),
+                    new EscapeStepDefinition(
+                        new EscapeStepId("escape-open-route"),
+                        secondDescription,
+                        secondLocation)
+                },
+                new[]
+                {
+                    new EscapeExitDefinition(
+                        new EscapeExitId("escape-exit-a"),
+                        new EscapeStepId("escape-prepare-exit-a"),
+                        new IncidentLocationId("escape-exit-a"),
+                        exitADescription,
+                        exitALocation),
+                    new EscapeExitDefinition(
+                        new EscapeExitId("escape-exit-b"),
+                        new EscapeStepId("escape-prepare-exit-b"),
+                        new IncidentLocationId("escape-exit-b"),
+                        exitBDescription,
+                        exitBLocation)
+                });
     }
 
     public sealed class EscapeExitOptionView
@@ -159,6 +271,8 @@ namespace InterrogationRoom.Domain
         public EscapeExitId Id { get; }
         public EscapeStepId PreparationStepId { get; }
         public IncidentLocationId Location { get; }
+        public string Description { get; }
+        public string LocationHint { get; }
         public bool IsPrepared { get; }
 
         public EscapeExitOptionView(
@@ -166,10 +280,23 @@ namespace InterrogationRoom.Domain
             EscapeStepId preparationStepId,
             IncidentLocationId location,
             bool isPrepared)
+            : this(id, preparationStepId, location, preparationStepId.Value, location.Value, isPrepared)
+        {
+        }
+
+        public EscapeExitOptionView(
+            EscapeExitId id,
+            EscapeStepId preparationStepId,
+            IncidentLocationId location,
+            string description,
+            string locationHint,
+            bool isPrepared)
         {
             Id = id;
             PreparationStepId = preparationStepId;
             Location = location;
+            Description = description;
+            LocationHint = locationHint;
             IsPrepared = isPrepared;
         }
     }
@@ -177,7 +304,11 @@ namespace InterrogationRoom.Domain
     public sealed class EscapePlanView
     {
         public EscapePlanId Id { get; }
+        public string Title { get; }
+        public string Motive { get; }
         public EscapeStepId? CurrentStep { get; }
+        public string CurrentStepDescription { get; }
+        public string CurrentStepLocationHint { get; }
         public int CompletedCommonStepCount { get; }
         public int TotalCommonStepCount { get; }
         public bool IsPrepared { get; }
@@ -192,9 +323,40 @@ namespace InterrogationRoom.Domain
             bool isPrepared,
             EscapeExitId? activeExit,
             IReadOnlyList<EscapeExitOptionView> exitOptions)
+            : this(
+                id,
+                id.Value,
+                id.Value,
+                currentStep,
+                currentStep?.Value,
+                null,
+                completedCommonStepCount,
+                totalCommonStepCount,
+                isPrepared,
+                activeExit,
+                exitOptions)
+        {
+        }
+
+        public EscapePlanView(
+            EscapePlanId id,
+            string title,
+            string motive,
+            EscapeStepId? currentStep,
+            string currentStepDescription,
+            string currentStepLocationHint,
+            int completedCommonStepCount,
+            int totalCommonStepCount,
+            bool isPrepared,
+            EscapeExitId? activeExit,
+            IReadOnlyList<EscapeExitOptionView> exitOptions)
         {
             Id = id;
+            Title = title;
+            Motive = motive;
             CurrentStep = currentStep;
+            CurrentStepDescription = currentStepDescription;
+            CurrentStepLocationHint = currentStepLocationHint;
             CompletedCommonStepCount = completedCommonStepCount;
             TotalCommonStepCount = totalCommonStepCount;
             IsPrepared = isPrepared;

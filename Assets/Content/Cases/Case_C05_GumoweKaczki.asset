@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C05_GumoweKaczki
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: Poranek Stu Gumowych Kaczek
+  crimeDescription: "Kto\u015B wrzuci\u0142 sto gumowych kaczek do miejskiej fontanny,
+    a najwi\u0119kszej za\u0142o\u017Cy\u0142 policyjn\u0105 czapk\u0119 i szarf\u0119
+    \u201EKomendant Stawu\u201D."
+  alibiFacts:
+  - id: zolw-w-lecznicy
+    text: "O 05:40 grupa przynios\u0142a znalezionego \u017C\xF3\u0142wia do ca\u0142odobowej
+      lecznicy i zwa\u017Cy\u0142a go w niebieskiej misce sa\u0142atkowej."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: karta-z-lisem
+    text: "Recepcjonistka da\u0142a im kart\u0119 kolejki z rysunkiem lisa."
+    canBeHidden: 1
+    variantTexts:
+    - "Recepcjonistka da\u0142a im kart\u0119 kolejki z rysunkiem lisa."
+    - "Recepcjonistka da\u0142a im kart\u0119 kolejki z rysunkiem borsuka."
+    distinctiveDetail: 1
+  - id: ostrzezenie-o-mgle
+    text: "Radio w poczekalni ostrzeg\u0142o przed g\u0119st\u0105 porann\u0105 mg\u0142\u0105."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: terier-i-parasole
+    text: "Ma\u0142y terier kichn\u0105\u0142 i przewr\xF3ci\u0142 stojak na parasole."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: gwiazda-na-skorupie
+    text: "Weterynarz narysowa\u0142 na skorupie zmywaln\u0105 bia\u0142\u0105 gwiazd\u0119."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: wyjscie-autobusem
+    text: "Wyszli drzwiami apteki, bo myto g\u0142\xF3wne wej\u015Bcie, i o 06:05
+      razem wsiedli do autobusu numer 3."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: karta-kolejki
+    linkedFactId: karta-z-lisem
+    content: "Karta z lisem, numerem 12 i odciskiem \u0142apy, lecz bez nazwy plac\xF3wki."
+  - id: wydruk-mgly
+    linkedFactId: ostrzezenie-o-mgle
+    content: "Wydruk z 05:47 z trzema symbolami mg\u0142y i ostrze\u017Ceniem o bardzo
+      ma\u0142ej widoczno\u015Bci."
+  - id: gaza-bialy-znak
+    linkedFactId: gwiazda-na-skorupie
+    content: "Gaza z fragmentem bia\u0142ego zmywalnego znaku i wzorem przypominaj\u0105cym
+      \u0142uski."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

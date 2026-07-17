@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce4e87563487f5479f254de01548595, type: 3}
+  m_Name: OS-10
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.PersonalMatterAsset
+  stableId: OS-10
+  title: "Ukryj sfa\u0142szowane zwolnienie"
+  motive: "Przy Tobie znaleziono niedoko\u0144czone fa\u0142szywe zwolnienie. Chcesz
+    nada\u0107 mu pozory autentyczno\u015Bci i schowa\u0107 je w swojej teczce."
+  steps:
+  - stableStepId: OS-10-pieczatka
+    description: "Zabierz piecz\u0105tk\u0119 z biurka dy\u017Curnego."
+    locationHint: "biuro dy\u017Curnego \u2014 przybory na biurku"
+    anchorActionId: osobista-sprawa-przygotuj
+    createsIncident: 1
+  - stableStepId: OS-10-zwolnienie
+    description: "Ostempluj zwolnienie i w\u0142\xF3\u017C je do swojej teczki."
+    locationHint: "archiwum \u2014 teczka osobowa"
+    anchorActionId: osobista-sprawa-zakoncz
+    createsIncident: 1
+  reservedItemIds:
+  - pieczatka-biurkowa
+  - sfalszowane-zwolnienie

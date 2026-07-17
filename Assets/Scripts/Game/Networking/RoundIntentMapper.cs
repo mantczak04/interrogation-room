@@ -28,6 +28,14 @@ namespace InterrogationRoom.Networking
             command = null;
             switch (message.Kind)
             {
+                // Gotowość is the only client-authored Runda intention: it is
+                // phase-gated and idempotence-checked by RoundEngine and its
+                // author is always the authenticated sender connection.
+                case RoundIntentKind.PlayerReady:
+                    command = new RoundCommand.MarkPlayerReady(authenticatedSender);
+                    rejectionReason = null;
+                    return true;
+
                 case RoundIntentKind.AdvancePrivateObjective:
                 case RoundIntentKind.RegisterIncident:
                 case RoundIntentKind.DiscoverQuietIncident:

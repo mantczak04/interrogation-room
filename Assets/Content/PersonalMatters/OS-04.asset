@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce4e87563487f5479f254de01548595, type: 3}
+  m_Name: OS-04
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.PersonalMatterAsset
+  stableId: OS-04
+  title: "Usu\u0144 wpis o d\u0142ugu"
+  motive: "W ksi\u0119dze pozosta\u0142 wpis o d\u0142ugu, kt\xF3ry mo\u017Ce ujawni\u0107
+    Tw\xF3j motyw do k\u0142amstwa. Chcesz go dyskretnie zmieni\u0107."
+  steps:
+  - stableStepId: OS-04-korektor
+    description: "Zabierz piecz\u0105tk\u0119 albo korektor potrzebny do poprawienia
+      wpisu."
+    locationHint: "biuro dy\u017Curnego \u2014 przybory na biurku"
+    anchorActionId: osobista-sprawa-przygotuj
+    createsIncident: 0
+  - stableStepId: OS-04-ksiega
+    description: "Odszukaj wskazany wpis i zmie\u0144 go tak, by d\u0142ug nie prowadzi\u0142
+      do Ciebie."
+    locationHint: "archiwum \u2014 ksi\u0119ga zobowi\u0105za\u0144"
+    anchorActionId: osobista-sprawa-zakoncz
+    createsIncident: 1
+  reservedItemIds:
+  - pieczatka-biurkowa
+  - ksiega-zobowiazan

@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f294f557898a8744cacfa8ab50eac7ce, type: 3}
+  m_Name: Case_C11_WirujacaPrzykrywka
+  m_EditorClassIdentifier: InterrogationRoom.Game::InterrogationRoom.Content.CaseAsset
+  title: "Wiruj\u0105ca przykrywka"
+  crimeDescription: "Kto\u015B wypu\u015Bci\u0142 podczas posiedzenia rady miasta
+    trzysta nakr\u0119canych kaczek, kt\xF3re zag\u0142uszy\u0142y g\u0142osowanie
+    nad bud\u017Cetem."
+  alibiFacts:
+  - id: tabliczka-numer-6
+    text: "O 20:05 grupa wesz\u0142a na nocn\u0105 gie\u0142d\u0119 kwiatow\u0105
+      \u201EIrys\u201D i dosta\u0142a fioletow\u0105 tabliczk\u0119 licytacyjn\u0105
+      numer 6."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: pachnace-lilie
+    text: "Wszyscy ogl\u0105dali lilie pachn\u0105ce cytryn\u0105."
+    canBeHidden: 0
+    variantTexts:
+    - "Wszyscy ogl\u0105dali lilie pachn\u0105ce cytryn\u0105."
+    - "Wszyscy ogl\u0105dali lilie pachn\u0105ce wanili\u0105."
+    distinctiveDetail: 1
+  - id: skrzynia-27
+    text: "Kurier w \u017C\xF3\u0142tym p\u0142aszczu przywi\xF3z\u0142 skrzyni\u0119
+      oznaczon\u0105 numerem 27."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: polknieta-moneta
+    text: "Automat kasowy po\u0142kn\u0105\u0142 monet\u0119 starszego klienta."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: tango-i-rekawiczka
+    text: "Z radia lecia\u0142o tango, gdy z w\xF3zka spad\u0142a czerwona r\u0119kawiczka."
+    canBeHidden: 1
+    variantTexts: []
+    distinctiveDetail: 0
+  - id: papier-i-wyjscie
+    text: "Grupa z\u0142o\u017Cy\u0142a trzy niebieskie arkusze papieru i o 20:43
+      wysz\u0142a razem za ci\u0119\u017Car\xF3wk\u0105 odbieraj\u0105c\u0105 szk\u0142o
+      z wazon\xF3w."
+    canBeHidden: 0
+    variantTexts: []
+    distinctiveDetail: 0
+  alibiClues:
+  - id: fragment-tabliczki
+    linkedFactId: tabliczka-numer-6
+    content: "Fragment tabliczki z fioletow\u0105 kraw\u0119dzi\u0105, logo irysa
+      i niepe\u0142nym numerem."
+  - id: kalka-dostawy
+    linkedFactId: skrzynia-27
+    content: Kalka dostawy z symbolem skrzyni i numerem 27, lecz bez nazwiska kuriera.
+  - id: zdjecie-radia
+    linkedFactId: tango-i-rekawiczka
+    content: "Zdj\u0119cie radia z napisem TANGO i czerwonym przedmiotem rozmazanym
+      przy w\xF3zku."
+  minHiddenFacts: 2
+  maxHiddenFacts: 3

@@ -2,60 +2,95 @@
     <ui:Style src="project://database/Assets/UI/RoundUI.uss" />
     <ui:VisualElement name="round-ui-root" class="round-ui">
         <ui:VisualElement name="lobby-panel" class="lobby-screen">
-            <ui:VisualElement class="lobby-shade" />
+            <ui:VisualElement class="screen-shade" />
             <ui:VisualElement class="lobby-layout">
-                <ui:VisualElement class="lobby-controls">
-                    <ui:Label text="PRZESŁUCHANIE" class="lobby-title" />
-                    <ui:Label text="LOBBY" class="lobby-kicker" />
+                <ui:VisualElement class="lobby-controls dossier">
+                    <ui:Label text="PRZESŁUCHANIE" class="lobby-title stamp-font" />
+                    <ui:Label text="LOBBY" class="lobby-kicker stamp-font" />
                     <ui:Label name="player-count-label" text="Gracze w lobby: 0/6" class="lobby-player-count" />
-                    <ui:Label text="Wybierz postać" class="section-title" />
+                    <ui:VisualElement class="document-rule" />
+                    <ui:Label text="Wybierz postać" class="section-title stamp-font" />
                     <ui:VisualElement class="character-selector">
-                        <ui:Button name="previous-character-button" text="‹" class="character-arrow" />
-                        <ui:Label name="character-name-label" text="Małpa" class="character-name" />
-                        <ui:Button name="next-character-button" text="›" class="character-arrow" />
+                        <ui:Button name="previous-character-button" text="‹" class="button button-secondary character-arrow" />
+                        <ui:Label name="character-name-label" text="Małpa" class="character-name stamp-font" />
+                        <ui:Button name="next-character-button" text="›" class="button button-secondary character-arrow" />
                     </ui:VisualElement>
-                    <ui:DropdownField name="case-selection" label="Sprawa" class="lobby-case" />
                     <ui:Toggle name="secret-objective-toggle" label="Włącz Sekretny Cel" value="true" class="lobby-toggle" />
-                    <ui:Label name="secret-objective-summary" text="Efektywna liczba Sekretnych Celów: 0" class="lobby-toggle-summary" />
-                    <ui:Button name="invite-button" text="Zaproś znajomych" class="secondary-button" />
-                    <ui:Button name="start-button" text="Start Rundy" class="primary-button lobby-start" />
-                    <ui:Label text="Host uruchamia Rundę po dołączeniu 4–6 graczy." class="lobby-help" />
+                    <ui:Label name="secret-objective-summary" text="Sekretny Cel jest dostępny od 5 graczy." class="lobby-toggle-summary" />
+                    <ui:Button name="invite-button" text="Zaproś znajomych" class="button button-secondary" />
+                    <ui:Button name="start-button" text="Start Rundy" class="button button-primary lobby-start" />
+                    <ui:Label text="Rundę można rozpocząć dla 3–6 graczy." class="lobby-help" />
                 </ui:VisualElement>
                 <ui:VisualElement class="preview-column">
                     <ui:Image name="character-preview" class="character-preview" scale-mode="ScaleToFit" />
-                    <ui:Label text="Postać jest kosmetyczna i nie zdradza roli." class="preview-caption" />
+                    <ui:Label text="Wygląd postaci nie zdradza roli." class="preview-caption" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="preparation-panel" class="screen-card">
-            <ui:Label text="Przygotowanie" class="title" />
-            <ui:Label name="role-label" class="role" />
-            <ui:Label text="Przestępstwo" class="section-title" />
-            <ui:Label name="crime-label" class="body-text" />
-            <ui:VisualElement name="alibi-section">
-                <ui:Label text="Twoje Alibi" class="section-title" />
-                <ui:Label name="alibi-label" class="alibi" />
+
+        <ui:VisualElement name="preparation-panel" class="full-screen-panel preparation-screen">
+            <ui:VisualElement class="screen-shade" />
+            <ui:VisualElement class="paper-shadow" />
+            <ui:VisualElement class="preparation-document paper-document">
+                <ui:VisualElement class="document-header">
+                    <ui:VisualElement>
+                        <ui:Label text="AKTA RUNDY" class="document-kicker stamp-font" />
+                        <ui:Label text="Przygotowanie" class="title stamp-font" />
+                    </ui:VisualElement>
+                    <ui:Label name="preparation-timer-label" class="preparation-timer document-font" />
+                </ui:VisualElement>
+                <ui:ScrollView name="preparation-scroll" class="preparation-scroll">
+                    <ui:Label name="role-label" class="role-stamp stamp-font" />
+                    <ui:Label text="Przestępstwo" class="section-title paper-section-title stamp-font" />
+                    <ui:Label name="crime-label" class="body-text document-font" />
+                    <ui:VisualElement name="alibi-section">
+                        <ui:Label text="Twoje Alibi" class="section-title paper-section-title stamp-font" />
+                        <ui:Label name="alibi-label" class="alibi document-font" />
+                    </ui:VisualElement>
+                    <ui:Label name="preparation-instruction-label" class="preparation-instruction document-font" />
+                </ui:ScrollView>
+                <ui:VisualElement class="preparation-footer">
+                    <ui:Label name="ready-count-label" class="ready-count" />
+                    <ui:Button name="ready-button" text="Gotowy" class="button button-primary ready-button" />
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:Button name="end-preparation-button" text="Zakończ Przygotowanie" class="primary-button" />
         </ui:VisualElement>
+
         <ui:VisualElement name="round-hud" class="hud">
-            <ui:Label name="timer-label" class="timer" />
-            <ui:VisualElement class="hud-card">
-                <ui:Label name="hud-role-label" class="hud-role" />
+            <ui:Label name="timer-label" class="timer document-font" />
+            <ui:VisualElement class="hud-card role-card">
+                <ui:Label name="hud-role-label" class="hud-role stamp-font" />
                 <ui:Label name="hud-crime-label" class="hud-crime" />
             </ui:VisualElement>
-            <ui:VisualElement name="private-panel" class="private-card">
-                <ui:Label name="private-title-label" class="private-title" />
-                <ui:Label name="private-label" class="private-text" />
+            <ui:VisualElement name="private-panel" class="hud-card private-card">
+                <ui:VisualElement class="private-header">
+                    <ui:Label name="private-title-label" class="private-title stamp-font" />
+                    <ui:Button name="private-toggle-button" text="Zwiń [I]" class="panel-toggle" />
+                </ui:VisualElement>
+                <ui:ScrollView name="private-content" class="private-content">
+                    <ui:Label name="private-motive-label" class="private-motive" />
+                    <ui:Label name="private-step-label" class="private-step" />
+                    <ui:Label name="private-location-label" class="private-location" />
+                    <ui:Label name="private-progress-label" class="private-progress document-font" />
+                    <ui:Label name="private-label" class="private-text" />
+                </ui:ScrollView>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="result-panel" class="screen-card result-card">
-            <ui:Label text="Koniec Rundy" class="title" />
-            <ui:ScrollView name="result-scroll" class="result-scroll">
-                <ui:Label name="result-label" class="result" />
-            </ui:ScrollView>
-            <ui:Button name="return-to-lobby-button" text="Powrót do lobby" class="primary-button" />
+
+        <ui:VisualElement name="result-panel" class="full-screen-panel result-screen">
+            <ui:VisualElement class="screen-shade" />
+            <ui:VisualElement class="result-card dossier">
+                <ui:Label text="KONIEC RUNDY" class="document-kicker stamp-font" />
+                <ui:Label name="result-verdict-label" class="result-verdict stamp-font" />
+                <ui:Label name="result-reason-label" class="result-reason" />
+                <ui:VisualElement class="document-rule" />
+                <ui:ScrollView name="result-scroll" class="result-scroll">
+                    <ui:Label name="result-label" class="result document-font" />
+                </ui:ScrollView>
+                <ui:Button name="return-to-lobby-button" text="Wróć do lobby" class="button button-primary result-action" />
+            </ui:VisualElement>
         </ui:VisualElement>
-        <ui:Label name="rejection-label" class="rejection" />
+
+        <ui:Label name="rejection-label" class="toast rejection" />
     </ui:VisualElement>
 </ui:UXML>

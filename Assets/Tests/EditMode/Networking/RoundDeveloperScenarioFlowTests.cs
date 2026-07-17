@@ -15,7 +15,14 @@ namespace InterrogationRoom.Networking.Tests
                 new AlibiFact("f1", "Spotkanie zaczęło się o dziewiętnastej.", false),
                 new AlibiFact("f2", "Kelner pomylił rachunek.", true),
                 new AlibiFact("f3", "Na chwilę zgasło światło.", true),
-                new AlibiFact("f4", "Wróciliśmy wspólnie tramwajem.", false)
+                new AlibiFact("f4", "Wróciliśmy wspólnie tramwajem.", false),
+                new AlibiFact("f5", "Przed wyjściem zamówiliśmy herbatę.", false),
+                new AlibiFact(
+                    "f6",
+                    "Kelner miał zieloną muchę.",
+                    false,
+                    new[] { "Kelner miał zieloną muchę.", "Kelner miał granatową muchę." },
+                    distinctiveDetail: true)
             },
             minHiddenFacts: 1,
             maxHiddenFacts: 1,

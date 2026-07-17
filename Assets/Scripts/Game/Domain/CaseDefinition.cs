@@ -11,6 +11,8 @@ namespace InterrogationRoom.Domain
     /// </summary>
     public sealed class CaseDefinition
     {
+        public const int RequiredAlibiFactCount = 6;
+
         public string Title { get; }
 
         /// <summary>Przestępstwo — public for every player at all times.</summary>
@@ -62,11 +64,47 @@ namespace InterrogationRoom.Domain
         /// </summary>
         public bool CanBeHidden { get; }
 
-        public AlibiFact(string id, string text, bool canBeHidden)
+        /// <summary>
+        /// Author-approved compatible tellings of the same fact (colors, snacks,
+        /// approximate times). Always non-empty and always contains
+        /// <see cref="Text"/>; one entry is resolved per Runda from the seed.
+        /// </summary>
+        public IReadOnlyList<string> VariantTexts { get; }
+
+        /// <summary>
+        /// charakterystycznyDetal — a memorable detail that is irrelevant to the
+        /// course of events. It may be hidden from the Winny, but never as the
+        /// only hidden fact.
+        /// </summary>
+        public bool DistinctiveDetail { get; }
+
+        public AlibiFact(
+            string id,
+            string text,
+            bool canBeHidden,
+            IEnumerable<string> variantTexts = null,
+            bool distinctiveDetail = false)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Text = text ?? throw new ArgumentNullException(nameof(text));
             CanBeHidden = canBeHidden;
+            DistinctiveDetail = distinctiveDetail;
+
+            var pool = new List<string>();
+            foreach (var variant in variantTexts ?? Array.Empty<string>())
+            {
+                if (string.IsNullOrWhiteSpace(variant))
+                    throw new ArgumentException($"Fact '{id}' has an empty variant text.", nameof(variantTexts));
+                var trimmed = variant.Trim();
+                if (!pool.Contains(trimmed))
+                    pool.Add(trimmed);
+            }
+
+            if (pool.Count == 0)
+                pool.Add(Text);
+            else if (!pool.Contains(Text))
+                throw new ArgumentException($"Variant pool of fact '{id}' must include its primary text.", nameof(variantTexts));
+            VariantTexts = pool.ToArray();
         }
     }
 }
