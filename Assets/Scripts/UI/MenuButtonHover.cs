@@ -24,19 +24,6 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
         SetNormalState();
     }
 
-    public void ConfigurePresentation(Color textColor, Color highlightedTextColor)
-    {
-        normalColor = textColor;
-        hoverColor = highlightedTextColor;
-
-        if (buttonText == null)
-        {
-            buttonText = GetComponentInChildren<TextMeshProUGUI>(true);
-        }
-
-        SetNormalState();
-    }
-
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (buttonText != null)
