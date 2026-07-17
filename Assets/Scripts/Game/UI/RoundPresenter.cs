@@ -316,7 +316,7 @@ namespace InterrogationRoom.UI
             panelSettings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
             panelSettings.referenceResolution = new Vector2Int(1920, 1080);
             panelSettings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
-            panelSettings.match = 1f;
+            panelSettings.match = 0.5f;
         }
 
         public void SetLobbyMenuVisible(bool visible)

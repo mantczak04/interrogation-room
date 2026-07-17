@@ -163,21 +163,25 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         cameraObject.transform.SetParent(previewRoot.transform, false);
         previewCamera = cameraObject.AddComponent<Camera>();
         previewCamera.clearFlags = CameraClearFlags.SolidColor;
-        previewCamera.backgroundColor = new Color(0f, 0f, 0f, 0f);
+        previewCamera.backgroundColor = new Color32(0x16, 0x1B, 0x1E, 0xFF);
         previewCamera.cullingMask = 1 << PreviewLayer;
-        previewCamera.fieldOfView = 28f;
+        previewCamera.fieldOfView = 27f;
         previewCamera.nearClipPlane = 0.05f;
+        previewCamera.allowHDR = true;
+        previewCamera.allowMSAA = true;
 
-        previewTexture = new RenderTexture(640, 760, 24, RenderTextureFormat.ARGB32)
+        previewTexture = new RenderTexture(768, 900, 24, RenderTextureFormat.ARGB32)
         {
             name = "Lobby Character Preview",
-            antiAliasing = 2
+            antiAliasing = 4,
+            filterMode = FilterMode.Bilinear
         };
         previewTexture.Create();
         previewCamera.targetTexture = previewTexture;
 
-        CreatePreviewLight("Preview Key Light", new Color(1f, 0.88f, 0.7f), 1.25f, new Vector3(35f, -35f, 0f));
-        CreatePreviewLight("Preview Fill Light", new Color(0.55f, 0.7f, 1f), 0.8f, new Vector3(20f, 145f, 0f));
+        CreatePreviewLight("Preview Key Light", new Color(1f, 0.9f, 0.76f), 1.75f, new Vector3(32f, -32f, 0f));
+        CreatePreviewLight("Preview Fill Light", new Color(0.62f, 0.76f, 1f), 1.05f, new Vector3(18f, 138f, 0f));
+        CreatePreviewLight("Preview Rim Light", new Color(1f, 0.72f, 0.42f), 1.35f, new Vector3(12f, 205f, 0f));
     }
 
     private void CreatePreviewLight(string lightName, Color color, float intensity, Vector3 rotation)

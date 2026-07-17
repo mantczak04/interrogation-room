@@ -6471,8 +6471,8 @@ MonoBehaviour:
   hingeLocalOffset: {x: 0, y: 0, z: 0}
   animationDuration: 0.2
   audioSource: {fileID: 328940143}
-  openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
-  closeClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  openClip: {fileID: 8300000, guid: cdd0c3441c13e5a49a496cdbad2a0523, type: 3}
+  closeClip: {fileID: 8300000, guid: d78a4f768b2822c46b259325a6bf5c45, type: 3}
   actionId: door-socjalny-toggle
   closedPrompt: "Otw\xF3rz drzwi"
   openPrompt: Zamknij drzwi
@@ -6505,7 +6505,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
   m_Volume: 0.65
   m_Pitch: 1
@@ -16412,8 +16412,8 @@ MonoBehaviour:
   hingeLocalOffset: {x: 0, y: 0, z: 0}
   animationDuration: 0.2
   audioSource: {fileID: 813735458}
-  openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
-  closeClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  openClip: {fileID: 8300000, guid: cdd0c3441c13e5a49a496cdbad2a0523, type: 3}
+  closeClip: {fileID: 8300000, guid: d78a4f768b2822c46b259325a6bf5c45, type: 3}
   actionId: door-przesluchania-toggle
   closedPrompt: "Otw\xF3rz drzwi"
   openPrompt: Zamknij drzwi
@@ -16446,7 +16446,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
   m_Volume: 0.65
   m_Pitch: 1
@@ -34403,8 +34403,8 @@ MonoBehaviour:
   hingeLocalOffset: {x: 0, y: 0, z: 0}
   animationDuration: 0.2
   audioSource: {fileID: 1718422813}
-  openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
-  closeClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  openClip: {fileID: 8300000, guid: cdd0c3441c13e5a49a496cdbad2a0523, type: 3}
+  closeClip: {fileID: 8300000, guid: d78a4f768b2822c46b259325a6bf5c45, type: 3}
   actionId: door-sala-toggle
   closedPrompt: "Otw\xF3rz drzwi"
   openPrompt: Zamknij drzwi
@@ -34437,7 +34437,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
   m_Volume: 0.65
   m_Pitch: 1
@@ -41239,8 +41239,8 @@ MonoBehaviour:
   hingeLocalOffset: {x: 0, y: 0, z: 0}
   animationDuration: 0.2
   audioSource: {fileID: 2002963103}
-  openClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
-  closeClip: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  openClip: {fileID: 8300000, guid: cdd0c3441c13e5a49a496cdbad2a0523, type: 3}
+  closeClip: {fileID: 8300000, guid: d78a4f768b2822c46b259325a6bf5c45, type: 3}
   actionId: door-archiwum-toggle
   closedPrompt: "Otw\xF3rz drzwi"
   openPrompt: Zamknij drzwi
@@ -41273,7 +41273,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 968b16c2c06274a4d83fc6853a3278e2, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
   m_Volume: 0.65
   m_Pitch: 1

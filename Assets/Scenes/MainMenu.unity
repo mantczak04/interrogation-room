@@ -1059,7 +1059,7 @@ MonoBehaviour:
   indicatorText: {fileID: 1036079125}
   normalColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
   hoverColor: {r: 1, g: 1, b: 1, a: 1}
-  hoverSound: {fileID: 8300000, guid: 544df50f25764fc43865b47970a4eecd, type: 3}
+  hoverSound: {fileID: 8300000, guid: 38051bc7ea3c8cd4787bc4c88ce25a7f, type: 3}
   audioSource: {fileID: 0}
 --- !u!114 &1240885835
 MonoBehaviour:
@@ -1168,7 +1168,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.05
+  m_Volume: 0.22
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -1614,7 +1614,7 @@ MonoBehaviour:
   indicatorText: {fileID: 1553860795}
   normalColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
   hoverColor: {r: 1, g: 1, b: 1, a: 1}
-  hoverSound: {fileID: 8300000, guid: 544df50f25764fc43865b47970a4eecd, type: 3}
+  hoverSound: {fileID: 8300000, guid: 38051bc7ea3c8cd4787bc4c88ce25a7f, type: 3}
   audioSource: {fileID: 0}
 --- !u!114 &1579841871
 MonoBehaviour:
@@ -1723,7 +1723,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.05
+  m_Volume: 0.22
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -1931,7 +1931,7 @@ MonoBehaviour:
   indicatorText: {fileID: 2104065145}
   normalColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
   hoverColor: {r: 1, g: 1, b: 1, a: 1}
-  hoverSound: {fileID: 8300000, guid: 544df50f25764fc43865b47970a4eecd, type: 3}
+  hoverSound: {fileID: 8300000, guid: 38051bc7ea3c8cd4787bc4c88ce25a7f, type: 3}
   audioSource: {fileID: 0}
 --- !u!114 &1774754710
 MonoBehaviour:
@@ -2040,7 +2040,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.05
+  m_Volume: 0.22
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -2319,7 +2319,7 @@ MonoBehaviour:
   indicatorText: {fileID: 420564955}
   normalColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
   hoverColor: {r: 1, g: 1, b: 1, a: 1}
-  hoverSound: {fileID: 8300000, guid: 544df50f25764fc43865b47970a4eecd, type: 3}
+  hoverSound: {fileID: 8300000, guid: 38051bc7ea3c8cd4787bc4c88ce25a7f, type: 3}
   audioSource: {fileID: 0}
 --- !u!114 &1879345957
 MonoBehaviour:
@@ -2428,7 +2428,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.05
+  m_Volume: 0.22
   m_Pitch: 1
   Loop: 0
   Mute: 0

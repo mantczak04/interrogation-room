@@ -343,6 +343,8 @@ namespace InterrogationRoom.Gameplay.Minigames
         private FileSearchSession session;
         private Transform gridRoot;
         private readonly List<Button> folderButtons = new List<Button>();
+        private Text inspectedLabel;
+        private Button confirmButton;
 
         protected override string Title => "Przeszukiwanie akt";
 
@@ -358,15 +360,16 @@ namespace InterrogationRoom.Gameplay.Minigames
             CreateLabel(
                 parent,
                 "Criterion",
-                $"Polecenie: znajdź teczkę {session.TargetSignature}",
-                21,
+                $"Notatka magazynowa: rocznik {session.TargetYear}, końcówka numeru " +
+                $"{session.TargetNumberSuffix:00}, suma cyfr {session.TargetDigitSum}.",
+                20,
                 InkColor,
                 TextAnchor.MiddleCenter,
                 FontStyle.Bold,
-                38f);
+                52f);
             var gridObject = new GameObject("FolderGrid", typeof(RectTransform));
             gridObject.transform.SetParent(parent, false);
-            gridObject.AddComponent<LayoutElement>().preferredHeight = 260f;
+            gridObject.AddComponent<LayoutElement>().preferredHeight = 210f;
             GridLayoutGroup grid = gridObject.AddComponent<GridLayoutGroup>();
             grid.cellSize = new Vector2(185f, 56f);
             grid.spacing = new Vector2(10f, 10f);
@@ -375,6 +378,25 @@ namespace InterrogationRoom.Gameplay.Minigames
             grid.childAlignment = TextAnchor.UpperCenter;
             gridRoot = gridObject.transform;
             RebuildFolders();
+
+            inspectedLabel = CreateLabel(
+                parent,
+                "InspectedFolder",
+                "Wybierz teczkę, aby sprawdzić jej etykietę.",
+                18,
+                MutedInkColor,
+                TextAnchor.MiddleCenter,
+                FontStyle.Normal,
+                36f);
+            confirmButton = CreateButton(
+                parent,
+                "ConfirmFolder",
+                "Otwórz wybraną teczkę",
+                ConfirmFolder,
+                AccentGreen,
+                LightText,
+                48f);
+            confirmButton.interactable = false;
         }
 
         private void RebuildFolders()
@@ -400,7 +422,18 @@ namespace InterrogationRoom.Gameplay.Minigames
 
         private void SelectFolder(int index)
         {
-            MinigameAttemptResult result = session.Choose(index);
+            if (!session.Inspect(index))
+                return;
+
+            FileFolderOption folder = session.Folders[index];
+            inspectedLabel.text = $"Wybrano: {folder.Signature} — rocznik {folder.Year}.";
+            inspectedLabel.color = InkColor;
+            confirmButton.interactable = true;
+        }
+
+        private void ConfirmFolder()
+        {
+            MinigameAttemptResult result = session.ConfirmInspected();
             if (result == MinigameAttemptResult.Success)
             {
                 Succeed();
@@ -408,6 +441,9 @@ namespace InterrogationRoom.Gameplay.Minigames
             }
 
             RebuildFolders();
+            inspectedLabel.text = "Teczki przełożono. Odczytaj wskazówki ponownie.";
+            inspectedLabel.color = WarningColor;
+            confirmButton.interactable = false;
             SetStatus($"Nie te akta. Strata {session.PenaltySeconds} s — teczki przełożono.", WarningColor);
             StartCoroutine(UnlockAfterDelay());
         }
@@ -417,6 +453,7 @@ namespace InterrogationRoom.Gameplay.Minigames
             SetButtonsInteractable(false);
             yield return new WaitForSecondsRealtime(Spec.WrongChoiceDelay);
             SetButtonsInteractable(true);
+            confirmButton.interactable = false;
             SetStatus("Spróbuj ponownie.", MutedInkColor);
         }
     }
@@ -439,12 +476,15 @@ namespace InterrogationRoom.Gameplay.Minigames
             CreateLabel(
                 parent,
                 "CodeBrief",
-                $"Kod z notatki: {Spec.Code:000}",
-                22,
+                "Notatka technika:\n" +
+                $"pierwsza + środkowa = {session.FirstPairSum},  " +
+                $"środkowa + ostatnia = {session.LastPairSum},  " +
+                $"pierwsza + ostatnia = {session.OuterPairSum}",
+                20,
                 InkColor,
                 TextAnchor.MiddleCenter,
                 FontStyle.Bold,
-                40f);
+                62f);
 
             var dialsObject = new GameObject("Dials", typeof(RectTransform));
             dialsObject.transform.SetParent(parent, false);
@@ -516,6 +556,9 @@ namespace InterrogationRoom.Gameplay.Minigames
     public sealed class RecordsTerminalMinigamePanel : MinigamePanelBase
     {
         private RecordsTerminalSession session;
+        private Transform recordsRoot;
+        private Text openedRecordLabel;
+        private Button confirmButton;
 
         protected override string Title => "Terminal kartoteki";
 
@@ -530,16 +573,26 @@ namespace InterrogationRoom.Gameplay.Minigames
             CreateLabel(
                 parent,
                 "Criterion",
-                $"Kryteria: nazwisko {session.TargetSurname}, rok {session.TargetYear}",
-                21,
+                $"Notatka: nazwisko na „{session.TargetSurnameInitial}”, jednostka „{session.TargetUnit}”, " +
+                $"okres {session.TargetYearBandStart}–{session.TargetYearBandStart + 4}.",
+                19,
                 InkColor,
                 TextAnchor.MiddleCenter,
                 FontStyle.Bold,
-                40f);
+                52f);
+
+            CreateFilterRow(parent, "Jednostka", session.UnitOptions, ApplyUnitFilter);
+            var yearLabels = new List<string>();
+            for (int index = 0; index < session.YearBandOptions.Count; index++)
+            {
+                int start = session.YearBandOptions[index];
+                yearLabels.Add($"{start}–{start + 4}");
+            }
+            CreateFilterRow(parent, "Okres", yearLabels, ApplyYearFilter);
 
             var scrollObject = new GameObject("RecordsScroll", typeof(RectTransform));
             scrollObject.transform.SetParent(parent, false);
-            scrollObject.AddComponent<LayoutElement>().preferredHeight = 280f;
+            scrollObject.AddComponent<LayoutElement>().preferredHeight = 180f;
             Image background = scrollObject.AddComponent<Image>();
             background.color = new Color32(0xCB, 0xBE, 0xA2, 0xFF);
             ScrollRect scroll = scrollObject.AddComponent<ScrollRect>();
@@ -571,26 +624,126 @@ namespace InterrogationRoom.Gameplay.Minigames
 
             scroll.viewport = viewport;
             scroll.content = content;
-            for (int index = 0; index < session.Records.Count; index++)
+            recordsRoot = content;
+            RebuildRecords();
+
+            openedRecordLabel = CreateLabel(
+                parent,
+                "OpenedRecord",
+                "Ustaw oba filtry, następnie otwórz rekord i sprawdź szczegóły.",
+                17,
+                MutedInkColor,
+                TextAnchor.MiddleCenter,
+                FontStyle.Normal,
+                42f);
+            confirmButton = CreateButton(
+                parent,
+                "ConfirmRecord",
+                "Zatwierdź otwarty rekord",
+                ConfirmRecord,
+                AccentGreen,
+                LightText,
+                46f);
+            confirmButton.interactable = false;
+        }
+
+        private void CreateFilterRow(
+            Transform parent,
+            string label,
+            IReadOnlyList<string> options,
+            Action<int> selected)
+        {
+            var rowObject = new GameObject($"{label}Filters", typeof(RectTransform));
+            rowObject.transform.SetParent(parent, false);
+            rowObject.AddComponent<LayoutElement>().preferredHeight = 42f;
+            var row = rowObject.AddComponent<HorizontalLayoutGroup>();
+            row.spacing = 7f;
+            row.childControlWidth = true;
+            row.childControlHeight = true;
+            row.childForceExpandWidth = true;
+            row.childForceExpandHeight = false;
+
+            for (int index = 0; index < options.Count; index++)
             {
                 int selectedIndex = index;
                 CreateButton(
-                    content,
-                    $"Record_{index}",
-                    session.Records[index].Label,
-                    () => SelectRecord(selectedIndex),
+                    rowObject.transform,
+                    $"{label}_{index}",
+                    options[index],
+                    () => selected(selectedIndex),
+                    ButtonPaper,
+                    InkColor,
+                    40f);
+            }
+        }
+
+        private void ApplyUnitFilter(int index)
+        {
+            session.SetUnitFilter(session.UnitOptions[index]);
+            ResetOpenedRecord();
+            RebuildRecords();
+        }
+
+        private void ApplyYearFilter(int index)
+        {
+            session.SetYearBandFilter(session.YearBandOptions[index]);
+            ResetOpenedRecord();
+            RebuildRecords();
+        }
+
+        private void RebuildRecords()
+        {
+            foreach (Transform child in recordsRoot)
+                child.gameObject.SetActive(false);
+
+            for (int visibleIndex = 0; visibleIndex < session.VisibleRecordIndices.Count; visibleIndex++)
+            {
+                int recordIndex = session.VisibleRecordIndices[visibleIndex];
+                CreateButton(
+                    recordsRoot,
+                    $"Record_{recordIndex}",
+                    session.Records[recordIndex].Label,
+                    () => SelectRecord(recordIndex),
                     ButtonPaper,
                     InkColor,
                     46f);
             }
+
+            if (session.VisibleRecordIndices.Count == 0)
+                SetStatus("Ustaw właściwą jednostkę i okres.", MutedInkColor);
+            else
+                SetStatus($"Wyniki filtrowania: {session.VisibleRecordIndices.Count}. Otwórz właściwy rekord.", MutedInkColor);
         }
 
         private void SelectRecord(int index)
         {
-            if (session.Select(index) == MinigameAttemptResult.Success)
+            if (!session.OpenRecord(index))
+                return;
+
+            RecordsTerminalOption record = session.Records[index];
+            openedRecordLabel.text =
+                $"OTWARTO: {record.Surname}\nRok: {record.Year}   Jednostka: {record.Unit}";
+            openedRecordLabel.color = InkColor;
+            confirmButton.interactable = true;
+        }
+
+        private void ConfirmRecord()
+        {
+            if (session.ConfirmOpenedRecord() == MinigameAttemptResult.Success)
+            {
                 Succeed();
-            else
-                Fail("Wybrano błędny rekord. Dostęp przerwany — spróbuj ponownie.");
+                return;
+            }
+
+            ResetOpenedRecord();
+            SetStatus("To nie ten rekord. Terminal pozostaje otwarty, ale tracisz czas.", WarningColor);
+        }
+
+        private void ResetOpenedRecord()
+        {
+            openedRecordLabel.text = "Otwórz rekord i porównaj jego szczegóły z notatką.";
+            openedRecordLabel.color = MutedInkColor;
+            confirmButton.interactable = false;
         }
     }
 }

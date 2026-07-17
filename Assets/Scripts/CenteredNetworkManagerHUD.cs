@@ -43,6 +43,16 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     GUIStyle textFieldStyle;
     GUIStyle homeButtonStyle;
     GUIStyle homeDescriptionStyle;
+    GUIStyle panelStyle;
+    GUIStyle titleStyle;
+    GUIStyle pageTitleStyle;
+    GUIStyle kickerStyle;
+    Texture2D panelTexture;
+    Texture2D buttonTexture;
+    Texture2D buttonHoverTexture;
+    Texture2D buttonPressedTexture;
+    Texture2D fieldTexture;
+    Texture2D scrimTexture;
     bool stylesInitialized;
     bool isVisible;
     bool sandboxPinned;
@@ -83,6 +93,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         switch (launchMode)
         {
             case GameLaunchMode.None:
+                SetMenuVisible(true, MenuPage.Home);
                 break;
             case GameLaunchMode.Host:
                 if (roundPresenter != null)
@@ -108,6 +119,16 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             roundPresenter.SetDeveloperMenuOpen(false);
         }
         SetExternalMenusVisible(false, false);
+    }
+
+    void OnDestroy()
+    {
+        DestroyTexture(panelTexture);
+        DestroyTexture(buttonTexture);
+        DestroyTexture(buttonHoverTexture);
+        DestroyTexture(buttonPressedTexture);
+        DestroyTexture(fieldTexture);
+        DestroyTexture(scrimTexture);
     }
 
     void OnValidate()
@@ -156,6 +177,10 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             {
                 SetMenuVisible(false, MenuPage.Home);
             }
+            else if (ShouldOpenModeMenu())
+            {
+                SetMenuVisible(true, MenuPage.Home);
+            }
             else if (settingsMenu != null)
             {
                 settingsMenu.Open();
@@ -177,30 +202,56 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void InitStyles()
     {
-        if (stylesInitialized)
+        if (stylesInitialized && pageTitleStyle != null && panelStyle != null)
         {
             return;
         }
+
+        stylesInitialized = false;
+        DestroyTexture(panelTexture);
+        DestroyTexture(buttonTexture);
+        DestroyTexture(buttonHoverTexture);
+        DestroyTexture(buttonPressedTexture);
+        DestroyTexture(fieldTexture);
+        DestroyTexture(scrimTexture);
+
+        panelTexture = CreateTexture(new Color32(0xE8, 0xDC, 0xC5, 0xFC));
+        buttonTexture = CreateTexture(new Color32(0x41, 0x5B, 0x4C, 0xFF));
+        buttonHoverTexture = CreateTexture(new Color32(0x4E, 0x6E, 0x5B, 0xFF));
+        buttonPressedTexture = CreateTexture(new Color32(0x33, 0x47, 0x3C, 0xFF));
+        fieldTexture = CreateTexture(new Color32(0xD9, 0xCB, 0xAF, 0xFF));
+        scrimTexture = CreateTexture(new Color32(0x08, 0x0B, 0x0D, 0xB8));
 
         buttonStyle = new GUIStyle(GUI.skin.button)
         {
             fontSize = fontSize,
             fixedHeight = buttonHeight,
-            alignment = TextAnchor.MiddleCenter
+            alignment = TextAnchor.MiddleCenter,
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = new Color32(0xE8, 0xE3, 0xD5, 0xFF), background = buttonTexture },
+            hover = { textColor = Color.white, background = buttonHoverTexture },
+            active = { textColor = Color.white, background = buttonPressedTexture },
+            focused = { textColor = Color.white, background = buttonHoverTexture },
+            border = new RectOffset(1, 1, 1, 1),
+            padding = new RectOffset(18, 18, 8, 8)
         };
 
         labelStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = fontSize,
             alignment = TextAnchor.MiddleCenter,
-            wordWrap = true
+            wordWrap = true,
+            normal = { textColor = new Color32(0x2B, 0x2A, 0x24, 0xFF) }
         };
 
         textFieldStyle = new GUIStyle(GUI.skin.textField)
         {
             fontSize = fontSize,
             fixedHeight = fieldHeight,
-            alignment = TextAnchor.MiddleCenter
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = new Color32(0x2B, 0x2A, 0x24, 0xFF), background = fieldTexture },
+            focused = { textColor = new Color32(0x2B, 0x2A, 0x24, 0xFF), background = fieldTexture },
+            padding = new RectOffset(12, 12, 6, 6)
         };
 
         homeButtonStyle = new GUIStyle(buttonStyle)
@@ -211,7 +262,35 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
         homeDescriptionStyle = new GUIStyle(labelStyle)
         {
-            fontSize = Mathf.Min(fontSize, 16)
+            fontSize = Mathf.Min(fontSize, 15),
+            normal = { textColor = new Color32(0x6E, 0x68, 0x57, 0xFF) }
+        };
+
+        panelStyle = new GUIStyle(GUI.skin.box)
+        {
+            normal = { background = panelTexture },
+            padding = new RectOffset(28, 28, 24, 26),
+            border = new RectOffset(2, 2, 2, 2)
+        };
+
+        titleStyle = new GUIStyle(labelStyle)
+        {
+            fontSize = Mathf.Min(fontSize + 10, 38),
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft
+        };
+
+        pageTitleStyle = new GUIStyle(titleStyle)
+        {
+            fontSize = Mathf.Min(fontSize + 2, 28)
+        };
+
+        kickerStyle = new GUIStyle(homeDescriptionStyle)
+        {
+            fontSize = Mathf.Min(fontSize, 14),
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft,
+            normal = { textColor = new Color32(0x80, 0x69, 0x48, 0xFF) }
         };
 
         stylesInitialized = true;
@@ -242,6 +321,9 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             return;
         }
 
+        if (currentPage == MenuPage.Home || currentPage == MenuPage.Network)
+            GUI.DrawTexture(new Rect(0f, 0f, screenWidth, screenHeight), scrimTexture);
+
         if (currentPage == MenuPage.NormalRound || currentPage == MenuPage.Sandbox)
         {
             DrawPageHeader(screenWidth);
@@ -250,10 +332,12 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         }
 
         float scaledWidth = panelWidth;
-        float scaledHeight = currentPage == MenuPage.Home ? 400f : 420f;
+        float scaledHeight = currentPage == MenuPage.Home
+            ? Mathf.Min(468f, screenHeight - 24f)
+            : Mathf.Min(450f, screenHeight - 24f);
         float x = (screenWidth - scaledWidth) * 0.5f + offsetX;
         float y = (screenHeight - scaledHeight) * 0.5f + offsetY;
-        GUILayout.BeginArea(new Rect(x, y, scaledWidth, scaledHeight));
+        GUILayout.BeginArea(new Rect(x, y, scaledWidth, scaledHeight), panelStyle);
 
         if (currentPage == MenuPage.Home)
         {
@@ -294,31 +378,35 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void DrawHomeMenu()
     {
-        GUILayout.Label("MENU", labelStyle);
-        GUILayout.Label("Wybierz jedną sekcję. Pozostałe panele pozostaną ukryte.", homeDescriptionStyle);
+        GUILayout.Label("AKTA SYSTEMOWE • MENU", kickerStyle, GUILayout.Height(22f));
+        GUILayout.Label("WYBIERZ TRYB", titleStyle, GUILayout.Height(48f));
+        GUILayout.Label("Uruchom lobby, przejdź do Rundy albo otwórz narzędzia testowe.", homeDescriptionStyle, GUILayout.Height(38f));
 
-        if (GUILayout.Button("Sieć / Host", homeButtonStyle))
+        if (GUILayout.Button("SIEĆ / HOST", homeButtonStyle))
         {
             SetMenuVisible(true, MenuPage.Network);
         }
-        GUILayout.Label("Uruchom hosta, klienta albo sprawdź stan połączenia.", homeDescriptionStyle);
 
-        if (GUILayout.Button("Zwykła Runda", homeButtonStyle))
+        if (GUILayout.Button("ZWYKŁA RUNDA", homeButtonStyle))
         {
             SetMenuVisible(true, MenuPage.NormalRound);
         }
-        GUILayout.Label("Najpierw połącz się przez Sieć / Host; potem uruchom Rundę dla 3–6 graczy.", homeDescriptionStyle);
 
         if (Application.isEditor)
         {
-            if (GUILayout.Button("Tryb developerski (DEBUG)", homeButtonStyle))
+            if (GUILayout.Button("TRYB DEVELOPERSKI", homeButtonStyle))
             {
                 OpenDeveloperMode();
             }
-            GUILayout.Label("Sam uruchamia hosta. Wybór roli, zadań i Runda bez limitu czasu. Skrót: F8.", homeDescriptionStyle);
         }
 
-        if (GUILayout.Button("Zamknij menu", homeButtonStyle))
+        if (GUILayout.Button("USTAWIENIA", homeButtonStyle))
+        {
+            SetMenuVisible(false, MenuPage.Home);
+            settingsMenu?.Open();
+        }
+
+        if (GUILayout.Button("ZAMKNIJ MENU", homeButtonStyle))
         {
             SetMenuVisible(false, MenuPage.Home);
         }
@@ -354,15 +442,16 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     void DrawPageHeader(float screenWidth)
     {
         string title = currentPage == MenuPage.NormalRound ? "ZWYKŁA RUNDA" : "TRYB DEVELOPERSKI";
-        float headerHeight = currentPage == MenuPage.Sandbox ? 180f : 120f;
-        GUILayout.BeginArea(new Rect(12f, 12f, Mathf.Min(190f, screenWidth - 24f), headerHeight));
-        GUILayout.Label(title, labelStyle);
-        if (GUILayout.Button("← Menu", buttonStyle, GUILayout.Width(150f)))
+        float headerHeight = currentPage == MenuPage.Sandbox ? 280f : 150f;
+        GUILayout.BeginArea(new Rect(12f, 12f, Mathf.Min(390f, screenWidth - 24f), headerHeight), panelStyle);
+        GUILayout.Label("AKTA TRYBU", kickerStyle);
+        GUILayout.Label(title, pageTitleStyle);
+        if (GUILayout.Button("← Menu", homeButtonStyle, GUILayout.Width(170f)))
         {
             SetMenuVisible(true, MenuPage.Home);
         }
         if (currentPage == MenuPage.Sandbox
-            && GUILayout.Button("Graj z panelem", buttonStyle, GUILayout.Width(170f)))
+            && GUILayout.Button("Graj z panelem", homeButtonStyle, GUILayout.Width(220f)))
         {
             PinSandboxAndCloseMenu();
         }
@@ -393,6 +482,29 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         SetCursorForClosedMenu();
     }
 
+    bool ShouldOpenModeMenu()
+    {
+        RoundPhase? phase = roundCoordinator?.CurrentView?.Phase;
+        return !phase.HasValue || phase.Value == RoundPhase.Lobby;
+    }
+
+    static Texture2D CreateTexture(Color color)
+    {
+        var texture = new Texture2D(1, 1, TextureFormat.RGBA32, false)
+        {
+            hideFlags = HideFlags.HideAndDontSave
+        };
+        texture.SetPixel(0, 0, color);
+        texture.Apply();
+        return texture;
+    }
+
+    static void DestroyTexture(Texture2D texture)
+    {
+        if (texture != null)
+            Destroy(texture);
+    }
+
     void PinSandboxAndCloseMenu()
     {
         sandboxPinned = true;
@@ -416,16 +528,28 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void ApplyPageVisibility()
     {
+        bool lobbyVisible = isVisible
+            ? currentPage == MenuPage.NormalRound
+            : ShouldShowLobbyWhenMenuClosed();
         SetExternalMenusVisible(
-            isVisible && currentPage == MenuPage.NormalRound,
+            lobbyVisible,
             sandboxPinned || (isVisible && currentPage == MenuPage.Sandbox));
     }
 
-    void SetExternalMenusVisible(bool normalRoundVisible, bool sandboxVisible)
+    bool ShouldShowLobbyWhenMenuClosed()
+    {
+        if (!NetworkClient.isConnected && !NetworkServer.active)
+            return false;
+
+        RoundPhase? phase = roundCoordinator?.CurrentView?.Phase;
+        return !phase.HasValue || phase.Value == RoundPhase.Lobby;
+    }
+
+    void SetExternalMenusVisible(bool lobbyVisible, bool sandboxVisible)
     {
         if (roundPresenter != null)
         {
-            roundPresenter.SetLobbyMenuVisible(normalRoundVisible);
+            roundPresenter.SetLobbyMenuVisible(lobbyVisible);
         }
 
         if (roundCoordinator != null && developerPanel == null)

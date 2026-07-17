@@ -10,6 +10,14 @@ using UnityEngine.InputSystem;
 
 namespace InterrogationRoom.Gameplay.Interaction
 {
+    public enum TimedInteractionClientOutcome : byte
+    {
+        Cancelled,
+        Completed,
+        CompletedWithoutObjectiveProgress,
+        MinigameFailed
+    }
+
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NetworkIdentity))]
     public sealed class PlayerInteractor : NetworkBehaviour
@@ -25,6 +33,7 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         [Header("Timed interaction")]
         [SerializeField] private string interactionAnimatorBool = "IsInteracting";
+        [SerializeField, Min(0.5f)] private float feedbackDuration = 4f;
 
         private PlayerController playerController;
         private Animator animator;
@@ -41,6 +50,8 @@ namespace InterrogationRoom.Gameplay.Interaction
         private double localTimedInteractionStartedAt;
         private double localTimedInteractionEndsAt;
         private string localTimedInteractionPrompt;
+        private string localInteractionFeedback;
+        private double localInteractionFeedbackEndsAt;
 
         [SyncVar(hook = nameof(OnInteractionMovementLockedChanged))]
         private bool interactionMovementLocked;
@@ -55,6 +66,12 @@ namespace InterrogationRoom.Gameplay.Interaction
         public NetworkCarryableItem HeldItem => NetworkCarryableItem.FindCarriedBy(netIdentity);
         public bool HasHeldItem => HeldItem != null;
         public string ActiveTimedInteractionPrompt => localTimedInteractionPrompt;
+        public bool HasInteractionFeedback =>
+            !string.IsNullOrEmpty(localInteractionFeedback) &&
+            NetworkTime.time < localInteractionFeedbackEndsAt;
+        public string InteractionFeedback => HasInteractionFeedback
+            ? localInteractionFeedback
+            : null;
         public float TimedInteractionProgress01 => !localTimedInteractionActive
             ? 0f
             : Mathf.Clamp01((float)((NetworkTime.time - localTimedInteractionStartedAt) /
@@ -325,15 +342,19 @@ namespace InterrogationRoom.Gameplay.Interaction
             }
 
             NetworkIdentity actor = GetComponent<NetworkIdentity>();
-            bool completed = activeTimedTarget.TryCompleteInteractionServer(actor);
-            if (!completed)
+            bool worldCompleted = activeTimedTarget.TryCompleteInteractionServer(actor);
+            if (!worldCompleted)
             {
                 activeTimedTarget.CancelInteractionServer(
                     actor,
                     TimedInteractionCancellationReason.CompletionRejected);
             }
-            EndActiveTimedInteractionServer(completed);
-            return completed;
+            TimedInteractionClientOutcome outcome = ResolveCompletionOutcomeServer(
+                activeTimedTarget,
+                actor,
+                worldCompleted);
+            EndActiveTimedInteractionServer(outcome);
+            return outcome == TimedInteractionClientOutcome.Completed;
         }
 
         [Command]
@@ -346,7 +367,7 @@ namespace InterrogationRoom.Gameplay.Interaction
             activeTimedTarget.CancelInteractionServer(
                 netIdentity,
                 TimedInteractionCancellationReason.MinigameFailed);
-            EndActiveTimedInteractionServer(false);
+            EndActiveTimedInteractionServer(TimedInteractionClientOutcome.MinigameFailed);
         }
 
         [Server]
@@ -429,12 +450,15 @@ namespace InterrogationRoom.Gameplay.Interaction
             if (activeMinigameSpec != null || NetworkTime.time < activeTimedEndsAt)
                 return;
 
-            bool completed = activeTimedTarget.TryCompleteInteractionServer(netIdentity);
-            if (!completed)
+            bool worldCompleted = activeTimedTarget.TryCompleteInteractionServer(netIdentity);
+            if (!worldCompleted)
                 activeTimedTarget.CancelInteractionServer(
                     netIdentity,
                     TimedInteractionCancellationReason.CompletionRejected);
-            EndActiveTimedInteractionServer(completed);
+            EndActiveTimedInteractionServer(ResolveCompletionOutcomeServer(
+                activeTimedTarget,
+                netIdentity,
+                worldCompleted));
         }
 
         private static bool AllowsTimedRoundInteraction()
@@ -448,11 +472,11 @@ namespace InterrogationRoom.Gameplay.Interaction
         private void CancelActiveTimedInteractionServer(TimedInteractionCancellationReason reason)
         {
             activeTimedTarget?.CancelInteractionServer(netIdentity, reason);
-            EndActiveTimedInteractionServer(false);
+            EndActiveTimedInteractionServer(TimedInteractionClientOutcome.Cancelled);
         }
 
         [Server]
-        private void EndActiveTimedInteractionServer(bool completed)
+        private void EndActiveTimedInteractionServer(TimedInteractionClientOutcome outcome)
         {
             activeTimedTarget = null;
             activeTimedTargetIdentity = null;
@@ -465,7 +489,25 @@ namespace InterrogationRoom.Gameplay.Interaction
                 ? identity.connectionToClient
                 : null;
             if (targetConnection != null)
-                TargetEndTimedInteraction(targetConnection, completed);
+                TargetEndTimedInteraction(targetConnection, outcome);
+        }
+
+        [Server]
+        private static TimedInteractionClientOutcome ResolveCompletionOutcomeServer(
+            INetworkTimedInteractable target,
+            NetworkIdentity actor,
+            bool worldCompleted)
+        {
+            if (!worldCompleted)
+                return TimedInteractionClientOutcome.Cancelled;
+
+            if (target is NetworkObjectiveWorldAction objectiveAction &&
+                !objectiveAction.HasActorCompletionServer(actor))
+            {
+                return TimedInteractionClientOutcome.CompletedWithoutObjectiveProgress;
+            }
+
+            return TimedInteractionClientOutcome.Completed;
         }
 
         [TargetRpc]
@@ -477,6 +519,8 @@ namespace InterrogationRoom.Gameplay.Interaction
             string prompt,
             bool hasMinigame)
         {
+            localInteractionFeedback = null;
+            localInteractionFeedbackEndsAt = 0d;
             localTimedInteractionActive = true;
             localMinigameInteractionActive = hasMinigame;
             localMinigameCompletionPending = false;
@@ -503,9 +547,28 @@ namespace InterrogationRoom.Gameplay.Interaction
         }
 
         [TargetRpc]
-        private void TargetEndTimedInteraction(NetworkConnection target, bool _)
+        private void TargetEndTimedInteraction(
+            NetworkConnection target,
+            TimedInteractionClientOutcome outcome)
         {
             ClearLocalTimedInteraction();
+            localInteractionFeedback = ResolveFeedback(outcome);
+            localInteractionFeedbackEndsAt = NetworkTime.time + feedbackDuration;
+        }
+
+        private static string ResolveFeedback(TimedInteractionClientOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case TimedInteractionClientOutcome.Completed:
+                    return "Czynność zatwierdzona.";
+                case TimedInteractionClientOutcome.CompletedWithoutObjectiveProgress:
+                    return "Czynność wykonana, ale nie rozwinęła twojego aktualnego celu.";
+                case TimedInteractionClientOutcome.MinigameFailed:
+                    return "Niepowodzenie. Możesz spróbować ponownie.";
+                default:
+                    return "Interakcja przerwana.";
+            }
         }
 
         private void OnLocalMinigameSucceeded()

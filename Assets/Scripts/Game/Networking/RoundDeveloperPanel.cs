@@ -27,6 +27,10 @@ namespace InterrogationRoom.Debugging
         private GUIStyle _headerStyle;
         private GUIStyle _labelStyle;
         private GUIStyle _buttonStyle;
+        private Texture2D _paperTexture;
+        private Texture2D _greenTexture;
+        private Texture2D _greenHoverTexture;
+        private Texture2D _greenPressedTexture;
 
         private void Reset()
         {
@@ -39,6 +43,14 @@ namespace InterrogationRoom.Debugging
                 coordinator = GetComponent<NetworkRoundCoordinator>();
         }
 
+        private void OnDestroy()
+        {
+            DestroyTexture(_paperTexture);
+            DestroyTexture(_greenTexture);
+            DestroyTexture(_greenHoverTexture);
+            DestroyTexture(_greenPressedTexture);
+        }
+
         private void OnGUI()
         {
             if (!_isVisible || !NetworkRoundCoordinator.DeveloperToolsAvailable || coordinator == null)
@@ -46,11 +58,12 @@ namespace InterrogationRoom.Debugging
 
             InitializeStyles();
 
-            const float panelWidth = 440f;
+            const float panelWidth = 480f;
             const float shortcutStripHeight = 68f;
             float panelHeight = Mathf.Min(Screen.height - 24f - shortcutStripHeight, 690f);
             var area = new Rect(Screen.width - panelWidth - 12f, 12f, panelWidth, panelHeight);
             GUILayout.BeginArea(area, _boxStyle);
+            GUILayout.Label("AKTA TESTOWE • NARZĘDZIA RUNDY", _labelStyle);
             GUILayout.BeginHorizontal();
             GUILayout.Label("TRYB DEVELOPERSKI — BEZ LIMITU", _headerStyle);
             if (GUILayout.Button(_expanded ? "—" : "+", _buttonStyle, GUILayout.Width(42f)))
@@ -335,27 +348,60 @@ namespace InterrogationRoom.Debugging
             if (_boxStyle != null)
                 return;
 
+            _paperTexture = CreateTexture(new Color32(0xE8, 0xDC, 0xC5, 0xFC));
+            _greenTexture = CreateTexture(new Color32(0x41, 0x5B, 0x4C, 0xFF));
+            _greenHoverTexture = CreateTexture(new Color32(0x4E, 0x6E, 0x5B, 0xFF));
+            _greenPressedTexture = CreateTexture(new Color32(0x33, 0x47, 0x3C, 0xFF));
+
             _boxStyle = new GUIStyle(GUI.skin.box)
             {
-                padding = new RectOffset(14, 14, 12, 12)
+                padding = new RectOffset(20, 20, 16, 18),
+                normal = { background = _paperTexture },
+                border = new RectOffset(2, 2, 2, 2)
             };
             _headerStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 16,
+                fontSize = 17,
                 fontStyle = FontStyle.Bold,
-                wordWrap = true
+                wordWrap = true,
+                normal = { textColor = new Color32(0x2B, 0x2A, 0x24, 0xFF) }
             };
             _labelStyle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 14,
-                wordWrap = true
+                wordWrap = true,
+                normal = { textColor = new Color32(0x6E, 0x68, 0x57, 0xFF) }
             };
             _buttonStyle = new GUIStyle(GUI.skin.button)
             {
                 fontSize = 14,
-                fixedHeight = 34f,
-                wordWrap = true
+                fixedHeight = 38f,
+                fontStyle = FontStyle.Bold,
+                wordWrap = true,
+                normal = { textColor = new Color32(0xE8, 0xE3, 0xD5, 0xFF), background = _greenTexture },
+                hover = { textColor = Color.white, background = _greenHoverTexture },
+                active = { textColor = Color.white, background = _greenPressedTexture },
+                focused = { textColor = Color.white, background = _greenHoverTexture },
+                padding = new RectOffset(12, 12, 6, 6),
+                border = new RectOffset(1, 1, 1, 1)
             };
+        }
+
+        private static Texture2D CreateTexture(Color color)
+        {
+            var texture = new Texture2D(1, 1, TextureFormat.RGBA32, false)
+            {
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            texture.SetPixel(0, 0, color);
+            texture.Apply();
+            return texture;
+        }
+
+        private static void DestroyTexture(Texture2D texture)
+        {
+            if (texture != null)
+                Destroy(texture);
         }
 
     }

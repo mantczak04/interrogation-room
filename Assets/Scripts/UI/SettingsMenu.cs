@@ -188,7 +188,7 @@ public sealed class SettingsMenu : MonoBehaviour
         CanvasScaler scaler = gameObject.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.matchWidthOrHeight = 1f;
+        scaler.matchWidthOrHeight = 0.5f;
 
         gameObject.AddComponent<GraphicRaycaster>();
 
@@ -197,22 +197,26 @@ public sealed class SettingsMenu : MonoBehaviour
         scrimRect.anchorMin = Vector2.zero;
         scrimRect.anchorMax = Vector2.one;
         scrimRect.offsetMin = Vector2.zero;
-        scrimRect.offsetMax = new Vector2(0f, -72f);
+        scrimRect.offsetMax = Vector2.zero;
 
         Image panel = CreateImage(transform, "Panel", PaperColor, raycastTarget: true);
         RectTransform panelRect = panel.rectTransform;
         panelRect.anchorMin = panelRect.anchorMax = new Vector2(0.5f, 0.5f);
         panelRect.pivot = new Vector2(0.5f, 0.5f);
         panelRect.anchoredPosition = Vector2.zero;
-        panelRect.sizeDelta = new Vector2(600f, 0f);
+        panelRect.sizeDelta = new Vector2(760f, 0f);
+
+        Outline panelOutline = panel.gameObject.AddComponent<Outline>();
+        panelOutline.effectColor = AccentGreenDark;
+        panelOutline.effectDistance = new Vector2(2f, -2f);
 
         Shadow panelShadow = panel.gameObject.AddComponent<Shadow>();
         panelShadow.effectColor = PaperShadowColor;
         panelShadow.effectDistance = new Vector2(10f, -10f);
 
         VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(40, 40, 30, 34);
-        layout.spacing = 14f;
+        layout.padding = new RectOffset(52, 52, 40, 42);
+        layout.spacing = 18f;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
         layout.childForceExpandWidth = true;
@@ -221,14 +225,15 @@ public sealed class SettingsMenu : MonoBehaviour
         ContentSizeFitter fitter = panel.gameObject.AddComponent<ContentSizeFitter>();
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-        CreateLabel(panel.transform, "Title", "USTAWIENIA", 36, InkColor, TextAnchor.MiddleLeft, FontStyle.Bold);
+        CreateLabel(panel.transform, "Kicker", "KARTA USTAWIEŃ • 01", 16, AccentGreenDark, TextAnchor.MiddleLeft, FontStyle.Bold);
+        CreateLabel(panel.transform, "Title", "USTAWIENIA", 44, InkColor, TextAnchor.MiddleLeft, FontStyle.Bold);
         CreateDivider(panel.transform, "TitleAccent", AccentGreen, 3f);
 
         contextHintLabel = CreateLabel(
             panel.transform,
             "ContextHint",
             "Zmiany ustawień działają natychmiast.",
-            15,
+            17,
             MutedInkColor,
             TextAnchor.MiddleLeft);
 
@@ -241,10 +246,10 @@ public sealed class SettingsMenu : MonoBehaviour
         rowLayout.childForceExpandHeight = false;
         rowLayout.spacing = 8f;
         Text sensitivityCaption = CreateLabel(
-            sensitivityRow.transform, "Caption", "Czułość myszy", 18, InkColor, TextAnchor.MiddleLeft);
+            sensitivityRow.transform, "Caption", "Czułość myszy", 21, InkColor, TextAnchor.MiddleLeft);
         sensitivityCaption.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
         sensitivityValueLabel = CreateLabel(
-            sensitivityRow.transform, "Value", "0.0", 18, AccentGreenDark, TextAnchor.MiddleRight, FontStyle.Bold);
+            sensitivityRow.transform, "Value", "0.0", 21, AccentGreenDark, TextAnchor.MiddleRight, FontStyle.Bold);
         sensitivityValueLabel.gameObject.AddComponent<LayoutElement>().preferredWidth = 64f;
 
         sensitivitySlider = BuildSensitivitySlider(panel.transform);
@@ -254,7 +259,7 @@ public sealed class SettingsMenu : MonoBehaviour
             panel.transform,
             "VoiceHint",
             "V — wycisz / włącz mikrofon",
-            16,
+            17,
             MutedInkColor,
             TextAnchor.MiddleLeft,
             FontStyle.Italic);
@@ -262,12 +267,12 @@ public sealed class SettingsMenu : MonoBehaviour
         CreateSpacer(panel.transform, "ButtonSpacer", 8f);
 
         Button backButton = CreateButton(
-            panel.transform, "BackButton", "Wróć do menu", AccentGreen, LightTextColor, Close, 52f);
+            panel.transform, "BackButton", "Wróć do menu", AccentGreen, LightTextColor, Close, 62f);
         backButtonLabel = backButton.GetComponentInChildren<Text>();
 
         leaveDivider = CreateDivider(panel.transform, "LeaveDivider", TrackColor, 1f);
         leaveButton = CreateButton(
-            panel.transform, "LeaveButton", "Opuść Rundę", DestructiveRedColor, LightTextColor, OnLeaveClicked, 48f);
+            panel.transform, "LeaveButton", "Opuść Rundę", DestructiveRedColor, LightTextColor, OnLeaveClicked, 56f);
 
         RefreshSectionVisibility();
     }
@@ -276,7 +281,7 @@ public sealed class SettingsMenu : MonoBehaviour
     {
         var sliderObject = new GameObject("SensitivitySlider", typeof(RectTransform));
         sliderObject.transform.SetParent(parent, false);
-        sliderObject.AddComponent<LayoutElement>().preferredHeight = 30f;
+        sliderObject.AddComponent<LayoutElement>().preferredHeight = 38f;
 
         Slider slider = sliderObject.AddComponent<Slider>();
 
@@ -284,7 +289,7 @@ public sealed class SettingsMenu : MonoBehaviour
         RectTransform backgroundRect = background.rectTransform;
         backgroundRect.anchorMin = new Vector2(0f, 0.5f);
         backgroundRect.anchorMax = new Vector2(1f, 0.5f);
-        backgroundRect.sizeDelta = new Vector2(0f, 8f);
+        backgroundRect.sizeDelta = new Vector2(0f, 10f);
 
         var fillArea = new GameObject("Fill Area", typeof(RectTransform)).GetComponent<RectTransform>();
         fillArea.SetParent(sliderObject.transform, false);
@@ -305,7 +310,7 @@ public sealed class SettingsMenu : MonoBehaviour
 
         Image handle = CreateImage(handleArea, "Handle", AccentGreenDark, raycastTarget: true);
         handle.rectTransform.anchorMin = handle.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-        handle.rectTransform.sizeDelta = new Vector2(16f, 16f);
+        handle.rectTransform.sizeDelta = new Vector2(20f, 20f);
 
         slider.fillRect = fill.rectTransform;
         slider.handleRect = handle.rectTransform;
@@ -344,7 +349,7 @@ public sealed class SettingsMenu : MonoBehaviour
         button.onClick.AddListener(() => onClick());
 
         Text buttonLabel = CreateLabel(
-            buttonObject.transform, "Label", label, 22, textColor, TextAnchor.MiddleCenter, FontStyle.Bold);
+            buttonObject.transform, "Label", label, 24, textColor, TextAnchor.MiddleCenter, FontStyle.Bold);
         RectTransform labelRect = buttonLabel.rectTransform;
         labelRect.anchorMin = Vector2.zero;
         labelRect.anchorMax = Vector2.one;

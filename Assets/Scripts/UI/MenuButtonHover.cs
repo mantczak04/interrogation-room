@@ -24,9 +24,25 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
         SetNormalState();
     }
 
+    public void ConfigurePresentation(Color textColor, Color highlightedTextColor)
+    {
+        normalColor = textColor;
+        hoverColor = highlightedTextColor;
+
+        if (buttonText == null)
+        {
+            buttonText = GetComponentInChildren<TextMeshProUGUI>(true);
+        }
+
+        SetNormalState();
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
-        buttonText.color = hoverColor;
+        if (buttonText != null)
+        {
+            buttonText.color = hoverColor;
+        }
         if (indicatorText != null)
         {
             indicatorText.enabled = true;
@@ -45,7 +61,10 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     private void SetNormalState()
     {
-        buttonText.color = normalColor;
+        if (buttonText != null)
+        {
+            buttonText.color = normalColor;
+        }
         if (indicatorText != null)
         {
             indicatorText.enabled = false;

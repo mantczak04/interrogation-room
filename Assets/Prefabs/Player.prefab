@@ -365,7 +365,7 @@ MonoBehaviour:
   playerCamera: {fileID: 7222047874019103226}
   weaponSocket: {fileID: 6515090701736740767}
   heldWeaponVisualPrefab: {fileID: 2037406299853551675, guid: 5c8d5277f35e12d4ab791008dc4e280b, type: 3}
-  shotSound: {fileID: 8300000, guid: 97c2c9b95bb673447a30131dd540e0a9, type: 3}
+  shotSound: {fileID: 8300000, guid: a218870dbd162944e89ac0079725f23e, type: 3}
   shotRange: 100
   shotInterval: 0.25
   maxShotOriginDistance: 10
@@ -400,6 +400,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   interactionAnimatorBool: IsInteracting
+  feedbackDuration: 4
 --- !u!114 &5364703619725945018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -451,6 +452,8 @@ MonoBehaviour:
   sizeLerpSpeed: 14
   hintKey: '[E]'
   standUpPrompt: Stand up
+  heldItemPrefix: Niesiesz
+  dropHint: "[G] Upu\u015B\u0107"
 --- !u!95 &2075991133823677100
 Animator:
   serializedVersion: 7

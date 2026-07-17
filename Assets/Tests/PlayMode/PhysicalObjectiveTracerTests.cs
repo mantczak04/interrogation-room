@@ -58,9 +58,15 @@ namespace InterrogationRoom.Gameplay.Tests
                 "A bluff still applies the visible world effect.");
             Assert.That(begin.Invoke(action, new object[] { other }), Is.False,
                 "One actor cannot spam the same stateful action.");
+            Assert.That(actionType.GetMethod("HasActorCompletionServer")
+                .Invoke(action, new object[] { other }), Is.True,
+                "The server must expose whether the domain binder retained the completion.");
 
             Assert.That(actionType.GetMethod("ReleaseActorCompletionServer")
                 .Invoke(action, new object[] { other }), Is.True);
+            Assert.That(actionType.GetMethod("HasActorCompletionServer")
+                .Invoke(action, new object[] { other }), Is.False,
+                "A rejected objective action must no longer look authoritative to its performer.");
             Assert.That(begin.Invoke(action, new object[] { other }), Is.True,
                 "Area A can release an out-of-order completion without reverting the world.");
             cancel.Invoke(action, new object[] { other });

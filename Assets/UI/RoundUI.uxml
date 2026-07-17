@@ -39,7 +39,7 @@
                     </ui:VisualElement>
                     <ui:Label name="preparation-timer-label" class="preparation-timer document-font" />
                 </ui:VisualElement>
-                <ui:ScrollView name="preparation-scroll" class="preparation-scroll">
+                <ui:ScrollView name="preparation-scroll" class="preparation-scroll" mode="Vertical" horizontal-scroller-visibility="Hidden">
                     <ui:Label name="role-label" class="role-stamp stamp-font" />
                     <ui:Label text="Przestępstwo" class="section-title paper-section-title stamp-font" />
                     <ui:Label name="crime-label" class="body-text document-font" />
@@ -51,7 +51,7 @@
                 </ui:ScrollView>
                 <ui:VisualElement class="preparation-footer">
                     <ui:Label name="ready-count-label" class="ready-count" />
-                    <ui:Button name="ready-button" text="Gotowy" class="button button-primary ready-button" />
+                    <ui:Button name="ready-button" text="Gotowy" class="button button-primary ready-button stamp-font" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

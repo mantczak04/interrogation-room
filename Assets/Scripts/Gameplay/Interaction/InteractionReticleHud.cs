@@ -70,17 +70,20 @@ namespace InterrogationRoom.Gameplay.Interaction
             }
 
             bool timedInteractionActive = interactor.HasActiveTimedInteraction;
+            bool feedbackVisible = interactor.HasInteractionFeedback;
             bool targeted = timedInteractionActive || interactor.HasHoveredTarget;
             float desiredSize = targeted ? targetedSize : idleSize;
             currentSize = Mathf.Lerp(currentSize, desiredSize, Time.deltaTime * sizeLerpSpeed);
             dotRect.sizeDelta = new Vector2(currentSize, currentSize);
             dotImage.color = targeted ? targetedColor : idleColor;
 
-            string prompt = ResolvePrompt(targeted, timedInteractionActive);
+            string prompt = ResolvePrompt(targeted, timedInteractionActive, feedbackVisible);
             bool showHint = !string.IsNullOrEmpty(prompt);
             if (showHint)
             {
-                hintLabel.text = timedInteractionActive ? prompt : $"{hintKey} {prompt}";
+                hintLabel.text = timedInteractionActive || feedbackVisible
+                    ? prompt
+                    : $"{hintKey} {prompt}";
             }
 
             if (hintLabel.enabled != showHint)
@@ -96,7 +99,10 @@ namespace InterrogationRoom.Gameplay.Interaction
                 heldItemLabel.enabled = showHeldItem;
         }
 
-        private string ResolvePrompt(bool targeted, bool timedInteractionActive)
+        private string ResolvePrompt(
+            bool targeted,
+            bool timedInteractionActive,
+            bool feedbackVisible)
         {
             if (playerController != null && playerController.IsSeated)
             {
@@ -108,6 +114,9 @@ namespace InterrogationRoom.Gameplay.Interaction
                 int progressPercent = Mathf.RoundToInt(interactor.TimedInteractionProgress01 * 100f);
                 return $"{interactor.ActiveTimedInteractionPrompt} {progressPercent}%";
             }
+
+            if (feedbackVisible)
+                return interactor.InteractionFeedback;
 
             return targeted ? interactor.HoveredPrompt : null;
         }

@@ -58,6 +58,16 @@ namespace InterrogationRoom.Gameplay.Interaction
             return NetworkServer.active && completedActors.Remove(GetActorKey(interactor));
         }
 
+        /// <summary>
+        /// Read after CompletedServer listeners return. The physical binder removes
+        /// the actor when the world action did not advance their authoritative Runda state.
+        /// </summary>
+        [Server]
+        public bool HasActorCompletionServer(NetworkIdentity interactor)
+        {
+            return NetworkServer.active && completedActors.Contains(GetActorKey(interactor));
+        }
+
         protected sealed override bool ApplyCompletedEffectServer(NetworkIdentity interactor)
         {
             int actorKey = GetActorKey(interactor);
