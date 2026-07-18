@@ -12,7 +12,7 @@ Cienka warstwa prezentacji: renderuje otrzymany `PlayerRoundView` i wysyła inte
 
 ### Ekrany / stany UI (sterowane fazą z widoku)
 
-1. **Lobby**: po połączeniu scena `Room` automatycznie pokazuje pełnoekranowe lobby na tle menu głównego. Każdy gracz wybiera jedną z pięciu neutralnych postaci strzałkami i widzi jej podgląd idle; wybór jest publicznie synchronizowany przez należący do gracza `PlayerController`. Host widzi listę Spraw, zaproszenie Steam oraz przycisk „Start Rundy" aktywny przy 3–6 graczach.
+1. **Lobby**: po połączeniu scena `Room` automatycznie pokazuje pełnoekranowe lobby na tle menu głównego. Każdy gracz wybiera jedną z pięciu neutralnych postaci strzałkami i widzi jej podgląd idle; wybór jest publicznie synchronizowany przez należący do gracza `PlayerController`. Host widzi listę Spraw, zaproszenie Steam oraz przycisk „Start Rundy" aktywny przy 3–8 graczach.
 2. **Przygotowanie**: karta z rolą gracza, jawnym Przestępstwem i właściwą wersją Alibi (Detektyw: rola + Przestępstwo + instrukcja, bez Alibi). Odliczanie do końca Przygotowania. Po zakończeniu karta znika trwale (ADR-0007).
 3. **Runda (HUD)**: pozostały Limit Rundy, własna rola (dyskretnie), jawne Przestępstwo (podręcznie, np. pod klawiszem), prompt interakcji „[E]" oraz prywatny podgląd aktualnego kroku Celu. Detektyw zamiast Celu ma prywatny Rejestr Incydentów.
 4. **Wynik**: przyczyna zakończenia, role, Prywatne Cele i ich postęp, właściciel i Cel Wrobienia, działania Planu Ucieczki, zdobyte Tropy do Alibi, prawdziwi autorzy Incydentów oraz indywidualne wyniki. Przycisk powrotu do lobby u hosta.

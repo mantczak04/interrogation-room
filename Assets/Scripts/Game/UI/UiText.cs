@@ -34,15 +34,16 @@ namespace InterrogationRoom.UI
                 ["Wróć do gry"] = "Back to game",
                 ["Opuść Rundę"] = "Leave Round",
                 ["PRZESŁUCHANIE"] = "INTERROGATION",
-                ["Gracze w lobby: 0/6"] = "Players in lobby: 0/6",
+                ["Gracze w lobby: 0/8"] = "Players in lobby: 0/8",
                 ["Wybierz postać"] = "Choose character",
                 ["Włącz Sekretny Cel"] = "Enable Secret Objective",
                 ["Sekretny Cel jest dostępny od 5 graczy."] = "Secret Objective is available from 5 players.",
                 ["Sekretny Cel będzie użyty w tej Rundzie."] = "Secret Objective will be used in this Round.",
                 ["Sekretny Cel jest wyłączony przez hosta."] = "Secret Objective was disabled by the host.",
                 ["Zaproś znajomych"] = "Invite friends",
+                ["Wyjdź z lobby"] = "Leave lobby",
                 ["Start Rundy"] = "Start Round",
-                ["Rundę można rozpocząć dla 3–6 graczy."] = "A Round can be started with 3–6 players.",
+                ["Rundę można rozpocząć dla 3–8 graczy."] = "A Round can be started with 3–8 players.",
                 ["Wygląd postaci nie zdradza roli."] = "A character's appearance does not reveal their role.",
                 ["AKTA RUNDY"] = "ROUND FILE",
                 ["Przygotowanie"] = "Preparation",
@@ -112,7 +113,7 @@ namespace InterrogationRoom.UI
                 ["Tylko serwer"] = "Server Only",
                 ["Zaproś"] = "Invite",
                 ["AKTA SPRAWY"] = "CASE FILE",
-                ["Gra sieciowa dla 3–6 graczy."] = "An online game for 3–6 players."
+                ["Gra sieciowa dla 3–8 graczy."] = "An online game for 3–8 players."
             };
 
         private static readonly IReadOnlyDictionary<string, string> Polish =

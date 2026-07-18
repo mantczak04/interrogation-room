@@ -7,7 +7,7 @@
 
 ## Cel
 
-Gracze (3–6 znajomych) łączą się przez lobby Steam bez konfiguracji sieci; deweloper testuje lokalnie na KCP + ParrelSync bez Steama.
+Gracze (3–8 znajomych) łączą się przez lobby Steam bez konfiguracji sieci; deweloper testuje lokalnie na KCP + ParrelSync bez Steama.
 
 ## Zasada działania (stan obecny — szczegóły w STEAM-NETWORKING.md)
 
@@ -20,7 +20,7 @@ Gracze (3–6 znajomych) łączą się przez lobby Steam bez konfiguracji sieci;
 
 ## Luki do domknięcia (pod Rundę)
 
-1. **Przepływ startu Rundy z lobby** — po połączeniu graczy nie ma żadnego kroku „zacznij grę": host musi dostać przycisk Start (aktywny przy 3–6 graczach), który buduje skład i woła `StartRound` przez `NetworkRoundCoordinator` ([prywatne-widoki-sieciowe.md](./prywatne-widoki-sieciowe.md)).
+1. **Przepływ startu Rundy z lobby** — po połączeniu graczy nie ma żadnego kroku „zacznij grę": host musi dostać przycisk Start (aktywny przy 3–8 graczach), który buduje skład i woła `StartRound` przez `NetworkRoundCoordinator` ([prywatne-widoki-sieciowe.md](./prywatne-widoki-sieciowe.md)).
 2. **Tożsamość gracza** — mapowanie na `PlayerId` (SteamID / connectionId) i nick (persona Steam / fallback) do listy graczy w lobby i ekranu wyników.
 3. **Blokada late-join podczas Rundy** — MVP: odrzucenie do lobby / komunikat; dziś nowy klient po prostu się spawnuje.
 4. **Powrót do lobby po Rundzie** — reset stanu sceny (pickupy, pozycje graczy, drzwi) bez restartu procesu; patrz reset Rundy w [silnik-rundy.md](./silnik-rundy.md).

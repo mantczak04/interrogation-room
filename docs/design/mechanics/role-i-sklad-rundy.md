@@ -6,7 +6,7 @@
 
 ## Cel
 
-Każda Runda potrzebuje poprawnego, tajnego przydziału ról: dokładnie jeden Detektyw, dokładnie jeden Winny, 1–4 Niewinnych, przy 3–6 graczach (balans główny: 5). Przydział jest sercem asymetrii informacyjnej — jego wyciek psuje całą Rundę.
+Każda Runda potrzebuje poprawnego, tajnego przydziału ról: dokładnie jeden Detektyw, dokładnie jeden Winny, 1–6 Niewinnych, przy 3–8 graczach (balans główny: 5). Przydział jest sercem asymetrii informacyjnej — jego wyciek psuje całą Rundę.
 
 ## Zasada działania
 

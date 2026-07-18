@@ -3,23 +3,27 @@
     <ui:VisualElement name="round-ui-root" class="round-ui">
         <ui:VisualElement name="lobby-panel" class="lobby-screen">
             <ui:VisualElement class="screen-shade" />
+            <ui:Button name="lobby-back-button" class="lobby-back" focusable="false">
+                <ui:Label text="‹" class="lobby-back-glyph" picking-mode="Ignore" />
+                <ui:Label text="Wyjdź z lobby" class="lobby-back-text" picking-mode="Ignore" />
+            </ui:Button>
             <ui:VisualElement class="lobby-layout">
                 <ui:VisualElement class="lobby-controls dossier">
                     <ui:Label text="PRZESŁUCHANIE" class="lobby-title stamp-font" />
                     <ui:Label text="LOBBY" class="lobby-kicker stamp-font" />
-                    <ui:Label name="player-count-label" text="Gracze w lobby: 0/6" class="lobby-player-count" />
+                    <ui:Label name="player-count-label" text="Gracze w lobby: 0/8" class="lobby-player-count" />
                     <ui:VisualElement class="document-rule" />
                     <ui:Label text="Wybierz postać" class="section-title stamp-font" />
                     <ui:VisualElement class="character-selector">
-                        <ui:Button name="previous-character-button" text="‹" class="character-arrow" />
+                        <ui:Button name="previous-character-button" text="‹" class="character-arrow" focusable="false" />
                         <ui:Label name="character-name-label" text="Małpa" class="character-name stamp-font" />
-                        <ui:Button name="next-character-button" text="›" class="character-arrow" />
+                        <ui:Button name="next-character-button" text="›" class="character-arrow" focusable="false" />
                     </ui:VisualElement>
                     <ui:Toggle name="secret-objective-toggle" label="Włącz Sekretny Cel" value="true" class="lobby-toggle" />
                     <ui:Label name="secret-objective-summary" text="Sekretny Cel jest dostępny od 5 graczy." class="lobby-toggle-summary" />
                     <ui:Button name="invite-button" text="Zaproś znajomych" class="btn btn--quiet lobby-action" />
                     <ui:Button name="start-button" text="Start Rundy" class="btn lobby-action lobby-start" />
-                    <ui:Label text="Rundę można rozpocząć dla 3–6 graczy." class="lobby-help" />
+                    <ui:Label text="Rundę można rozpocząć dla 3–8 graczy." class="lobby-help" />
                 </ui:VisualElement>
                 <ui:VisualElement class="preview-column">
                     <ui:Image name="character-preview" class="character-preview" scale-mode="ScaleToFit" />

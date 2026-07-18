@@ -93,7 +93,7 @@ public class MainMenuPresenter : MonoBehaviour
         quitButton.text = UiText.Get("Wyjdź").ToUpperInvariant();
 
         kicker.text = UiText.Get("AKTA SPRAWY");
-        note.text = UiText.Get("Gra sieciowa dla 3–6 graczy.");
+        note.text = UiText.Get("Gra sieciowa dla 3–8 graczy.");
         build.text = $"v{Application.version}";
     }
 

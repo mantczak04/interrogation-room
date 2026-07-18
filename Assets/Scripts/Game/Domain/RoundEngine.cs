@@ -14,7 +14,7 @@ namespace InterrogationRoom.Domain
     public sealed class RoundEngine
     {
         public const int MinPlayers = 3;
-        public const int MaxPlayers = 6;
+        public const int MaxPlayers = 8;
         public const int MinPlayersForSecretObjective = 5;
 
         private RoundPhase _phase = RoundPhase.Lobby;
@@ -232,7 +232,7 @@ namespace InterrogationRoom.Domain
             }
             else
             {
-                return Reject("Five- and six-player Rundy support 0 or 1 Sekretny Cel.");
+                return Reject($"Rundy of {MinPlayersForSecretObjective}+ players support 0 or 1 Sekretny Cel.");
             }
 
             var rng = new Random(start.Seed);

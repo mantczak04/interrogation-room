@@ -37,6 +37,7 @@ namespace InterrogationRoom.Networking.Tests
         [TestCase(4)]
         [TestCase(5)]
         [TestCase(6)]
+        [TestCase(8)]
         public void GuiltyScenario_RunsThroughWireEscapeRevealAndFreshSecondRound(int playerCount)
         {
             var controlled = new PlayerId(0);

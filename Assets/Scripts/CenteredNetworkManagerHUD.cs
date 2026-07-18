@@ -60,6 +60,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     Label hintLabel;
 
     bool isVisible;
+    bool elementsBound;
     bool sandboxPinned;
     bool hadLocalPlayer;
     MenuPage currentPage = MenuPage.Home;
@@ -92,6 +93,9 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void Start()
     {
+        if (roundPresenter != null)
+            roundPresenter.ConfigureLobbyExit(LeaveToMainMenu);
+
         settingsMenu = SettingsMenu.EnsureInstance();
         settingsMenu.Configure(
             () => PlayerController.SetCursorReleased(true),
@@ -157,8 +161,26 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         document.panelSettings = panelSettings;
         document.sortingOrder = SortingOrder;
         document.visualTreeAsset = visualTree;
+    }
+
+    /// <summary>
+    /// The UIDocument is added at runtime, so it clones the visual tree on its
+    /// own schedule rather than when visualTreeAsset is assigned. Querying in
+    /// Awake therefore cached ten nulls, and RefreshHint threw every frame —
+    /// which aborted Update before the menu could render at all. The elements
+    /// are bound on the first frame the tree actually exists instead.
+    /// </summary>
+    bool EnsureElementsBound()
+    {
+        if (elementsBound)
+            return true;
+        if (document == null)
+            return false;
 
         VisualElement root = document.rootVisualElement;
+        if (root == null || root.Q<VisualElement>("network-root") == null)
+            return false;
+
         scrim = root.Q<VisualElement>("network-scrim");
         sheetBody = root.Q<VisualElement>("network-body");
         header = root.Q<VisualElement>("network-header");
@@ -173,6 +195,8 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         UiSounds.Bind(root);
         SetVisible(scrim, false);
         SetVisible(header, false);
+        elementsBound = true;
+        return true;
     }
 
     void Update()
@@ -293,6 +317,14 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void Render()
     {
+        // Until the tree exists there is nothing to render, and the signature
+        // must stay dirty so the first bound frame renders the current state.
+        if (!EnsureElementsBound())
+        {
+            renderedSignature = null;
+            return;
+        }
+
         bool sheetVisible = isVisible && (currentPage == MenuPage.Home || currentPage == MenuPage.Network);
         bool headerVisible = isVisible && (currentPage == MenuPage.NormalRound || currentPage == MenuPage.Sandbox);
         SetVisible(scrim, sheetVisible);
@@ -526,7 +558,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
                                      && (roundCoordinator == null || roundCoordinator.CurrentView == null);
         bool show = Application.isEditor && !automaticLobbyVisible;
         SetVisible(hintLabel, show);
-        if (show)
+        if (show && hintLabel != null)
             hintLabel.text = UiText.Get("Esc: menu     F8: sandbox Rundy     V: mikrofon");
     }
 

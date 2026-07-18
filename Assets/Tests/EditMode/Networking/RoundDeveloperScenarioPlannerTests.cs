@@ -37,6 +37,7 @@ namespace InterrogationRoom.Networking.Tests
         [TestCase(4)]
         [TestCase(5)]
         [TestCase(6)]
+        [TestCase(8)]
         public void Create_FillsRequestedRosterWithoutCreatingConnections(int targetPlayerCount)
         {
             var connected = new[] { new PlayerId(0) };

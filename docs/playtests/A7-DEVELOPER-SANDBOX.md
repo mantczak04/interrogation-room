@@ -8,12 +8,12 @@ Nie jest to zamiennik pełnego A7. Rozmowy, prywatność między ekranami, Egzek
 
 1. Otwórz scenę `Room` i Play Mode.
 2. W Editorze Tryb developerski automatycznie uruchamia lokalnego hosta i otwiera panel po prawej stronie. Ten sam tryb można później otworzyć ręcznie przez `Esc` → `Tryb developerski (DEBUG)`.
-3. Wybierz testowanego prawdziwego gracza, docelowy skład 3–6 i scenariusz. Scenariusz wymusza rolę testowanego gracza.
+3. Wybierz testowanego prawdziwego gracza, docelowy skład 3–8 i scenariusz. Scenariusz wymusza rolę testowanego gracza.
 4. W Przygotowaniu sprawdź prywatny widok, a następnie kliknij `Zakończ Przygotowanie`.
 5. Podejdź do wskazanego obiektu i przytrzymaj `E`. Panel pokazuje bieżący krok.
 6. Po wyniku kliknij `Wróć do lobby i zresetuj świat`, zanim uruchomisz kolejny scenariusz.
 
-Wszystkie menu są domyślnie ukryte. `Esc` otwiera wybór między siecią, zwykłą Rundą i Trybem developerskim; `F8` bezpośrednio pokazuje lub ukrywa panel. Po skonfigurowaniu scenariusza wybierz `Graj z panelem`, żeby przypiąć instrukcję, schować kursor i wrócić do chodzenia. `F8` ponownie otwiera obsługę albo ukrywa przypięty panel. Panel można dodatkowo zwinąć przyciskiem `—`. Developerska Runda nie kończy się automatycznie po czasie i pokazuje `∞`; zakończenie nadal można wymusić z panelu. Normalny przycisk Start Rundy wymaga 3–6 prawdziwych graczy.
+Wszystkie menu są domyślnie ukryte. `Esc` otwiera wybór między siecią, zwykłą Rundą i Trybem developerskim; `F8` bezpośrednio pokazuje lub ukrywa panel. Po skonfigurowaniu scenariusza wybierz `Graj z panelem`, żeby przypiąć instrukcję, schować kursor i wrócić do chodzenia. `F8` ponownie otwiera obsługę albo ukrywa przypięty panel. Panel można dodatkowo zwinąć przyciskiem `—`. Developerska Runda nie kończy się automatycznie po czasie i pokazuje `∞`; zakończenie nadal można wymusić z panelu. Normalny przycisk Start Rundy wymaga 3–8 prawdziwych graczy.
 
 ## Scenariusze fizyczne
 

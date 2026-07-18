@@ -16,6 +16,9 @@ namespace InterrogationRoom.Networking.Tests
         [TestCase(5, false, 0)]
         [TestCase(6, true, 1)]
         [TestCase(6, false, 0)]
+        [TestCase(8, true, 1)]
+        [TestCase(8, false, 0)]
+        [TestCase(9, true, 0)]
         public void LobbySecretObjectiveConfigurationFollowsApprovedPlayerCounts(
             int playerCount,
             bool hostAllowsSecretObjective,

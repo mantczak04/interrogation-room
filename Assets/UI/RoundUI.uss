@@ -57,6 +57,66 @@
     border-radius: 2px;
 }
 
+/*
+ * The lobby was a dead end: once inside, the only way back to the main menu
+ * was Esc into the settings sheet. The back control sits outside the dossier,
+ * in the corner where a player already looks for it, so it never competes
+ * with Start Rundy.
+ */
+.lobby-back {
+    position: absolute;
+    left: 3%;
+    top: 4%;
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 18px 6px 12px;
+    margin: 0;
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/*
+ * Glyph and label are separate elements because they need different sizes.
+ * As one string the guillemet rendered at the label's size, which left a tick
+ * mark next to full-height caps. Both ignore picking so the button keeps the
+ * whole row as its click target.
+ */
+.lobby-back-glyph {
+    font-size: 34px;
+    color: var(--text-hi);
+    margin-right: 10px;
+    padding-bottom: 6px;
+    -unity-text-align: middle-center;
+}
+
+.lobby-back-text {
+    font-size: 19px;
+    color: var(--text-hi);
+    letter-spacing: 1px;
+    -unity-text-align: middle-left;
+}
+
+.lobby-back:hover,
+.lobby-back:hover:enabled {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.lobby-back:hover .lobby-back-glyph,
+.lobby-back:hover .lobby-back-text {
+    color: var(--amber);
+}
+
+.lobby-back:active .lobby-back-glyph,
+.lobby-back:active .lobby-back-text {
+    color: var(--amber-dim);
+}
+
+.lobby-back:focus,
+.lobby-back:focus:enabled {
+    background-color: rgba(0, 0, 0, 0);
+}
+
 .lobby-controls {
     width: 42%;
     max-width: 560px;
@@ -145,7 +205,10 @@
 
 .character-arrow {
     width: 56px;
-    padding: 0;
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 6px;
+    padding-left: 0;
     margin: 0;
     border-width: 0;
     border-radius: 0;
@@ -163,16 +226,37 @@
     transition-timing-function: ease-out;
 }
 
-.character-arrow:hover {
+/*
+ * The arrows react in colour only. A tinted cell behind them looked broken
+ * for two reasons: UI Toolkit leaves :hover latched on the button the pointer
+ * clicked, so the block stayed lit after the cursor moved on, and the block
+ * spanned the full 56px cell while the guillemet fills a quarter of its em
+ * box, so the highlight never looked centred on the glyph it belonged to.
+ *
+ * Every state is spelled out, including :focus and the :enabled variants.
+ * These buttons carry no .btn class, so any state left undeclared falls back
+ * to Unity's default .unity-button theme, which paints its own background.
+ */
+.character-arrow:hover,
+.character-arrow:hover:enabled {
     color: var(--amber);
-    background-color: rgba(224, 181, 104, 0.1);
+    background-color: rgba(0, 0, 0, 0);
 }
 
-.character-arrow:active { color: var(--amber-dim); }
+.character-arrow:active,
+.character-arrow:active:enabled {
+    color: var(--amber-dim);
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.character-arrow:focus,
+.character-arrow:focus:enabled {
+    background-color: rgba(0, 0, 0, 0);
+}
 
 .character-arrow:focus {
     color: var(--amber);
-    background-color: rgba(224, 181, 104, 0.1);
+    background-color: rgba(0, 0, 0, 0);
 }
 
 .character-arrow:disabled {

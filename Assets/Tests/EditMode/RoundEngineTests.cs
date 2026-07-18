@@ -143,7 +143,9 @@ namespace InterrogationRoom.Domain.Tests
             var tooFew = new RoundEngine().Handle(new RoundCommand.StartRound(
                 TestCase(), FivePlayers.Take(2), seed: 1));
             var tooMany = new RoundEngine().Handle(new RoundCommand.StartRound(
-                TestCase(), Enumerable.Range(1, 7).Select(i => new PlayerId(i)), seed: 1));
+                TestCase(),
+                Enumerable.Range(1, RoundEngine.MaxPlayers + 1).Select(i => new PlayerId(i)),
+                seed: 1));
             var duplicates = new RoundEngine().Handle(new RoundCommand.StartRound(
                 TestCase(), new[] { new PlayerId(1), new PlayerId(1), new PlayerId(2), new PlayerId(3) }, seed: 1));
 
@@ -524,6 +526,8 @@ namespace InterrogationRoom.Domain.Tests
         [TestCase(4, 0)]
         [TestCase(5, 1)]
         [TestCase(6, 1)]
+        [TestCase(7, 1)]
+        [TestCase(8, 1)]
         public void StartRound_DefaultSecretObjectiveCount_DependsOnPlayerCount(int playerCount, int expectedCount)
         {
             var players = Enumerable.Range(1, playerCount).Select(value => new PlayerId(value)).ToArray();
@@ -537,9 +541,9 @@ namespace InterrogationRoom.Domain.Tests
         }
 
         [Test]
-        public void StartRound_HostCanDisableSecretObjectiveForFiveOrSixPlayers()
+        public void StartRound_HostCanDisableSecretObjectiveForFiveOrMorePlayers()
         {
-            foreach (var playerCount in new[] { 5, 6 })
+            foreach (var playerCount in new[] { 5, 6, 7, 8 })
             {
                 var players = Enumerable.Range(1, playerCount).Select(value => new PlayerId(value)).ToArray();
                 var engine = StartedEngine(players, secretObjectives: 0);

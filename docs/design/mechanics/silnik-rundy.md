@@ -45,7 +45,7 @@ Komendy postępu Celów, odkrycia Incydentu i Ucieczki zostaną zaprojektowane p
 
 ### Reguły egzekwowane przez moduł (niezmienniki)
 
-1. Skład Rundy: 3–6 graczy, dokładnie 1 Detektyw, 1 Winny, 1–4 Niewinnych (ADR-0001).
+1. Skład Rundy: 3–8 graczy, dokładnie 1 Detektyw, 1 Winny, 1–6 Niewinnych (ADR-0001).
 2. Alibi: pełne dla Niewinnych, zredagowane dla Winnego, żadne dla Detektywa (ADR-0006).
 3. Alibi niedostępne po Przygotowaniu — `ViewFor` po prostu przestaje je zwracać (ADR-0007).
 4. Najwyżej jedna Egzekucja; druga jest odrzucana (ADR-0003).

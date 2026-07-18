@@ -2,7 +2,13 @@
     <ui:Style src="project://database/Assets/UI/Theme.uss" />
     <ui:Style src="project://database/Assets/UI/NetworkMenu.uss" />
 
-    <ui:VisualElement name="network-root" class="network-root ui-font">
+    <!--
+        The root and the hint stretch across the whole panel, and this document
+        sorts above the Round UI. Without picking-mode="Ignore" they swallow
+        every click meant for the lobby underneath even while the sheet itself
+        is hidden. Only the scrim and the header should ever catch a pointer.
+    -->
+    <ui:VisualElement name="network-root" class="network-root ui-font" picking-mode="Ignore">
         <ui:VisualElement name="network-scrim" class="network-scrim">
             <ui:VisualElement name="network-sheet" class="network-sheet surface-paper">
                 <ui:Label name="network-kicker" class="network-kicker document-font" text="" />
@@ -19,6 +25,6 @@
             <ui:VisualElement name="header-actions" class="network-header-actions" />
         </ui:VisualElement>
 
-        <ui:Label name="network-hint" class="network-hint document-font" text="" />
+        <ui:Label name="network-hint" class="network-hint document-font" text="" picking-mode="Ignore" />
     </ui:VisualElement>
 </ui:UXML>

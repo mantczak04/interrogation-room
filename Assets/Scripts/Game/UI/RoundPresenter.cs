@@ -166,6 +166,8 @@ namespace InterrogationRoom.UI
         private Toggle _secretObjectiveToggle;
         private Label _secretObjectiveSummary;
         private Button _returnToLobbyButton;
+        private Button _lobbyBackButton;
+        private Action _lobbyExitHandler;
         private bool _lobbyMenuVisible;
         private bool _developerMenuOpen;
         private bool _unlimitedRound;
@@ -214,6 +216,7 @@ namespace InterrogationRoom.UI
             _privateToggleButton.clicked += TogglePrivatePanel;
             _root.RegisterCallback<KeyDownEvent>(OnRootKeyDown);
             _returnToLobbyButton.clicked += OnReturnToLobbyClicked;
+            _lobbyBackButton.clicked += OnLobbyBackClicked;
 
             if (coordinator.CurrentView != null)
                 OnViewReceived(coordinator.CurrentView, coordinator.CurrentRoundEndsAtNetworkTime);
@@ -242,6 +245,8 @@ namespace InterrogationRoom.UI
                 _root.UnregisterCallback<KeyDownEvent>(OnRootKeyDown);
             if (_returnToLobbyButton != null)
                 _returnToLobbyButton.clicked -= OnReturnToLobbyClicked;
+            if (_lobbyBackButton != null)
+                _lobbyBackButton.clicked -= OnLobbyBackClicked;
         }
 
         private void Update()
@@ -322,6 +327,21 @@ namespace InterrogationRoom.UI
             panelSettings.referenceResolution = new Vector2Int(1920, 1080);
             panelSettings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
             panelSettings.match = 0.5f;
+        }
+
+        /// <summary>
+        /// Leaving the lobby means stopping the host or client and loading the
+        /// main menu scene — network work the presenter must not do itself, so
+        /// the owner of the transport supplies it.
+        /// </summary>
+        public void ConfigureLobbyExit(Action exit)
+        {
+            _lobbyExitHandler = exit;
+        }
+
+        private void OnLobbyBackClicked()
+        {
+            _lobbyExitHandler?.Invoke();
         }
 
         public void SetLobbyMenuVisible(bool visible)
@@ -489,7 +509,7 @@ namespace InterrogationRoom.UI
                 : $"{UiText.Get("Start Rundy")} ({playerCount}/{RoundEngine.MinPlayers})";
             _playerCountLabel.text = $"{UiText.Get("Gracze w lobby")}: {playerCount}/{RoundEngine.MaxPlayers}";
             _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
-            bool secretObjectiveAvailable = playerCount >= 5;
+            bool secretObjectiveAvailable = playerCount >= RoundEngine.MinPlayersForSecretObjective;
             _secretObjectiveToggle.SetEnabled(coordinator.IsLocalHost && secretObjectiveAvailable);
             _secretObjectiveSummary.text = secretObjectiveAvailable
                 ? coordinator.HostAllowsSecretObjective
@@ -539,6 +559,7 @@ namespace InterrogationRoom.UI
             _secretObjectiveToggle = Required<Toggle>(root, "secret-objective-toggle");
             _secretObjectiveSummary = Required<Label>(root, "secret-objective-summary");
             _returnToLobbyButton = Required<Button>(root, "return-to-lobby-button");
+            _lobbyBackButton = Required<Button>(root, "lobby-back-button");
 
             // Covers the lobby, preparation and result screens. The HUD carries
             // no-hover-sound in UXML: a panel toggle the cursor passes over
