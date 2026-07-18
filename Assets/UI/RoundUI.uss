@@ -89,11 +89,26 @@
     margin-bottom: 8px;
 }
 
+/*
+ * One brass-framed field with the name centred in it, rather than a name
+ * flanked by two grey buttons.
+ *
+ * The arrows previously inherited .button, which overrode only margin-top and
+ * left Unity's default 2px margin on the other three sides — so each arrow sat
+ * in a box that was off-centre against the name, and the pair read as ragged.
+ * Stretching them to the row height removes the free vertical play entirely.
+ * (The guillemet glyphs themselves are not the problem: in Lato their advances
+ * differ by one font unit in two thousand.)
+ */
 .character-selector {
     height: 72px;
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
     margin-bottom: 12px;
+    background-color: rgba(20, 24, 27, 0.6);
+    border-width: 1px;
+    border-color: var(--brass);
+    border-radius: 2px;
 }
 
 .button,
@@ -164,12 +179,35 @@
 }
 
 .character-arrow {
-    width: 64px;
-    height: 56px;
-    padding-left: 0;
-    padding-right: 0;
-    margin-top: 0;
-    font-size: 32px;
+    width: 56px;
+    padding: 0;
+    margin: 0;
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--brass);
+    font-size: 34px;
+    -unity-text-align: middle-center;
+    transition-property: color, background-color;
+    transition-duration: 0.08s;
+    transition-timing-function: ease-out;
+}
+
+.character-arrow:hover {
+    color: var(--amber);
+    background-color: rgba(224, 181, 104, 0.1);
+}
+
+.character-arrow:active { color: var(--amber-dim); }
+
+.character-arrow:focus {
+    color: var(--amber);
+    background-color: rgba(224, 181, 104, 0.1);
+}
+
+.character-arrow:disabled {
+    color: var(--graphite-500);
+    opacity: 1;
 }
 
 .character-name {

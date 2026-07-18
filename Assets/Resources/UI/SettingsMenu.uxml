@@ -2,7 +2,7 @@
     <ui:Style src="project://database/Assets/UI/Theme.uss" />
     <ui:Style src="project://database/Assets/UI/SettingsMenu.uss" />
 
-    <ui:VisualElement name="settings-scrim" class="settings-scrim ui-font">
+    <ui:VisualElement name="settings-scrim" class="settings-scrim ui-font no-hover-sound">
         <ui:VisualElement name="settings-sheet" class="settings-sheet surface-paper document-font">
             <ui:Label name="kicker" class="settings-kicker" text="KARTA USTAWIEŃ • 01" />
             <ui:Label name="title" class="settings-title stamp-font" text="USTAWIENIA" />

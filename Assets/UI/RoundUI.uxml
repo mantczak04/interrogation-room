@@ -11,9 +11,9 @@
                     <ui:VisualElement class="document-rule" />
                     <ui:Label text="Wybierz postać" class="section-title stamp-font" />
                     <ui:VisualElement class="character-selector">
-                        <ui:Button name="previous-character-button" text="‹" class="button button-secondary character-arrow" />
+                        <ui:Button name="previous-character-button" text="‹" class="character-arrow" />
                         <ui:Label name="character-name-label" text="Małpa" class="character-name stamp-font" />
-                        <ui:Button name="next-character-button" text="›" class="button button-secondary character-arrow" />
+                        <ui:Button name="next-character-button" text="›" class="character-arrow" />
                     </ui:VisualElement>
                     <ui:Toggle name="secret-objective-toggle" label="Włącz Sekretny Cel" value="true" class="lobby-toggle" />
                     <ui:Label name="secret-objective-summary" text="Sekretny Cel jest dostępny od 5 graczy." class="lobby-toggle-summary" />
@@ -56,7 +56,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <ui:VisualElement name="round-hud" class="hud">
+        <ui:VisualElement name="round-hud" class="hud no-hover-sound">
             <ui:Label name="timer-label" class="timer document-font" />
             <ui:VisualElement class="hud-card role-card">
                 <ui:Label name="hud-role-label" class="hud-role stamp-font" />

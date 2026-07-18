@@ -539,6 +539,11 @@ namespace InterrogationRoom.UI
             _secretObjectiveToggle = Required<Toggle>(root, "secret-objective-toggle");
             _secretObjectiveSummary = Required<Label>(root, "secret-objective-summary");
             _returnToLobbyButton = Required<Button>(root, "return-to-lobby-button");
+
+            // Covers the lobby, preparation and result screens. The HUD carries
+            // no-hover-sound in UXML: a panel toggle the cursor passes over
+            // mid-round should not chirp.
+            UiSounds.Bind(root);
         }
 
         private void CaptureStaticLocalizedText()
