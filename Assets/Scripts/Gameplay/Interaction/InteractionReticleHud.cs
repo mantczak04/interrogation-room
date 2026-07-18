@@ -28,6 +28,8 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         private static readonly Color PrimaryTextColor = new Color(0.94f, 0.91f, 0.82f, 1f);
         private static readonly Color SecondaryTextColor = new Color(0.78f, 0.79f, 0.73f, 1f);
+        private static readonly Color PanelColor = new Color(0.055f, 0.065f, 0.06f, 0.94f);
+        private static readonly Color HeldPanelColor = new Color(0.08f, 0.09f, 0.08f, 0.92f);
         private static readonly Color SuccessColor = new Color(0.42f, 0.78f, 0.48f, 1f);
         private static readonly Color WarningColor = new Color(0.95f, 0.68f, 0.28f, 1f);
         private static readonly Color CancelledColor = new Color(0.85f, 0.31f, 0.27f, 1f);
@@ -41,12 +43,15 @@ namespace InterrogationRoom.Gameplay.Interaction
         private Image progressFill;
         private CanvasGroup promptGroup;
         private RectTransform promptRect;
-        private Text eyebrowLabel;
+        private Image promptBackground;
+        private Image keyBackground;
+        private Text keyLabel;
         private Text titleLabel;
         private Text instructionLabel;
         private CanvasGroup heldItemGroup;
         private RectTransform heldItemRect;
         private Text heldItemLabel;
+        private Image heldItemBackground;
         private float currentSize;
         private float promptVisibility;
         private float heldItemVisibility;
@@ -56,6 +61,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         private Component previousTarget;
         private Sprite dotSprite;
         private Sprite ringSprite;
+        private Sprite roundedSprite;
         private Font runtimeFont;
 
         private void Awake()
@@ -77,6 +83,7 @@ namespace InterrogationRoom.Gameplay.Interaction
 
             DestroyGeneratedSprite(dotSprite);
             DestroyGeneratedSprite(ringSprite);
+            DestroyGeneratedSprite(roundedSprite);
         }
 
         private void Update()
@@ -202,14 +209,14 @@ namespace InterrogationRoom.Gameplay.Interaction
                 interactor.TimedInteractionProgress01,
                 UiText.CurrentLanguage);
 
-            eyebrowLabel.text = copy.Eyebrow;
+            keyLabel.text = copy.Key;
             titleLabel.text = copy.Title;
-            instructionLabel.text = UsesInteractionKey(mode)
-                ? $"{copy.Key}   •   {copy.Instruction}"
-                : copy.Instruction;
+            instructionLabel.text = copy.Instruction;
 
             Color accent = ResolveAccent(mode);
-            eyebrowLabel.color = accent;
+            keyLabel.color = accent;
+            keyBackground.color = new Color(accent.r, accent.g, accent.b, 0.24f);
+            promptBackground.color = PanelColor;
         }
 
         private string ResolveAction(InteractionHudMode mode)
@@ -256,6 +263,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         {
             dotSprite = CreateDotSprite();
             ringSprite = CreateRingSprite();
+            roundedSprite = CreateRoundedSprite();
             runtimeFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             var canvasObject = new GameObject("InteractionFocusHud");
@@ -301,33 +309,42 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         private void BuildPromptPanel(Transform parent)
         {
-            GameObject panelObject = new GameObject("InteractionCard", typeof(RectTransform));
+            GameObject panelObject = new GameObject("InteractionCard", typeof(RectTransform), typeof(Image));
             panelObject.transform.SetParent(parent, false);
             promptRect = panelObject.GetComponent<RectTransform>();
-            SetCenteredRect(promptRect, new Vector2(0f, -91f), new Vector2(640f, 104f));
+            SetCenteredRect(promptRect, new Vector2(0f, -82f), new Vector2(560f, 84f));
+            promptBackground = panelObject.GetComponent<Image>();
+            promptBackground.sprite = roundedSprite;
+            promptBackground.type = Image.Type.Sliced;
+            promptBackground.color = PanelColor;
+            promptBackground.raycastTarget = false;
             promptGroup = panelObject.AddComponent<CanvasGroup>();
             promptGroup.alpha = 0f;
 
-            eyebrowLabel = CreateText(
-                "Eyebrow",
-                panelObject.transform,
-                13,
+            keyBackground = CreateImage("Keycap", panelObject.transform, roundedSprite);
+            keyBackground.type = Image.Type.Sliced;
+            SetCenteredRect(keyBackground.rectTransform, new Vector2(-242f, 0f), new Vector2(52f, 52f));
+
+            keyLabel = CreateText(
+                "Key",
+                keyBackground.transform,
+                20,
                 FontStyle.Bold,
-                TextAnchor.LowerCenter,
+                TextAnchor.MiddleCenter,
                 targetedColor);
-            SetCenteredRect(eyebrowLabel.rectTransform, new Vector2(0f, 31f), new Vector2(640f, 22f));
+            Stretch(keyLabel.rectTransform, 0f);
 
             titleLabel = CreateText(
                 "Action",
                 panelObject.transform,
-                24,
+                23,
                 FontStyle.Bold,
-                TextAnchor.MiddleCenter,
+                TextAnchor.MiddleLeft,
                 PrimaryTextColor);
-            SetCenteredRect(titleLabel.rectTransform, new Vector2(0f, 3f), new Vector2(640f, 32f));
+            SetCenteredRect(titleLabel.rectTransform, new Vector2(43f, 11f), new Vector2(456f, 30f));
             titleLabel.resizeTextForBestFit = true;
             titleLabel.resizeTextMinSize = 15;
-            titleLabel.resizeTextMaxSize = 24;
+            titleLabel.resizeTextMaxSize = 23;
             titleLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
             titleLabel.verticalOverflow = VerticalWrapMode.Truncate;
 
@@ -336,17 +353,22 @@ namespace InterrogationRoom.Gameplay.Interaction
                 panelObject.transform,
                 13,
                 FontStyle.Bold,
-                TextAnchor.UpperCenter,
+                TextAnchor.MiddleLeft,
                 SecondaryTextColor);
-            SetCenteredRect(instructionLabel.rectTransform, new Vector2(0f, -31f), new Vector2(640f, 22f));
+            SetCenteredRect(instructionLabel.rectTransform, new Vector2(43f, -20f), new Vector2(456f, 20f));
         }
 
         private void BuildHeldItemPanel(Transform parent)
         {
-            GameObject panelObject = new GameObject("HeldItemCard", typeof(RectTransform));
+            GameObject panelObject = new GameObject("HeldItemCard", typeof(RectTransform), typeof(Image));
             panelObject.transform.SetParent(parent, false);
             heldItemRect = panelObject.GetComponent<RectTransform>();
-            SetCenteredRect(heldItemRect, new Vector2(0f, -158f), new Vector2(640f, 30f));
+            SetCenteredRect(heldItemRect, new Vector2(0f, -145f), new Vector2(520f, 38f));
+            heldItemBackground = panelObject.GetComponent<Image>();
+            heldItemBackground.sprite = roundedSprite;
+            heldItemBackground.type = Image.Type.Sliced;
+            heldItemBackground.color = HeldPanelColor;
+            heldItemBackground.raycastTarget = false;
             heldItemGroup = panelObject.AddComponent<CanvasGroup>();
             heldItemGroup.alpha = 0f;
 
@@ -359,12 +381,6 @@ namespace InterrogationRoom.Gameplay.Interaction
                 PrimaryTextColor);
             Stretch(heldItemLabel.rectTransform, 12f);
         }
-
-        private static bool UsesInteractionKey(InteractionHudMode mode) =>
-            mode == InteractionHudMode.Available ||
-            mode == InteractionHudMode.HoldAvailable ||
-            mode == InteractionHudMode.Active ||
-            mode == InteractionHudMode.Seated;
 
         private Color ResolveAccent(InteractionHudMode mode)
         {
@@ -476,10 +492,27 @@ namespace InterrogationRoom.Gameplay.Interaction
                 });
         }
 
+        private static Sprite CreateRoundedSprite()
+        {
+            const int size = 64;
+            const float radius = 12f;
+            return CreateProceduralSprite(
+                "InteractionRoundedPanel",
+                size,
+                (x, y) =>
+                {
+                    float dx = Mathf.Max(radius - x, 0f) + Mathf.Max(x - (size - 1f - radius), 0f);
+                    float dy = Mathf.Max(radius - y, 0f) + Mathf.Max(y - (size - 1f - radius), 0f);
+                    return Mathf.Clamp01(radius - Mathf.Sqrt(dx * dx + dy * dy) + 0.5f);
+                },
+                new Vector4(16f, 16f, 16f, 16f));
+        }
+
         private static Sprite CreateProceduralSprite(
             string name,
             int size,
-            System.Func<float, float, float> alphaAt)
+            System.Func<float, float, float> alphaAt,
+            Vector4 border = default)
         {
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
             {
@@ -506,7 +539,10 @@ namespace InterrogationRoom.Gameplay.Interaction
                 texture,
                 new Rect(0f, 0f, size, size),
                 new Vector2(0.5f, 0.5f),
-                100f);
+                100f,
+                0,
+                SpriteMeshType.FullRect,
+                border);
         }
 
         private static void DestroyGeneratedSprite(Sprite sprite)

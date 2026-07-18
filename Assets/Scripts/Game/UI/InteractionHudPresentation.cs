@@ -18,20 +18,17 @@ namespace InterrogationRoom.UI
     {
         public InteractionHudCopy(
             string key,
-            string eyebrow,
             string title,
             string instruction,
             float progress)
         {
             Key = key;
-            Eyebrow = eyebrow;
             Title = title;
             Instruction = instruction;
             Progress = progress;
         }
 
         public string Key { get; }
-        public string Eyebrow { get; }
         public string Title { get; }
         public string Instruction { get; }
         public float Progress { get; }
@@ -56,7 +53,6 @@ namespace InterrogationRoom.UI
                 case InteractionHudMode.Available:
                     return new InteractionHudCopy(
                         "E",
-                        UiText.Get("INTERAKCJA", language),
                         localizedAction,
                         UiText.Get("NACIŚNIJ, ABY WYKONAĆ", language),
                         0f);
@@ -64,17 +60,13 @@ namespace InterrogationRoom.UI
                 case InteractionHudMode.HoldAvailable:
                     return new InteractionHudCopy(
                         "E",
-                        UiText.Get("DŁUŻSZA CZYNNOŚĆ", language),
                         localizedAction,
                         UiText.Get("PRZYTRZYMAJ, ABY ROZPOCZĄĆ", language),
                         0f);
 
                 case InteractionHudMode.Active:
-                    int percent = UnityEngine.Mathf.RoundToInt(
-                        UnityEngine.Mathf.Clamp01(progress) * 100f);
                     return new InteractionHudCopy(
                         "E",
-                        UiText.Format("POSTĘP {0}%", language, percent),
                         localizedAction,
                         UiText.Get("TRZYMAJ • PUŚĆ, ABY PRZERWAĆ", language),
                         UnityEngine.Mathf.Clamp01(progress));
@@ -82,7 +74,6 @@ namespace InterrogationRoom.UI
                 case InteractionHudMode.Success:
                     return new InteractionHudCopy(
                         "OK",
-                        UiText.Get("POTWIERDZONE", language),
                         localizedAction,
                         UiText.Get("CZYNNOŚĆ ZAKOŃCZONA", language),
                         1f);
@@ -90,7 +81,6 @@ namespace InterrogationRoom.UI
                 case InteractionHudMode.Warning:
                     return new InteractionHudCopy(
                         "!",
-                        UiText.Get("UWAGA", language),
                         localizedAction,
                         UiText.Get("SPRAWDŹ SWÓJ AKTUALNY CEL", language),
                         0f);
@@ -98,7 +88,6 @@ namespace InterrogationRoom.UI
                 case InteractionHudMode.Cancelled:
                     return new InteractionHudCopy(
                         "×",
-                        UiText.Get("PRZERWANE", language),
                         localizedAction,
                         UiText.Get("MOŻESZ SPRÓBOWAĆ PONOWNIE", language),
                         0f);
@@ -106,13 +95,12 @@ namespace InterrogationRoom.UI
                 case InteractionHudMode.Seated:
                     return new InteractionHudCopy(
                         "E",
-                        UiText.Get("POZYCJA", language),
                         localizedAction,
                         UiText.Get("NACIŚNIJ, ABY WSTAĆ", language),
                         0f);
 
                 default:
-                    return new InteractionHudCopy(null, null, null, null, 0f);
+                    return new InteractionHudCopy(null, null, null, 0f);
             }
         }
     }

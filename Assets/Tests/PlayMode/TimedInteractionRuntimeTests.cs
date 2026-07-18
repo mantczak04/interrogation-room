@@ -114,26 +114,27 @@ namespace InterrogationRoom.Gameplay.Tests
             Assert.That(root.Find("ProgressTrack"), Is.Not.Null);
             Assert.That(root.Find("Progress"), Is.Not.Null);
             Assert.That(root.Find("FocusDot"), Is.Not.Null);
-            Assert.That(root.Find("InteractionCard/Eyebrow"), Is.Not.Null);
             Assert.That(root.Find("InteractionCard/Action"), Is.Not.Null);
+            Assert.That(root.Find("InteractionCard/Keycap/Key"), Is.Not.Null);
             Assert.That(root.Find("HeldItemCard/HeldItem"), Is.Not.Null);
 
             Transform card = root.Find("InteractionCard");
             Transform heldItemCard = root.Find("HeldItemCard");
-            Assert.That(card.Find("Eyebrow").GetComponent<Text>().alignment,
-                Is.EqualTo(TextAnchor.LowerCenter));
             Assert.That(card.Find("Action").GetComponent<Text>().alignment,
-                Is.EqualTo(TextAnchor.MiddleCenter));
+                Is.EqualTo(TextAnchor.MiddleLeft));
             Assert.That(card.Find("Instruction").GetComponent<Text>().alignment,
-                Is.EqualTo(TextAnchor.UpperCenter));
-            Assert.That(card.GetComponent<Image>(), Is.Null,
-                "The focus copy should float cleanly without a card background.");
+                Is.EqualTo(TextAnchor.MiddleLeft));
+            Assert.That(card.GetComponent<Image>(), Is.Not.Null,
+                "The focus copy should keep its dark card background.");
             Assert.That(card.Find("Accent"), Is.Null,
-                "The centered layout should not keep the old vertical border.");
-            Assert.That(card.Find("Keycap"), Is.Null,
-                "The interaction key belongs in the centered instruction line.");
-            Assert.That(heldItemCard.GetComponent<Image>(), Is.Null,
-                "The carried-item hint should use the same background-free treatment.");
+                "The card should not keep the old vertical border.");
+            Assert.That(card.Find("Eyebrow"), Is.Null,
+                "The card should not show redundant category labels.");
+            Assert.That(card.Find("Keycap").GetComponent<Image>(), Is.Not.Null,
+                "The interaction key should remain visibly highlighted.");
+            Assert.That(heldItemCard.GetComponent<Image>(), Is.Not.Null,
+                "The carried-item hint should keep the same dark background treatment.");
+            Assert.That(heldItemCard.Find("Accent"), Is.Null);
             LogAssert.NoUnexpectedReceived();
         }
 

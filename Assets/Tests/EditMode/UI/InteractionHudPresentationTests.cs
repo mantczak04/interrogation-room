@@ -15,7 +15,7 @@ namespace InterrogationRoom.UI.Tests
                 UiLanguage.Polish);
 
             Assert.That(copy.Key, Is.EqualTo("E"));
-            Assert.That(copy.Eyebrow, Is.EqualTo("DŁUŻSZA CZYNNOŚĆ"));
+            Assert.That(copy.Title, Is.EqualTo("Otwórz akta"));
             Assert.That(copy.Instruction, Is.EqualTo("PRZYTRZYMAJ, ABY ROZPOCZĄĆ"));
         }
 
@@ -28,18 +28,17 @@ namespace InterrogationRoom.UI.Tests
                 1.4f,
                 UiLanguage.English);
 
-            Assert.That(copy.Eyebrow, Is.EqualTo("PROGRESS 100%"));
+            Assert.That(copy.Key, Is.EqualTo("E"));
             Assert.That(copy.Title, Is.EqualTo("Search evidence shelf"));
             Assert.That(copy.Instruction, Is.EqualTo("KEEP HOLDING • RELEASE TO CANCEL"));
             Assert.That(copy.Progress, Is.EqualTo(1f));
         }
 
-        [TestCase(InteractionHudMode.Success, "POTWIERDZONE", "CZYNNOŚĆ ZAKOŃCZONA")]
-        [TestCase(InteractionHudMode.Warning, "UWAGA", "SPRAWDŹ SWÓJ AKTUALNY CEL")]
-        [TestCase(InteractionHudMode.Cancelled, "PRZERWANE", "MOŻESZ SPRÓBOWAĆ PONOWNIE")]
+        [TestCase(InteractionHudMode.Success, "CZYNNOŚĆ ZAKOŃCZONA")]
+        [TestCase(InteractionHudMode.Warning, "SPRAWDŹ SWÓJ AKTUALNY CEL")]
+        [TestCase(InteractionHudMode.Cancelled, "MOŻESZ SPRÓBOWAĆ PONOWNIE")]
         public void OutcomeModesCommunicateTheirMeaning(
             InteractionHudMode mode,
-            string expectedEyebrow,
             string expectedInstruction)
         {
             InteractionHudCopy copy = InteractionHudPresentation.Build(
@@ -48,7 +47,7 @@ namespace InterrogationRoom.UI.Tests
                 0f,
                 UiLanguage.Polish);
 
-            Assert.That(copy.Eyebrow, Is.EqualTo(expectedEyebrow));
+            Assert.That(copy.Title, Is.EqualTo("Wynik interakcji"));
             Assert.That(copy.Instruction, Is.EqualTo(expectedInstruction));
         }
     }
