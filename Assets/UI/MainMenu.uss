@@ -1,0 +1,85 @@
+/*
+ * Main menu layout only. All colours, fonts and sizes come from Theme.uss.
+ *
+ * The key art carries the screen, so the menu adds no panels or boxes: the
+ * type sits directly on the picture. The art places the detective right of
+ * centre, so the content column occupies the dark left third and a horizontal
+ * wash keeps the type legible without flattening the image.
+ */
+
+.menu-root {
+    flex-grow: 1;
+    color: var(--text-hi);
+}
+
+.menu-art {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    /* Shared with the lobby screen so both use one graded export of the art. */
+    background-image: url("project://database/Assets/UI/Sprites/MainMenuBackground.jpg");
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+/*
+ * Darkens the left edge and fades out by mid-screen. Implemented as a tinted
+ * element rather than a gradient texture so it costs nothing to retune.
+ */
+.menu-wash {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 46%;
+    background-color: rgba(5, 7, 10, 0.55);
+}
+
+.menu-content {
+    position: absolute;
+    left: 7%;
+    top: 16%;
+    width: 34%;
+    min-width: 360px;
+}
+
+.menu-kicker {
+    margin-bottom: var(--space-2);
+}
+
+.menu-title {
+    font-size: var(--type-display);
+    color: var(--paper-bright);
+    letter-spacing: 6px;
+    margin-bottom: var(--space-3);
+}
+
+.menu-title-rule {
+    width: 68%;
+    margin-bottom: var(--space-8);
+}
+
+.menu-list {
+    margin-bottom: var(--space-6);
+}
+
+.menu-list > .menu-entry {
+    margin-bottom: var(--space-3);
+}
+
+.menu-note {
+    font-size: var(--type-micro);
+    color: var(--graphite-300);
+    white-space: normal;
+    max-width: 320px;
+}
+
+.menu-build {
+    position: absolute;
+    left: 7%;
+    bottom: 5%;
+    font-size: var(--type-micro);
+    color: var(--graphite-500);
+    letter-spacing: 1px;
+}

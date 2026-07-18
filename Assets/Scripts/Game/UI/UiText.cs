@@ -110,7 +110,9 @@ namespace InterrogationRoom.UI
                 ["Zatrzymaj serwer"] = "Stop server",
                 ["Klient gotowy"] = "Client Ready",
                 ["Tylko serwer"] = "Server Only",
-                ["Zaproś"] = "Invite"
+                ["Zaproś"] = "Invite",
+                ["AKTA SPRAWY"] = "CASE FILE",
+                ["Gra sieciowa dla 3–6 graczy."] = "An online game for 3–6 players."
             };
 
         private static readonly IReadOnlyDictionary<string, string> Polish =

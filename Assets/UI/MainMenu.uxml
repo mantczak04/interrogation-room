@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Theme.uss" />
+    <ui:Style src="project://database/Assets/UI/MainMenu.uss" />
+
+    <ui:VisualElement name="menu-root" class="menu-root ui-font">
+        <ui:VisualElement name="menu-art" class="menu-art" />
+        <ui:VisualElement name="menu-wash" class="menu-wash" />
+
+        <ui:VisualElement name="menu-content" class="menu-content">
+            <ui:Label name="menu-kicker" class="kicker document-font menu-kicker" text="AKTA SPRAWY" />
+            <ui:Label name="menu-title" class="menu-title stamp-font" text="PRZESŁUCHANIE" />
+            <ui:VisualElement class="rule menu-title-rule" />
+
+            <ui:VisualElement name="menu-list" class="menu-list">
+                <ui:Button name="host-button" class="menu-entry" text="GOSPODARZ GRY" />
+                <ui:Button name="join-button" class="menu-entry" text="DOŁĄCZ DO SERWERA" />
+                <ui:Button name="settings-button" class="menu-entry" text="USTAWIENIA" />
+                <ui:Button name="quit-button" class="menu-entry" text="WYJDŹ" />
+            </ui:VisualElement>
+
+            <ui:Label name="menu-note" class="menu-note document-font" text="" />
+        </ui:VisualElement>
+
+        <ui:Label name="menu-build" class="menu-build document-font" text="" />
+    </ui:VisualElement>
+</ui:UXML>

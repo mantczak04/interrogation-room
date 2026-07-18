@@ -1,0 +1,234 @@
+/*
+ * Single source of truth for UI styling.
+ *
+ * Every UI Toolkit stylesheet imports this file; nothing else may declare a
+ * colour, font or type size of its own. Screen stylesheets compose the classes
+ * defined here and add layout only.
+ *
+ * The look is a case file on a detective's desk: paper, typewriter ink, brass
+ * fittings, and a dark room around it.
+ */
+
+:root {
+    /* Paper — documents, dossiers, anything the player is meant to read. */
+    --paper: rgb(219, 207, 181);
+    --paper-bright: rgb(232, 220, 197);
+    --paper-dark: rgb(198, 183, 153);
+    --paper-shadow: rgb(116, 103, 78);
+
+    /* Ink — text printed on paper. */
+    --ink: rgb(43, 42, 36);
+    --ink-faded: rgb(101, 95, 79);
+
+    /* Graphite — the room behind the paper. */
+    --graphite-900: rgb(20, 24, 27);
+    --graphite-700: rgb(47, 53, 58);
+    --graphite-500: rgb(76, 83, 89);
+    --graphite-300: rgb(166, 171, 170);
+
+    /* Text on dark surfaces. */
+    --text-hi: rgb(232, 227, 213);
+
+    /* Accents. Amber is the desk lamp; brass is the fittings. */
+    --green: rgb(65, 91, 76);
+    --green-hover: rgb(78, 110, 91);
+    --green-active: rgb(51, 71, 60);
+    --red: rgb(194, 46, 40);
+    --amber: rgb(224, 181, 104);
+    --amber-dim: rgb(177, 143, 85);
+    --brass: rgb(128, 105, 72);
+
+    /* Scrims. One value per purpose — do not invent new alphas. */
+    --scrim: rgba(5, 7, 10, 0.68);
+    --scrim-heavy: rgba(5, 7, 10, 0.84);
+
+    /* Type scale. Nothing outside this ladder. */
+    --type-micro: 12px;
+    --type-kicker: 15px;
+    --type-body: 16px;
+    --type-lead: 18px;
+    --type-subtitle: 26px;
+    --type-title: 38px;
+    --type-display: 56px;
+
+    /* Spacing scale. */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-6: 24px;
+    --space-8: 32px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Fonts
+ *
+ * Lato is the interface voice. Courier Prime is anything the fiction treats as
+ * a typed document. Staatliches is reserved for stamps and headings that want
+ * to read as pressed into the page.
+ * ------------------------------------------------------------------------ */
+
+.ui-font {
+    -unity-font-definition: url("project://database/Assets/UI/Fonts/Lato-Regular.ttf");
+}
+
+.document-font {
+    -unity-font-definition: url("project://database/Assets/UI/Fonts/CourierPrime-Regular.ttf");
+}
+
+.stamp-font {
+    -unity-font-definition: url("project://database/Assets/UI/Fonts/Staatliches-Regular.ttf");
+}
+
+/* ---------------------------------------------------------------------------
+ * Typographic primitives
+ * ------------------------------------------------------------------------ */
+
+.kicker {
+    font-size: var(--type-kicker);
+    color: var(--amber);
+    letter-spacing: 3px;
+    margin-bottom: var(--space-4);
+}
+
+.rule {
+    height: 1px;
+    background-color: var(--brass);
+    margin-bottom: var(--space-4);
+}
+
+.rule--faint {
+    background-color: var(--graphite-500);
+}
+
+.muted {
+    color: var(--graphite-300);
+    font-size: var(--type-micro);
+}
+
+/* ---------------------------------------------------------------------------
+ * Surfaces
+ * ------------------------------------------------------------------------ */
+
+.surface-dark {
+    background-color: rgba(20, 24, 27, 0.97);
+    border-width: 2px;
+    border-color: var(--brass);
+    border-radius: 2px;
+}
+
+.surface-paper {
+    background-color: var(--paper);
+    color: var(--ink);
+    border-radius: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Buttons
+ *
+ * .btn is the shared shape. Modifiers set intent. A button never carries a
+ * colour of its own.
+ * ------------------------------------------------------------------------ */
+
+.btn {
+    -unity-font-definition: url("project://database/Assets/UI/Fonts/Staatliches-Regular.ttf");
+    font-size: var(--type-body);
+    letter-spacing: 2px;
+    color: var(--text-hi);
+    background-color: var(--green);
+    border-width: 0;
+    border-radius: 2px;
+    padding: 14px 24px;
+    margin: 0;
+    transition-property: background-color, color, translate;
+    transition-duration: 0.08s;
+}
+
+.btn:hover {
+    background-color: var(--green-hover);
+}
+
+.btn:active {
+    background-color: var(--green-active);
+    translate: 0 1px;
+}
+
+.btn:disabled {
+    background-color: var(--graphite-700);
+    color: var(--graphite-500);
+    opacity: 1;
+}
+
+.btn--destructive {
+    background-color: var(--red);
+}
+
+.btn--quiet {
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--graphite-300);
+    border-width: 1px;
+    border-color: var(--graphite-500);
+}
+
+.btn--quiet:hover {
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--text-hi);
+    border-color: var(--brass);
+}
+
+/*
+ * A menu entry is a button with the chrome removed: type on the art, with a
+ * marker that slides in on hover. Used by the main menu.
+ */
+.menu-entry {
+    -unity-font-definition: url("project://database/Assets/UI/Fonts/Staatliches-Regular.ttf");
+    font-size: 30px;
+    letter-spacing: 4px;
+    color: var(--paper-dark);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    padding: 6px 0;
+    margin: 0;
+    -unity-text-align: middle-left;
+    transition-property: color, translate;
+    transition-duration: 0.10s;
+}
+
+.menu-entry:hover {
+    color: var(--amber);
+    translate: 10px 0;
+}
+
+.menu-entry:active {
+    color: var(--amber-dim);
+}
+
+.menu-entry:disabled {
+    color: var(--graphite-500);
+    opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * Text fields
+ * ------------------------------------------------------------------------ */
+
+.field > .unity-base-text-field__input {
+    -unity-font-definition: url("project://database/Assets/UI/Fonts/CourierPrime-Regular.ttf");
+    font-size: var(--type-body);
+    background-color: var(--paper-dark);
+    color: var(--ink);
+    border-width: 0;
+    border-radius: 0;
+    padding: 10px 12px;
+}
+
+.field > .unity-base-text-field__input:focus {
+    background-color: var(--paper-bright);
+}
+
+.field-label {
+    font-size: var(--type-micro);
+    color: var(--amber);
+    letter-spacing: 2px;
+    margin-bottom: var(--space-2);
+}
