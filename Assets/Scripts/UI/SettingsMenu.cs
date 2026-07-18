@@ -183,6 +183,8 @@ public sealed class SettingsMenu : MonoBehaviour
         backButton.clicked += Close;
         leaveButton.clicked += OnLeaveClicked;
 
+        UiSounds.Bind(root);
+
         scrim.style.display = DisplayStyle.None;
         RefreshLocalizedText();
     }

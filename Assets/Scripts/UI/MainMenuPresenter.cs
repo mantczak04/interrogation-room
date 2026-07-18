@@ -51,6 +51,8 @@ public class MainMenuPresenter : MonoBehaviour
         settingsButton.clicked += OpenSettings;
         quitButton.clicked += QuitGame;
 
+        UiSounds.Bind(root);
+
         GameSettingsService.Current.Changed += RefreshLocalizedText;
         RefreshLocalizedText();
     }
