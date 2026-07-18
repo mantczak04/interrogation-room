@@ -85,7 +85,6 @@ namespace InterrogationRoom.UI
                 ["MOŻESZ SPRÓBOWAĆ PONOWNIE"] = "YOU CAN TRY AGAIN",
                 ["POZYCJA"] = "POSITION",
                 ["NACIŚNIJ, ABY WSTAĆ"] = "PRESS TO STAND",
-                ["Wykonano."] = "Done.",
                 ["Nie można teraz wykonać tej czynności."] = "That action is not available right now.",
                 ["Czynność zatwierdzona."] = "Action confirmed.",
                 ["Czynność wykonana, ale nie rozwinęła twojego aktualnego celu."] = "Action completed, but it did not advance your current objective.",

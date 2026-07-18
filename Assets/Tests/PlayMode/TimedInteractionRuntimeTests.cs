@@ -7,6 +7,7 @@ using Mirror;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace InterrogationRoom.Gameplay.Tests
 {
@@ -113,10 +114,43 @@ namespace InterrogationRoom.Gameplay.Tests
             Assert.That(root.Find("ProgressTrack"), Is.Not.Null);
             Assert.That(root.Find("Progress"), Is.Not.Null);
             Assert.That(root.Find("FocusDot"), Is.Not.Null);
-            Assert.That(root.Find("InteractionCard/Keycap/Key"), Is.Not.Null);
+            Assert.That(root.Find("InteractionCard/Eyebrow"), Is.Not.Null);
             Assert.That(root.Find("InteractionCard/Action"), Is.Not.Null);
             Assert.That(root.Find("HeldItemCard/HeldItem"), Is.Not.Null);
+
+            Transform card = root.Find("InteractionCard");
+            Transform heldItemCard = root.Find("HeldItemCard");
+            Assert.That(card.Find("Eyebrow").GetComponent<Text>().alignment,
+                Is.EqualTo(TextAnchor.LowerCenter));
+            Assert.That(card.Find("Action").GetComponent<Text>().alignment,
+                Is.EqualTo(TextAnchor.MiddleCenter));
+            Assert.That(card.Find("Instruction").GetComponent<Text>().alignment,
+                Is.EqualTo(TextAnchor.UpperCenter));
+            Assert.That(card.GetComponent<Image>(), Is.Null,
+                "The focus copy should float cleanly without a card background.");
+            Assert.That(card.Find("Accent"), Is.Null,
+                "The centered layout should not keep the old vertical border.");
+            Assert.That(card.Find("Keycap"), Is.Null,
+                "The interaction key belongs in the centered instruction line.");
+            Assert.That(heldItemCard.GetComponent<Image>(), Is.Null,
+                "The carried-item hint should use the same background-free treatment.");
             LogAssert.NoUnexpectedReceived();
+        }
+
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        public void InstantWorldActionsOnlyShowFeedbackWhenRejected(
+            bool completed,
+            bool expectedFeedback)
+        {
+            Type interactorType = FindAssemblyCSharpType(
+                "InterrogationRoom.Gameplay.Interaction.PlayerInteractor");
+            MethodInfo policy = interactorType.GetMethod(
+                "ShouldShowInstantInteractionFeedback",
+                BindingFlags.Static | BindingFlags.NonPublic);
+
+            Assert.That(policy, Is.Not.Null);
+            Assert.That(policy.Invoke(null, new object[] { completed }), Is.EqualTo(expectedFeedback));
         }
 
         [TestCase("Completed", "Success")]

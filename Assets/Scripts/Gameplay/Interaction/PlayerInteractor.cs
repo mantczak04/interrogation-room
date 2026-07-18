@@ -434,11 +434,16 @@ namespace InterrogationRoom.Gameplay.Interaction
             }
 
             bool completed = interactable.TryInteractServer(netIdentity);
-            SendInteractionFeedbackServer(
-                completed ? InteractionFeedbackKind.Success : InteractionFeedbackKind.Cancelled,
-                completed ? "Wykonano." : "Nie można teraz wykonać tej czynności.",
-                completed ? 0.85f : 1.8f);
+            if (ShouldShowInstantInteractionFeedback(completed))
+            {
+                SendInteractionFeedbackServer(
+                    InteractionFeedbackKind.Cancelled,
+                    "Nie można teraz wykonać tej czynności.",
+                    1.8f);
+            }
         }
+
+        private static bool ShouldShowInstantInteractionFeedback(bool completed) => !completed;
 
         [Server]
         private void SendInteractionFeedbackServer(
