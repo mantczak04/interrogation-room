@@ -21,6 +21,7 @@ namespace InterrogationRoom.UI
                 ["Dołącz do serwera"] = "Join Server",
                 ["Ustawienia"] = "Settings",
                 ["Wyjdź"] = "Quit",
+                ["Test deweloperski"] = "Developer test",
                 ["KARTA USTAWIEŃ • 01"] = "SETTINGS FILE • 01",
                 ["USTAWIENIA"] = "SETTINGS",
                 ["Zmiany ustawień działają natychmiast."] = "Settings apply immediately.",

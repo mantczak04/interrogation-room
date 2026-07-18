@@ -21,6 +21,7 @@ public class MainMenuPresenter : MonoBehaviour
     private UIDocument document;
     private Button hostButton;
     private Button joinButton;
+    private Button developerTestButton;
     private Button settingsButton;
     private Button quitButton;
     private Label kicker;
@@ -40,6 +41,7 @@ public class MainMenuPresenter : MonoBehaviour
 
         hostButton = root.Q<Button>("host-button");
         joinButton = root.Q<Button>("join-button");
+        developerTestButton = root.Q<Button>("developer-test-button");
         settingsButton = root.Q<Button>("settings-button");
         quitButton = root.Q<Button>("quit-button");
         kicker = root.Q<Label>("menu-kicker");
@@ -48,6 +50,7 @@ public class MainMenuPresenter : MonoBehaviour
 
         hostButton.clicked += HostGame;
         joinButton.clicked += JoinServer;
+        developerTestButton.clicked += OpenDeveloperTest;
         settingsButton.clicked += OpenSettings;
         quitButton.clicked += QuitGame;
 
@@ -65,6 +68,8 @@ public class MainMenuPresenter : MonoBehaviour
             hostButton.clicked -= HostGame;
         if (joinButton != null)
             joinButton.clicked -= JoinServer;
+        if (developerTestButton != null)
+            developerTestButton.clicked -= OpenDeveloperTest;
         if (settingsButton != null)
             settingsButton.clicked -= OpenSettings;
         if (quitButton != null)
@@ -89,6 +94,7 @@ public class MainMenuPresenter : MonoBehaviour
     {
         hostButton.text = UiText.Get("Gospodarz gry").ToUpperInvariant();
         joinButton.text = UiText.Get("Dołącz do serwera").ToUpperInvariant();
+        developerTestButton.text = UiText.Get("Test deweloperski").ToUpperInvariant();
         settingsButton.text = UiText.Get("Ustawienia").ToUpperInvariant();
         quitButton.text = UiText.Get("Wyjdź").ToUpperInvariant();
 
@@ -126,6 +132,13 @@ public class MainMenuPresenter : MonoBehaviour
     {
         loadingGameScene = true;
         GameLaunchRequest.Set(GameLaunchMode.Join);
+        SceneManager.LoadScene(gameSceneName);
+    }
+
+    private void OpenDeveloperTest()
+    {
+        loadingGameScene = true;
+        GameLaunchRequest.Set(GameLaunchMode.None);
         SceneManager.LoadScene(gameSceneName);
     }
 

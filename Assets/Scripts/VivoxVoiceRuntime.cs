@@ -467,29 +467,31 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private async Task DisconnectAsync(bool logout)
     {
+        var service = VivoxService.Instance;
         if (isDisconnecting ||
-            VivoxService.Instance.InitializationState == VivoxInitializationState.Uninitialized)
+            service == null ||
+            service.InitializationState == VivoxInitializationState.Uninitialized)
         {
             return;
         }
 
         isDisconnecting = true;
         isReady = false;
-        VivoxService.Instance.ParticipantAddedToChannel -= OnParticipantAdded;
-        VivoxService.Instance.ParticipantRemovedFromChannel -= OnParticipantRemoved;
+        service.ParticipantAddedToChannel -= OnParticipantAdded;
+        service.ParticipantRemovedFromChannel -= OnParticipantRemoved;
         UnsubscribeConnectionEvents();
 
         try
         {
             if (!string.IsNullOrEmpty(activeChannelName) &&
-                VivoxService.Instance.ActiveChannels.ContainsKey(activeChannelName))
+                service.ActiveChannels.ContainsKey(activeChannelName))
             {
-                await VivoxService.Instance.LeaveChannelAsync(activeChannelName);
+                await service.LeaveChannelAsync(activeChannelName);
             }
 
-            if (logout && VivoxService.Instance.IsLoggedIn)
+            if (logout && service.IsLoggedIn)
             {
-                await VivoxService.Instance.LogoutAsync();
+                await service.LogoutAsync();
             }
         }
         catch (Exception exception)

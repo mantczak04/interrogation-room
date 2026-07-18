@@ -713,20 +713,26 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void LeaveToMainMenu()
     {
+        if (steamLobby != null)
+        {
+            steamLobby.LeaveLobby();
+        }
+
         if (NetworkServer.active && NetworkClient.isConnected)
         {
-            StopHostAndLobby();
+            manager.StopHost();
         }
         else if (NetworkClient.active)
         {
-            StopClientAndLobby();
+            manager.StopClient();
         }
         else if (NetworkServer.active)
         {
             manager.StopServer();
         }
-
-        Destroy(manager.gameObject);
-        SceneManager.LoadScene(mainMenuSceneName);
+        else
+        {
+            SceneManager.LoadScene(mainMenuSceneName);
+        }
     }
 }
