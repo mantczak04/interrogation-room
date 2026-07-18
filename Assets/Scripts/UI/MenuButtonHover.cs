@@ -15,6 +15,12 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
     [Header("Audio")]
     [SerializeField] private AudioClip hoverSound;
     [SerializeField] private AudioSource audioSource;
+    [Range(0f, 1f)]
+    [SerializeField] private float hoverVolume = 0.18f;
+    [Min(0f)]
+    [SerializeField] private float hoverSoundCooldown = 0.06f;
+
+    private static float lastHoverSoundTime = float.NegativeInfinity;
 
     private void Start()
     {
@@ -35,9 +41,13 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
             indicatorText.enabled = true;
         }
 
-        if (hoverSound != null && audioSource != null)
+        float realtimeNow = Time.realtimeSinceStartup;
+        if (hoverSound != null &&
+            audioSource != null &&
+            realtimeNow >= lastHoverSoundTime + hoverSoundCooldown)
         {
-            audioSource.PlayOneShot(hoverSound);
+            audioSource.PlayOneShot(hoverSound, hoverVolume);
+            lastHoverSoundTime = realtimeNow;
         }
     }
 
