@@ -92,6 +92,55 @@ namespace InterrogationRoom.Gameplay.Tests
             LogAssert.NoUnexpectedReceived();
         }
 
+        [Test]
+        public void InteractionFocusHudBuildsWithoutSceneOrAuthoredUiAssets()
+        {
+            Type hudType = FindAssemblyCSharpType(
+                "InterrogationRoom.Gameplay.Interaction.InteractionReticleHud");
+            var actorObject = CreateObject("Actor with focus HUD");
+            actorObject.AddComponent<NetworkIdentity>();
+            Component hud = actorObject.AddComponent(hudType);
+
+            MethodInfo buildHud = hudType.GetMethod(
+                "BuildHud",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.That(buildHud, Is.Not.Null);
+            Assert.DoesNotThrow(() => buildHud.Invoke(hud, null));
+
+            Transform root = actorObject.transform.Find("InteractionFocusHud");
+            Assert.That(root, Is.Not.Null);
+            Assert.That(root.Find("ProgressTrack"), Is.Not.Null);
+            Assert.That(root.Find("Progress"), Is.Not.Null);
+            Assert.That(root.Find("FocusDot"), Is.Not.Null);
+            Assert.That(root.Find("InteractionCard/Keycap/Key"), Is.Not.Null);
+            Assert.That(root.Find("InteractionCard/Action"), Is.Not.Null);
+            Assert.That(root.Find("HeldItemCard/HeldItem"), Is.Not.Null);
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [TestCase("Completed", "Success")]
+        [TestCase("CompletedWithoutObjectiveProgress", "Warning")]
+        [TestCase("Cancelled", "Cancelled")]
+        [TestCase("MinigameFailed", "Cancelled")]
+        public void TimedOutcomesMapToDistinctPlayerFeedback(
+            string outcomeName,
+            string expectedKind)
+        {
+            Type interactorType = FindAssemblyCSharpType(
+                "InterrogationRoom.Gameplay.Interaction.PlayerInteractor");
+            Type outcomeType = FindAssemblyCSharpType(
+                "InterrogationRoom.Gameplay.Interaction.TimedInteractionClientOutcome");
+            MethodInfo resolveKind = interactorType.GetMethod(
+                "ResolveFeedbackKind",
+                BindingFlags.Static | BindingFlags.NonPublic);
+
+            Assert.That(resolveKind, Is.Not.Null);
+            object outcome = Enum.Parse(outcomeType, outcomeName);
+            object kind = resolveKind.Invoke(null, new object[] { outcome });
+            Assert.That(kind?.ToString(), Is.EqualTo(expectedKind));
+        }
+
         private NetworkIdentity CreateIdentity(string name)
         {
             var createdObject = CreateObject(name);

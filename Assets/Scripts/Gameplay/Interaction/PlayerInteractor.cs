@@ -18,6 +18,14 @@ namespace InterrogationRoom.Gameplay.Interaction
         MinigameFailed
     }
 
+    public enum InteractionFeedbackKind : byte
+    {
+        None,
+        Success,
+        Warning,
+        Cancelled
+    }
+
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NetworkIdentity))]
     public sealed class PlayerInteractor : NetworkBehaviour
@@ -52,6 +60,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         private string localTimedInteractionPrompt;
         private string localInteractionFeedback;
         private double localInteractionFeedbackEndsAt;
+        private InteractionFeedbackKind localInteractionFeedbackKind;
 
         [SyncVar(hook = nameof(OnInteractionMovementLockedChanged))]
         private bool interactionMovementLocked;
@@ -61,6 +70,9 @@ namespace InterrogationRoom.Gameplay.Interaction
         public bool HasHoveredTarget => hoveredTarget != null && hoveredInteractable != null;
 
         public string HoveredPrompt => hoveredInteractable?.InteractionPrompt;
+        public bool HoveredInteractionRequiresHold =>
+            hoveredInteractable is INetworkTimedInteractable &&
+            (hoveredTarget == null || hoveredTarget.GetComponent<MinigameSpec>() == null);
         public bool IsMovementLocked => interactionMovementLocked;
         public bool HasActiveTimedInteraction => localTimedInteractionActive;
         public NetworkCarryableItem HeldItem => NetworkCarryableItem.FindCarriedBy(netIdentity);
@@ -72,6 +84,9 @@ namespace InterrogationRoom.Gameplay.Interaction
         public string InteractionFeedback => HasInteractionFeedback
             ? localInteractionFeedback
             : null;
+        public InteractionFeedbackKind FeedbackKind => HasInteractionFeedback
+            ? localInteractionFeedbackKind
+            : InteractionFeedbackKind.None;
         public float TimedInteractionProgress01 => !localTimedInteractionActive
             ? 0f
             : Mathf.Clamp01((float)((NetworkTime.time - localTimedInteractionStartedAt) /
@@ -384,6 +399,10 @@ namespace InterrogationRoom.Gameplay.Interaction
                     targetIdentity == null ||
                     !timedInteractable.TryBeginInteractionServer(netIdentity))
                 {
+                    SendInteractionFeedbackServer(
+                        InteractionFeedbackKind.Cancelled,
+                        "Nie można teraz wykonać tej czynności.",
+                        1.8f);
                     return;
                 }
 
@@ -414,7 +433,34 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
-            interactable.TryInteractServer(netIdentity);
+            bool completed = interactable.TryInteractServer(netIdentity);
+            SendInteractionFeedbackServer(
+                completed ? InteractionFeedbackKind.Success : InteractionFeedbackKind.Cancelled,
+                completed ? "Wykonano." : "Nie można teraz wykonać tej czynności.",
+                completed ? 0.85f : 1.8f);
+        }
+
+        [Server]
+        private void SendInteractionFeedbackServer(
+            InteractionFeedbackKind kind,
+            string message,
+            float duration)
+        {
+            NetworkConnectionToClient targetConnection = netIdentity != null
+                ? netIdentity.connectionToClient
+                : null;
+            if (targetConnection != null)
+                TargetShowInteractionFeedback(targetConnection, kind, message, duration);
+        }
+
+        [TargetRpc]
+        private void TargetShowInteractionFeedback(
+            NetworkConnection target,
+            InteractionFeedbackKind kind,
+            string message,
+            float duration)
+        {
+            SetLocalInteractionFeedback(kind, message, duration);
         }
 
         [Server]
@@ -552,8 +598,50 @@ namespace InterrogationRoom.Gameplay.Interaction
             TimedInteractionClientOutcome outcome)
         {
             ClearLocalTimedInteraction();
-            localInteractionFeedback = ResolveFeedback(outcome);
-            localInteractionFeedbackEndsAt = NetworkTime.time + feedbackDuration;
+            SetLocalInteractionFeedback(
+                ResolveFeedbackKind(outcome),
+                ResolveFeedback(outcome),
+                ResolveFeedbackDuration(outcome));
+        }
+
+        private void SetLocalInteractionFeedback(
+            InteractionFeedbackKind kind,
+            string message,
+            float duration)
+        {
+            localInteractionFeedbackKind = kind;
+            localInteractionFeedback = message;
+            localInteractionFeedbackEndsAt = NetworkTime.time +
+                Mathf.Min(feedbackDuration, Mathf.Max(0.1f, duration));
+        }
+
+        private static InteractionFeedbackKind ResolveFeedbackKind(
+            TimedInteractionClientOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case TimedInteractionClientOutcome.Completed:
+                    return InteractionFeedbackKind.Success;
+                case TimedInteractionClientOutcome.CompletedWithoutObjectiveProgress:
+                    return InteractionFeedbackKind.Warning;
+                default:
+                    return InteractionFeedbackKind.Cancelled;
+            }
+        }
+
+        private static float ResolveFeedbackDuration(TimedInteractionClientOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case TimedInteractionClientOutcome.Completed:
+                    return 1.4f;
+                case TimedInteractionClientOutcome.CompletedWithoutObjectiveProgress:
+                    return 3.5f;
+                case TimedInteractionClientOutcome.MinigameFailed:
+                    return 2.5f;
+                default:
+                    return 1.8f;
+            }
         }
 
         private static string ResolveFeedback(TimedInteractionClientOutcome outcome)
