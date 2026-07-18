@@ -1,14 +1,25 @@
+using System.Text;
 using Mirror;
 using InterrogationRoom.Debugging;
 using InterrogationRoom.Domain;
 using InterrogationRoom.Networking;
+using InterrogationRoom.Settings;
 using InterrogationRoom.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
 
+/// <summary>
+/// Mode and network menu. Players reach it on the host/join path and with Esc
+/// in the lobby, so it is built from the same case-file sheet as the rest of
+/// the UI rather than from IMGUI defaults.
+///
+/// The document is created at runtime, like <see cref="SettingsMenu"/>, so the
+/// scene needs no extra wiring beyond the RoundPresenter reference.
+/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NetworkManager))]
 public class CenteredNetworkManagerHUD : MonoBehaviour
@@ -21,6 +32,12 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         Sandbox
     }
 
+    private const string PanelSettingsResource = "UI/UIPanelSettings";
+    private const string VisualTreeResource = "UI/NetworkMenu";
+
+    /// <summary>Above the Round UI, below the settings sheet.</summary>
+    private const float SortingOrder = 50f;
+
     NetworkManager manager;
     SteamLobby steamLobby;
     NetworkRoundCoordinator roundCoordinator;
@@ -30,34 +47,23 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     [SerializeField] RoundPresenter roundPresenter;
     [SerializeField] string mainMenuSceneName = "MainMenu";
 
-    public int offsetX;
-    public int offsetY;
-    public int panelWidth = 560;
-    public int buttonHeight = 72;
-    public int fontSize = 28;
-    public int fieldHeight = 52;
-    public float uiScale = 1.5f;
+    UIDocument document;
+    VisualElement scrim;
+    VisualElement sheetBody;
+    VisualElement header;
+    VisualElement headerActions;
+    Label kickerLabel;
+    Label titleLabel;
+    Label descriptionLabel;
+    Label headerKickerLabel;
+    Label headerTitleLabel;
+    Label hintLabel;
 
-    GUIStyle buttonStyle;
-    GUIStyle labelStyle;
-    GUIStyle textFieldStyle;
-    GUIStyle homeButtonStyle;
-    GUIStyle homeDescriptionStyle;
-    GUIStyle panelStyle;
-    GUIStyle titleStyle;
-    GUIStyle pageTitleStyle;
-    GUIStyle kickerStyle;
-    Texture2D panelTexture;
-    Texture2D buttonTexture;
-    Texture2D buttonHoverTexture;
-    Texture2D buttonPressedTexture;
-    Texture2D fieldTexture;
-    Texture2D scrimTexture;
-    bool stylesInitialized;
     bool isVisible;
     bool sandboxPinned;
     bool hadLocalPlayer;
     MenuPage currentPage = MenuPage.Home;
+    string renderedSignature;
 
     public static bool HandlesEscape { get; private set; }
 
@@ -73,11 +79,14 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
                 lobbyPresenter = roundPresenter.gameObject.AddComponent<LobbyCharacterPresenter>();
             lobbyPresenter.Configure(roundCoordinator, steamLobby);
         }
+
+        BuildDocument();
     }
 
     void OnEnable()
     {
         HandlesEscape = true;
+        GameSettingsService.Current.Changed += OnLanguageChanged;
         ApplyPageVisibility();
     }
 
@@ -114,21 +123,12 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     {
         HandlesEscape = false;
         sandboxPinned = false;
+        GameSettingsService.Current.Changed -= OnLanguageChanged;
         if (roundPresenter != null)
         {
             roundPresenter.SetDeveloperMenuOpen(false);
         }
         SetExternalMenusVisible(false, false);
-    }
-
-    void OnDestroy()
-    {
-        DestroyTexture(panelTexture);
-        DestroyTexture(buttonTexture);
-        DestroyTexture(buttonHoverTexture);
-        DestroyTexture(buttonPressedTexture);
-        DestroyTexture(fieldTexture);
-        DestroyTexture(scrimTexture);
     }
 
     void OnValidate()
@@ -140,6 +140,40 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     }
 
     bool SteamMode => steamLobby != null && steamLobby.SteamAvailable;
+
+    void BuildDocument()
+    {
+        var panelSettings = Resources.Load<PanelSettings>(PanelSettingsResource);
+        var visualTree = Resources.Load<VisualTreeAsset>(VisualTreeResource);
+        if (panelSettings == null || visualTree == null)
+        {
+            Debug.LogError(
+                $"[CenteredNetworkManagerHUD] Could not load '{PanelSettingsResource}' or '{VisualTreeResource}'.", this);
+            enabled = false;
+            return;
+        }
+
+        document = gameObject.AddComponent<UIDocument>();
+        document.panelSettings = panelSettings;
+        document.sortingOrder = SortingOrder;
+        document.visualTreeAsset = visualTree;
+
+        VisualElement root = document.rootVisualElement;
+        scrim = root.Q<VisualElement>("network-scrim");
+        sheetBody = root.Q<VisualElement>("network-body");
+        header = root.Q<VisualElement>("network-header");
+        headerActions = root.Q<VisualElement>("header-actions");
+        kickerLabel = root.Q<Label>("network-kicker");
+        titleLabel = root.Q<Label>("network-title");
+        descriptionLabel = root.Q<Label>("network-description");
+        headerKickerLabel = root.Q<Label>("header-kicker");
+        headerTitleLabel = root.Q<Label>("header-title");
+        hintLabel = root.Q<Label>("network-hint");
+
+        UiSounds.Bind(root);
+        SetVisible(scrim, false);
+        SetVisible(header, false);
+    }
 
     void Update()
     {
@@ -185,8 +219,10 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             {
                 settingsMenu.Open();
             }
+            return;
         }
-        else if (sandboxPressed)
+
+        if (sandboxPressed)
         {
             if (sandboxPinned || (isVisible && currentPage == MenuPage.Sandbox))
             {
@@ -197,230 +233,324 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             {
                 SetMenuVisible(true, MenuPage.Sandbox);
             }
+            return;
         }
+
+        RefreshHint();
+        RenderIfChanged();
     }
 
-    void InitStyles()
+    void OnLanguageChanged()
     {
-        if (stylesInitialized && pageTitleStyle != null && panelStyle != null)
-        {
-            return;
-        }
-
-        stylesInitialized = false;
-        DestroyTexture(panelTexture);
-        DestroyTexture(buttonTexture);
-        DestroyTexture(buttonHoverTexture);
-        DestroyTexture(buttonPressedTexture);
-        DestroyTexture(fieldTexture);
-        DestroyTexture(scrimTexture);
-
-        panelTexture = CreateTexture(new Color32(0xE8, 0xDC, 0xC5, 0xFC));
-        buttonTexture = CreateTexture(new Color32(0x41, 0x5B, 0x4C, 0xFF));
-        buttonHoverTexture = CreateTexture(new Color32(0x4E, 0x6E, 0x5B, 0xFF));
-        buttonPressedTexture = CreateTexture(new Color32(0x33, 0x47, 0x3C, 0xFF));
-        fieldTexture = CreateTexture(new Color32(0xD9, 0xCB, 0xAF, 0xFF));
-        scrimTexture = CreateTexture(new Color32(0x08, 0x0B, 0x0D, 0xB8));
-
-        buttonStyle = new GUIStyle(GUI.skin.button)
-        {
-            fontSize = fontSize,
-            fixedHeight = buttonHeight,
-            alignment = TextAnchor.MiddleCenter,
-            fontStyle = FontStyle.Bold,
-            normal = { textColor = new Color32(0xE8, 0xE3, 0xD5, 0xFF), background = buttonTexture },
-            hover = { textColor = Color.white, background = buttonHoverTexture },
-            active = { textColor = Color.white, background = buttonPressedTexture },
-            focused = { textColor = Color.white, background = buttonHoverTexture },
-            border = new RectOffset(1, 1, 1, 1),
-            padding = new RectOffset(18, 18, 8, 8)
-        };
-
-        labelStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = fontSize,
-            alignment = TextAnchor.MiddleCenter,
-            wordWrap = true,
-            normal = { textColor = new Color32(0x2B, 0x2A, 0x24, 0xFF) }
-        };
-
-        textFieldStyle = new GUIStyle(GUI.skin.textField)
-        {
-            fontSize = fontSize,
-            fixedHeight = fieldHeight,
-            alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color32(0x2B, 0x2A, 0x24, 0xFF), background = fieldTexture },
-            focused = { textColor = new Color32(0x2B, 0x2A, 0x24, 0xFF), background = fieldTexture },
-            padding = new RectOffset(12, 12, 6, 6)
-        };
-
-        homeButtonStyle = new GUIStyle(buttonStyle)
-        {
-            fontSize = Mathf.Min(fontSize, 20),
-            fixedHeight = 44f
-        };
-
-        homeDescriptionStyle = new GUIStyle(labelStyle)
-        {
-            fontSize = Mathf.Min(fontSize, 15),
-            normal = { textColor = new Color32(0x6E, 0x68, 0x57, 0xFF) }
-        };
-
-        panelStyle = new GUIStyle(GUI.skin.box)
-        {
-            normal = { background = panelTexture },
-            padding = new RectOffset(28, 28, 24, 26),
-            border = new RectOffset(2, 2, 2, 2)
-        };
-
-        titleStyle = new GUIStyle(labelStyle)
-        {
-            fontSize = Mathf.Min(fontSize + 10, 38),
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleLeft
-        };
-
-        pageTitleStyle = new GUIStyle(titleStyle)
-        {
-            fontSize = Mathf.Min(fontSize + 2, 28)
-        };
-
-        kickerStyle = new GUIStyle(homeDescriptionStyle)
-        {
-            fontSize = Mathf.Min(fontSize, 14),
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleLeft,
-            normal = { textColor = new Color32(0x80, 0x69, 0x48, 0xFF) }
-        };
-
-        stylesInitialized = true;
+        renderedSignature = null;
+        RenderIfChanged();
     }
 
-    void OnGUI()
+    /// <summary>
+    /// IMGUI rebuilt the whole panel every frame, which is how the status text
+    /// stayed current. Rebuilding a retained tree that often would drop focus
+    /// out of the address field mid-keystroke, so the page is rebuilt only when
+    /// something it displays actually changed. The address text is deliberately
+    /// absent from the signature — it is owned by the field while it has focus.
+    /// </summary>
+    string BuildSignature()
     {
-        InitStyles();
-
-        Matrix4x4 previousMatrix = GUI.matrix;
-        float scale = uiScale * Mathf.Min(Screen.width / 1280f, Screen.height / 720f, 2f);
-        GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1f));
-
-        float screenWidth = Screen.width / scale;
-        float screenHeight = Screen.height / scale;
-        bool automaticLobbyVisible = (NetworkClient.isConnected || NetworkServer.active)
-                                     && (roundCoordinator == null || roundCoordinator.CurrentView == null);
-        if (Application.isEditor && !automaticLobbyVisible)
+        var sb = new StringBuilder();
+        sb.Append(isVisible ? '1' : '0').Append(currentPage).Append('|');
+        sb.Append(NetworkServer.active ? '1' : '0');
+        sb.Append(NetworkClient.active ? '1' : '0');
+        sb.Append(NetworkClient.isConnected ? '1' : '0');
+        sb.Append(NetworkClient.ready ? '1' : '0');
+        sb.Append('|').Append(Transport.active != null ? Transport.active.ToString() : "-");
+        if (steamLobby != null)
         {
-            GUILayout.BeginArea(new Rect(0f, screenHeight - 44f, screenWidth, 40f));
-            GUILayout.Label("Esc: menu     F8: sandbox Rundy     V: mute / unmute voice chat", labelStyle);
-            GUILayout.EndArea();
-        }
+            sb.Append('|').Append(steamLobby.SteamAvailable ? '1' : '0');
+            sb.Append(steamLobby.InLobby ? '1' : '0');
+            sb.Append(steamLobby.LobbyPending ? '1' : '0');
 
-        if (!isVisible)
-        {
-            GUI.matrix = previousMatrix;
-            return;
-        }
-
-        if (currentPage == MenuPage.Home || currentPage == MenuPage.Network)
-            GUI.DrawTexture(new Rect(0f, 0f, screenWidth, screenHeight), scrimTexture);
-
-        if (currentPage == MenuPage.NormalRound || currentPage == MenuPage.Sandbox)
-        {
-            DrawPageHeader(screenWidth);
-            GUI.matrix = previousMatrix;
-            return;
-        }
-
-        float scaledWidth = panelWidth;
-        float scaledHeight = currentPage == MenuPage.Home
-            ? Mathf.Min(468f, screenHeight - 24f)
-            : Mathf.Min(450f, screenHeight - 24f);
-        float x = (screenWidth - scaledWidth) * 0.5f + offsetX;
-        float y = (screenHeight - scaledHeight) * 0.5f + offsetY;
-        GUILayout.BeginArea(new Rect(x, y, scaledWidth, scaledHeight), panelStyle);
-
-        if (currentPage == MenuPage.Home)
-        {
-            DrawHomeMenu();
-            GUILayout.EndArea();
-            GUI.matrix = previousMatrix;
-            return;
-        }
-
-        DrawInlineBackButton(UiText.Get("SIEĆ / HOST"));
-
-        if (!NetworkClient.isConnected && !NetworkServer.active)
-        {
-            StartButtons();
-        }
-        else
-        {
-            StatusLabels();
-        }
-
-        if (Application.isEditor && NetworkClient.isConnected && !NetworkClient.ready)
-        {
-            if (GUILayout.Button(UiText.Get("Klient gotowy"), buttonStyle))
+            // Only inside a lobby, because these reach into Steamworks and
+            // throw outright when it is not initialised — which is every run
+            // that starts from the KCP path.
+            if (steamLobby.InLobby)
             {
-                NetworkClient.Ready();
-                if (NetworkClient.localPlayer == null)
-                {
-                    NetworkClient.AddPlayer();
-                }
+                sb.Append(steamLobby.OverlayEnabled ? '1' : '0');
+                sb.Append(Mathf.Min(steamLobby.DirectInviteFriendCount, 2));
             }
         }
 
-        StopButtons();
-
-        GUILayout.EndArea();
-        GUI.matrix = previousMatrix;
+        return sb.ToString();
     }
 
-    void DrawHomeMenu()
+    void RenderIfChanged()
     {
-        GUILayout.Label(UiText.Get("AKTA SYSTEMOWE • MENU"), kickerStyle, GUILayout.Height(22f));
-        GUILayout.Label(UiText.Get("WYBIERZ TRYB"), titleStyle, GUILayout.Height(48f));
-        GUILayout.Label(UiText.Get("Uruchom lobby, przejdź do Rundy albo otwórz narzędzia testowe."), homeDescriptionStyle, GUILayout.Height(38f));
+        string signature = BuildSignature();
+        if (signature == renderedSignature)
+            return;
 
-        if (GUILayout.Button(UiText.Get("SIEĆ / HOST"), homeButtonStyle))
+        renderedSignature = signature;
+        Render();
+    }
+
+    void Render()
+    {
+        bool sheetVisible = isVisible && (currentPage == MenuPage.Home || currentPage == MenuPage.Network);
+        bool headerVisible = isVisible && (currentPage == MenuPage.NormalRound || currentPage == MenuPage.Sandbox);
+        SetVisible(scrim, sheetVisible);
+        SetVisible(header, headerVisible);
+
+        if (sheetVisible)
         {
-            SetMenuVisible(true, MenuPage.Network);
+            sheetBody.Clear();
+            if (currentPage == MenuPage.Home)
+                RenderHome();
+            else
+                RenderNetwork();
         }
 
-        if (GUILayout.Button(UiText.Get("ZWYKŁA RUNDA"), homeButtonStyle))
-        {
-            SetMenuVisible(true, MenuPage.NormalRound);
-        }
+        if (headerVisible)
+            RenderModeHeader();
+    }
+
+    void RenderHome()
+    {
+        kickerLabel.text = UiText.Get("AKTA SYSTEMOWE • MENU");
+        titleLabel.text = UiText.Get("WYBIERZ TRYB");
+        descriptionLabel.text = UiText.Get("Uruchom lobby, przejdź do Rundy albo otwórz narzędzia testowe.");
+
+        AddAction(sheetBody, UiText.Get("Sieć / host"), "btn--ink", () => SetMenuVisible(true, MenuPage.Network));
+        AddAction(sheetBody, UiText.Get("Zwykła Runda"), "btn--paper", () => SetMenuVisible(true, MenuPage.NormalRound));
 
         if (Application.isEditor)
-        {
-            if (GUILayout.Button(UiText.Get("TRYB DEVELOPERSKI"), homeButtonStyle))
-            {
-                OpenDeveloperMode();
-            }
-        }
+            AddAction(sheetBody, UiText.Get("Tryb developerski"), "btn--paper", OpenDeveloperMode);
 
-        if (GUILayout.Button(UiText.Get("USTAWIENIA"), homeButtonStyle))
+        AddAction(sheetBody, UiText.Get("Ustawienia"), "btn--paper", () =>
         {
             SetMenuVisible(false, MenuPage.Home);
             settingsMenu?.Open();
+        });
+
+        sheetBody.Add(new VisualElement { name = "home-divider" });
+        sheetBody[sheetBody.childCount - 1].AddToClassList("network-divider");
+
+        AddAction(sheetBody, UiText.Get("Zamknij menu"), "btn--paper", () => SetMenuVisible(false, MenuPage.Home));
+    }
+
+    void RenderNetwork()
+    {
+        kickerLabel.text = UiText.Get("AKTA SYSTEMOWE • SIEĆ");
+        titleLabel.text = UiText.Get("SIEĆ / HOST");
+        descriptionLabel.text = UiText.Get("Utwórz lobby albo dołącz do istniejącego.");
+
+        if (!NetworkClient.isConnected && !NetworkServer.active)
+            RenderStartControls();
+        else
+            RenderStatus();
+
+        if (Application.isEditor && NetworkClient.isConnected && !NetworkClient.ready)
+        {
+            AddAction(sheetBody, UiText.Get("Klient gotowy"), "btn--paper", () =>
+            {
+                NetworkClient.Ready();
+                if (NetworkClient.localPlayer == null)
+                    NetworkClient.AddPlayer();
+            });
         }
 
-        if (GUILayout.Button(UiText.Get("ZAMKNIJ MENU"), homeButtonStyle))
+        RenderStopControls();
+
+        var divider = new VisualElement();
+        divider.AddToClassList("network-divider");
+        sheetBody.Add(divider);
+        AddAction(sheetBody, UiText.Get("← Menu"), "btn--paper", () => SetMenuVisible(true, MenuPage.Home));
+    }
+
+    void RenderStartControls()
+    {
+        if (SteamMode)
         {
-            SetMenuVisible(false, MenuPage.Home);
+            RenderSteamStartControls();
+            return;
+        }
+
+        if (NetworkClient.active)
+        {
+            AddStatus(UiText.Get("Łączenie…"));
+            AddAction(sheetBody, UiText.Get("Anuluj"), "btn--paper", StopClientAndLobby);
+            return;
+        }
+
+#if UNITY_WEBGL
+        AddAction(sheetBody, UiText.Get("Graj"), "btn--ink", () =>
+        {
+            NetworkServer.listen = false;
+            manager.StartHost();
+        });
+#else
+        AddAction(sheetBody, UiText.Get("Utwórz lobby"), "btn--ink", () => manager.StartHost());
+#endif
+
+        var row = new VisualElement();
+        row.AddToClassList("network-join-row");
+
+        var joinButton = new Button(() => manager.StartClient()) { text = UiText.Get("Dołącz") };
+        joinButton.AddToClassList("btn");
+        joinButton.AddToClassList("btn--paper");
+        row.Add(joinButton);
+
+        var addressField = new TextField { value = manager.networkAddress };
+        addressField.AddToClassList("field");
+        addressField.AddToClassList("network-address-field");
+        addressField.RegisterValueChangedCallback(evt => manager.networkAddress = evt.newValue);
+        row.Add(addressField);
+
+        if (Application.isEditor && Transport.active is PortTransport portTransport)
+        {
+            var portField = new TextField { value = portTransport.Port.ToString() };
+            portField.AddToClassList("field");
+            portField.AddToClassList("network-port-field");
+            portField.RegisterValueChangedCallback(evt =>
+            {
+                if (ushort.TryParse(evt.newValue, out ushort port))
+                    portTransport.Port = port;
+            });
+            row.Add(portField);
+        }
+
+        sheetBody.Add(row);
+
+#if !UNITY_WEBGL
+        if (Application.isEditor)
+            AddAction(sheetBody, UiText.Get("Tylko serwer"), "btn--paper", () => manager.StartServer());
+#endif
+    }
+
+    void RenderSteamStartControls()
+    {
+        if (NetworkClient.active)
+        {
+            AddStatus(UiText.Get("Łączenie przez Steam…"));
+            AddAction(sheetBody, UiText.Get("Anuluj"), "btn--paper", StopClientAndLobby);
+            return;
+        }
+
+        if (steamLobby.LobbyPending)
+        {
+            AddStatus(UiText.Get("Tworzenie lobby Steam…"));
+            return;
+        }
+
+        AddAction(sheetBody, UiText.Get("Utwórz lobby dla znajomych"), "btn--ink", () => steamLobby.HostLobby());
+        AddStatus(UiText.Get("Znajomi dołączają przez nakładkę Steam: Znajomi → Dołącz do gry"));
+    }
+
+    void RenderStatus()
+    {
+        if (NetworkServer.active && NetworkClient.active)
+        {
+            AddStatus(Application.isEditor
+                ? $"Host: running via {Transport.active}"
+                : UiText.Get("Lobby działa — jesteś hostem."));
+        }
+        else if (NetworkServer.active)
+        {
+            AddStatus(Application.isEditor
+                ? $"Server: running via {Transport.active}"
+                : UiText.Get("Serwer działa."));
+        }
+        else if (NetworkClient.isConnected)
+        {
+            AddStatus(Application.isEditor
+                ? $"Client: connected to {manager.networkAddress} via {Transport.active}"
+                : UiText.Get("Połączono z lobby."));
+        }
+
+        if (steamLobby == null || !steamLobby.InLobby)
+            return;
+
+        if (steamLobby.OverlayEnabled)
+            AddAction(sheetBody, UiText.Get("Zaproś znajomych"), "btn--ink", () => steamLobby.OpenInviteDialog());
+        else
+            AddStatus(UiText.Get("Nakładka Steam jest niedostępna — użyj zaproszenia poniżej."));
+
+        int friendCount = Mathf.Min(steamLobby.DirectInviteFriendCount, 2);
+        for (int i = 0; i < friendCount; i++)
+        {
+            int index = i;
+            string friendName = steamLobby.GetDirectInviteFriendName(index);
+            AddAction(
+                sheetBody,
+                $"{UiText.Get("Zaproś")}: {friendName}",
+                "btn--paper",
+                () => steamLobby.InviteDirectFriend(index));
+        }
+
+        if (friendCount == 0)
+            AddStatus(UiText.Get("Brak znajomych Steam online."));
+    }
+
+    void RenderStopControls()
+    {
+        if (NetworkServer.active && NetworkClient.isConnected)
+        {
+#if UNITY_WEBGL
+            AddAction(sheetBody, UiText.Get("Opuść grę"), "btn--destructive", StopHostAndLobby);
+#else
+            AddAction(sheetBody, UiText.Get("Zamknij lobby"), "btn--destructive", StopHostAndLobby);
+#endif
+        }
+        else if (NetworkClient.isConnected)
+        {
+            AddAction(sheetBody, UiText.Get("Rozłącz"), "btn--destructive", StopClientAndLobby);
+        }
+        else if (NetworkServer.active)
+        {
+            AddAction(sheetBody, UiText.Get("Zatrzymaj serwer"), "btn--destructive", () => manager.StopServer());
         }
     }
 
-    void DrawInlineBackButton(string title)
+    void RenderModeHeader()
     {
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button(UiText.Get("← Menu"), buttonStyle, GUILayout.Width(150f)))
-        {
-            SetMenuVisible(true, MenuPage.Home);
-        }
-        GUILayout.Label(title, labelStyle);
-        GUILayout.EndHorizontal();
+        bool sandbox = currentPage == MenuPage.Sandbox;
+        headerKickerLabel.text = UiText.Get("AKTA TRYBU");
+        headerTitleLabel.text = UiText.Get(sandbox ? "TRYB DEVELOPERSKI" : "ZWYKŁA RUNDA");
+
+        headerActions.Clear();
+        AddAction(headerActions, UiText.Get("← Menu"), "btn--paper", () => SetMenuVisible(true, MenuPage.Home));
+        if (sandbox)
+            AddAction(headerActions, UiText.Get("Graj z panelem"), "btn--ink", PinSandboxAndCloseMenu);
+    }
+
+    void RefreshHint()
+    {
+        bool automaticLobbyVisible = (NetworkClient.isConnected || NetworkServer.active)
+                                     && (roundCoordinator == null || roundCoordinator.CurrentView == null);
+        bool show = Application.isEditor && !automaticLobbyVisible;
+        SetVisible(hintLabel, show);
+        if (show)
+            hintLabel.text = UiText.Get("Esc: menu     F8: sandbox Rundy     V: mikrofon");
+    }
+
+    static void AddAction(VisualElement parent, string text, string modifier, System.Action action)
+    {
+        var button = new Button(action) { text = text };
+        button.AddToClassList("btn");
+        button.AddToClassList(modifier);
+        button.AddToClassList("network-action");
+        parent.Add(button);
+    }
+
+    void AddStatus(string text)
+    {
+        var label = new Label(text);
+        label.AddToClassList("network-status");
+        label.AddToClassList("document-font");
+        sheetBody.Add(label);
+    }
+
+    static void SetVisible(VisualElement element, bool visible)
+    {
+        if (element != null)
+            element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
     void OpenDeveloperMode()
@@ -439,25 +569,6 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         SetMenuVisible(true, MenuPage.Sandbox);
     }
 
-    void DrawPageHeader(float screenWidth)
-    {
-        string title = UiText.Get(currentPage == MenuPage.NormalRound ? "ZWYKŁA RUNDA" : "TRYB DEVELOPERSKI");
-        float headerHeight = currentPage == MenuPage.Sandbox ? 280f : 150f;
-        GUILayout.BeginArea(new Rect(12f, 12f, Mathf.Min(390f, screenWidth - 24f), headerHeight), panelStyle);
-        GUILayout.Label(UiText.Get("AKTA TRYBU"), kickerStyle);
-        GUILayout.Label(title, pageTitleStyle);
-        if (GUILayout.Button(UiText.Get("← Menu"), homeButtonStyle, GUILayout.Width(170f)))
-        {
-            SetMenuVisible(true, MenuPage.Home);
-        }
-        if (currentPage == MenuPage.Sandbox
-            && GUILayout.Button(UiText.Get("Graj z panelem"), homeButtonStyle, GUILayout.Width(220f)))
-        {
-            PinSandboxAndCloseMenu();
-        }
-        GUILayout.EndArea();
-    }
-
     void SetMenuVisible(bool visible, MenuPage page)
     {
         if (visible && page != MenuPage.Sandbox)
@@ -472,6 +583,8 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             roundPresenter.SetDeveloperMenuOpen(visible);
         }
         ApplyPageVisibility();
+        renderedSignature = null;
+        RenderIfChanged();
 
         if (visible)
         {
@@ -488,23 +601,6 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         return !phase.HasValue || phase.Value == RoundPhase.Lobby;
     }
 
-    static Texture2D CreateTexture(Color color)
-    {
-        var texture = new Texture2D(1, 1, TextureFormat.RGBA32, false)
-        {
-            hideFlags = HideFlags.HideAndDontSave
-        };
-        texture.SetPixel(0, 0, color);
-        texture.Apply();
-        return texture;
-    }
-
-    static void DestroyTexture(Texture2D texture)
-    {
-        if (texture != null)
-            Destroy(texture);
-    }
-
     void PinSandboxAndCloseMenu()
     {
         sandboxPinned = true;
@@ -515,6 +611,8 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             roundPresenter.SetDeveloperMenuOpen(false);
         }
         ApplyPageVisibility();
+        renderedSignature = null;
+        RenderIfChanged();
         SetCursorForClosedMenu();
     }
 
@@ -563,90 +661,6 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         }
     }
 
-    void StartButtons()
-    {
-        if (SteamMode)
-        {
-            SteamStartButtons();
-            return;
-        }
-
-        if (!NetworkClient.active)
-        {
-#if UNITY_WEBGL
-            if (GUILayout.Button(UiText.Get("Graj"), buttonStyle))
-            {
-                NetworkServer.listen = false;
-                manager.StartHost();
-            }
-#else
-            if (GUILayout.Button(UiText.Get("Utwórz lobby"), buttonStyle))
-            {
-                manager.StartHost();
-            }
-#endif
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(UiText.Get("Dołącz"), buttonStyle, GUILayout.Width(panelWidth * 0.35f)))
-            {
-                manager.StartClient();
-            }
-
-            manager.networkAddress = GUILayout.TextField(manager.networkAddress, textFieldStyle);
-
-            if (Application.isEditor && Transport.active is PortTransport portTransport)
-            {
-                if (ushort.TryParse(GUILayout.TextField(portTransport.Port.ToString(), textFieldStyle, GUILayout.Width(90f)), out ushort port))
-                {
-                    portTransport.Port = port;
-                }
-            }
-
-            GUILayout.EndHorizontal();
-
-#if !UNITY_WEBGL
-            if (Application.isEditor && GUILayout.Button(UiText.Get("Tylko serwer"), buttonStyle))
-            {
-                manager.StartServer();
-            }
-#endif
-        }
-        else
-        {
-            GUILayout.Label(UiText.Get("Łączenie…"), labelStyle);
-            if (GUILayout.Button(UiText.Get("Anuluj"), buttonStyle))
-            {
-                StopClientAndLobby();
-            }
-        }
-    }
-
-    void SteamStartButtons()
-    {
-        if (NetworkClient.active)
-        {
-            GUILayout.Label(UiText.Get("Łączenie przez Steam…"), labelStyle);
-            if (GUILayout.Button(UiText.Get("Anuluj"), buttonStyle))
-            {
-                StopClientAndLobby();
-            }
-            return;
-        }
-
-        if (steamLobby.LobbyPending)
-        {
-            GUILayout.Label(UiText.Get("Tworzenie lobby Steam…"), labelStyle);
-            return;
-        }
-
-        if (GUILayout.Button(UiText.Get("Utwórz lobby dla znajomych"), buttonStyle))
-        {
-            steamLobby.HostLobby();
-        }
-
-        GUILayout.Label(UiText.Get("Znajomi dołączają przez nakładkę Steam: Znajomi → Dołącz do gry"), labelStyle);
-    }
-
     void StopClientAndLobby()
     {
         manager.StopClient();
@@ -682,89 +696,5 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
         Destroy(manager.gameObject);
         SceneManager.LoadScene(mainMenuSceneName);
-    }
-
-    void StatusLabels()
-    {
-        if (NetworkServer.active && NetworkClient.active)
-        {
-            GUILayout.Label(Application.isEditor
-                ? $"<b>Host</b>: running via {Transport.active}"
-                : UiText.Get("Lobby działa — jesteś hostem."), labelStyle);
-        }
-        else if (NetworkServer.active)
-        {
-            GUILayout.Label(Application.isEditor
-                ? $"<b>Server</b>: running via {Transport.active}"
-                : UiText.Get("Serwer działa."), labelStyle);
-        }
-        else if (NetworkClient.isConnected)
-        {
-            GUILayout.Label(Application.isEditor
-                ? $"<b>Client</b>: connected to {manager.networkAddress} via {Transport.active}"
-                : UiText.Get("Połączono z lobby."), labelStyle);
-        }
-
-        if (steamLobby != null && steamLobby.InLobby)
-        {
-            if (steamLobby.OverlayEnabled)
-            {
-                if (GUILayout.Button(UiText.Get("Zaproś znajomych"), buttonStyle))
-                {
-                    steamLobby.OpenInviteDialog();
-                }
-            }
-            else
-            {
-                GUILayout.Label(UiText.Get("Nakładka Steam jest niedostępna — użyj zaproszenia poniżej."), labelStyle);
-            }
-
-            int friendCount = Mathf.Min(steamLobby.DirectInviteFriendCount, 2);
-            for (int i = 0; i < friendCount; i++)
-            {
-                string friendName = steamLobby.GetDirectInviteFriendName(i);
-                if (GUILayout.Button($"{UiText.Get("Zaproś")}: {friendName}", buttonStyle, GUILayout.Height(52f)))
-                {
-                    steamLobby.InviteDirectFriend(i);
-                }
-            }
-
-            if (friendCount == 0)
-            {
-                GUILayout.Label(UiText.Get("Brak znajomych Steam online."), labelStyle);
-            }
-        }
-    }
-
-    void StopButtons()
-    {
-        if (NetworkServer.active && NetworkClient.isConnected)
-        {
-#if UNITY_WEBGL
-            if (GUILayout.Button(UiText.Get("Opuść grę"), buttonStyle))
-            {
-                StopHostAndLobby();
-            }
-#else
-            if (GUILayout.Button(UiText.Get("Zamknij lobby"), buttonStyle))
-            {
-                StopHostAndLobby();
-            }
-#endif
-        }
-        else if (NetworkClient.isConnected)
-        {
-            if (GUILayout.Button(UiText.Get("Rozłącz"), buttonStyle))
-            {
-                StopClientAndLobby();
-            }
-        }
-        else if (NetworkServer.active)
-        {
-            if (GUILayout.Button(UiText.Get("Zatrzymaj serwer"), buttonStyle))
-            {
-                manager.StopServer();
-            }
-        }
     }
 }

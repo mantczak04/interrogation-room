@@ -1,0 +1,24 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Theme.uss" />
+    <ui:Style src="project://database/Assets/UI/NetworkMenu.uss" />
+
+    <ui:VisualElement name="network-root" class="network-root ui-font">
+        <ui:VisualElement name="network-scrim" class="network-scrim">
+            <ui:VisualElement name="network-sheet" class="network-sheet surface-paper">
+                <ui:Label name="network-kicker" class="network-kicker document-font" text="" />
+                <ui:Label name="network-title" class="network-title stamp-font" text="" />
+                <ui:VisualElement class="network-rule" />
+                <ui:Label name="network-description" class="network-description document-font" text="" />
+                <ui:VisualElement name="network-body" class="network-body" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="network-header" class="network-header surface-paper">
+            <ui:Label name="header-kicker" class="network-kicker document-font" text="" />
+            <ui:Label name="header-title" class="network-header-title stamp-font" text="" />
+            <ui:VisualElement name="header-actions" class="network-header-actions" />
+        </ui:VisualElement>
+
+        <ui:Label name="network-hint" class="network-hint document-font" text="" />
+    </ui:VisualElement>
+</ui:UXML>

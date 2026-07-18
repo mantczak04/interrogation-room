@@ -1,0 +1,147 @@
+/*
+ * Network and mode menu layout only. Colours, fonts and sizes come from
+ * Theme.uss.
+ *
+ * This screen replaced an IMGUI panel that drew itself in Unity's default
+ * Arial with five identical green slabs. It is the first thing a player sees
+ * on the host/join path, so it is built as the same case-file sheet the
+ * settings screen uses rather than as a debug overlay.
+ */
+
+.network-root {
+    flex-grow: 1;
+}
+
+.network-scrim {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: var(--scrim-heavy);
+    align-items: center;
+    justify-content: center;
+}
+
+.network-sheet {
+    width: 560px;
+    max-width: 92%;
+    padding: 40px 48px 36px 48px;
+    border-left-width: 6px;
+    border-left-color: var(--brass);
+}
+
+.network-kicker {
+    font-size: var(--type-micro);
+    color: var(--ink-faded);
+    letter-spacing: 3px;
+    margin-bottom: var(--space-2);
+}
+
+.network-title {
+    font-size: var(--type-subtitle);
+    color: var(--ink);
+    letter-spacing: 4px;
+    margin-bottom: var(--space-3);
+}
+
+.network-rule {
+    height: 1px;
+    background-color: var(--paper-shadow);
+    margin-bottom: var(--space-3);
+}
+
+.network-description {
+    font-size: var(--type-micro);
+    color: var(--ink-faded);
+    white-space: normal;
+    margin-bottom: var(--space-6);
+}
+
+.network-body {
+    flex-direction: column;
+}
+
+/*
+ * One action per row, and the row the player most likely wants is the only
+ * one with a filled background. The old panel gave five choices identical
+ * weight, which made the menu read as a list of switches rather than a
+ * decision.
+ */
+.network-action {
+    margin-bottom: var(--space-2);
+}
+
+.network-status {
+    font-size: var(--type-micro);
+    color: var(--ink);
+    white-space: normal;
+    margin-bottom: var(--space-3);
+}
+
+.network-join-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-2);
+}
+
+.network-join-row > .btn {
+    width: 150px;
+    margin-right: var(--space-2);
+}
+
+.network-address-field {
+    flex-grow: 1;
+    margin-right: var(--space-2);
+}
+
+.network-port-field {
+    width: 110px;
+}
+
+.network-divider {
+    height: 1px;
+    background-color: var(--paper-shadow);
+    margin-top: var(--space-4);
+    margin-bottom: var(--space-3);
+}
+
+/*
+ * The mode pages keep the game visible, so they get a small corner card
+ * instead of the full sheet.
+ */
+.network-header {
+    position: absolute;
+    left: 24px;
+    top: 24px;
+    width: 340px;
+    padding: 20px 24px 22px 24px;
+    border-left-width: 4px;
+    border-left-color: var(--brass);
+}
+
+.network-header-title {
+    font-size: var(--type-lead);
+    color: var(--ink);
+    letter-spacing: 3px;
+    margin-bottom: var(--space-3);
+}
+
+.network-header-actions {
+    flex-direction: column;
+}
+
+.network-header-actions > .btn {
+    margin-bottom: var(--space-2);
+}
+
+.network-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 16px;
+    font-size: var(--type-micro);
+    color: var(--graphite-300);
+    -unity-text-align: middle-center;
+    letter-spacing: 1px;
+}
