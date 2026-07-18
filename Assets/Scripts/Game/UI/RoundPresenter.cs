@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using InterrogationRoom.Domain;
 using InterrogationRoom.Networking;
+using InterrogationRoom.Settings;
 using Mirror;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -170,6 +171,7 @@ namespace InterrogationRoom.UI
         private bool _unlimitedRound;
         private bool _privatePanelExpanded = true;
         private RoundPhase? _lastRenderedPhase;
+        private readonly Dictionary<TextElement, string> _staticPolishText = new Dictionary<TextElement, string>();
 
         private void Reset()
         {
@@ -199,6 +201,8 @@ namespace InterrogationRoom.UI
 
             ConfigurePanelScaling(uiDocument.panelSettings);
             BindVisualTree();
+            CaptureStaticLocalizedText();
+            GameSettingsService.Current.Changed += OnLanguageChanged;
             _rejectionLabel.text = string.Empty;
             SetVisible(_rejectionLabel, false);
             coordinator.ViewReceived += OnViewReceived;
@@ -219,6 +223,7 @@ namespace InterrogationRoom.UI
 
         private void OnDisable()
         {
+            GameSettingsService.Current.Changed -= OnLanguageChanged;
             if (coordinator != null)
             {
                 coordinator.ViewReceived -= OnViewReceived;
@@ -338,7 +343,8 @@ namespace InterrogationRoom.UI
             float remainingSeconds,
             bool isHost,
             bool unlimitedTime = false,
-            float preparationRemainingSeconds = 0f)
+            float preparationRemainingSeconds = 0f,
+            UiLanguage language = UiLanguage.Polish)
         {
             if (view == null)
                 throw new ArgumentNullException(nameof(view));
@@ -356,14 +362,14 @@ namespace InterrogationRoom.UI
 
             return new RoundUiState(
                 view.Phase,
-                FormatRole(view.Role),
+                FormatRole(view.Role, language),
                 view.CrimeDescription,
                 alibiVisible,
-                alibiVisible ? FormatAlibi(view.Alibi) : null,
-                preparation ? FormatPreparationInstruction(view.Role) : null,
+                alibiVisible ? FormatAlibi(view.Alibi, language) : null,
+                preparation ? FormatPreparationInstruction(view.Role, language) : null,
                 preparation,
                 preparation && !view.IsReady,
-                preparation ? $"Gotowi: {view.ReadyPlayerCount}/{view.Players.Count}" : null,
+                preparation ? $"{UiText.Get("Gotowi", language)}: {view.ReadyPlayerCount}/{view.Players.Count}" : null,
                 preparation && preparationRemainingSeconds > 0f,
                 Mathf.Max(0f, preparationRemainingSeconds),
                 view.Phase == RoundPhase.Round,
@@ -402,7 +408,8 @@ namespace InterrogationRoom.UI
                 CalculatePreparationRemainingSeconds(
                     _preparationEndsAtNetworkTime,
                     NetworkTime.time,
-                    view.Phase)));
+                    view.Phase),
+                UiText.CurrentLanguage));
         }
 
         private void Render(RoundUiState state)
@@ -419,15 +426,15 @@ namespace InterrogationRoom.UI
             SetVisible(_resultPanel, state.ResultVisible);
             _roleLabel.text = state.RoleText;
             _crimeLabel.text = state.CrimeText;
-            _hudRoleLabel.text = $"Rola: {state.RoleText}";
-            _hudCrimeLabel.text = $"Przestępstwo: {state.CrimeText}";
+            _hudRoleLabel.text = $"{UiText.Get("Rola")}: {state.RoleText}";
+            _hudCrimeLabel.text = $"{UiText.Get("Przestępstwo")}: {state.CrimeText}";
             _alibiLabel.text = state.AlibiText ?? string.Empty;
             _preparationInstructionLabel.text = state.PreparationInstructionText ?? string.Empty;
             SetVisible(_alibiSection, state.AlibiVisible);
             SetVisible(_preparationInstructionLabel, !string.IsNullOrWhiteSpace(state.PreparationInstructionText));
             SetVisible(_readyButton, state.ReadyButtonVisible);
             _readyButton.SetEnabled(state.ReadyButtonEnabled);
-            _readyButton.text = state.ReadyButtonEnabled ? "Gotowy" : "GOTOWY";
+            _readyButton.text = UiText.Get(state.ReadyButtonEnabled ? "Gotowy" : "GOTOWY");
             _readyCountLabel.text = state.ReadyCountText ?? string.Empty;
             SetVisible(_readyCountLabel, state.ReadyButtonVisible);
             _preparationTimerLabel.text = FormatTimer(state.PreparationRemainingSeconds);
@@ -478,17 +485,17 @@ namespace InterrogationRoom.UI
             SetVisible(_secretObjectiveSummary, coordinator.IsLocalHost);
             _startButton.SetEnabled(canStart);
             _startButton.text = canStart
-                ? "Start Rundy"
-                : $"Start Rundy ({playerCount}/{RoundEngine.MinPlayers})";
-            _playerCountLabel.text = $"Gracze w lobby: {playerCount}/{RoundEngine.MaxPlayers}";
+                ? UiText.Get("Start Rundy")
+                : $"{UiText.Get("Start Rundy")} ({playerCount}/{RoundEngine.MinPlayers})";
+            _playerCountLabel.text = $"{UiText.Get("Gracze w lobby")}: {playerCount}/{RoundEngine.MaxPlayers}";
             _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
             bool secretObjectiveAvailable = playerCount >= 5;
             _secretObjectiveToggle.SetEnabled(coordinator.IsLocalHost && secretObjectiveAvailable);
             _secretObjectiveSummary.text = secretObjectiveAvailable
                 ? coordinator.HostAllowsSecretObjective
-                    ? "Sekretny Cel będzie użyty w tej Rundzie."
-                    : "Sekretny Cel jest wyłączony przez hosta."
-                : "Sekretny Cel jest dostępny od 5 graczy.";
+                    ? UiText.Get("Sekretny Cel będzie użyty w tej Rundzie.")
+                    : UiText.Get("Sekretny Cel jest wyłączony przez hosta.")
+                : UiText.Get("Sekretny Cel jest dostępny od 5 graczy.");
 
             if (_lobbyMenuVisible || connected)
                 SetCursorFor(RoundPhase.Lobby, false);
@@ -532,6 +539,32 @@ namespace InterrogationRoom.UI
             _secretObjectiveToggle = Required<Toggle>(root, "secret-objective-toggle");
             _secretObjectiveSummary = Required<Label>(root, "secret-objective-summary");
             _returnToLobbyButton = Required<Button>(root, "return-to-lobby-button");
+        }
+
+        private void CaptureStaticLocalizedText()
+        {
+            _staticPolishText.Clear();
+            foreach (TextElement element in _root.Query<TextElement>().ToList())
+            {
+                if (!string.IsNullOrWhiteSpace(element.text))
+                    _staticPolishText[element] = element.text;
+            }
+            ApplyStaticLocalizedText();
+        }
+
+        private void ApplyStaticLocalizedText()
+        {
+            foreach (KeyValuePair<TextElement, string> entry in _staticPolishText)
+                entry.Key.text = UiText.Get(entry.Value);
+        }
+
+        private void OnLanguageChanged()
+        {
+            ApplyStaticLocalizedText();
+            if (_view != null)
+                OnViewReceived(_view, _roundEndsAtNetworkTime);
+            else
+                RenderLobby();
         }
 
         private void OnStartClicked() => coordinator.RequestStartRound();
@@ -581,8 +614,8 @@ namespace InterrogationRoom.UI
             _privatePanel.EnableInClassList("private-card--collapsed", !_privatePanelExpanded);
             bool registry = _privatePanel.ClassListContains("private-card--registry");
             _privateToggleButton.text = _privatePanelExpanded
-                ? "Zwiń [I]"
-                : registry ? "Rejestr [I]" : "Cel [I]";
+                ? UiText.Get("Zwiń [I]")
+                : registry ? UiText.Get("Rejestr [I]") : UiText.Get("Cel [I]");
         }
 
         private void OnReturnToLobbyClicked() => coordinator.RequestReturnToLobby();
@@ -600,31 +633,33 @@ namespace InterrogationRoom.UI
 
         private void OnIntentRejected(string reason)
         {
-            _rejectionLabel.text = string.IsNullOrWhiteSpace(reason) ? "Intencja została odrzucona." : reason;
+            _rejectionLabel.text = string.IsNullOrWhiteSpace(reason) ? UiText.Get("Intencja została odrzucona.") : reason;
             SetVisible(_rejectionLabel, true);
         }
 
-        private static string FormatAlibi(AlibiView alibi)
+        private static string FormatAlibi(AlibiView alibi, UiLanguage language)
         {
             var builder = new StringBuilder();
             for (int index = 0; index < alibi.Entries.Count; index++)
             {
                 AlibiEntry entry = alibi.Entries[index];
                 builder.AppendLine(entry.IsHidden
-                    ? $"{index + 1}. [Brak w Twojej wersji Alibi]"
+                    ? $"{index + 1}. [{UiText.Get("Brak w Twojej wersji Alibi", language)}]"
                     : $"{index + 1}. {entry.Text}");
             }
             return builder.ToString().TrimEnd();
         }
 
-        private static string FormatPreparationInstruction(RoundRole role)
+        private static string FormatPreparationInstruction(RoundRole role, UiLanguage language)
         {
             if (role != RoundRole.Detective)
-                return "Zapamiętaj swoją wersję Alibi. Po Przygotowaniu nie będzie można jej ponownie otworzyć.";
+                return UiText.Get("Zapamiętaj swoją wersję Alibi. Po Przygotowaniu nie będzie można jej ponownie otworzyć.", language);
 
-            return "1. Przesłuchaj każdego Podejrzanego.\n" +
-                   "2. Porównuj zeznania z tym, co widzisz, oraz z Rejestrem Incydentów.\n" +
-                   "3. Masz jedną Egzekucję — pierwsze trafienie żywego Podejrzanego kończy Rundę.";
+            return UiText.Get(
+                "1. Przesłuchaj każdego Podejrzanego.\n" +
+                "2. Porównuj zeznania z tym, co widzisz, oraz z Rejestrem Incydentów.\n" +
+                "3. Masz jedną Egzekucję — pierwsze trafienie żywego Podejrzanego kończy Rundę.",
+                language);
         }
 
         private static void BuildPrivatePanel(
@@ -864,13 +899,13 @@ namespace InterrogationRoom.UI
             }
         }
 
-        private static string FormatRole(RoundRole role)
+        private static string FormatRole(RoundRole role, UiLanguage language = UiLanguage.Polish)
         {
             switch (role)
             {
-                case RoundRole.Detective: return "Detektyw";
-                case RoundRole.Guilty: return "Winny";
-                default: return "Niewinny";
+                case RoundRole.Detective: return UiText.Get("Detektyw", language);
+                case RoundRole.Guilty: return UiText.Get("Winny", language);
+                default: return UiText.Get("Niewinny", language);
             }
         }
 

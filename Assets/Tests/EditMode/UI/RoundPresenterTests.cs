@@ -1,4 +1,5 @@
 using InterrogationRoom.Domain;
+using InterrogationRoom.Settings;
 using NUnit.Framework;
 
 namespace InterrogationRoom.UI.Tests
@@ -173,6 +174,29 @@ namespace InterrogationRoom.UI.Tests
             bool expected)
         {
             Assert.That(RoundPresenter.IsUnlimitedRound(phase, deadline), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void BuildState_EnglishPreparation_LocalizesUiButPreservesAuthoredCrimeAndAlibi()
+        {
+            var alibi = new AlibiView(new[]
+            {
+                new AlibiEntry("f1", false, "Fabularny fakt pozostaje bez zmian."),
+                new AlibiEntry("f2", true, null)
+            });
+
+            RoundUiState state = RoundPresenter.BuildState(
+                View(RoundPhase.Preparation, RoundRole.Guilty, alibi),
+                remainingSeconds: 0f,
+                isHost: false,
+                language: UiLanguage.English);
+
+            Assert.That(state.RoleText, Is.EqualTo("Guilty"));
+            Assert.That(state.CrimeText, Is.EqualTo("Ktoś przemalował pomnik."));
+            Assert.That(state.AlibiText, Does.Contain("Fabularny fakt pozostaje bez zmian."));
+            Assert.That(state.AlibiText, Does.Contain("Missing from your version of the Alibi"));
+            Assert.That(state.PreparationInstructionText, Does.Contain("Memorize your version"));
+            Assert.That(state.ReadyCountText, Is.EqualTo("Ready: 0/4"));
         }
 
         [TestCase(60f, false)]

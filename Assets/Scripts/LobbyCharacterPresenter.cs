@@ -1,5 +1,6 @@
 using InterrogationRoom.Gameplay.Characters;
 using InterrogationRoom.Networking;
+using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -128,7 +129,7 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         }
 
         CharacterId selected = selectedCharacter ?? localPlayer.CharacterId;
-        characterNameLabel.text = CharacterSelectionCarousel.DisplayName(selected);
+        characterNameLabel.text = UiText.Get(CharacterSelectionCarousel.DisplayName(selected));
         EnsurePreviewRig();
 
         if (renderedCharacter == selected && previewModel != null)

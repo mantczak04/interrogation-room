@@ -347,7 +347,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             return;
         }
 
-        DrawInlineBackButton("SIEĆ / HOST");
+        DrawInlineBackButton(UiText.Get("SIEĆ / HOST"));
 
         if (!NetworkClient.isConnected && !NetworkServer.active)
         {
@@ -360,7 +360,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
         if (Application.isEditor && NetworkClient.isConnected && !NetworkClient.ready)
         {
-            if (GUILayout.Button("Client Ready", buttonStyle))
+            if (GUILayout.Button(UiText.Get("Klient gotowy"), buttonStyle))
             {
                 NetworkClient.Ready();
                 if (NetworkClient.localPlayer == null)
@@ -378,35 +378,35 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void DrawHomeMenu()
     {
-        GUILayout.Label("AKTA SYSTEMOWE • MENU", kickerStyle, GUILayout.Height(22f));
-        GUILayout.Label("WYBIERZ TRYB", titleStyle, GUILayout.Height(48f));
-        GUILayout.Label("Uruchom lobby, przejdź do Rundy albo otwórz narzędzia testowe.", homeDescriptionStyle, GUILayout.Height(38f));
+        GUILayout.Label(UiText.Get("AKTA SYSTEMOWE • MENU"), kickerStyle, GUILayout.Height(22f));
+        GUILayout.Label(UiText.Get("WYBIERZ TRYB"), titleStyle, GUILayout.Height(48f));
+        GUILayout.Label(UiText.Get("Uruchom lobby, przejdź do Rundy albo otwórz narzędzia testowe."), homeDescriptionStyle, GUILayout.Height(38f));
 
-        if (GUILayout.Button("SIEĆ / HOST", homeButtonStyle))
+        if (GUILayout.Button(UiText.Get("SIEĆ / HOST"), homeButtonStyle))
         {
             SetMenuVisible(true, MenuPage.Network);
         }
 
-        if (GUILayout.Button("ZWYKŁA RUNDA", homeButtonStyle))
+        if (GUILayout.Button(UiText.Get("ZWYKŁA RUNDA"), homeButtonStyle))
         {
             SetMenuVisible(true, MenuPage.NormalRound);
         }
 
         if (Application.isEditor)
         {
-            if (GUILayout.Button("TRYB DEVELOPERSKI", homeButtonStyle))
+            if (GUILayout.Button(UiText.Get("TRYB DEVELOPERSKI"), homeButtonStyle))
             {
                 OpenDeveloperMode();
             }
         }
 
-        if (GUILayout.Button("USTAWIENIA", homeButtonStyle))
+        if (GUILayout.Button(UiText.Get("USTAWIENIA"), homeButtonStyle))
         {
             SetMenuVisible(false, MenuPage.Home);
             settingsMenu?.Open();
         }
 
-        if (GUILayout.Button("ZAMKNIJ MENU", homeButtonStyle))
+        if (GUILayout.Button(UiText.Get("ZAMKNIJ MENU"), homeButtonStyle))
         {
             SetMenuVisible(false, MenuPage.Home);
         }
@@ -415,7 +415,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     void DrawInlineBackButton(string title)
     {
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("← Menu", buttonStyle, GUILayout.Width(150f)))
+        if (GUILayout.Button(UiText.Get("← Menu"), buttonStyle, GUILayout.Width(150f)))
         {
             SetMenuVisible(true, MenuPage.Home);
         }
@@ -441,17 +441,17 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     void DrawPageHeader(float screenWidth)
     {
-        string title = currentPage == MenuPage.NormalRound ? "ZWYKŁA RUNDA" : "TRYB DEVELOPERSKI";
+        string title = UiText.Get(currentPage == MenuPage.NormalRound ? "ZWYKŁA RUNDA" : "TRYB DEVELOPERSKI");
         float headerHeight = currentPage == MenuPage.Sandbox ? 280f : 150f;
         GUILayout.BeginArea(new Rect(12f, 12f, Mathf.Min(390f, screenWidth - 24f), headerHeight), panelStyle);
-        GUILayout.Label("AKTA TRYBU", kickerStyle);
+        GUILayout.Label(UiText.Get("AKTA TRYBU"), kickerStyle);
         GUILayout.Label(title, pageTitleStyle);
-        if (GUILayout.Button("← Menu", homeButtonStyle, GUILayout.Width(170f)))
+        if (GUILayout.Button(UiText.Get("← Menu"), homeButtonStyle, GUILayout.Width(170f)))
         {
             SetMenuVisible(true, MenuPage.Home);
         }
         if (currentPage == MenuPage.Sandbox
-            && GUILayout.Button("Graj z panelem", homeButtonStyle, GUILayout.Width(220f)))
+            && GUILayout.Button(UiText.Get("Graj z panelem"), homeButtonStyle, GUILayout.Width(220f)))
         {
             PinSandboxAndCloseMenu();
         }
@@ -574,20 +574,20 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         if (!NetworkClient.active)
         {
 #if UNITY_WEBGL
-            if (GUILayout.Button("Graj", buttonStyle))
+            if (GUILayout.Button(UiText.Get("Graj"), buttonStyle))
             {
                 NetworkServer.listen = false;
                 manager.StartHost();
             }
 #else
-            if (GUILayout.Button("Utwórz lobby", buttonStyle))
+            if (GUILayout.Button(UiText.Get("Utwórz lobby"), buttonStyle))
             {
                 manager.StartHost();
             }
 #endif
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Dołącz", buttonStyle, GUILayout.Width(panelWidth * 0.35f)))
+            if (GUILayout.Button(UiText.Get("Dołącz"), buttonStyle, GUILayout.Width(panelWidth * 0.35f)))
             {
                 manager.StartClient();
             }
@@ -605,7 +605,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             GUILayout.EndHorizontal();
 
 #if !UNITY_WEBGL
-            if (Application.isEditor && GUILayout.Button("Server Only", buttonStyle))
+            if (Application.isEditor && GUILayout.Button(UiText.Get("Tylko serwer"), buttonStyle))
             {
                 manager.StartServer();
             }
@@ -613,8 +613,8 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         }
         else
         {
-            GUILayout.Label("Łączenie…", labelStyle);
-            if (GUILayout.Button("Anuluj", buttonStyle))
+            GUILayout.Label(UiText.Get("Łączenie…"), labelStyle);
+            if (GUILayout.Button(UiText.Get("Anuluj"), buttonStyle))
             {
                 StopClientAndLobby();
             }
@@ -625,8 +625,8 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     {
         if (NetworkClient.active)
         {
-            GUILayout.Label("Łączenie przez Steam…", labelStyle);
-            if (GUILayout.Button("Anuluj", buttonStyle))
+            GUILayout.Label(UiText.Get("Łączenie przez Steam…"), labelStyle);
+            if (GUILayout.Button(UiText.Get("Anuluj"), buttonStyle))
             {
                 StopClientAndLobby();
             }
@@ -635,16 +635,16 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
         if (steamLobby.LobbyPending)
         {
-            GUILayout.Label("Tworzenie lobby Steam…", labelStyle);
+            GUILayout.Label(UiText.Get("Tworzenie lobby Steam…"), labelStyle);
             return;
         }
 
-        if (GUILayout.Button("Utwórz lobby dla znajomych", buttonStyle))
+        if (GUILayout.Button(UiText.Get("Utwórz lobby dla znajomych"), buttonStyle))
         {
             steamLobby.HostLobby();
         }
 
-        GUILayout.Label("Znajomi dołączają przez nakładkę Steam: Znajomi → Dołącz do gry", labelStyle);
+        GUILayout.Label(UiText.Get("Znajomi dołączają przez nakładkę Steam: Znajomi → Dołącz do gry"), labelStyle);
     }
 
     void StopClientAndLobby()
@@ -690,40 +690,40 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         {
             GUILayout.Label(Application.isEditor
                 ? $"<b>Host</b>: running via {Transport.active}"
-                : "Lobby działa — jesteś hostem.", labelStyle);
+                : UiText.Get("Lobby działa — jesteś hostem."), labelStyle);
         }
         else if (NetworkServer.active)
         {
             GUILayout.Label(Application.isEditor
                 ? $"<b>Server</b>: running via {Transport.active}"
-                : "Serwer działa.", labelStyle);
+                : UiText.Get("Serwer działa."), labelStyle);
         }
         else if (NetworkClient.isConnected)
         {
             GUILayout.Label(Application.isEditor
                 ? $"<b>Client</b>: connected to {manager.networkAddress} via {Transport.active}"
-                : "Połączono z lobby.", labelStyle);
+                : UiText.Get("Połączono z lobby."), labelStyle);
         }
 
         if (steamLobby != null && steamLobby.InLobby)
         {
             if (steamLobby.OverlayEnabled)
             {
-                if (GUILayout.Button("Zaproś znajomych", buttonStyle))
+                if (GUILayout.Button(UiText.Get("Zaproś znajomych"), buttonStyle))
                 {
                     steamLobby.OpenInviteDialog();
                 }
             }
             else
             {
-                GUILayout.Label("Nakładka Steam jest niedostępna — użyj zaproszenia poniżej.", labelStyle);
+                GUILayout.Label(UiText.Get("Nakładka Steam jest niedostępna — użyj zaproszenia poniżej."), labelStyle);
             }
 
             int friendCount = Mathf.Min(steamLobby.DirectInviteFriendCount, 2);
             for (int i = 0; i < friendCount; i++)
             {
                 string friendName = steamLobby.GetDirectInviteFriendName(i);
-                if (GUILayout.Button($"Zaproś: {friendName}", buttonStyle, GUILayout.Height(52f)))
+                if (GUILayout.Button($"{UiText.Get("Zaproś")}: {friendName}", buttonStyle, GUILayout.Height(52f)))
                 {
                     steamLobby.InviteDirectFriend(i);
                 }
@@ -731,7 +731,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
             if (friendCount == 0)
             {
-                GUILayout.Label("Brak znajomych Steam online.", labelStyle);
+                GUILayout.Label(UiText.Get("Brak znajomych Steam online."), labelStyle);
             }
         }
     }
@@ -741,12 +741,12 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         if (NetworkServer.active && NetworkClient.isConnected)
         {
 #if UNITY_WEBGL
-            if (GUILayout.Button("Opuść grę", buttonStyle))
+            if (GUILayout.Button(UiText.Get("Opuść grę"), buttonStyle))
             {
                 StopHostAndLobby();
             }
 #else
-            if (GUILayout.Button("Zamknij lobby", buttonStyle))
+            if (GUILayout.Button(UiText.Get("Zamknij lobby"), buttonStyle))
             {
                 StopHostAndLobby();
             }
@@ -754,14 +754,14 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         }
         else if (NetworkClient.isConnected)
         {
-            if (GUILayout.Button("Rozłącz", buttonStyle))
+            if (GUILayout.Button(UiText.Get("Rozłącz"), buttonStyle))
             {
                 StopClientAndLobby();
             }
         }
         else if (NetworkServer.active)
         {
-            if (GUILayout.Button("Zatrzymaj serwer", buttonStyle))
+            if (GUILayout.Button(UiText.Get("Zatrzymaj serwer"), buttonStyle))
             {
                 manager.StopServer();
             }

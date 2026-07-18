@@ -1,4 +1,5 @@
 using Mirror;
+using InterrogationRoom.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -94,7 +95,7 @@ namespace InterrogationRoom.Gameplay.Interaction
             var heldItem = interactor.HeldItem;
             bool showHeldItem = heldItem != null;
             if (showHeldItem)
-                heldItemLabel.text = $"■  {heldItemPrefix}: {heldItem.DisplayName}   {dropHint}";
+                heldItemLabel.text = $"■  {UiText.Get(heldItemPrefix)}: {UiText.Get(heldItem.DisplayName)}   {UiText.Get(dropHint)}";
             if (heldItemLabel.enabled != showHeldItem)
                 heldItemLabel.enabled = showHeldItem;
         }
@@ -106,19 +107,19 @@ namespace InterrogationRoom.Gameplay.Interaction
         {
             if (playerController != null && playerController.IsSeated)
             {
-                return standUpPrompt;
+                return UiText.Get(standUpPrompt);
             }
 
             if (timedInteractionActive)
             {
                 int progressPercent = Mathf.RoundToInt(interactor.TimedInteractionProgress01 * 100f);
-                return $"{interactor.ActiveTimedInteractionPrompt} {progressPercent}%";
+                return $"{UiText.Get(interactor.ActiveTimedInteractionPrompt)} {progressPercent}%";
             }
 
             if (feedbackVisible)
-                return interactor.InteractionFeedback;
+                return UiText.Get(interactor.InteractionFeedback);
 
-            return targeted ? interactor.HoveredPrompt : null;
+            return targeted ? UiText.Get(interactor.HoveredPrompt) : null;
         }
 
         private void BuildHud()

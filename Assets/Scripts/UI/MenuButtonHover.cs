@@ -22,10 +22,28 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     private static float lastHoverSoundTime = float.NegativeInfinity;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetRuntimeState()
+    {
+        lastHoverSoundTime = float.NegativeInfinity;
+    }
+
     private void Start()
     {
         if (buttonText == null) buttonText = GetComponent<TextMeshProUGUI>();
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
+
+        if (indicatorText != null)
+        {
+            indicatorText.raycastTarget = false;
+        }
+
+        if (audioSource != null)
+        {
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;
+            audioSource.volume = 1f;
+        }
         
         SetNormalState();
     }
@@ -42,9 +60,12 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
         }
 
         float realtimeNow = Time.realtimeSinceStartup;
+        float minimumInterval = hoverSound != null
+            ? Mathf.Max(hoverSoundCooldown, hoverSound.length)
+            : hoverSoundCooldown;
         if (hoverSound != null &&
             audioSource != null &&
-            realtimeNow >= lastHoverSoundTime + hoverSoundCooldown)
+            realtimeNow >= lastHoverSoundTime + minimumInterval)
         {
             audioSource.PlayOneShot(hoverSound, hoverVolume);
             lastHoverSoundTime = realtimeNow;

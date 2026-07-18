@@ -36,6 +36,41 @@ namespace InterrogationRoom.UI.Tests
         }
 
         [Test]
+        public void Language_WithoutStoredValue_DefaultsToPolish()
+        {
+            Assert.That(settings.Language, Is.EqualTo(UiLanguage.Polish));
+        }
+
+        [Test]
+        public void SetLanguage_PersistsAndRaisesChanged()
+        {
+            int raised = 0;
+            settings.Changed += () => raised++;
+
+            settings.SetLanguage(UiLanguage.English);
+
+            Assert.That(store.Values[GameSettings.LanguageKey], Is.EqualTo(1f));
+            Assert.That(settings.Language, Is.EqualTo(UiLanguage.English));
+            Assert.That(store.SaveCount, Is.EqualTo(1));
+            Assert.That(raised, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Language_InvalidStoredValue_FallsBackToPolish()
+        {
+            store.Values[GameSettings.LanguageKey] = 99f;
+
+            Assert.That(settings.Language, Is.EqualTo(UiLanguage.Polish));
+        }
+
+        [Test]
+        public void UiText_LocalizesInBothDirections()
+        {
+            Assert.That(UiText.Get("Ustawienia", UiLanguage.English), Is.EqualTo("Settings"));
+            Assert.That(UiText.Get("Open door", UiLanguage.Polish), Is.EqualTo("Otwórz drzwi"));
+        }
+
+        [Test]
         public void MouseSensitivity_WithoutStoredValue_UsesConfiguredFallback()
         {
             settings.SetMouseSensitivityFallback(3.5f);

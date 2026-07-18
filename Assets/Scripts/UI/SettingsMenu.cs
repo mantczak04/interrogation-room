@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using InterrogationRoom.Settings;
+using InterrogationRoom.UI;
 using UnityEngine;
 using UnityEngine.UI;
 #if ENABLE_INPUT_SYSTEM
@@ -34,8 +35,16 @@ public sealed class SettingsMenu : MonoBehaviour
     private Font font;
     private Slider sensitivitySlider;
     private Text sensitivityValueLabel;
+    private Text kickerLabel;
+    private Text titleLabel;
     private Text contextHintLabel;
+    private Text sensitivityCaptionLabel;
+    private Text languageCaptionLabel;
+    private Text polishButtonLabel;
+    private Text englishButtonLabel;
+    private Text voiceHintLabel;
     private Text backButtonLabel;
+    private Text leaveButtonLabel;
     private Button leaveButton;
     private GameObject leaveDivider;
     private Action onOpened;
@@ -102,10 +111,12 @@ public sealed class SettingsMenu : MonoBehaviour
         instance = this;
         font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         BuildMenu();
+        GameSettingsService.Current.Changed += OnSettingsChanged;
     }
 
     private void OnDestroy()
     {
+        GameSettingsService.Current.Changed -= OnSettingsChanged;
         if (instance == this)
         {
             instance = null;
@@ -149,15 +160,43 @@ public sealed class SettingsMenu : MonoBehaviour
 
         if (contextHintLabel != null)
         {
-            contextHintLabel.text = leaveGame != null
+            contextHintLabel.text = UiText.Get(leaveGame != null
                 ? "Runda trwa — zmiany ustawień działają natychmiast."
-                : "Zmiany ustawień działają natychmiast.";
+                : "Zmiany ustawień działają natychmiast.");
         }
 
         if (backButtonLabel != null)
         {
-            backButtonLabel.text = leaveGame != null ? "Wróć do gry" : "Wróć do menu";
+            backButtonLabel.text = UiText.Get(leaveGame != null ? "Wróć do gry" : "Wróć do menu");
         }
+    }
+
+    private void OnSettingsChanged()
+    {
+        RefreshLocalizedText();
+    }
+
+    private void SetLanguage(UiLanguage language)
+    {
+        GameSettingsService.Current.SetLanguage(language);
+        RefreshLocalizedText();
+    }
+
+    private void RefreshLocalizedText()
+    {
+        if (kickerLabel == null)
+            return;
+
+        kickerLabel.text = UiText.Get("KARTA USTAWIEŃ • 01");
+        titleLabel.text = UiText.Get("USTAWIENIA");
+        sensitivityCaptionLabel.text = UiText.Get("Czułość myszy");
+        languageCaptionLabel.text = UiText.Get("Język");
+        UiLanguage language = GameSettingsService.Current.Language;
+        polishButtonLabel.text = $"{(language == UiLanguage.Polish ? "● " : string.Empty)}{UiText.Get("Polski")}";
+        englishButtonLabel.text = $"{(language == UiLanguage.English ? "● " : string.Empty)}{UiText.Get("Angielski")}";
+        voiceHintLabel.text = UiText.Get("V — wycisz / włącz mikrofon");
+        leaveButtonLabel.text = UiText.Get("Opuść Rundę");
+        RefreshSectionVisibility();
     }
 
     private void OnSensitivityChanged(float value)
@@ -225,8 +264,8 @@ public sealed class SettingsMenu : MonoBehaviour
         ContentSizeFitter fitter = panel.gameObject.AddComponent<ContentSizeFitter>();
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-        CreateLabel(panel.transform, "Kicker", "KARTA USTAWIEŃ • 01", 16, AccentGreenDark, TextAnchor.MiddleLeft, FontStyle.Bold);
-        CreateLabel(panel.transform, "Title", "USTAWIENIA", 44, InkColor, TextAnchor.MiddleLeft, FontStyle.Bold);
+        kickerLabel = CreateLabel(panel.transform, "Kicker", "KARTA USTAWIEŃ • 01", 16, AccentGreenDark, TextAnchor.MiddleLeft, FontStyle.Bold);
+        titleLabel = CreateLabel(panel.transform, "Title", "USTAWIENIA", 44, InkColor, TextAnchor.MiddleLeft, FontStyle.Bold);
         CreateDivider(panel.transform, "TitleAccent", AccentGreen, 3f);
 
         contextHintLabel = CreateLabel(
@@ -245,9 +284,9 @@ public sealed class SettingsMenu : MonoBehaviour
         rowLayout.childForceExpandWidth = false;
         rowLayout.childForceExpandHeight = false;
         rowLayout.spacing = 8f;
-        Text sensitivityCaption = CreateLabel(
+        sensitivityCaptionLabel = CreateLabel(
             sensitivityRow.transform, "Caption", "Czułość myszy", 21, InkColor, TextAnchor.MiddleLeft);
-        sensitivityCaption.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+        sensitivityCaptionLabel.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
         sensitivityValueLabel = CreateLabel(
             sensitivityRow.transform, "Value", "0.0", 21, AccentGreenDark, TextAnchor.MiddleRight, FontStyle.Bold);
         sensitivityValueLabel.gameObject.AddComponent<LayoutElement>().preferredWidth = 64f;
@@ -255,7 +294,29 @@ public sealed class SettingsMenu : MonoBehaviour
         sensitivitySlider = BuildSensitivitySlider(panel.transform);
         sensitivitySlider.onValueChanged.AddListener(OnSensitivityChanged);
 
-        CreateLabel(
+        var languageRow = new GameObject("LanguageRow", typeof(RectTransform));
+        languageRow.transform.SetParent(panel.transform, false);
+        HorizontalLayoutGroup languageLayout = languageRow.AddComponent<HorizontalLayoutGroup>();
+        languageLayout.childControlWidth = true;
+        languageLayout.childControlHeight = true;
+        languageLayout.childForceExpandWidth = false;
+        languageLayout.childForceExpandHeight = false;
+        languageLayout.spacing = 10f;
+        languageCaptionLabel = CreateLabel(
+            languageRow.transform, "Caption", "Język", 21, InkColor, TextAnchor.MiddleLeft);
+        languageCaptionLabel.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+        Button polishButton = CreateButton(
+            languageRow.transform, "PolishButton", "Polski", ButtonPaperColor, InkColor,
+            () => SetLanguage(UiLanguage.Polish), 46f);
+        polishButton.gameObject.GetComponent<LayoutElement>().preferredWidth = 150f;
+        polishButtonLabel = polishButton.GetComponentInChildren<Text>();
+        Button englishButton = CreateButton(
+            languageRow.transform, "EnglishButton", "Angielski", ButtonPaperColor, InkColor,
+            () => SetLanguage(UiLanguage.English), 46f);
+        englishButton.gameObject.GetComponent<LayoutElement>().preferredWidth = 150f;
+        englishButtonLabel = englishButton.GetComponentInChildren<Text>();
+
+        voiceHintLabel = CreateLabel(
             panel.transform,
             "VoiceHint",
             "V — wycisz / włącz mikrofon",
@@ -273,7 +334,9 @@ public sealed class SettingsMenu : MonoBehaviour
         leaveDivider = CreateDivider(panel.transform, "LeaveDivider", TrackColor, 1f);
         leaveButton = CreateButton(
             panel.transform, "LeaveButton", "Opuść Rundę", DestructiveRedColor, LightTextColor, OnLeaveClicked, 56f);
+        leaveButtonLabel = leaveButton.GetComponentInChildren<Text>();
 
+        RefreshLocalizedText();
         RefreshSectionVisibility();
     }
 

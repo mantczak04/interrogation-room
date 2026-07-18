@@ -1,4 +1,6 @@
 using InterrogationRoom.UI;
+using InterrogationRoom.Settings;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 #if ENABLE_INPUT_SYSTEM
@@ -15,7 +17,41 @@ public class MainMenuManager : MonoBehaviour
     private void Start()
     {
         PlayerInputGate.SetUiInputBlocked(true);
+        RefreshLocalizedText();
         TryOpenPendingSteamLobby();
+    }
+
+    private void OnEnable()
+    {
+        GameSettingsService.Current.Changed += RefreshLocalizedText;
+    }
+
+    private void OnDisable()
+    {
+        GameSettingsService.Current.Changed -= RefreshLocalizedText;
+    }
+
+    private void RefreshLocalizedText()
+    {
+        foreach (TextMeshProUGUI label in FindObjectsByType<TextMeshProUGUI>(
+                     FindObjectsInactive.Include,
+                     FindObjectsSortMode.None))
+        {
+            if (label.gameObject.name != "Text")
+                continue;
+
+            string polish = label.transform.parent != null ? label.transform.parent.name switch
+            {
+                "Button_Host Game" => "Gospodarz gry",
+                "Button_Join Server" => "Dołącz do serwera",
+                "Button_Settings" => "Ustawienia",
+                "Button_Quit" => "Wyjdź",
+                _ => null
+            } : null;
+
+            if (polish != null)
+                label.text = UiText.Get(polish);
+        }
     }
 
     private void Update()

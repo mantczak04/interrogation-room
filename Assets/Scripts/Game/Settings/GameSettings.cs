@@ -10,6 +10,7 @@ namespace InterrogationRoom.Settings
     public sealed class GameSettings
     {
         public const string MouseSensitivityKey = "settings.mouseSensitivity";
+        public const string LanguageKey = "settings.language";
         public const float DefaultMouseSensitivity = 2f;
         public const float MinMouseSensitivity = 0.2f;
         public const float MaxMouseSensitivity = 8f;
@@ -29,6 +30,11 @@ namespace InterrogationRoom.Settings
                 ? ClampMouseSensitivity(stored)
                 : fallbackMouseSensitivity;
 
+        public UiLanguage Language =>
+            store.TryGetFloat(LanguageKey, out float stored)
+                ? UiLanguageUtility.FromStoredValue(stored)
+                : UiLanguage.Polish;
+
         public void SetMouseSensitivityFallback(float value)
         {
             fallbackMouseSensitivity = ClampMouseSensitivity(value);
@@ -44,6 +50,20 @@ namespace InterrogationRoom.Settings
             }
 
             store.SetFloat(MouseSensitivityKey, clamped);
+            store.Save();
+            Changed?.Invoke();
+        }
+
+        public void SetLanguage(UiLanguage language)
+        {
+            UiLanguage normalized = UiLanguageUtility.Normalize(language);
+            if (store.TryGetFloat(LanguageKey, out float stored) &&
+                UiLanguageUtility.FromStoredValue(stored) == normalized)
+            {
+                return;
+            }
+
+            store.SetFloat(LanguageKey, (float)normalized);
             store.Save();
             Changed?.Invoke();
         }
