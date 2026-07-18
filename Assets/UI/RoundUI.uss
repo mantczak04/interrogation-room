@@ -27,6 +27,12 @@
     background-color: rgba(5, 7, 10, 0.68);
 }
 
+/*
+ * The panels are centred and sized to their content rather than stretched to
+ * the full height. Stretching left the controls floating in a tall empty box
+ * with the key art hidden behind it; hugging the content lets the room show
+ * around the edges, which is what the main menu does.
+ */
 .lobby-layout {
     position: absolute;
     left: 8%;
@@ -34,7 +40,8 @@
     top: 7%;
     bottom: 6%;
     flex-direction: row;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
 }
 
 .dossier {
@@ -52,9 +59,9 @@
 
 .lobby-controls {
     width: 42%;
+    max-width: 560px;
     min-width: 430px;
-    padding: 32px;
-    justify-content: center;
+    padding: 36px 40px 40px 40px;
 }
 
 .lobby-title {
@@ -111,71 +118,29 @@
     border-radius: 2px;
 }
 
-.button,
-.panel-toggle {
-    border-radius: 2px;
-    border-left-width: 1px;
-    border-right-width: 1px;
-    border-top-width: 1px;
-    border-bottom-width: 1px;
-    color: var(--text-hi);
-    transition-property: background-color, border-color, color;
-    transition-duration: 0.1s;
-    transition-timing-function: ease-out;
-}
+/* Buttons come from Theme.uss (.btn and its modifiers). Only layout lives here. */
 
-.button {
-    height: 44px;
-    padding-left: 24px;
-    padding-right: 24px;
-    font-size: 15px;
-    letter-spacing: 1px;
+.lobby-action {
+    height: 46px;
     margin-top: 12px;
 }
 
-.button-primary {
-    background-color: var(--green);
-    border-left-color: var(--green-hover);
-    border-right-color: var(--green-hover);
-    border-top-color: var(--green-hover);
-    border-bottom-color: var(--green-hover);
+/*
+ * Start is the one action on the screen, so it stays the widest and tallest
+ * element — but while the lobby is short of players it is an unavailable
+ * action, not a dead grey slab. Outline only, so the eye reads "not yet"
+ * rather than "broken".
+ */
+.lobby-start {
+    height: 54px;
 }
 
-.button-primary:hover { background-color: var(--green-hover); }
-.button-primary:active { background-color: var(--green-active); }
-
-.button-secondary,
-.panel-toggle {
-    background-color: var(--graphite-700);
-    border-left-color: var(--graphite-500);
-    border-right-color: var(--graphite-500);
-    border-top-color: var(--graphite-500);
-    border-bottom-color: var(--graphite-500);
-}
-
-.button-secondary:hover,
-.panel-toggle:hover { background-color: var(--graphite-500); }
-
-.button:focus,
-.panel-toggle:focus {
-    border-left-width: 2px;
-    border-right-width: 2px;
-    border-top-width: 2px;
-    border-bottom-width: 2px;
-    border-left-color: var(--amber);
-    border-right-color: var(--amber);
-    border-top-color: var(--amber);
-    border-bottom-color: var(--amber);
-}
-
-.button:disabled {
-    background-color: var(--graphite-700);
+.lobby-start:disabled {
+    background-color: rgba(0, 0, 0, 0);
     color: var(--graphite-300);
-    border-left-color: var(--graphite-500);
-    border-right-color: var(--graphite-500);
-    border-top-color: var(--graphite-500);
-    border-bottom-color: var(--graphite-500);
-    opacity: 0.6;
+    border-width: 1px;
+    border-color: var(--graphite-500);
+    opacity: 1;
 }
 
 .character-arrow {
@@ -185,8 +150,13 @@
     border-width: 0;
     border-radius: 0;
     background-color: rgba(0, 0, 0, 0);
-    color: var(--brass);
-    font-size: 34px;
+    /*
+     * The guillemet occupies about a quarter of its em box, so it needs a much
+     * larger size than a letter to carry the same weight — at 34px in brass it
+     * read as a tick mark rather than a control you can press.
+     */
+    color: var(--text-hi);
+    font-size: 46px;
     -unity-text-align: middle-center;
     transition-property: color, background-color;
     transition-duration: 0.08s;
@@ -227,10 +197,10 @@
     margin-top: 4px;
 }
 
-.lobby-start { height: 52px; }
-
 .preview-column {
     flex-grow: 1;
+    max-width: 720px;
+    height: 82%;
     align-items: center;
     justify-content: flex-end;
     margin-left: 4%;
@@ -253,7 +223,7 @@
 .character-preview {
     width: 100%;
     height: 86%;
-    background-color: rgb(22, 27, 30);
+    background-color: rgba(0, 0, 0, 0);
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -452,7 +422,6 @@
     border-radius: 0;
     font-size: 18px;
     letter-spacing: 3px;
-    -unity-font-style: bold;
 }
 
 .ready-button:hover {
@@ -584,9 +553,10 @@
     width: 88px;
     height: 32px;
     margin-left: 12px;
-    padding-left: 8px;
-    padding-right: 8px;
-    font-size: 12px;
+    /* .btn pads for a full-size action; this one has to fit a card header. */
+    padding: 0 8px;
+    font-size: var(--type-micro);
+    letter-spacing: 1px;
 }
 
 .private-content {

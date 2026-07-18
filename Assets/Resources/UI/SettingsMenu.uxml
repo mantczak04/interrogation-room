@@ -23,7 +23,7 @@
 
             <ui:Label name="voice-hint" class="settings-hint" text="" />
 
-            <ui:Button name="back-button" class="btn settings-action" text="Wróć do menu" />
+            <ui:Button name="back-button" class="btn btn--ink settings-action" text="Wróć do menu" />
 
             <ui:VisualElement name="leave-divider" class="settings-divider" />
             <ui:Button name="leave-button" class="btn btn--destructive settings-action" text="Opuść Rundę" />

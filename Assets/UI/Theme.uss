@@ -34,6 +34,12 @@
     --green-hover: rgb(78, 110, 91);
     --green-active: rgb(51, 71, 60);
     --red: rgb(194, 46, 40);
+    /*
+     * The bright red is a warning light in a dark room — right for a timer
+     * running out, wrong for a button printed on paper, where it reads as a web
+     * control. Destructive actions on paper use the stamp red instead.
+     */
+    --red-deep: rgb(146, 41, 35);
     --amber: rgb(224, 181, 104);
     --amber-dim: rgb(177, 143, 85);
     --brass: rgb(128, 105, 72);
@@ -160,7 +166,28 @@
 }
 
 .btn--destructive {
+    background-color: var(--red-deep);
+}
+
+.btn--destructive:hover {
     background-color: var(--red);
+}
+
+/*
+ * The primary action on a paper sheet. Saturated green on paper reads as a
+ * web button; ink on paper reads as part of the document.
+ */
+.btn--ink {
+    background-color: var(--ink);
+    color: var(--paper-bright);
+}
+
+.btn--ink:hover {
+    background-color: var(--ink-faded);
+}
+
+.btn--ink:active {
+    background-color: var(--paper-shadow);
 }
 
 /* For buttons sitting on a paper surface rather than on the dark room. */
@@ -221,6 +248,56 @@
 .menu-entry:disabled {
     color: var(--graphite-500);
     opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * Toggles
+ *
+ * Unity's default checkbox ships a grey bevelled box that belongs to the
+ * Editor, not to a case file. The tick image is dropped and the state is drawn
+ * as a brass frame that fills with amber — the same two colours the rest of the
+ * dark surfaces use for "inactive" and "lit".
+ * ------------------------------------------------------------------------ */
+
+.unity-toggle {
+    margin: 0;
+}
+
+/*
+ * Unity's field input carries flex-basis: 0 alongside flex-grow: 1. Setting
+ * only flex-grow: 0 collapses it to zero width and the checkmark vanishes, so
+ * the basis has to come back to auto in the same rule.
+ */
+.unity-toggle > .unity-toggle__input {
+    flex-grow: 0;
+    flex-basis: auto;
+}
+
+.unity-toggle .unity-toggle__checkmark {
+    background-image: none;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-left: var(--space-3);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 1px;
+    border-color: var(--brass);
+    border-radius: 2px;
+    transition-property: background-color, border-color;
+    transition-duration: 0.08s;
+}
+
+.unity-toggle:hover .unity-toggle__checkmark {
+    border-color: var(--amber);
+}
+
+.unity-toggle:checked .unity-toggle__checkmark {
+    background-color: var(--amber);
+    border-color: var(--amber);
+}
+
+.unity-toggle:disabled {
+    opacity: 0.5;
 }
 
 /* ---------------------------------------------------------------------------

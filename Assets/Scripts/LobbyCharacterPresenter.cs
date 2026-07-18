@@ -164,7 +164,9 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         cameraObject.transform.SetParent(previewRoot.transform, false);
         previewCamera = cameraObject.AddComponent<Camera>();
         previewCamera.clearFlags = CameraClearFlags.SolidColor;
-        previewCamera.backgroundColor = new Color32(0x16, 0x1B, 0x1E, 0xFF);
+        // Transparent, so the character stands on the dossier itself rather than
+        // inside a grey rectangle whose edges do not line up with anything.
+        previewCamera.backgroundColor = new Color(0f, 0f, 0f, 0f);
         previewCamera.cullingMask = 1 << PreviewLayer;
         previewCamera.fieldOfView = 27f;
         previewCamera.nearClipPlane = 0.05f;

@@ -17,8 +17,8 @@
                     </ui:VisualElement>
                     <ui:Toggle name="secret-objective-toggle" label="Włącz Sekretny Cel" value="true" class="lobby-toggle" />
                     <ui:Label name="secret-objective-summary" text="Sekretny Cel jest dostępny od 5 graczy." class="lobby-toggle-summary" />
-                    <ui:Button name="invite-button" text="Zaproś znajomych" class="button button-secondary" />
-                    <ui:Button name="start-button" text="Start Rundy" class="button button-primary lobby-start" />
+                    <ui:Button name="invite-button" text="Zaproś znajomych" class="btn btn--quiet lobby-action" />
+                    <ui:Button name="start-button" text="Start Rundy" class="btn lobby-action lobby-start" />
                     <ui:Label text="Rundę można rozpocząć dla 3–6 graczy." class="lobby-help" />
                 </ui:VisualElement>
                 <ui:VisualElement class="preview-column">
@@ -51,7 +51,7 @@
                 </ui:ScrollView>
                 <ui:VisualElement class="preparation-footer">
                     <ui:Label name="ready-count-label" class="ready-count" />
-                    <ui:Button name="ready-button" text="Gotowy" class="button button-primary ready-button stamp-font" />
+                    <ui:Button name="ready-button" text="Gotowy" class="btn ready-button" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
@@ -65,7 +65,7 @@
             <ui:VisualElement name="private-panel" class="hud-card private-card">
                 <ui:VisualElement class="private-header">
                     <ui:Label name="private-title-label" class="private-title stamp-font" />
-                    <ui:Button name="private-toggle-button" text="Zwiń [I]" class="panel-toggle" />
+                    <ui:Button name="private-toggle-button" text="Zwiń [I]" class="btn btn--quiet panel-toggle" />
                 </ui:VisualElement>
                 <ui:ScrollView name="private-content" class="private-content">
                     <ui:Label name="private-motive-label" class="private-motive" />
@@ -87,7 +87,7 @@
                 <ui:ScrollView name="result-scroll" class="result-scroll">
                     <ui:Label name="result-label" class="result document-font" />
                 </ui:ScrollView>
-                <ui:Button name="return-to-lobby-button" text="Wróć do lobby" class="button button-primary result-action" />
+                <ui:Button name="return-to-lobby-button" text="Wróć do lobby" class="btn result-action" />
             </ui:VisualElement>
         </ui:VisualElement>
 
