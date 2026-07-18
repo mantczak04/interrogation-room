@@ -1,0 +1,32 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Theme.uss" />
+    <ui:Style src="project://database/Assets/UI/SettingsMenu.uss" />
+
+    <ui:VisualElement name="settings-scrim" class="settings-scrim ui-font">
+        <ui:VisualElement name="settings-sheet" class="settings-sheet surface-paper document-font">
+            <ui:Label name="kicker" class="settings-kicker" text="KARTA USTAWIEŃ • 01" />
+            <ui:Label name="title" class="settings-title stamp-font" text="USTAWIENIA" />
+            <ui:VisualElement class="settings-rule" />
+            <ui:Label name="context-hint" class="settings-hint" text="" />
+
+            <ui:VisualElement class="settings-row">
+                <ui:Label name="sensitivity-caption" class="settings-caption" text="Czułość myszy" />
+                <ui:Label name="sensitivity-value" class="settings-value" text="1.0" />
+            </ui:VisualElement>
+            <ui:Slider name="sensitivity-slider" class="settings-slider" low-value="0.1" high-value="5" />
+
+            <ui:Label name="language-caption" class="settings-caption" text="Język" />
+            <ui:VisualElement class="settings-language-row">
+                <ui:Button name="polish-button" class="btn btn--paper" text="Polski" />
+                <ui:Button name="english-button" class="btn btn--paper" text="Angielski" />
+            </ui:VisualElement>
+
+            <ui:Label name="voice-hint" class="settings-hint" text="" />
+
+            <ui:Button name="back-button" class="btn settings-action" text="Wróć do menu" />
+
+            <ui:VisualElement name="leave-divider" class="settings-divider" />
+            <ui:Button name="leave-button" class="btn btn--destructive settings-action" text="Opuść Rundę" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

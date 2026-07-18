@@ -163,6 +163,21 @@
     background-color: var(--red);
 }
 
+/* For buttons sitting on a paper surface rather than on the dark room. */
+.btn--paper {
+    background-color: var(--paper-dark);
+    color: var(--ink);
+}
+
+.btn--paper:hover {
+    background-color: var(--paper-bright);
+}
+
+.btn--paper:active {
+    background-color: var(--paper-shadow);
+    color: var(--paper-bright);
+}
+
 .btn--quiet {
     background-color: rgba(0, 0, 0, 0);
     color: var(--graphite-300);

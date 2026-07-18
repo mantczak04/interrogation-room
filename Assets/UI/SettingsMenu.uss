@@ -1,0 +1,122 @@
+/*
+ * Settings screen layout only. Colours, fonts and sizes come from Theme.uss.
+ *
+ * The screen is a single sheet of paper laid on the darkened game view, so it
+ * reads as a form pulled from the case file rather than as an options dialog.
+ */
+
+.settings-scrim {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: var(--scrim-heavy);
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-sheet {
+    width: 620px;
+    max-width: 92%;
+    padding: 40px 48px 36px 48px;
+    border-left-width: 6px;
+    border-left-color: var(--brass);
+}
+
+.settings-kicker {
+    font-size: var(--type-micro);
+    color: var(--ink-faded);
+    letter-spacing: 3px;
+    margin-bottom: var(--space-2);
+}
+
+.settings-title {
+    font-size: var(--type-subtitle);
+    color: var(--ink);
+    letter-spacing: 4px;
+    margin-bottom: var(--space-3);
+}
+
+.settings-rule {
+    height: 1px;
+    background-color: var(--paper-shadow);
+    margin-bottom: var(--space-3);
+}
+
+.settings-hint {
+    font-size: var(--type-micro);
+    color: var(--ink-faded);
+    white-space: normal;
+    margin-bottom: var(--space-6);
+}
+
+.settings-caption {
+    font-size: var(--type-body);
+    color: var(--ink);
+    letter-spacing: 1px;
+}
+
+.settings-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-2);
+}
+
+.settings-value {
+    font-size: var(--type-body);
+    color: var(--ink-faded);
+}
+
+/* Slider: strip the default UI Toolkit chrome and rebuild it on paper. */
+.settings-slider {
+    margin: 0 0 var(--space-6) 0;
+}
+
+.settings-slider .unity-base-slider__tracker {
+    background-color: var(--paper-shadow);
+    border-width: 0;
+    border-radius: 0;
+    height: 3px;
+    margin-top: 6px;
+}
+
+.settings-slider .unity-base-slider__dragger {
+    background-color: var(--green);
+    border-width: 0;
+    border-radius: 0;
+    width: 14px;
+    height: 22px;
+    margin-top: -4px;
+}
+
+.settings-slider .unity-base-slider__dragger:hover {
+    background-color: var(--green-hover);
+}
+
+.settings-language-row {
+    flex-direction: row;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.settings-language-row > .btn {
+    flex-grow: 1;
+    margin-right: var(--space-2);
+}
+
+.settings-language-row > .btn:last-child {
+    margin-right: 0;
+}
+
+.settings-action {
+    margin-top: var(--space-2);
+}
+
+.settings-divider {
+    height: 1px;
+    background-color: var(--paper-shadow);
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-2);
+}

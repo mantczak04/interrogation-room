@@ -3,50 +3,45 @@ using System.Globalization;
 using InterrogationRoom.Settings;
 using InterrogationRoom.UI;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
 
 /// <summary>
-/// Runtime-built player settings menu (noir paper-on-graphite styling). Scenes
-/// never reference it directly: hosts create it through <see cref="EnsureInstance"/>
-/// and route Esc to it. While open it owns Esc; cursor state goes through the
-/// host callbacks so PlayerInputGate stays the single cursor owner.
+/// Runtime player settings menu, presented as a sheet from the case file.
+/// Scenes never reference it directly: hosts create it through
+/// <see cref="EnsureInstance"/> and route Esc to it. While open it owns Esc;
+/// cursor state goes through the host callbacks so PlayerInputGate stays the
+/// single cursor owner.
 /// </summary>
 public sealed class SettingsMenu : MonoBehaviour
 {
+    private const string PanelSettingsResource = "UI/UIPanelSettings";
+    private const string VisualTreeResource = "UI/SettingsMenu";
+
+    /// <summary>Draws above the Round UI, which leaves its sorting order at 0.</summary>
+    private const float SortingOrder = 100f;
+
     private static SettingsMenu instance;
     private static int escapeConsumedFrame = -1;
 
-    private static readonly Color ScrimColor = new Color32(0x14, 0x17, 0x15, 0xD4);
-    private static readonly Color PaperColor = new Color32(0xE8, 0xDC, 0xC5, 0xFF);
-    private static readonly Color PaperShadowColor = new Color32(0x0C, 0x0E, 0x0D, 0xB4);
-    private static readonly Color InkColor = new Color32(0x2B, 0x2A, 0x24, 0xFF);
-    private static readonly Color MutedInkColor = new Color32(0x6E, 0x68, 0x57, 0xFF);
-    private static readonly Color AccentGreen = new Color32(0x41, 0x5B, 0x4C, 0xFF);
-    private static readonly Color AccentGreenDark = new Color32(0x33, 0x47, 0x3C, 0xFF);
-    private static readonly Color TrackColor = new Color32(0xCB, 0xBE, 0xA2, 0xFF);
-    private static readonly Color ButtonPaperColor = new Color32(0xD9, 0xCB, 0xAF, 0xFF);
-    private static readonly Color DestructiveRedColor = new Color32(0xC2, 0x2E, 0x28, 0xFF);
-    private static readonly Color LightTextColor = new Color32(0xE8, 0xE3, 0xD5, 0xFF);
-
-    private Canvas canvas;
-    private Font font;
+    private UIDocument document;
+    private VisualElement scrim;
     private Slider sensitivitySlider;
-    private Text sensitivityValueLabel;
-    private Text kickerLabel;
-    private Text titleLabel;
-    private Text contextHintLabel;
-    private Text sensitivityCaptionLabel;
-    private Text languageCaptionLabel;
-    private Text polishButtonLabel;
-    private Text englishButtonLabel;
-    private Text voiceHintLabel;
-    private Text backButtonLabel;
-    private Text leaveButtonLabel;
+    private Label sensitivityValueLabel;
+    private Label kickerLabel;
+    private Label titleLabel;
+    private Label contextHintLabel;
+    private Label sensitivityCaptionLabel;
+    private Label languageCaptionLabel;
+    private Label voiceHintLabel;
+    private Button polishButton;
+    private Button englishButton;
+    private Button backButton;
     private Button leaveButton;
-    private GameObject leaveDivider;
+    private VisualElement leaveDivider;
+
     private Action onOpened;
     private Action onClosed;
     private Action leaveGame;
@@ -89,7 +84,7 @@ public sealed class SettingsMenu : MonoBehaviour
         sensitivitySlider.SetValueWithoutNotify(sensitivity);
         UpdateSensitivityLabel(sensitivity);
         RefreshSectionVisibility();
-        canvas.enabled = true;
+        scrim.style.display = DisplayStyle.Flex;
         isOpen = true;
         onOpened?.Invoke();
     }
@@ -102,14 +97,13 @@ public sealed class SettingsMenu : MonoBehaviour
         }
 
         isOpen = false;
-        canvas.enabled = false;
+        scrim.style.display = DisplayStyle.None;
         onClosed?.Invoke();
     }
 
     private void Awake()
     {
         instance = this;
-        font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         BuildMenu();
         GameSettingsService.Current.Changed += OnSettingsChanged;
     }
@@ -146,28 +140,77 @@ public sealed class SettingsMenu : MonoBehaviour
 #endif
     }
 
+    private void BuildMenu()
+    {
+        var panelSettings = Resources.Load<PanelSettings>(PanelSettingsResource);
+        var visualTree = Resources.Load<VisualTreeAsset>(VisualTreeResource);
+
+        if (panelSettings == null || visualTree == null)
+        {
+            Debug.LogError(
+                $"SettingsMenu could not load '{PanelSettingsResource}' or '{VisualTreeResource}' from Resources.");
+            return;
+        }
+
+        document = gameObject.AddComponent<UIDocument>();
+        document.panelSettings = panelSettings;
+        document.sortingOrder = SortingOrder;
+        document.visualTreeAsset = visualTree;
+
+        VisualElement root = document.rootVisualElement;
+        scrim = root.Q<VisualElement>("settings-scrim");
+
+        kickerLabel = root.Q<Label>("kicker");
+        titleLabel = root.Q<Label>("title");
+        contextHintLabel = root.Q<Label>("context-hint");
+        sensitivityCaptionLabel = root.Q<Label>("sensitivity-caption");
+        sensitivityValueLabel = root.Q<Label>("sensitivity-value");
+        languageCaptionLabel = root.Q<Label>("language-caption");
+        voiceHintLabel = root.Q<Label>("voice-hint");
+        sensitivitySlider = root.Q<Slider>("sensitivity-slider");
+        polishButton = root.Q<Button>("polish-button");
+        englishButton = root.Q<Button>("english-button");
+        backButton = root.Q<Button>("back-button");
+        leaveButton = root.Q<Button>("leave-button");
+        leaveDivider = root.Q<VisualElement>("leave-divider");
+
+        sensitivitySlider.lowValue = GameSettings.MinMouseSensitivity;
+        sensitivitySlider.highValue = GameSettings.MaxMouseSensitivity;
+        sensitivitySlider.RegisterValueChangedCallback(evt => OnSensitivityChanged(evt.newValue));
+
+        polishButton.clicked += () => SetLanguage(UiLanguage.Polish);
+        englishButton.clicked += () => SetLanguage(UiLanguage.English);
+        backButton.clicked += Close;
+        leaveButton.clicked += OnLeaveClicked;
+
+        scrim.style.display = DisplayStyle.None;
+        RefreshLocalizedText();
+    }
+
     private void RefreshSectionVisibility()
     {
+        bool inRound = leaveGame != null;
+
         if (leaveButton != null)
         {
-            leaveButton.gameObject.SetActive(leaveGame != null);
+            leaveButton.style.display = inRound ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         if (leaveDivider != null)
         {
-            leaveDivider.SetActive(leaveGame != null);
+            leaveDivider.style.display = inRound ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         if (contextHintLabel != null)
         {
-            contextHintLabel.text = UiText.Get(leaveGame != null
+            contextHintLabel.text = UiText.Get(inRound
                 ? "Runda trwa — zmiany ustawień działają natychmiast."
                 : "Zmiany ustawień działają natychmiast.");
         }
 
-        if (backButtonLabel != null)
+        if (backButton != null)
         {
-            backButtonLabel.text = UiText.Get(leaveGame != null ? "Wróć do gry" : "Wróć do menu");
+            backButton.text = UiText.Get(inRound ? "Wróć do gry" : "Wróć do menu");
         }
     }
 
@@ -180,23 +223,6 @@ public sealed class SettingsMenu : MonoBehaviour
     {
         GameSettingsService.Current.SetLanguage(language);
         RefreshLocalizedText();
-    }
-
-    private void RefreshLocalizedText()
-    {
-        if (kickerLabel == null)
-            return;
-
-        kickerLabel.text = UiText.Get("KARTA USTAWIEŃ • 01");
-        titleLabel.text = UiText.Get("USTAWIENIA");
-        sensitivityCaptionLabel.text = UiText.Get("Czułość myszy");
-        languageCaptionLabel.text = UiText.Get("Język");
-        UiLanguage language = GameSettingsService.Current.Language;
-        polishButtonLabel.text = $"{(language == UiLanguage.Polish ? "● " : string.Empty)}{UiText.Get("Polski")}";
-        englishButtonLabel.text = $"{(language == UiLanguage.English ? "● " : string.Empty)}{UiText.Get("Angielski")}";
-        voiceHintLabel.text = UiText.Get("V — wycisz / włącz mikrofon");
-        leaveButtonLabel.text = UiText.Get("Opuść Rundę");
-        RefreshSectionVisibility();
     }
 
     private void OnSensitivityChanged(float value)
@@ -212,259 +238,28 @@ public sealed class SettingsMenu : MonoBehaviour
 
     private void OnLeaveClicked()
     {
-        Action action = leaveGame;
+        Action leave = leaveGame;
         Close();
-        action?.Invoke();
+        leave?.Invoke();
     }
 
-    private void BuildMenu()
+    private void RefreshLocalizedText()
     {
-        canvas = gameObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 5000;
-        canvas.enabled = false;
+        if (kickerLabel == null)
+            return;
 
-        CanvasScaler scaler = gameObject.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.matchWidthOrHeight = 0.5f;
+        kickerLabel.text = UiText.Get("KARTA USTAWIEŃ • 01");
+        titleLabel.text = UiText.Get("USTAWIENIA");
+        sensitivityCaptionLabel.text = UiText.Get("Czułość myszy");
+        languageCaptionLabel.text = UiText.Get("Język");
 
-        gameObject.AddComponent<GraphicRaycaster>();
+        UiLanguage language = GameSettingsService.Current.Language;
+        polishButton.text = $"{(language == UiLanguage.Polish ? "● " : string.Empty)}{UiText.Get("Polski")}";
+        englishButton.text = $"{(language == UiLanguage.English ? "● " : string.Empty)}{UiText.Get("Angielski")}";
 
-        Image scrim = CreateImage(transform, "Scrim", ScrimColor, raycastTarget: true);
-        RectTransform scrimRect = scrim.rectTransform;
-        scrimRect.anchorMin = Vector2.zero;
-        scrimRect.anchorMax = Vector2.one;
-        scrimRect.offsetMin = Vector2.zero;
-        scrimRect.offsetMax = Vector2.zero;
+        voiceHintLabel.text = UiText.Get("V — wycisz / włącz mikrofon");
+        leaveButton.text = UiText.Get("Opuść Rundę");
 
-        Image panel = CreateImage(transform, "Panel", PaperColor, raycastTarget: true);
-        RectTransform panelRect = panel.rectTransform;
-        panelRect.anchorMin = panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-        panelRect.pivot = new Vector2(0.5f, 0.5f);
-        panelRect.anchoredPosition = Vector2.zero;
-        panelRect.sizeDelta = new Vector2(760f, 0f);
-
-        Outline panelOutline = panel.gameObject.AddComponent<Outline>();
-        panelOutline.effectColor = AccentGreenDark;
-        panelOutline.effectDistance = new Vector2(2f, -2f);
-
-        Shadow panelShadow = panel.gameObject.AddComponent<Shadow>();
-        panelShadow.effectColor = PaperShadowColor;
-        panelShadow.effectDistance = new Vector2(10f, -10f);
-
-        VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(52, 52, 40, 42);
-        layout.spacing = 18f;
-        layout.childControlWidth = true;
-        layout.childControlHeight = true;
-        layout.childForceExpandWidth = true;
-        layout.childForceExpandHeight = false;
-
-        ContentSizeFitter fitter = panel.gameObject.AddComponent<ContentSizeFitter>();
-        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        kickerLabel = CreateLabel(panel.transform, "Kicker", "KARTA USTAWIEŃ • 01", 16, AccentGreenDark, TextAnchor.MiddleLeft, FontStyle.Bold);
-        titleLabel = CreateLabel(panel.transform, "Title", "USTAWIENIA", 44, InkColor, TextAnchor.MiddleLeft, FontStyle.Bold);
-        CreateDivider(panel.transform, "TitleAccent", AccentGreen, 3f);
-
-        contextHintLabel = CreateLabel(
-            panel.transform,
-            "ContextHint",
-            "Zmiany ustawień działają natychmiast.",
-            17,
-            MutedInkColor,
-            TextAnchor.MiddleLeft);
-
-        var sensitivityRow = new GameObject("SensitivityRow", typeof(RectTransform));
-        sensitivityRow.transform.SetParent(panel.transform, false);
-        HorizontalLayoutGroup rowLayout = sensitivityRow.AddComponent<HorizontalLayoutGroup>();
-        rowLayout.childControlWidth = true;
-        rowLayout.childControlHeight = true;
-        rowLayout.childForceExpandWidth = false;
-        rowLayout.childForceExpandHeight = false;
-        rowLayout.spacing = 8f;
-        sensitivityCaptionLabel = CreateLabel(
-            sensitivityRow.transform, "Caption", "Czułość myszy", 21, InkColor, TextAnchor.MiddleLeft);
-        sensitivityCaptionLabel.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-        sensitivityValueLabel = CreateLabel(
-            sensitivityRow.transform, "Value", "0.0", 21, AccentGreenDark, TextAnchor.MiddleRight, FontStyle.Bold);
-        sensitivityValueLabel.gameObject.AddComponent<LayoutElement>().preferredWidth = 64f;
-
-        sensitivitySlider = BuildSensitivitySlider(panel.transform);
-        sensitivitySlider.onValueChanged.AddListener(OnSensitivityChanged);
-
-        var languageRow = new GameObject("LanguageRow", typeof(RectTransform));
-        languageRow.transform.SetParent(panel.transform, false);
-        HorizontalLayoutGroup languageLayout = languageRow.AddComponent<HorizontalLayoutGroup>();
-        languageLayout.childControlWidth = true;
-        languageLayout.childControlHeight = true;
-        languageLayout.childForceExpandWidth = false;
-        languageLayout.childForceExpandHeight = false;
-        languageLayout.spacing = 10f;
-        languageCaptionLabel = CreateLabel(
-            languageRow.transform, "Caption", "Język", 21, InkColor, TextAnchor.MiddleLeft);
-        languageCaptionLabel.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-        Button polishButton = CreateButton(
-            languageRow.transform, "PolishButton", "Polski", ButtonPaperColor, InkColor,
-            () => SetLanguage(UiLanguage.Polish), 46f);
-        polishButton.gameObject.GetComponent<LayoutElement>().preferredWidth = 150f;
-        polishButtonLabel = polishButton.GetComponentInChildren<Text>();
-        Button englishButton = CreateButton(
-            languageRow.transform, "EnglishButton", "Angielski", ButtonPaperColor, InkColor,
-            () => SetLanguage(UiLanguage.English), 46f);
-        englishButton.gameObject.GetComponent<LayoutElement>().preferredWidth = 150f;
-        englishButtonLabel = englishButton.GetComponentInChildren<Text>();
-
-        voiceHintLabel = CreateLabel(
-            panel.transform,
-            "VoiceHint",
-            "V — wycisz / włącz mikrofon",
-            17,
-            MutedInkColor,
-            TextAnchor.MiddleLeft,
-            FontStyle.Italic);
-
-        CreateSpacer(panel.transform, "ButtonSpacer", 8f);
-
-        Button backButton = CreateButton(
-            panel.transform, "BackButton", "Wróć do menu", AccentGreen, LightTextColor, Close, 62f);
-        backButtonLabel = backButton.GetComponentInChildren<Text>();
-
-        leaveDivider = CreateDivider(panel.transform, "LeaveDivider", TrackColor, 1f);
-        leaveButton = CreateButton(
-            panel.transform, "LeaveButton", "Opuść Rundę", DestructiveRedColor, LightTextColor, OnLeaveClicked, 56f);
-        leaveButtonLabel = leaveButton.GetComponentInChildren<Text>();
-
-        RefreshLocalizedText();
         RefreshSectionVisibility();
-    }
-
-    private Slider BuildSensitivitySlider(Transform parent)
-    {
-        var sliderObject = new GameObject("SensitivitySlider", typeof(RectTransform));
-        sliderObject.transform.SetParent(parent, false);
-        sliderObject.AddComponent<LayoutElement>().preferredHeight = 38f;
-
-        Slider slider = sliderObject.AddComponent<Slider>();
-
-        Image background = CreateImage(sliderObject.transform, "Background", TrackColor, raycastTarget: true);
-        RectTransform backgroundRect = background.rectTransform;
-        backgroundRect.anchorMin = new Vector2(0f, 0.5f);
-        backgroundRect.anchorMax = new Vector2(1f, 0.5f);
-        backgroundRect.sizeDelta = new Vector2(0f, 10f);
-
-        var fillArea = new GameObject("Fill Area", typeof(RectTransform)).GetComponent<RectTransform>();
-        fillArea.SetParent(sliderObject.transform, false);
-        fillArea.anchorMin = new Vector2(0f, 0.5f);
-        fillArea.anchorMax = new Vector2(1f, 0.5f);
-        fillArea.offsetMin = new Vector2(0f, -4f);
-        fillArea.offsetMax = new Vector2(-10f, 4f);
-
-        Image fill = CreateImage(fillArea, "Fill", AccentGreen);
-        fill.rectTransform.sizeDelta = new Vector2(10f, 0f);
-
-        var handleArea = new GameObject("Handle Slide Area", typeof(RectTransform)).GetComponent<RectTransform>();
-        handleArea.SetParent(sliderObject.transform, false);
-        handleArea.anchorMin = Vector2.zero;
-        handleArea.anchorMax = Vector2.one;
-        handleArea.offsetMin = new Vector2(8f, 0f);
-        handleArea.offsetMax = new Vector2(-8f, 0f);
-
-        Image handle = CreateImage(handleArea, "Handle", AccentGreenDark, raycastTarget: true);
-        handle.rectTransform.anchorMin = handle.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-        handle.rectTransform.sizeDelta = new Vector2(20f, 20f);
-
-        slider.fillRect = fill.rectTransform;
-        slider.handleRect = handle.rectTransform;
-        slider.targetGraphic = handle;
-        slider.direction = Slider.Direction.LeftToRight;
-        slider.minValue = GameSettings.MinMouseSensitivity;
-        slider.maxValue = GameSettings.MaxMouseSensitivity;
-        slider.wholeNumbers = false;
-        return slider;
-    }
-
-    private Button CreateButton(
-        Transform parent,
-        string name,
-        string label,
-        Color background,
-        Color textColor,
-        Action onClick,
-        float height)
-    {
-        var buttonObject = new GameObject(name, typeof(RectTransform));
-        buttonObject.transform.SetParent(parent, false);
-        buttonObject.AddComponent<LayoutElement>().preferredHeight = height;
-
-        Image image = buttonObject.AddComponent<Image>();
-        image.color = background;
-
-        Button button = buttonObject.AddComponent<Button>();
-        button.targetGraphic = image;
-        ColorBlock colors = button.colors;
-        colors.normalColor = Color.white;
-        colors.highlightedColor = new Color(0.92f, 0.92f, 0.92f, 1f);
-        colors.pressedColor = new Color(0.78f, 0.78f, 0.78f, 1f);
-        colors.selectedColor = Color.white;
-        button.colors = colors;
-        button.onClick.AddListener(() => onClick());
-
-        Text buttonLabel = CreateLabel(
-            buttonObject.transform, "Label", label, 24, textColor, TextAnchor.MiddleCenter, FontStyle.Bold);
-        RectTransform labelRect = buttonLabel.rectTransform;
-        labelRect.anchorMin = Vector2.zero;
-        labelRect.anchorMax = Vector2.one;
-        labelRect.offsetMin = Vector2.zero;
-        labelRect.offsetMax = Vector2.zero;
-
-        return button;
-    }
-
-    private Text CreateLabel(
-        Transform parent,
-        string name,
-        string value,
-        int size,
-        Color color,
-        TextAnchor alignment,
-        FontStyle style = FontStyle.Normal)
-    {
-        var labelObject = new GameObject(name, typeof(RectTransform));
-        labelObject.transform.SetParent(parent, false);
-        Text label = labelObject.AddComponent<Text>();
-        label.font = font;
-        label.fontSize = size;
-        label.fontStyle = style;
-        label.color = color;
-        label.alignment = alignment;
-        label.text = value;
-        label.raycastTarget = false;
-        return label;
-    }
-
-    private static GameObject CreateDivider(Transform parent, string name, Color color, float height)
-    {
-        Image divider = CreateImage(parent, name, color);
-        divider.gameObject.AddComponent<LayoutElement>().preferredHeight = height;
-        return divider.gameObject;
-    }
-
-    private static void CreateSpacer(Transform parent, string name, float height)
-    {
-        var spacerObject = new GameObject(name, typeof(RectTransform));
-        spacerObject.transform.SetParent(parent, false);
-        spacerObject.AddComponent<LayoutElement>().preferredHeight = height;
-    }
-
-    private static Image CreateImage(Transform parent, string name, Color color, bool raycastTarget = false)
-    {
-        var imageObject = new GameObject(name, typeof(RectTransform));
-        imageObject.transform.SetParent(parent, false);
-        Image image = imageObject.AddComponent<Image>();
-        image.color = color;
-        image.raycastTarget = raycastTarget;
-        return image;
     }
 }
