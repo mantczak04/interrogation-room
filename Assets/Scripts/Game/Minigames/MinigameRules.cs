@@ -17,6 +17,25 @@ namespace InterrogationRoom.Minigames
         Success
     }
 
+    public sealed class MinigameLaunchSequence
+    {
+        private const int LaunchStep = 104729;
+        private readonly int initialSeed;
+        private int launchIndex;
+
+        public MinigameLaunchSequence(int authoredSeed, int runtimeEntropy)
+        {
+            initialSeed = unchecked(authoredSeed * 486187739 + runtimeEntropy * 16777619);
+        }
+
+        public int NextSeed()
+        {
+            int result = unchecked(initialSeed + launchIndex * LaunchStep);
+            launchIndex++;
+            return result;
+        }
+    }
+
     public readonly struct FileFolderOption
     {
         public FileFolderOption(int number, int year)
@@ -82,6 +101,8 @@ namespace InterrogationRoom.Minigames
                 new FileFolderOption(targetNumber, targetYear)
             };
 
+            AddSameYearDecoys(options, targetNumber, targetYear, ref random);
+
             while (options.Count < folderCount)
             {
                 int year = targetYear + random.Next(-4, 5);
@@ -107,6 +128,50 @@ namespace InterrogationRoom.Minigames
 
             Shuffle(options, ref random);
             return new FileSearchSession(seed, options, targetNumber, targetYear);
+        }
+
+        private static void AddSameYearDecoys(
+            ICollection<FileFolderOption> options,
+            int targetNumber,
+            int targetYear,
+            ref DeterministicRandom random)
+        {
+            int targetPrefix = targetNumber / 100;
+            int alternatePrefix = FindAlternatePrefix(targetPrefix, ref random);
+            options.Add(new FileFolderOption(
+                alternatePrefix * 100 + targetNumber % 100,
+                targetYear));
+
+            int desiredDigitSum = DigitSum(targetNumber);
+            int searchStart = 1000 + random.Next(9000);
+            for (int offset = 0; offset < 9000; offset++)
+            {
+                int candidate = 1000 + (searchStart - 1000 + offset) % 9000;
+                if (candidate != targetNumber &&
+                    candidate % 100 != targetNumber % 100 &&
+                    DigitSum(candidate) == desiredDigitSum)
+                {
+                    options.Add(new FileFolderOption(candidate, targetYear));
+                    return;
+                }
+            }
+
+            throw new InvalidOperationException("Unable to build a same-year file-search decoy.");
+        }
+
+        private static int FindAlternatePrefix(
+            int targetPrefix,
+            ref DeterministicRandom random)
+        {
+            int start = random.Next(90);
+            for (int offset = 0; offset < 90; offset++)
+            {
+                int candidate = 10 + (start + offset) % 90;
+                if (candidate != targetPrefix && DigitSum(candidate) != DigitSum(targetPrefix))
+                    return candidate;
+            }
+
+            throw new InvalidOperationException("Unable to build a distinct file-search prefix.");
         }
 
         public bool Inspect(int index)
@@ -164,12 +229,88 @@ namespace InterrogationRoom.Minigames
             number % 10;
     }
 
+    public sealed class CodeLockBag
+    {
+        private readonly int[] codes;
+        private DeterministicRandom random;
+        private int nextIndex;
+        private int? lastCode;
+
+        internal CodeLockBag(IReadOnlyList<int> sourceCodes, int seed)
+        {
+            codes = new int[sourceCodes.Count];
+            for (int index = 0; index < sourceCodes.Count; index++)
+                codes[index] = sourceCodes[index];
+
+            random = new DeterministicRandom(seed);
+            Shuffle(avoidLastCode: false);
+        }
+
+        public int DrawNext()
+        {
+            if (nextIndex >= codes.Length)
+                Shuffle(avoidLastCode: true);
+
+            int code = codes[nextIndex++];
+            lastCode = code;
+            return code;
+        }
+
+        private void Shuffle(bool avoidLastCode)
+        {
+            for (int index = codes.Length - 1; index > 0; index--)
+            {
+                int other = random.Next(index + 1);
+                int temporary = codes[index];
+                codes[index] = codes[other];
+                codes[other] = temporary;
+            }
+
+            if (avoidLastCode &&
+                lastCode.HasValue &&
+                codes.Length > 1 &&
+                codes[0] == lastCode.Value)
+            {
+                int temporary = codes[0];
+                codes[0] = codes[1];
+                codes[1] = temporary;
+            }
+
+            nextIndex = 0;
+        }
+    }
+
     public sealed class CodeLockSession
     {
+        private static readonly int[] Codes =
+        {
+            137, 173, 317, 371, 713, 731,
+            246, 264, 426, 462, 624, 642,
+            358, 385, 538, 583, 835, 853,
+            147, 174, 417, 471, 714, 741,
+            258, 285, 528, 582, 825, 852,
+            369, 396, 639, 693, 936, 963,
+            159, 195, 519, 591, 915, 951,
+            269, 296, 629, 692, 926, 962,
+            479, 497
+        };
+
         public CodeLockSession(int code, int maximumAttempts)
         {
             Code = Math.Max(0, Math.Min(999, code));
             MaximumAttempts = Math.Max(1, maximumAttempts);
+        }
+
+        public static int AvailableCodeCount => Codes.Length;
+
+        public static CodeLockBag CreateBag(int seed) => new CodeLockBag(Codes, seed);
+
+        public static CodeLockSession Create(int seed, int maximumAttempts)
+        {
+            int index = seed % Codes.Length;
+            if (index < 0)
+                index += Codes.Length;
+            return new CodeLockSession(Codes[index], maximumAttempts);
         }
 
         public int Code { get; }
@@ -210,6 +351,9 @@ namespace InterrogationRoom.Minigames
 
     public sealed class RecordsTerminalSession
     {
+        private const int MinimumRecordsPerFilter = 5;
+        private const int MinimumRecordCount = 60;
+
         private static readonly string[] Surnames =
         {
             "Borkowski", "Czarnecki", "Domańska", "Kowal", "Lis", "Majewska",
@@ -258,7 +402,7 @@ namespace InterrogationRoom.Minigames
 
         public static RecordsTerminalSession Create(int seed, int recordCount)
         {
-            recordCount = Math.Max(4, Math.Min(9, recordCount));
+            recordCount = Math.Max(MinimumRecordCount, Math.Min(72, recordCount));
             var random = new DeterministicRandom(seed);
             string targetSurname = Surnames[random.Next(Surnames.Length)];
             int targetYear = 1992 + random.Next(25);
@@ -272,19 +416,20 @@ namespace InterrogationRoom.Minigames
                     targetUnit)
             };
 
-            string decoySurname = Surnames[0];
-            for (int index = 0; index < Surnames.Length; index++)
+            var yearBands = new List<int>
             {
-                if (Surnames[index][0] == targetSurname[0])
-                    continue;
+                targetBand - 5,
+                targetBand,
+                targetBand + 5
+            };
 
-                decoySurname = Surnames[index];
-                break;
-            }
-            records.Add(new RecordsTerminalOption(
-                decoySurname,
-                targetBand + random.Next(5),
-                targetUnit));
+            AddFilterCoverage(
+                records,
+                targetSurname,
+                targetUnit,
+                targetBand,
+                yearBands,
+                ref random);
 
             while (records.Count < recordCount)
             {
@@ -326,12 +471,6 @@ namespace InterrogationRoom.Minigames
                 records[other] = temporary;
             }
 
-            var yearBands = new List<int>
-            {
-                targetBand - 5,
-                targetBand,
-                targetBand + 5
-            };
             for (int index = yearBands.Count - 1; index > 0; index--)
             {
                 int other = random.Next(index + 1);
@@ -346,6 +485,99 @@ namespace InterrogationRoom.Minigames
                 targetYear,
                 targetUnit,
                 yearBands);
+        }
+
+        private static void AddFilterCoverage(
+            ICollection<RecordsTerminalOption> records,
+            string targetSurname,
+            string targetUnit,
+            int targetBand,
+            IReadOnlyList<int> yearBands,
+            ref DeterministicRandom random)
+        {
+            for (int unitIndex = 0; unitIndex < Units.Length; unitIndex++)
+            {
+                string unit = Units[unitIndex];
+                for (int bandIndex = 0; bandIndex < yearBands.Count; bandIndex++)
+                {
+                    int band = yearBands[bandIndex];
+                    FillFilterToMinimum(
+                        records,
+                        unit,
+                        band,
+                        targetSurname,
+                        unit == targetUnit && band == targetBand,
+                        ref random);
+                }
+            }
+        }
+
+        private static void FillFilterToMinimum(
+            ICollection<RecordsTerminalOption> records,
+            string unit,
+            int yearBandStart,
+            string targetSurname,
+            bool protectTargetClue,
+            ref DeterministicRandom random)
+        {
+            while (CountRecordsForFilter(records, unit, yearBandStart) < MinimumRecordsPerFilter)
+            {
+                bool added = false;
+                int candidateCount = Surnames.Length * 5;
+                int start = random.Next(candidateCount);
+                for (int offset = 0; offset < candidateCount; offset++)
+                {
+                    int slot = (start + offset) % candidateCount;
+                    string surname = Surnames[slot % Surnames.Length];
+                    int year = yearBandStart + slot / Surnames.Length;
+                    if (protectTargetClue && surname[0] == targetSurname[0])
+                        continue;
+
+                    var candidate = new RecordsTerminalOption(surname, year, unit);
+                    if (ContainsRecord(records, candidate))
+                        continue;
+
+                    records.Add(candidate);
+                    added = true;
+                    break;
+                }
+
+                if (!added)
+                {
+                    throw new InvalidOperationException(
+                        "Unable to populate a terminal filter with enough distinct records.");
+                }
+            }
+        }
+
+        private static int CountRecordsForFilter(
+            IEnumerable<RecordsTerminalOption> records,
+            string unit,
+            int yearBandStart)
+        {
+            int count = 0;
+            foreach (RecordsTerminalOption record in records)
+            {
+                if (record.Unit == unit && YearBandStart(record.Year) == yearBandStart)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static bool ContainsRecord(
+            IEnumerable<RecordsTerminalOption> records,
+            RecordsTerminalOption candidate)
+        {
+            foreach (RecordsTerminalOption record in records)
+            {
+                if (record.Surname == candidate.Surname &&
+                    record.Year == candidate.Year &&
+                    record.Unit == candidate.Unit)
+                    return true;
+            }
+
+            return false;
         }
 
         public bool SetUnitFilter(string unit)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using InterrogationRoom.Minigames;
 using NUnit.Framework;
@@ -6,6 +7,18 @@ namespace InterrogationRoom.Gameplay.Tests
 {
     public sealed class MinigameRulesTests
     {
+        [Test]
+        public void LaunchSequenceProducesDifferentSeedsForConsecutiveMinigames()
+        {
+            var sequence = new MinigameLaunchSequence(authoredSeed: 73, runtimeEntropy: 912);
+            var seeds = new HashSet<int>();
+
+            for (int launch = 0; launch < 40; launch++)
+                seeds.Add(sequence.NextSeed());
+
+            Assert.That(seeds.Count, Is.EqualTo(40));
+        }
+
         [Test]
         public void FileSearchRequiresInspectionAndKeepsTargetAfterShufflePenalty()
         {
@@ -16,6 +29,8 @@ namespace InterrogationRoom.Gameplay.Tests
 
             Assert.That(session.Folders.Count, Is.EqualTo(10));
             Assert.That(session.Folders.Count(folder => folder.Signature == targetSignature), Is.EqualTo(1));
+            Assert.That(session.Folders.Count(folder => folder.Year == session.TargetYear),
+                Is.GreaterThanOrEqualTo(3));
             Assert.That(session.Folders.Count(folder =>
                     folder.Year == session.TargetYear &&
                     folder.NumberSuffix == session.TargetNumberSuffix &&
@@ -28,6 +43,48 @@ namespace InterrogationRoom.Gameplay.Tests
             Assert.That(session.Folders.Count(folder => folder.Signature == targetSignature), Is.EqualTo(1));
             Assert.That(session.Inspect(session.TargetIndex), Is.True);
             Assert.That(session.ConfirmInspected(), Is.EqualTo(MinigameAttemptResult.Success));
+        }
+
+        [Test]
+        public void CodeLockPoolContainsFiftyDistinctCodesWithConsistentClues()
+        {
+            CodeLockSession[] sessions = Enumerable.Range(0, CodeLockSession.AvailableCodeCount)
+                .Select(seed => CodeLockSession.Create(seed, maximumAttempts: 3))
+                .ToArray();
+
+            Assert.That(CodeLockSession.AvailableCodeCount, Is.EqualTo(50));
+            Assert.That(sessions.Select(session => session.Code).Distinct().Count(), Is.EqualTo(50));
+
+            foreach (CodeLockSession session in sessions)
+            {
+                int first = (session.FirstPairSum + session.OuterPairSum - session.LastPairSum) / 2;
+                int middle = session.FirstPairSum - first;
+                int last = session.OuterPairSum - first;
+                int reconstructedCode = first * 100 + middle * 10 + last;
+
+                Assert.That(reconstructedCode, Is.EqualTo(session.Code));
+                Assert.That(session.Enter(reconstructedCode), Is.EqualTo(MinigameAttemptResult.Success));
+            }
+        }
+
+        [Test]
+        public void ShuffledCodeBagUsesEveryCodeBeforeRepeating()
+        {
+            CodeLockBag bag = CodeLockSession.CreateBag(seed: 4101);
+            int[] firstCycle = Enumerable.Range(0, CodeLockSession.AvailableCodeCount)
+                .Select(_ => bag.DrawNext())
+                .ToArray();
+
+            Assert.That(firstCycle.Distinct().Count(), Is.EqualTo(CodeLockSession.AvailableCodeCount));
+
+            int firstCodeOfSecondCycle = bag.DrawNext();
+            Assert.That(firstCodeOfSecondCycle, Is.Not.EqualTo(firstCycle[firstCycle.Length - 1]));
+
+            int[] secondCycle = new[] { firstCodeOfSecondCycle }
+                .Concat(Enumerable.Range(1, CodeLockSession.AvailableCodeCount - 1)
+                    .Select(_ => bag.DrawNext()))
+                .ToArray();
+            Assert.That(secondCycle.Distinct().Count(), Is.EqualTo(CodeLockSession.AvailableCodeCount));
         }
 
         [Test]
@@ -50,7 +107,7 @@ namespace InterrogationRoom.Gameplay.Tests
         {
             RecordsTerminalSession session = RecordsTerminalSession.Create(seed: 912, recordCount: 6);
 
-            Assert.That(session.Records.Count, Is.EqualTo(6));
+            Assert.That(session.Records.Count, Is.EqualTo(60));
             Assert.That(session.Records.Count(record =>
                 record.Surname == session.TargetSurname &&
                 record.Year == session.TargetYear &&
@@ -62,10 +119,21 @@ namespace InterrogationRoom.Gameplay.Tests
             session.SetYearBandFilter(session.TargetYearBandStart);
 
             Assert.That(session.VisibleRecordIndices, Does.Contain(session.TargetIndex));
-            Assert.That(session.VisibleRecordIndices.Count, Is.GreaterThanOrEqualTo(2),
+            Assert.That(session.VisibleRecordIndices.Count, Is.GreaterThanOrEqualTo(5),
                 "Filtering should narrow the list without directly revealing the answer.");
             Assert.That(session.OpenRecord(session.TargetIndex), Is.True);
             Assert.That(session.ConfirmOpenedRecord(), Is.EqualTo(MinigameAttemptResult.Success));
+
+            foreach (string unit in session.UnitOptions)
+            {
+                foreach (int yearBand in session.YearBandOptions)
+                {
+                    session.SetUnitFilter(unit);
+                    session.SetYearBandFilter(yearBand);
+                    Assert.That(session.VisibleRecordIndices.Count, Is.GreaterThanOrEqualTo(5),
+                        $"Filter {unit}, {yearBand}-{yearBand + 4} should contain five records.");
+                }
+            }
         }
 
         [Test]
@@ -93,12 +161,15 @@ namespace InterrogationRoom.Gameplay.Tests
                         folder.NumberSuffix == files.TargetNumberSuffix &&
                         folder.DigitSum == files.TargetDigitSum),
                     Is.EqualTo(1), $"File clues are ambiguous for seed {seed}.");
+                Assert.That(files.Folders.Count(folder => folder.Year == files.TargetYear),
+                    Is.GreaterThanOrEqualTo(3), $"File search lacks same-year decoys for seed {seed}.");
+                Assert.That(files.TargetIndex, Is.InRange(0, files.Folders.Count - 1));
 
                 RecordsTerminalSession records = RecordsTerminalSession.Create(seed, 7);
                 records.SetUnitFilter(records.TargetUnit);
                 records.SetYearBandFilter(records.TargetYearBandStart);
                 Assert.That(records.VisibleRecordIndices, Does.Contain(records.TargetIndex));
-                Assert.That(records.VisibleRecordIndices.Count, Is.GreaterThanOrEqualTo(2));
+                Assert.That(records.VisibleRecordIndices.Count, Is.GreaterThanOrEqualTo(5));
                 Assert.That(records.VisibleRecordIndices.Count(index =>
                         records.Records[index].Surname[0] == records.TargetSurnameInitial),
                     Is.EqualTo(1), $"Record clues are ambiguous for seed {seed}.");
