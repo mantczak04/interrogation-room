@@ -84,6 +84,11 @@ namespace InterrogationRoom.Gameplay.Minigames
         protected Text StatusLabel { get; private set; }
         protected Transform ContentRoot { get; private set; }
         protected MinigameSpec Spec { get; private set; }
+        protected int LaunchSeed { get; private set; }
+        private GameObject verificationRow;
+        private CanvasGroup verificationGroup;
+        private RectTransform verificationSpinner;
+        private bool verifying;
 
         public void Open(
             MinigameSpec spec,
@@ -92,6 +97,7 @@ namespace InterrogationRoom.Gameplay.Minigames
             Action cancelledCallback)
         {
             Spec = spec;
+            LaunchSeed = spec.NextLaunchSeed();
             succeeded = succeededCallback;
             failed = failedCallback;
             cancelled = cancelledCallback;
@@ -101,6 +107,7 @@ namespace InterrogationRoom.Gameplay.Minigames
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             BuildFrame(Title, spec.IntroText);
             BuildContent(ContentRoot);
+            BuildVerificationIndicator(ContentRoot);
         }
 
         public void Close(bool notifyCancellation)
@@ -150,6 +157,94 @@ namespace InterrogationRoom.Gameplay.Minigames
                 if (button.name != "Cancel")
                     button.interactable = interactable;
             }
+        }
+
+        protected void BeginVerification(
+            Func<MinigameAttemptResult> evaluate,
+            Action<MinigameAttemptResult> resolved)
+        {
+            if (verifying || closing || evaluate == null || resolved == null)
+                return;
+
+            StartCoroutine(VerifyAnswer(evaluate, resolved));
+        }
+
+        private IEnumerator VerifyAnswer(
+            Func<MinigameAttemptResult> evaluate,
+            Action<MinigameAttemptResult> resolved)
+        {
+            const float verificationDurationSeconds = 5f;
+            verifying = true;
+            SetButtonsInteractable(false);
+            SetStatus(string.Empty, MutedInkColor);
+            verificationGroup.alpha = 1f;
+
+            float elapsed = 0f;
+            while (elapsed < verificationDurationSeconds)
+            {
+                float delta = Time.unscaledDeltaTime;
+                elapsed += delta;
+                verificationSpinner.Rotate(0f, 0f, -240f * delta);
+                yield return null;
+            }
+
+            verificationGroup.alpha = 0f;
+            verifying = false;
+            SetButtonsInteractable(true);
+            resolved(evaluate());
+        }
+
+        private void BuildVerificationIndicator(Transform parent)
+        {
+            verificationRow = new GameObject("Verification", typeof(RectTransform));
+            verificationRow.transform.SetParent(parent, false);
+            verificationRow.AddComponent<LayoutElement>().preferredHeight = 48f;
+            verificationGroup = verificationRow.AddComponent<CanvasGroup>();
+            verificationGroup.alpha = 0f;
+            verificationGroup.blocksRaycasts = false;
+            verificationGroup.interactable = false;
+            var row = verificationRow.AddComponent<HorizontalLayoutGroup>();
+            row.spacing = 12f;
+            row.childAlignment = TextAnchor.MiddleCenter;
+            row.childControlWidth = true;
+            row.childControlHeight = true;
+            row.childForceExpandWidth = false;
+            row.childForceExpandHeight = false;
+
+            var spinnerObject = new GameObject("Spinner", typeof(RectTransform));
+            spinnerObject.transform.SetParent(verificationRow.transform, false);
+            spinnerObject.AddComponent<LayoutElement>().preferredWidth = 40f;
+            verificationSpinner = spinnerObject.GetComponent<RectTransform>();
+            verificationSpinner.sizeDelta = new Vector2(40f, 40f);
+
+            const int dotCount = 8;
+            const float radius = 14f;
+            for (int index = 0; index < dotCount; index++)
+            {
+                var dotObject = new GameObject($"Dot_{index}", typeof(RectTransform));
+                dotObject.transform.SetParent(spinnerObject.transform, false);
+                RectTransform dot = dotObject.GetComponent<RectTransform>();
+                dot.anchorMin = new Vector2(0.5f, 0.5f);
+                dot.anchorMax = new Vector2(0.5f, 0.5f);
+                dot.sizeDelta = new Vector2(5f, 5f);
+                float angle = index * Mathf.PI * 2f / dotCount;
+                dot.anchoredPosition = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+                Image image = dotObject.AddComponent<Image>();
+                Color color = AccentDark;
+                color.a = Mathf.Lerp(0.2f, 1f, (index + 1f) / dotCount);
+                image.color = color;
+                image.raycastTarget = false;
+            }
+
+            CreateLabel(
+                verificationRow.transform,
+                "VerificationLabel",
+                "Weryfikowanie odpowiedzi...",
+                18,
+                MutedInkColor,
+                TextAnchor.MiddleLeft,
+                FontStyle.Bold,
+                40f);
         }
 
         protected Text CreateLabel(
@@ -350,7 +445,7 @@ namespace InterrogationRoom.Gameplay.Minigames
 
         protected override void BuildContent(Transform parent)
         {
-            session = FileSearchSession.Create(Spec.Seed, Spec.FolderCount, Spec.TargetYear);
+            session = FileSearchSession.Create(LaunchSeed, Spec.FolderCount, Spec.TargetYear);
             var layout = parent.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 10f;
             layout.childControlWidth = true;
@@ -433,7 +528,11 @@ namespace InterrogationRoom.Gameplay.Minigames
 
         private void ConfirmFolder()
         {
-            MinigameAttemptResult result = session.ConfirmInspected();
+            BeginVerification(session.ConfirmInspected, ResolveFolderResult);
+        }
+
+        private void ResolveFolderResult(MinigameAttemptResult result)
+        {
             if (result == MinigameAttemptResult.Success)
             {
                 Succeed();
@@ -468,7 +567,7 @@ namespace InterrogationRoom.Gameplay.Minigames
 
         protected override void BuildContent(Transform parent)
         {
-            session = new CodeLockSession(Spec.Code, Spec.MaximumCodeAttempts);
+            session = Spec.CreateCodeLockSession(LaunchSeed);
             var layout = parent.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 12f;
             layout.childControlHeight = true;
@@ -532,7 +631,11 @@ namespace InterrogationRoom.Gameplay.Minigames
         private void Confirm()
         {
             int candidate = digits[0] * 100 + digits[1] * 10 + digits[2];
-            MinigameAttemptResult result = session.Enter(candidate);
+            BeginVerification(() => session.Enter(candidate), ResolveCodeResult);
+        }
+
+        private void ResolveCodeResult(MinigameAttemptResult result)
+        {
             if (result == MinigameAttemptResult.Success)
             {
                 Succeed();
@@ -555,16 +658,20 @@ namespace InterrogationRoom.Gameplay.Minigames
 
     public sealed class RecordsTerminalMinigamePanel : MinigamePanelBase
     {
+        private const float FilterLoadingDurationSeconds = 3f;
+
         private RecordsTerminalSession session;
         private Transform recordsRoot;
+        private Text loadingRecordsLabel;
         private Text openedRecordLabel;
         private Button confirmButton;
+        private bool loadingFilter;
 
         protected override string Title => "Terminal kartoteki";
 
         protected override void BuildContent(Transform parent)
         {
-            session = RecordsTerminalSession.Create(Spec.Seed, Spec.RecordCount);
+            session = RecordsTerminalSession.Create(LaunchSeed, Spec.RecordCount);
             var layout = parent.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 10f;
             layout.childControlWidth = true;
@@ -625,6 +732,16 @@ namespace InterrogationRoom.Gameplay.Minigames
             scroll.viewport = viewport;
             scroll.content = content;
             recordsRoot = content;
+            loadingRecordsLabel = CreateLabel(
+                recordsRoot,
+                "LoadingRecords",
+                "\u0141adowanie danych...",
+                20,
+                MutedInkColor,
+                TextAnchor.MiddleCenter,
+                FontStyle.Bold,
+                160f);
+            loadingRecordsLabel.gameObject.SetActive(false);
             RebuildRecords();
 
             openedRecordLabel = CreateLabel(
@@ -679,22 +796,59 @@ namespace InterrogationRoom.Gameplay.Minigames
 
         private void ApplyUnitFilter(int index)
         {
-            session.SetUnitFilter(session.UnitOptions[index]);
-            ResetOpenedRecord();
-            RebuildRecords();
+            if (!loadingFilter)
+                StartCoroutine(ApplyFilterAfterLoading(isUnitFilter: true, index));
         }
 
         private void ApplyYearFilter(int index)
         {
-            session.SetYearBandFilter(session.YearBandOptions[index]);
+            if (!loadingFilter)
+                StartCoroutine(ApplyFilterAfterLoading(isUnitFilter: false, index));
+        }
+
+        private IEnumerator ApplyFilterAfterLoading(bool isUnitFilter, int index)
+        {
+            loadingFilter = true;
+            ResetOpenedRecord();
+            HideRecordButtons();
+            loadingRecordsLabel.gameObject.SetActive(true);
+            SetButtonsInteractable(false);
+
+            float elapsed = 0f;
+            int previousDotCount = -1;
+            while (elapsed < FilterLoadingDurationSeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                int dotCount = Mathf.FloorToInt(elapsed * 2f) % 4;
+                if (dotCount != previousDotCount)
+                {
+                    previousDotCount = dotCount;
+                    loadingRecordsLabel.text = $"\u0141adowanie danych{new string('.', dotCount)}";
+                }
+                yield return null;
+            }
+
+            if (isUnitFilter)
+                session.SetUnitFilter(session.UnitOptions[index]);
+            else
+                session.SetYearBandFilter(session.YearBandOptions[index]);
+
+            loadingFilter = false;
+            loadingRecordsLabel.gameObject.SetActive(false);
+            SetButtonsInteractable(true);
             ResetOpenedRecord();
             RebuildRecords();
         }
 
-        private void RebuildRecords()
+        private void HideRecordButtons()
         {
             foreach (Transform child in recordsRoot)
                 child.gameObject.SetActive(false);
+        }
+
+        private void RebuildRecords()
+        {
+            HideRecordButtons();
 
             for (int visibleIndex = 0; visibleIndex < session.VisibleRecordIndices.Count; visibleIndex++)
             {
@@ -729,7 +883,12 @@ namespace InterrogationRoom.Gameplay.Minigames
 
         private void ConfirmRecord()
         {
-            if (session.ConfirmOpenedRecord() == MinigameAttemptResult.Success)
+            BeginVerification(session.ConfirmOpenedRecord, ResolveRecordResult);
+        }
+
+        private void ResolveRecordResult(MinigameAttemptResult result)
+        {
+            if (result == MinigameAttemptResult.Success)
             {
                 Succeed();
                 return;
