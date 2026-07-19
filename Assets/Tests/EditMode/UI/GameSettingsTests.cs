@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using InterrogationRoom.Gameplay.Characters;
 using InterrogationRoom.Settings;
 using NUnit.Framework;
 using UnityEngine;
@@ -68,6 +69,34 @@ namespace InterrogationRoom.UI.Tests
         {
             Assert.That(UiText.Get("Ustawienia", UiLanguage.English), Is.EqualTo("Settings"));
             Assert.That(UiText.Get("Open door", UiLanguage.Polish), Is.EqualTo("Otwórz drzwi"));
+        }
+
+        [TestCase(UiLanguage.Polish, CharacterId.Jak, "Graj jako Jak")]
+        [TestCase(UiLanguage.Polish, CharacterId.Wieprz, "Graj jako Wieprz")]
+        [TestCase(UiLanguage.English, CharacterId.Jak, "Play as Yak")]
+        [TestCase(UiLanguage.English, CharacterId.Wieprz, "Play as Boar")]
+        public void UiText_CharacterSwapPrompt_DoesNotMixLanguages(
+            UiLanguage language,
+            CharacterId character,
+            string expected)
+        {
+            Assert.That(
+                UiText.FormatCharacterSwapPrompt(character, language),
+                Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void UiText_LocalizesMinigameCopyInEnglish()
+        {
+            Assert.That(
+                UiText.Get("Przeszukiwanie akt", UiLanguage.English),
+                Is.EqualTo("File Search"));
+            Assert.That(
+                UiText.Format(
+                    "Błędny kod. Pozostało prób: {0}.",
+                    UiLanguage.English,
+                    2),
+                Is.EqualTo("Wrong code. Attempts remaining: 2."));
         }
 
         [Test]

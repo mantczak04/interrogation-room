@@ -18,6 +18,7 @@ namespace InterrogationRoom.Networking
     {
         public const float PreparationLimitSeconds = 30f;
         public const float AllReadyPreparationSeconds = 3f;
+        private const float ReusedStartPositionOffset = 0.75f;
 
         private static readonly AlibiClueId DeveloperPhysicalClueId =
             new AlibiClueId("paragon-cztery-kompoty");
@@ -591,7 +592,7 @@ namespace InterrogationRoom.Networking
                 .ToArray();
             if (!HasCompletePhysicalRoster())
             {
-                Reject(sender, "Every player must be spawned with weapon, hit, and elimination components before the Runda starts.");
+                Reject(sender, "Every player must be spawned with all physical Runda components before the Runda starts.");
                 return;
             }
 
@@ -630,6 +631,7 @@ namespace InterrogationRoom.Networking
             _roundDeadline = 0d;
             _roundStartedAtNetworkTime = 0d;
             _preparationDeadline = 0d;
+            RelocatePlayersToStartRoom();
             ServerGameplayRoundEnded?.Invoke();
             ServerRoundReset?.Invoke();
 
@@ -775,6 +777,21 @@ namespace InterrogationRoom.Networking
 
         private bool Submit(NetworkConnectionToClient sender, RoundCommand command)
         {
+            if (command is RoundCommand.StartRound &&
+                !NetworkManager.startPositions.Any(position => position != null))
+            {
+                const string reason = "At least one NetworkStartPosition is required to start a Runda.";
+                if (sender != null)
+                {
+                    Reject(sender, reason);
+                }
+                else
+                {
+                    Debug.LogError($"[NetworkRoundCoordinator] {reason}", this);
+                }
+                return false;
+            }
+
             var transition = _engine.Handle(command);
             if (!transition.Accepted)
             {
@@ -789,6 +806,7 @@ namespace InterrogationRoom.Networking
                 _preparationDeadline = IsDeveloperRoundUnlimited
                     ? 0d
                     : NetworkTime.time + PreparationLimitSeconds;
+                RelocatePlayersToStartRoom();
                 ConfigureRoundWeapons();
             }
             else if (command is RoundCommand.MarkPlayerReady
@@ -856,13 +874,51 @@ namespace InterrogationRoom.Networking
                 if (connection?.identity == null ||
                     FindPort<IRoundWeaponPort>(connection.identity) == null ||
                     FindPort<IRoundHitSource>(connection.identity) == null ||
-                    FindPort<IRoundEliminationPort>(connection.identity) == null)
+                    FindPort<IRoundEliminationPort>(connection.identity) == null ||
+                    FindPort<IRoundRelocationPort>(connection.identity) == null)
                 {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        private void RelocatePlayersToStartRoom()
+        {
+            var startPositions = NetworkManager.startPositions
+                .Where(position => position != null)
+                .ToArray();
+            if (startPositions.Length == 0)
+            {
+                Debug.LogError(
+                    "[NetworkRoundCoordinator] At least one NetworkStartPosition is required to start a Runda.",
+                    this);
+                return;
+            }
+
+            var players = _connectionsByPlayerId
+                .OrderBy(pair => pair.Key)
+                .ToArray();
+            for (var index = 0; index < players.Length; index++)
+            {
+                var connection = players[index].Value;
+                var relocation = FindPort<IRoundRelocationPort>(connection?.identity);
+                var startPosition = startPositions[index % startPositions.Length];
+                var reuseLayer = index / startPositions.Length;
+                var reuseDirection = index % 2 == 0 ? 1f : -1f;
+                var destination = startPosition.position +
+                    startPosition.right * (reuseLayer * ReusedStartPositionOffset * reuseDirection);
+                if (relocation == null ||
+                    !relocation.RelocateToStartRoomServer(
+                        destination,
+                        startPosition.rotation))
+                {
+                    Debug.LogError(
+                        $"[NetworkRoundCoordinator] Failed to relocate player {players[index].Key} for the new Runda.",
+                        this);
+                }
+            }
         }
 
         private void ConfigureRoundWeapons()

@@ -1,6 +1,7 @@
 using System;
 using InterrogationRoom.Domain;
 using Mirror;
+using UnityEngine;
 
 namespace InterrogationRoom.Networking
 {
@@ -39,6 +40,12 @@ namespace InterrogationRoom.Networking
 
         bool TryEliminateServer();
         bool ResetEliminationServer();
+    }
+
+    /// <summary>Server-owned movement effect used when a new Runda gathers everyone in the start room.</summary>
+    public interface IRoundRelocationPort
+    {
+        bool RelocateToStartRoomServer(Vector3 position, Quaternion rotation);
     }
 
     public static class RoundPhysicalRules

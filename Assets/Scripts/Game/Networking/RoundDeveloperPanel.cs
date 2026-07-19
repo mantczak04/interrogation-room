@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using InterrogationRoom.Domain;
 using InterrogationRoom.Networking;
+using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
 
@@ -63,16 +64,16 @@ namespace InterrogationRoom.Debugging
             float panelHeight = Mathf.Min(Screen.height - 24f - shortcutStripHeight, 690f);
             var area = new Rect(Screen.width - panelWidth - 12f, 12f, panelWidth, panelHeight);
             GUILayout.BeginArea(area, _boxStyle);
-            GUILayout.Label("AKTA TESTOWE • NARZĘDZIA RUNDY", _labelStyle);
+            GUILayout.Label(UiText.Get("AKTA TESTOWE • NARZĘDZIA RUNDY"), _labelStyle);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("TRYB DEVELOPERSKI — BEZ LIMITU", _headerStyle);
+            GUILayout.Label(UiText.Get("TRYB DEVELOPERSKI — BEZ LIMITU"), _headerStyle);
             if (GUILayout.Button(_expanded ? "—" : "+", _buttonStyle, GUILayout.Width(42f)))
                 _expanded = !_expanded;
             GUILayout.EndHorizontal();
 
             if (!_expanded)
             {
-                GUILayout.Label("F8 lub + otwiera panel", _labelStyle);
+                GUILayout.Label(UiText.Get("F8 lub + otwiera panel"), _labelStyle);
                 GUILayout.EndArea();
                 return;
             }
@@ -92,7 +93,8 @@ namespace InterrogationRoom.Debugging
         {
             if (!NetworkServer.activeHost || !coordinator.IsLocalHost)
             {
-                GUILayout.Label("Uruchom Host (Server + Client) w launcherze sieciowym.", _labelStyle);
+                GUILayout.Label(UiText.Get(
+                    "Uruchom Host (Server + Client) w launcherze sieciowym."), _labelStyle);
                 return;
             }
 
@@ -110,29 +112,33 @@ namespace InterrogationRoom.Debugging
         {
             var connected = coordinator.ConnectedPlayers;
             GUILayout.Label(
-                $"Prawdziwi gracze: {connected.Count}. Brakujące miejsca będą technicznymi slotami domeny.",
+                UiText.Format(
+                    "Prawdziwi gracze: {0}. Brakujące miejsca będą technicznymi slotami domeny.",
+                    connected.Count),
                 _labelStyle);
 
             if (connected.Count == 0)
             {
-                GUILayout.Label("Poczekaj, aż lokalna postać zostanie zespawnowana.", _labelStyle);
+                GUILayout.Label(UiText.Get(
+                    "Poczekaj, aż lokalna postać zostanie zespawnowana."), _labelStyle);
                 return;
             }
 
             if (!connected.Any(player => player.Value == _controlledPlayerId))
                 _controlledPlayerId = connected[0].Value;
 
-            GUILayout.Label("Testowany prawdziwy gracz", _headerStyle);
+            GUILayout.Label(UiText.Get("Testowany prawdziwy gracz"), _headerStyle);
             GUILayout.BeginHorizontal();
             foreach (var player in connected)
             {
                 string prefix = player.Value == _controlledPlayerId ? "✓ " : string.Empty;
-                if (GUILayout.Button($"{prefix}Player {player.Value}", _buttonStyle))
+                if (GUILayout.Button(UiText.Format(
+                    "{0}Gracz {1}", prefix, player.Value), _buttonStyle))
                     _controlledPlayerId = player.Value;
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("Docelowy Skład Rundy", _headerStyle);
+            GUILayout.Label(UiText.Get("Docelowy Skład Rundy"), _headerStyle);
             GUILayout.BeginHorizontal();
             for (var count = RoundEngine.MinPlayers; count <= RoundEngine.MaxPlayers; count++)
             {
@@ -142,16 +148,16 @@ namespace InterrogationRoom.Debugging
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("Scenariusz", _headerStyle);
-            DrawStartButton("Niewinny — Osobista Sprawa", RoundDeveloperScenario.PersonalMatter);
+            GUILayout.Label(UiText.Get("Scenariusz"), _headerStyle);
+            DrawStartButton(UiText.Get("Niewinny — Osobista Sprawa"), RoundDeveloperScenario.PersonalMatter);
             GUI.enabled = _targetPlayerCount >= RoundEngine.MinPlayersForSecretObjective;
-            DrawStartButton("Niewinny — Sekretny Cel", RoundDeveloperScenario.SecretObjective);
+            DrawStartButton(UiText.Get("Niewinny — Sekretny Cel"), RoundDeveloperScenario.SecretObjective);
             GUI.enabled = true;
-            DrawStartButton("Winny — Trop i Ucieczka", RoundDeveloperScenario.GuiltyEscape);
-            DrawStartButton("Detektyw — Incydenty", RoundDeveloperScenario.DetectiveIncidents);
+            DrawStartButton(UiText.Get("Winny — Trop i Ucieczka"), RoundDeveloperScenario.GuiltyEscape);
+            DrawStartButton(UiText.Get("Detektyw — Incydenty"), RoundDeveloperScenario.DetectiveIncidents);
 
             GUILayout.Label(
-                "Wybór scenariusza wymusza rolę testowanego gracza. Runda nie kończy się automatycznie po czasie. Panel działa tylko w Editorze i Development Buildzie.",
+                UiText.Get("Wybór scenariusza wymusza rolę testowanego gracza. Runda nie kończy się automatycznie po czasie. Panel działa tylko w Editorze i Development Buildzie."),
                 _labelStyle);
         }
 
@@ -165,7 +171,11 @@ namespace InterrogationRoom.Debugging
                 _targetPlayerCount,
                 new PlayerId(_controlledPlayerId),
                 out var reason);
-            _status = started ? "Scenariusz uruchomiony." : reason;
+            if (!started)
+                Debug.LogWarning($"[RoundDeveloperPanel] Scenario start rejected: {reason}", this);
+            _status = started
+                ? UiText.Get("Scenariusz uruchomiony.")
+                : UiText.Get("Nie udało się uruchomić scenariusza.");
         }
 
         private void DrawActiveScenario(RoundDeveloperPlan plan)
@@ -173,22 +183,30 @@ namespace InterrogationRoom.Debugging
             var view = coordinator.DeveloperControlledView;
             GUILayout.Label(ScenarioLabel(plan.Scenario), _headerStyle);
             GUILayout.Label(
-                $"Testowany: Player {plan.ControlledPlayer.Value} | skład {plan.Players.Count} " +
-                $"({plan.ConnectedPlayerCount} prawdziwych + {plan.TechnicalPlayerCount} technicznych)",
+                UiText.Format(
+                    "Testowany: Gracz {0} | skład {1} ({2} prawdziwych + {3} technicznych)",
+                    plan.ControlledPlayer.Value,
+                    plan.Players.Count,
+                    plan.ConnectedPlayerCount,
+                    plan.TechnicalPlayerCount),
                 _labelStyle);
 
             if (view == null)
             {
-                GUILayout.Label("Oczekiwanie na prywatny widok testowanego gracza.", _labelStyle);
+                GUILayout.Label(UiText.Get(
+                    "Oczekiwanie na prywatny widok testowanego gracza."), _labelStyle);
                 return;
             }
 
-            GUILayout.Label($"Rola: {RoleLabel(view.Role)} | faza: {view.Phase}", _labelStyle);
+            GUILayout.Label(UiText.Format(
+                "Rola: {0} | faza: {1}",
+                RoleLabel(view.Role),
+                UiText.Get(view.Phase.ToString())), _labelStyle);
             GUILayout.Label(DescribeNextStep(plan, view), _labelStyle);
 
             if (view.Phase == RoundPhase.Preparation)
             {
-                if (GUILayout.Button("Zakończ Przygotowanie", _buttonStyle))
+                if (GUILayout.Button(UiText.Get("Zakończ Przygotowanie"), _buttonStyle))
                     coordinator.RequestEndPreparation();
                 return;
             }
@@ -204,12 +222,14 @@ namespace InterrogationRoom.Debugging
                 if (view.Result != null)
                 {
                     GUILayout.Label(
-                        $"Wynik testowanego gracza: {(view.Result.Won ? "WYGRANA" : "PRZEGRANA")} " +
-                        $"({view.Result.EndCause})",
+                        UiText.Format(
+                            "Wynik testowanego gracza: {0} ({1})",
+                            UiText.Get(view.Result.Won ? "WYGRANA" : "PRZEGRANA"),
+                            UiText.Get(view.Result.EndCause.ToString())),
                         _headerStyle);
                 }
 
-                if (GUILayout.Button("Wróć do lobby i zresetuj świat", _buttonStyle))
+                if (GUILayout.Button(UiText.Get("Wróć do lobby i zresetuj świat"), _buttonStyle))
                     coordinator.RequestReturnToLobby();
             }
         }
@@ -217,24 +237,24 @@ namespace InterrogationRoom.Debugging
         private void DrawDeveloperEndings(RoundDeveloperPlan plan)
         {
             GUILayout.Space(8f);
-            GUILayout.Label("Symulowane zakończenie (opcjonalne)", _headerStyle);
+            GUILayout.Label(UiText.Get("Symulowane zakończenie (opcjonalne)"), _headerStyle);
             switch (plan.Scenario)
             {
                 case RoundDeveloperScenario.PersonalMatter:
-                    DrawFinishButton("Wymuś upływ Limitu Rundy", RoundDeveloperFinish.TimeExpired);
+                    DrawFinishButton(UiText.Get("Wymuś upływ Limitu Rundy"), RoundDeveloperFinish.TimeExpired);
                     break;
                 case RoundDeveloperScenario.SecretObjective:
-                    DrawFinishButton("Wymuś Egzekucję Celu", RoundDeveloperFinish.ExecuteSecretTarget);
-                    DrawFinishButton("Wymuś upływ Limitu Rundy", RoundDeveloperFinish.TimeExpired);
+                    DrawFinishButton(UiText.Get("Wymuś Egzekucję Celu"), RoundDeveloperFinish.ExecuteSecretTarget);
+                    DrawFinishButton(UiText.Get("Wymuś upływ Limitu Rundy"), RoundDeveloperFinish.TimeExpired);
                     break;
                 case RoundDeveloperScenario.GuiltyEscape:
-                    DrawFinishButton("Wymuś upływ Limitu Rundy", RoundDeveloperFinish.TimeExpired);
+                    DrawFinishButton(UiText.Get("Wymuś upływ Limitu Rundy"), RoundDeveloperFinish.TimeExpired);
                     break;
                 case RoundDeveloperScenario.DetectiveIncidents:
-                    DrawFinishButton("Wymuś Egzekucję Winnego", RoundDeveloperFinish.ExecuteGuilty);
-                    DrawFinishButton("Wymuś Egzekucję Niewinnego", RoundDeveloperFinish.ExecuteInnocent);
+                    DrawFinishButton(UiText.Get("Wymuś Egzekucję Winnego"), RoundDeveloperFinish.ExecuteGuilty);
+                    DrawFinishButton(UiText.Get("Wymuś Egzekucję Niewinnego"), RoundDeveloperFinish.ExecuteInnocent);
                     GUILayout.Label(
-                        "Prawdziwy strzał wymaga drugiej prawdziwej postaci z hitboxem. Incydenty uruchamiane fizycznie przez testowanego Detektywa są przypisywane technicznemu Podejrzanemu.",
+                        UiText.Get("Prawdziwy strzał wymaga drugiej prawdziwej postaci z hitboxem. Incydenty uruchamiane fizycznie przez testowanego Detektywa są przypisywane technicznemu Podejrzanemu."),
                         _labelStyle);
                     break;
             }
@@ -246,15 +266,19 @@ namespace InterrogationRoom.Debugging
                 return;
 
             bool finished = coordinator.TryFinishDeveloperScenario(finish, out var reason);
-            _status = finished ? "Runda zakończona." : reason;
+            if (!finished)
+                Debug.LogWarning($"[RoundDeveloperPanel] Scenario finish rejected: {reason}", this);
+            _status = finished
+                ? UiText.Get("Runda zakończona.")
+                : UiText.Get("Nie udało się zakończyć scenariusza.");
         }
 
         private static string DescribeNextStep(RoundDeveloperPlan plan, PlayerRoundView view)
         {
             if (view.Phase == RoundPhase.Preparation)
-                return "Sprawdź prywatną rolę i Alibi, następnie zakończ Przygotowanie.";
+                return UiText.Get("Sprawdź prywatną rolę i Alibi, następnie zakończ Przygotowanie.");
             if (view.Phase == RoundPhase.Finished)
-                return "Sprawdź wynik i pełne ujawnienie, potem wróć do lobby.";
+                return UiText.Get("Sprawdź wynik i pełne ujawnienie, potem wróć do lobby.");
 
             switch (plan.Scenario)
             {
@@ -264,7 +288,7 @@ namespace InterrogationRoom.Debugging
                 case RoundDeveloperScenario.GuiltyEscape:
                     return DescribeGuilty(view);
                 case RoundDeveloperScenario.DetectiveIncidents:
-                    return "Podejdź do Archive Alarm albo podłóż przedmiot w Target Locker. Hałaśliwy Incydent pojawi się od razu; Cichy odkryj ponownie przy zmienionym obiekcie.";
+                    return UiText.Get("Podejdź do Archive Alarm albo podłóż przedmiot w Target Locker. Hałaśliwy Incydent pojawi się od razu; Cichy odkryj ponownie przy zmienionym obiekcie.");
                 default:
                     return string.Empty;
             }
@@ -273,61 +297,64 @@ namespace InterrogationRoom.Debugging
         private static string DescribeObjective(PrivateObjectiveView objective)
         {
             if (objective == null)
-                return "Brak Prywatnego Celu dla wybranego widoku.";
+                return UiText.Get("Brak Prywatnego Celu dla wybranego widoku.");
             if (objective.IsCompleted)
-                return "Prywatny Cel ukończony. Użyj symulowanego zakończenia, aby sprawdzić wynik.";
+                return UiText.Get("Prywatny Cel ukończony. Użyj symulowanego zakończenia, aby sprawdzić wynik.");
             if (!objective.CurrentStep.HasValue)
-                return "Oczekiwanie na następny krok Celu.";
+                return UiText.Get("Oczekiwanie na następny krok Celu.");
 
             switch (objective.CurrentStep.Value.Value)
             {
                 case "osobista-sprawa-przygotuj":
-                    return "Krok 1: przeszukaj Records Cabinet albo Evidence Shelf.";
+                    return UiText.Get("Krok 1: przeszukaj Records Cabinet albo Evidence Shelf.");
                 case "osobista-sprawa-zakoncz":
-                    return "Krok 2: ukryj dokument w Locker albo Archive Slot.";
+                    return UiText.Get("Krok 2: ukryj dokument w Locker albo Archive Slot.");
                 case "wrobienie-przygotuj":
-                    return "Krok 1 Wrobienia: zabierz przedmiot z Evidence Tray.";
+                    return UiText.Get("Krok 1 Wrobienia: zabierz przedmiot z Evidence Tray.");
                 case "wrobienie-podloz":
-                    return "Krok 2 Wrobienia: podłóż przedmiot w Target Locker.";
+                    return UiText.Get("Krok 2 Wrobienia: podłóż przedmiot w Target Locker.");
                 default:
-                    return $"Wykonaj fizyczny krok: {objective.CurrentStep.Value.Value}.";
+                    return UiText.Format(
+                        "Wykonaj fizyczny krok: {0}.",
+                        objective.CurrentStep.Value.Value);
             }
         }
 
         private static string DescribeGuilty(PlayerRoundView view)
         {
             string clue = view.AcquiredAlibiClues == null || view.AcquiredAlibiClues.Count == 0
-                ? "Opcjonalnie przeszukaj Crumpled Receipt, aby zdobyć Trop. "
-                : "Trop zdobyty. ";
+                ? UiText.Get("Opcjonalnie przeszukaj Crumpled Receipt, aby zdobyć Trop. ")
+                : UiText.Get("Trop zdobyty. ");
             var plan = view.EscapePlan;
             if (plan == null)
-                return clue + "Brak Planu Ucieczki w prywatnym widoku.";
+                return clue + UiText.Get("Brak Planu Ucieczki w prywatnym widoku.");
             if (plan.CurrentStep.HasValue)
             {
                 switch (plan.CurrentStep.Value.Value)
                 {
                     case "escape-find-tool":
-                        return clue + "Plan: przeszukaj Maintenance Cabinet.";
+                        return clue + UiText.Get("Plan: przeszukaj Maintenance Cabinet.");
                     case "escape-open-route":
-                        return clue + "Plan: sprawdź Service Panel.";
+                        return clue + UiText.Get("Plan: sprawdź Service Panel.");
                 }
             }
 
             if (!plan.ExitOptions.Any(option => option.IsPrepared))
-                return clue + "Przygotuj Vent Control albo Loading Gate Control, następnie użyj odpowiadającego wyjścia.";
+                return clue + UiText.Get("Przygotuj Vent Control albo Loading Gate Control, następnie użyj odpowiadającego wyjścia.");
             if (plan.ActiveExit.HasValue)
-                return clue + $"Trwa finał Ucieczki przy {plan.ActiveExit.Value.Value}.";
-            return clue + "Użyj przygotowanego Service Vent albo Loading Gate Exit.";
+                return clue + UiText.Format(
+                    "Trwa finał Ucieczki przy {0}.", plan.ActiveExit.Value.Value);
+            return clue + UiText.Get("Użyj przygotowanego Service Vent albo Loading Gate Exit.");
         }
 
         private static string ScenarioLabel(RoundDeveloperScenario scenario)
         {
             switch (scenario)
             {
-                case RoundDeveloperScenario.PersonalMatter: return "NIEWINNY — OSOBISTA SPRAWA";
-                case RoundDeveloperScenario.SecretObjective: return "NIEWINNY — SEKRETNY CEL";
-                case RoundDeveloperScenario.GuiltyEscape: return "WINNY — TROP I UCIECZKA";
-                case RoundDeveloperScenario.DetectiveIncidents: return "DETEKTYW — INCYDENTY";
+                case RoundDeveloperScenario.PersonalMatter: return UiText.Get("NIEWINNY — OSOBISTA SPRAWA");
+                case RoundDeveloperScenario.SecretObjective: return UiText.Get("NIEWINNY — SEKRETNY CEL");
+                case RoundDeveloperScenario.GuiltyEscape: return UiText.Get("WINNY — TROP I UCIECZKA");
+                case RoundDeveloperScenario.DetectiveIncidents: return UiText.Get("DETEKTYW — INCYDENTY");
                 default: return scenario.ToString();
             }
         }
@@ -336,9 +363,9 @@ namespace InterrogationRoom.Debugging
         {
             switch (role)
             {
-                case RoundRole.Detective: return "Detektyw";
-                case RoundRole.Guilty: return "Winny";
-                case RoundRole.Innocent: return "Niewinny";
+                case RoundRole.Detective: return UiText.Get("Detektyw");
+                case RoundRole.Guilty: return UiText.Get("Winny");
+                case RoundRole.Innocent: return UiText.Get("Niewinny");
                 default: return role.ToString();
             }
         }

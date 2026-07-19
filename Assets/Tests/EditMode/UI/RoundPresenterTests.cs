@@ -316,7 +316,7 @@ namespace InterrogationRoom.UI.Tests
             Assert.That(state.PrivatePanelVisible, Is.True);
             Assert.That(state.PrivateTitle, Does.Contain("Rejestr"));
             Assert.That(state.PrivateText, Does.Contain("01:05"));
-            Assert.That(state.PrivateText, Does.Contain("Archive alarm"));
+            Assert.That(state.PrivateText, Does.Contain("Alarm archiwum"));
             Assert.That(state.PrivateText, Does.Not.Contain("Gracz"));
         }
 
@@ -352,9 +352,74 @@ namespace InterrogationRoom.UI.Tests
             RoundUiState state = RoundPresenter.BuildState(view, 120f, isHost: false);
 
             Assert.That(state.PrivateText.IndexOf("01:05"), Is.LessThan(state.PrivateText.IndexOf("00:15")));
-            Assert.That(state.PrivateText, Does.Contain("Magazyn dowodow"));
+            Assert.That(state.PrivateText, Does.Contain("Magazyn dowodów"));
             Assert.That(state.PrivateText, Does.Not.Contain("newer-id"));
             Assert.That(state.PrivateText, Does.Not.Contain("Gracz"));
+        }
+
+        [Test]
+        public void BuildState_EnglishDetectiveRegistry_LocalizesAllUiShellText()
+        {
+            var view = new PlayerRoundView(
+                new PlayerId(1),
+                RoundPhase.Round,
+                RoundRole.Detective,
+                "Publiczne Przestępstwo",
+                alibi: null,
+                privateObjective: null,
+                result: null,
+                Players,
+                new PlayerId(1),
+                incidentRegistry: new[]
+                {
+                    new IncidentRegistryEntryView(
+                        new IncidentId("alarm-001"),
+                        IncidentKind.Loud,
+                        new IncidentEffectId("uruchomiony-alarm"),
+                        new IncidentLocationId("archiwum"),
+                        new IncidentTimestamp(65000))
+                });
+
+            RoundUiState state = RoundPresenter.BuildState(
+                view,
+                120f,
+                isHost: false,
+                language: UiLanguage.English);
+
+            Assert.That(state.PrivateTitle, Is.EqualTo("Incident Registry"));
+            Assert.That(state.PrivateText, Does.Contain("Archive"));
+            Assert.That(state.PrivateText, Does.Contain("Alarm triggered — loud"));
+            Assert.That(state.PrivateText, Does.Not.Contain("głośny"));
+        }
+
+        [Test]
+        public void BuildState_EnglishFinished_LocalizesOutcomeAndPreservesAuthoredStoryText()
+        {
+            var result = new PlayerResultView(
+                won: false,
+                survived: false,
+                detectiveWon: false,
+                RoundEndCause.Execution,
+                new PlayerId(2));
+
+            RoundUiState state = RoundPresenter.BuildState(
+                View(
+                    RoundPhase.Finished,
+                    RoundRole.Innocent,
+                    alibi: null,
+                    viewer: new PlayerId(2),
+                    result: result),
+                remainingSeconds: 0f,
+                isHost: false,
+                language: UiLanguage.English);
+
+            Assert.That(state.CrimeText, Is.EqualTo("Ktoś przemalował pomnik."));
+            Assert.That(state.ResultVerdictText, Is.EqualTo("DEFEAT"));
+            Assert.That(state.ResultReasonText, Is.EqualTo("You were Executed."));
+            Assert.That(state.ResultText, Does.Contain("Defeat"));
+            Assert.That(state.ResultText, Does.Contain("Execution"));
+            Assert.That(state.ResultText, Does.Contain("Player 2"));
+            Assert.That(state.ResultText, Does.Not.Contain("Przegrana"));
         }
 
         [Test]

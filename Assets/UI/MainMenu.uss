@@ -68,10 +68,6 @@
     margin-bottom: var(--space-3);
 }
 
-.menu-entry--developer {
-    color: var(--amber);
-}
-
 .menu-note {
     font-size: var(--type-micro);
     color: var(--graphite-300);

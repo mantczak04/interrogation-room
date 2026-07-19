@@ -15,10 +15,10 @@ namespace InterrogationRoom.UI
         public PlayerId PlayerId { get; }
         public string Label { get; }
 
-        public ExecutionTargetView(PlayerId playerId)
+        public ExecutionTargetView(PlayerId playerId, UiLanguage language = UiLanguage.Polish)
         {
             PlayerId = playerId;
-            Label = $"Gracz {playerId.Value}";
+            Label = UiText.Format("Gracz {0}", language, playerId.Value);
         }
     }
 
@@ -373,6 +373,7 @@ namespace InterrogationRoom.UI
             var alibiVisible = preparation && view.Alibi != null;
             BuildPrivatePanel(
                 view,
+                language,
                 out string privateTitle,
                 out string privateMotive,
                 out string privateStep,
@@ -405,10 +406,10 @@ namespace InterrogationRoom.UI
                 privateProgress,
                 privateText,
                 view.Phase == RoundPhase.Finished,
-                view.Phase == RoundPhase.Finished ? FormatResultVerdict(view.Result) : null,
-                view.Phase == RoundPhase.Finished ? FormatResultReason(view.Role, view.Result) : null,
+                view.Phase == RoundPhase.Finished ? FormatResultVerdict(view.Result, language) : null,
+                view.Phase == RoundPhase.Finished ? FormatResultReason(view.Role, view.Result, language) : null,
                 view.Phase == RoundPhase.Finished && view.Result != null && !view.Result.Won,
-                view.Phase == RoundPhase.Finished ? FormatResult(view.Result, view.RoundReveal) : null,
+                view.Phase == RoundPhase.Finished ? FormatResult(view.Result, view.RoundReveal, language) : null,
                 view.Phase == RoundPhase.Finished && isHost);
         }
 
@@ -465,7 +466,9 @@ namespace InterrogationRoom.UI
                 !state.UnlimitedTime && IsCriticalRoundTime(state.RemainingSeconds));
             SetVisible(_timerLabel, state.TimerVisible);
             SetVisible(_privatePanel, state.PrivatePanelVisible);
-            _privatePanel.EnableInClassList("private-card--registry", state.PrivateTitle == "Rejestr Incydentów");
+            _privatePanel.EnableInClassList(
+                "private-card--registry",
+                state.PrivateTitle == UiText.Get("Rejestr Incydentów"));
             _privateTitleLabel.text = state.PrivateTitle ?? string.Empty;
             _privateMotiveLabel.text = state.PrivateMotive ?? string.Empty;
             _privateStepLabel.text = state.PrivateStep ?? string.Empty;
@@ -659,7 +662,7 @@ namespace InterrogationRoom.UI
 
         private void OnIntentRejected(string reason)
         {
-            _rejectionLabel.text = string.IsNullOrWhiteSpace(reason) ? UiText.Get("Intencja została odrzucona.") : reason;
+            _rejectionLabel.text = UiText.Get("Intencja została odrzucona.");
             SetVisible(_rejectionLabel, true);
         }
 
@@ -690,6 +693,7 @@ namespace InterrogationRoom.UI
 
         private static void BuildPrivatePanel(
             PlayerRoundView view,
+            UiLanguage language,
             out string title,
             out string motive,
             out string step,
@@ -706,10 +710,10 @@ namespace InterrogationRoom.UI
             switch (view.Role)
             {
                 case RoundRole.Detective:
-                    title = "Rejestr Incydentów";
+                    title = UiText.Get("Rejestr Incydentów", language);
                     if (view.IncidentRegistry == null || view.IncidentRegistry.Count == 0)
                     {
-                        text = "Brak zgłoszonych lub odkrytych Incydentów.";
+                        text = UiText.Get("Brak zgłoszonych lub odkrytych Incydentów.", language);
                         return;
                     }
 
@@ -718,30 +722,34 @@ namespace InterrogationRoom.UI
                         IncidentRegistryEntryView incident = view.IncidentRegistry[index];
                         builder.AppendLine(
                             $"{FormatTimestamp(incident.ReportedAt)}\n" +
-                            $"{HumanizeIdentifier(incident.Location.Value)}\n" +
-                            $"{HumanizeIdentifier(incident.Effect.Value)} — {FormatIncidentKind(incident.Kind)}\n");
+                            $"{HumanizeIdentifier(incident.Location.Value, language)}\n" +
+                            $"{HumanizeIdentifier(incident.Effect.Value, language)} — {FormatIncidentKind(incident.Kind, language)}\n");
                     }
                     text = builder.ToString().TrimEnd();
                     return;
 
                 case RoundRole.Guilty:
-                    title = "Tropy do Alibi i Plan Ucieczki";
+                    title = UiText.Get("Tropy do Alibi i Plan Ucieczki", language);
                     if (view.EscapePlan != null)
                     {
-                        motive = $"Cel: {view.EscapePlan.Title}\n{view.EscapePlan.Motive}";
+                        motive = UiText.Format("Cel: {0}", language, view.EscapePlan.Title) +
+                                 $"\n{view.EscapePlan.Motive}";
                         step = view.EscapePlan.CurrentStep.HasValue
-                            ? $"Szukasz: {view.EscapePlan.CurrentStepDescription}"
-                            : "Szukasz: wybierz i przygotuj punkt końcowy Ucieczki.";
+                            ? UiText.Format("Szukasz: {0}", language, view.EscapePlan.CurrentStepDescription)
+                            : UiText.Get("Szukasz: wybierz i przygotuj punkt końcowy Ucieczki.", language);
                         location = view.EscapePlan.CurrentStep.HasValue
-                            ? $"Gdzie: {view.EscapePlan.CurrentStepLocationHint}"
-                            : "Gdzie: jeden z opisanych punktów końcowych";
-                        progress = $"Postęp: {view.EscapePlan.CompletedCommonStepCount}/" +
-                                   $"{view.EscapePlan.TotalCommonStepCount} kroków przygotowania";
+                            ? UiText.Format("Gdzie: {0}", language, view.EscapePlan.CurrentStepLocationHint)
+                            : UiText.Get("Gdzie: jeden z opisanych punktów końcowych", language);
+                        progress = UiText.Format(
+                            "Postęp: {0}/{1} kroków przygotowania",
+                            language,
+                            view.EscapePlan.CompletedCommonStepCount,
+                            view.EscapePlan.TotalCommonStepCount);
                     }
 
-                    builder.AppendLine("Tropy:");
+                    builder.AppendLine(UiText.Get("Tropy:", language));
                     if (view.AcquiredAlibiClues == null || view.AcquiredAlibiClues.Count == 0)
-                        builder.AppendLine("• brak");
+                        builder.AppendLine(UiText.Get("• brak", language));
                     else
                     {
                         foreach (AlibiClueView clue in view.AcquiredAlibiClues)
@@ -750,15 +758,16 @@ namespace InterrogationRoom.UI
 
                     if (view.EscapePlan != null)
                     {
-                        builder.AppendLine("Wyjścia:");
+                        builder.AppendLine(UiText.Get("Wyjścia:", language));
                         foreach (EscapeExitOptionView option in view.EscapePlan.ExitOptions)
                         {
                             builder.AppendLine(
-                                $"• {option.Description}\n  Gdzie: {option.LocationHint} — " +
-                                (option.IsPrepared ? "przygotowane" : "nieprzygotowane"));
+                                $"• {option.Description}\n  " +
+                                UiText.Format("Gdzie: {0} — {1}", language, option.LocationHint,
+                                    UiText.Get(option.IsPrepared ? "przygotowane" : "nieprzygotowane", language)));
                         }
                         if (view.EscapePlan.ActiveExit.HasValue)
-                            builder.AppendLine("Finał Ucieczki jest gotowy.");
+                            builder.AppendLine(UiText.Get("Finał Ucieczki jest gotowy.", language));
                     }
                     text = builder.ToString().TrimEnd();
                     return;
@@ -766,120 +775,159 @@ namespace InterrogationRoom.UI
                 default:
                     if (view.PrivateObjective == null)
                     {
-                        title = "Prywatny Cel";
-                        text = "Brak przypisanego Celu.";
+                        title = UiText.Get("Prywatny Cel", language);
+                        text = UiText.Get("Brak przypisanego Celu.", language);
                         return;
                     }
 
                     PrivateObjectiveView objective = view.PrivateObjective;
-                    title = $"Cel: {objective.Title}";
+                    title = UiText.Format("Cel: {0}", language, objective.Title);
                     motive = objective.Motive;
                     step = objective.CurrentStep.HasValue
-                        ? $"Szukasz: {objective.CurrentStepDescription}"
-                        : "Szukasz: Cel ukończony.";
+                        ? UiText.Format("Szukasz: {0}", language, objective.CurrentStepDescription)
+                        : UiText.Get("Szukasz: Cel ukończony.", language);
                     location = objective.CurrentStep.HasValue
-                        ? $"Gdzie: {objective.CurrentStepLocationHint}"
+                        ? UiText.Format("Gdzie: {0}", language, objective.CurrentStepLocationHint)
                         : null;
-                    progress = $"Postęp: {objective.CompletedStepCount}/{objective.TotalStepCount}";
+                    progress = UiText.Format(
+                        "Postęp: {0}/{1}",
+                        language,
+                        objective.CompletedStepCount,
+                        objective.TotalStepCount);
                     if (objective.Target.HasValue)
-                        text = $"Cel Wrobienia: Gracz {objective.Target.Value.Value}";
+                        text = UiText.Format("Cel Wrobienia: Gracz {0}", language, objective.Target.Value.Value);
                     return;
             }
         }
 
-        private static string FormatResult(PlayerResultView result, RoundRevealView reveal)
+        private static string FormatResult(
+            PlayerResultView result,
+            RoundRevealView reveal,
+            UiLanguage language)
         {
             if (result == null)
-                return "Brak wyniku Rundy.";
-            var outcome = result.Won ? "Wygrana" : "Przegrana";
-            var survival = result.Survived ? "Przetrwanie" : "Wykonano Egzekucję na Tobie";
-            var cause = FormatEndCause(result.EndCause);
-            var executed = result.ExecutedPlayer.HasValue ? $"Gracz {result.ExecutedPlayer.Value.Value}" : "nikt";
+                return UiText.Get("Brak wyniku Rundy.", language);
+            var outcome = UiText.Get(result.Won ? "Wygrana" : "Przegrana", language);
+            var survival = UiText.Get(
+                result.Survived ? "Przetrwanie" : "Wykonano Egzekucję na Tobie",
+                language);
+            var cause = FormatEndCause(result.EndCause, language);
+            var executed = result.ExecutedPlayer.HasValue
+                ? UiText.Format("Gracz {0}", language, result.ExecutedPlayer.Value.Value)
+                : UiText.Get("nikt", language);
             var builder = new StringBuilder();
             builder.AppendLine(outcome);
             builder.AppendLine(survival);
-            builder.AppendLine($"Przyczyna: {cause}");
-            builder.AppendLine($"Wykonany gracz: {executed}");
-            builder.AppendLine($"Prywatny Cel: {(result.PrivateObjectiveCompleted ? "ukończony" : "nieukończony")}");
+            builder.AppendLine(UiText.Format("Przyczyna: {0}", language, cause));
+            builder.AppendLine(UiText.Format("Wykonany gracz: {0}", language, executed));
+            builder.AppendLine(UiText.Format(
+                "Prywatny Cel: {0}",
+                language,
+                UiText.Get(result.PrivateObjectiveCompleted ? "ukończony" : "nieukończony", language)));
             if (result.Escaped)
-                builder.AppendLine("Ucieczka: ukończona");
+                builder.AppendLine(UiText.Get("Ucieczka: ukończona", language));
 
             if (reveal != null)
-                AppendRoundReveal(builder, reveal);
+                AppendRoundReveal(builder, reveal, language);
 
             return builder.ToString().TrimEnd();
         }
 
-        private static string FormatResultVerdict(PlayerResultView result) =>
-            result == null ? "BRAK ROZSTRZYGNIĘCIA" : result.Won ? "WYGRANA" : "PRZEGRANA";
+        private static string FormatResultVerdict(PlayerResultView result, UiLanguage language) =>
+            UiText.Get(
+                result == null ? "BRAK ROZSTRZYGNIĘCIA" : result.Won ? "WYGRANA" : "PRZEGRANA",
+                language);
 
-        private static string FormatResultReason(RoundRole role, PlayerResultView result)
+        private static string FormatResultReason(
+            RoundRole role,
+            PlayerResultView result,
+            UiLanguage language)
         {
             if (result == null)
-                return "Runda zakończyła się bez dostępnego wyniku.";
+                return UiText.Get("Runda zakończyła się bez dostępnego wyniku.", language);
             if (result.EndCause == RoundEndCause.Execution)
             {
                 if (!result.ExecutedPlayer.HasValue)
-                    return "Runda zakończyła się Egzekucją.";
+                    return UiText.Get("Runda zakończyła się Egzekucją.", language);
                 if (!result.Survived)
-                    return "Egzekucja została wykonana na Tobie.";
-                return result.DetectiveWon
+                    return UiText.Get("Egzekucja została wykonana na Tobie.", language);
+                return UiText.Get(result.DetectiveWon
                     ? "Detektyw poprawnie rozpoznał Winnego."
-                    : "Detektyw wykonał Egzekucję na Niewinnym.";
+                    : "Detektyw wykonał Egzekucję na Niewinnym.", language);
             }
             if (result.EndCause == RoundEndCause.Escape)
-                return role == RoundRole.Guilty
+                return UiText.Get(role == RoundRole.Guilty
                     ? "Ucieczka Winnego zakończyła Rundę."
-                    : "Winny ukończył Ucieczkę.";
-            return "Limit Rundy upłynął bez Egzekucji Winnego.";
+                    : "Winny ukończył Ucieczkę.", language);
+            return UiText.Get("Limit Rundy upłynął bez Egzekucji Winnego.", language);
         }
 
-        private static void AppendRoundReveal(StringBuilder builder, RoundRevealView reveal)
+        private static void AppendRoundReveal(
+            StringBuilder builder,
+            RoundRevealView reveal,
+            UiLanguage language)
         {
             builder.AppendLine();
-            builder.AppendLine("UJAWNIENIE RUNDY");
-            builder.AppendLine("Role, Cele i indywidualne wyniki:");
+            builder.AppendLine(UiText.Get("UJAWNIENIE RUNDY", language));
+            builder.AppendLine(UiText.Get("Role, Cele i indywidualne wyniki:", language));
             foreach (PlayerEndRevealView player in reveal.Players)
             {
-                builder.Append($"• Gracz {player.Player.Value}: {FormatRole(player.Role)}");
+                builder.Append(UiText.Format(
+                    "• Gracz {0}: {1}",
+                    language,
+                    player.Player.Value,
+                    FormatRole(player.Role, language)));
                 if (player.PrivateObjective != null)
                 {
-                    builder.Append(
-                        $"; Cel „{player.PrivateObjective.Title}” " +
-                        $"{player.PrivateObjective.CompletedStepCount}/{player.PrivateObjective.TotalStepCount}");
+                    builder.Append(UiText.Format(
+                        "; Cel „{0}” {1}/{2}",
+                        language,
+                        player.PrivateObjective.Title,
+                        player.PrivateObjective.CompletedStepCount,
+                        player.PrivateObjective.TotalStepCount));
                     if (player.PrivateObjective.Target.HasValue)
-                        builder.Append($"; Cel Wrobienia: Gracz {player.PrivateObjective.Target.Value.Value}");
+                        builder.Append(UiText.Format(
+                            "; Cel Wrobienia: Gracz {0}",
+                            language,
+                            player.PrivateObjective.Target.Value.Value));
                 }
-                builder.AppendLine(
-                    $"; {(player.Result.Won ? "wygrana" : "przegrana")}; " +
-                    $"{(player.Result.Survived ? "przeżył" : "wyeliminowany")}");
+                builder.AppendLine(UiText.Format(
+                    "; {0}; {1}",
+                    language,
+                    UiText.Get(player.Result.Won ? "wygrana" : "przegrana", language),
+                    UiText.Get(player.Result.Survived ? "przeżył" : "wyeliminowany", language)));
             }
 
-            builder.AppendLine("Tropy do Alibi:");
+            builder.AppendLine(UiText.Get("Tropy do Alibi:", language));
             if (reveal.AcquiredAlibiClues.Count == 0)
-                builder.AppendLine("• brak");
+                builder.AppendLine(UiText.Get("• brak", language));
             foreach (AlibiClueRevealView clue in reveal.AcquiredAlibiClues)
                 builder.AppendLine($"• {clue.Content}");
 
-            builder.AppendLine("Plan Ucieczki:");
+            builder.AppendLine(UiText.Get("Plan Ucieczki:", language));
             if (reveal.EscapePlan.Actions.Count == 0)
-                builder.AppendLine("• brak działań");
+                builder.AppendLine(UiText.Get("• brak działań", language));
             foreach (EscapeActionRevealView action in reveal.EscapePlan.Actions)
             {
-                builder.AppendLine($"• {FormatEscapeAction(action.Kind)}");
+                builder.AppendLine($"• {FormatEscapeAction(action.Kind, language)}");
             }
-            builder.AppendLine(reveal.EscapePlan.SuccessfulExit.HasValue
+            builder.AppendLine(UiText.Get(reveal.EscapePlan.SuccessfulExit.HasValue
                 ? "Udane wyjście: przygotowany punkt Ucieczki"
-                : "Udane wyjście: brak");
+                : "Udane wyjście: brak", language));
 
-            builder.AppendLine("Incydenty i autorzy:");
+            builder.AppendLine(UiText.Get("Incydenty i autorzy:", language));
             if (reveal.Incidents.Count == 0)
-                builder.AppendLine("• brak");
+                builder.AppendLine(UiText.Get("• brak", language));
             foreach (IncidentRevealView incident in reveal.Incidents)
             {
                 builder.AppendLine(
-                    $"• {HumanizeIdentifier(incident.Effect.Value)} / {HumanizeIdentifier(incident.Location.Value)}; " +
-                    $"autor Gracz {incident.Author.Value} ({FormatIncidentKind(incident.Kind)})");
+                    UiText.Format(
+                        "• {0} / {1}; autor Gracz {2} ({3})",
+                        language,
+                        HumanizeIdentifier(incident.Effect.Value, language),
+                        HumanizeIdentifier(incident.Location.Value, language),
+                        incident.Author.Value,
+                        FormatIncidentKind(incident.Kind, language)));
             }
         }
 
@@ -889,40 +937,45 @@ namespace InterrogationRoom.UI
             return $"{totalSeconds / 60:00}:{totalSeconds % 60:00}";
         }
 
-        private static string FormatIncidentKind(IncidentKind kind) =>
-            kind == IncidentKind.Loud ? "głośny" : "cichy";
+        private static string FormatIncidentKind(IncidentKind kind, UiLanguage language) =>
+            UiText.Get(kind == IncidentKind.Loud ? "głośny" : "cichy", language);
 
-        private static string FormatEscapeAction(EscapeActionKind kind)
+        private static string FormatEscapeAction(EscapeActionKind kind, UiLanguage language)
         {
+            string text;
             switch (kind)
             {
-                case EscapeActionKind.Completed: return "ukończono Ucieczkę";
-                case EscapeActionKind.PreparedCommonStep: return "przygotowano element Planu Ucieczki";
-                case EscapeActionKind.PreparedExit: return "przygotowano punkt Ucieczki";
-                case EscapeActionKind.AttemptStarted: return "rozpoczęto finał Ucieczki";
-                case EscapeActionKind.AttemptInterrupted: return "przerwano finał Ucieczki";
-                default: return "wykonano działanie Planu Ucieczki";
+                case EscapeActionKind.Completed: text = "ukończono Ucieczkę"; break;
+                case EscapeActionKind.PreparedCommonStep: text = "przygotowano element Planu Ucieczki"; break;
+                case EscapeActionKind.PreparedExit: text = "przygotowano punkt Ucieczki"; break;
+                case EscapeActionKind.AttemptStarted: text = "rozpoczęto finał Ucieczki"; break;
+                case EscapeActionKind.AttemptInterrupted: text = "przerwano finał Ucieczki"; break;
+                default: text = "wykonano działanie Planu Ucieczki"; break;
             }
+            return UiText.Get(text, language);
         }
 
-        private static string HumanizeIdentifier(string value)
+        private static string HumanizeIdentifier(string value, UiLanguage language)
         {
             if (string.IsNullOrWhiteSpace(value))
-                return "nieznane";
+                return UiText.Get("nieznane", language);
             string normalized = value.Replace('-', ' ').Replace('_', ' ').Trim();
             if (normalized.Length == 0)
-                return "nieznane";
-            return char.ToUpperInvariant(normalized[0]) + normalized.Substring(1);
+                return UiText.Get("nieznane", language);
+            string humanized = char.ToUpperInvariant(normalized[0]) + normalized.Substring(1);
+            return UiText.Get(humanized, language);
         }
 
-        private static string FormatEndCause(RoundEndCause cause)
+        private static string FormatEndCause(RoundEndCause cause, UiLanguage language)
         {
+            string text;
             switch (cause)
             {
-                case RoundEndCause.Execution: return "Egzekucja";
-                case RoundEndCause.Escape: return "Ucieczka Winnego";
-                default: return "Upłynął Limit Rundy";
+                case RoundEndCause.Execution: text = "Egzekucja"; break;
+                case RoundEndCause.Escape: text = "Ucieczka Winnego"; break;
+                default: text = "Upłynął Limit Rundy"; break;
             }
+            return UiText.Get(text, language);
         }
 
         private static string FormatRole(RoundRole role, UiLanguage language = UiLanguage.Polish)

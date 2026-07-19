@@ -14,7 +14,7 @@
             <ui:VisualElement name="menu-list" class="menu-list">
                 <ui:Button name="host-button" class="menu-entry" text="GOSPODARZ GRY" />
                 <ui:Button name="join-button" class="menu-entry" text="DOŁĄCZ DO SERWERA" />
-                <ui:Button name="developer-test-button" class="menu-entry menu-entry--developer" text="TEST DEWELOPERSKI" />
+                <ui:Button name="developer-test-button" class="menu-entry" text="TEST DEWELOPERSKI" />
                 <ui:Button name="settings-button" class="menu-entry" text="USTAWIENIA" />
                 <ui:Button name="quit-button" class="menu-entry" text="WYJDŹ" />
             </ui:VisualElement>

@@ -14,7 +14,7 @@ using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(NetworkIdentity))]
-public class PlayerController : NetworkBehaviour, IRoundEliminationPort
+public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundRelocationPort
 {
     [Serializable]
     private sealed class CharacterVisualDefinition
@@ -695,6 +695,35 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort
 
         isDead = false;
         verticalVelocity = 0f;
+        return true;
+    }
+
+    [Server]
+    public bool RelocateToStartRoomServer(Vector3 position, Quaternion rotation)
+    {
+        if (!NetworkServer.active)
+        {
+            return false;
+        }
+
+        if (activeSeat != null)
+        {
+            activeSeat.ReleaseServer(netIdentity);
+            activeSeat = null;
+        }
+
+        isSeated = false;
+        isDancing = false;
+        verticalVelocity = 0f;
+        SetSeatedLocally(false);
+
+        NetworkTransformBase networkTransform = GetComponent<NetworkTransformBase>();
+        if (networkTransform == null)
+        {
+            return false;
+        }
+
+        networkTransform.ServerTeleport(position, rotation);
         return true;
     }
 

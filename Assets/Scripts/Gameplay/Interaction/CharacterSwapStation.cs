@@ -1,5 +1,6 @@
 using System;
 using InterrogationRoom.Gameplay.Characters;
+using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
 
@@ -27,7 +28,6 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         [Header("Interaction")]
         [SerializeField] private Transform interactionPoint;
-        [SerializeField] private string promptFormat = "Play as {0}";
 
         [SyncVar(hook = nameof(OnDisplayedCharacterChanged))]
         private CharacterId displayedCharacter;
@@ -36,7 +36,9 @@ namespace InterrogationRoom.Gameplay.Interaction
             ? interactionPoint.position
             : transform.position + transform.up * 1f;
 
-        public string InteractionPrompt => string.Format(promptFormat, displayedCharacter);
+        public string InteractionPrompt => UiText.FormatCharacterSwapPrompt(
+            displayedCharacter,
+            UiText.CurrentLanguage);
 
         private void Awake()
         {
