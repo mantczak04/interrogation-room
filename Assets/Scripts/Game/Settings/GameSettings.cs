@@ -11,7 +11,7 @@ namespace InterrogationRoom.Settings
     {
         public const string MouseSensitivityKey = "settings.mouseSensitivity";
         public const string LanguageKey = "settings.language";
-        public const float DefaultMouseSensitivity = 2f;
+        public const float DefaultMouseSensitivity = 1f;
         public const float MinMouseSensitivity = 0.2f;
         public const float MaxMouseSensitivity = 8f;
 

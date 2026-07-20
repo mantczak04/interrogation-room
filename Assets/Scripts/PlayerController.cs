@@ -28,7 +28,7 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
 
     [Header("Movement")]
     public float speed = 5f;
-    public float mouseSensitivity = 2f;
+    public float mouseSensitivity = 1f;
     public float jumpHeight = 1.5f;
     public float gravity = -9.81f;
     public Camera playerCamera;

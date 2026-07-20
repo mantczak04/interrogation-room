@@ -63,6 +63,9 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     bool elementsBound;
     bool sandboxPinned;
     bool hadLocalPlayer;
+#if UNITY_EDITOR
+    bool cursorWasLockedLastFrame;
+#endif
     MenuPage currentPage = MenuPage.Home;
     string renderedSignature;
 
@@ -228,6 +231,17 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 #else
         bool togglePressed = Input.GetKeyDown(KeyCode.Escape);
         bool sandboxPressed = Application.isEditor && Input.GetKeyDown(KeyCode.F8);
+#endif
+#if UNITY_EDITOR
+        // In the Editor, pressing Esc with a locked cursor is consumed by the
+        // Game view to release the cursor and the key never reaches the game.
+        // A Locked -> None transition that the input gate did not request is
+        // therefore that swallowed Esc press.
+        bool editorSwallowedEscape = cursorWasLockedLastFrame
+                                     && UnityEngine.Cursor.lockState == CursorLockMode.None
+                                     && !PlayerInputGate.CursorReleased;
+        cursorWasLockedLastFrame = UnityEngine.Cursor.lockState == CursorLockMode.Locked;
+        togglePressed |= editorSwallowedEscape;
 #endif
         if (togglePressed && !SettingsMenu.IsOpen && !SettingsMenu.EscapeConsumedThisFrame)
         {
