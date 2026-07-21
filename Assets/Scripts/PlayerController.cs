@@ -110,6 +110,7 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
     public bool IsDead => isDead;
     public bool IsEliminated => isDead;
     public CharacterId CharacterId => characterId;
+    public bool IsThirdPerson => isThirdPerson;
 
     public GameObject CreateCharacterPreview(CharacterId selectedCharacter, Transform parent)
     {
@@ -185,6 +186,7 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
         RefreshSeatedState();
         RefreshRendererVisibility();
         SetDeadLocally(isDead);
+        PlayerWorldNameplate.Attach(this);
     }
 
     public override void OnStartServer()

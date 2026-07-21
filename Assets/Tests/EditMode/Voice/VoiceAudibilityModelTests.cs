@@ -34,9 +34,8 @@ namespace InterrogationRoom.Voice.Tests
                 },
                 Tuning);
 
-            Assert.That(result.VolumeMultiplier, Is.LessThanOrEqualTo(0.05f),
-                "A full wall must practically block speech.");
-            Assert.That(result.LowPassCutoff, Is.LessThanOrEqualTo(700f));
+            Assert.That(result.VolumeMultiplier, Is.Zero,
+                "A full wall must not pass any voice signal.");
         }
 
         [Test]
@@ -55,7 +54,7 @@ namespace InterrogationRoom.Voice.Tests
                 },
                 Tuning);
 
-            Assert.That(result.VolumeMultiplier, Is.EqualTo(wall.VolumeMultiplier),
+            Assert.That(result.VolumeMultiplier, Is.Zero,
                 "Eavesdropping must require standing next to the closed door.");
             Assert.That(result.LowPassCutoff, Is.EqualTo(wall.LowPassCutoff));
         }
@@ -75,11 +74,13 @@ namespace InterrogationRoom.Voice.Tests
 
             Assert.That(result.VolumeMultiplier, Is.EqualTo(Tuning.ClosedPortalVolume));
             Assert.That(result.VolumeMultiplier, Is.GreaterThan(Tuning.WallVolume));
-            Assert.That(result.VolumeMultiplier, Is.LessThanOrEqualTo(0.2f),
+            Assert.That(result.VolumeMultiplier, Is.LessThanOrEqualTo(0.12f),
                 "Eavesdropped speech must stay quiet.");
             Assert.That(result.LowPassCutoff, Is.EqualTo(Tuning.ClosedPortalCutoff));
-            Assert.That(result.LowPassCutoff, Is.LessThanOrEqualTo(1200f),
+            Assert.That(result.LowPassCutoff, Is.LessThanOrEqualTo(900f),
                 "Eavesdropped speech must stay strongly filtered.");
+            Assert.That(Tuning.EavesdropRange, Is.LessThanOrEqualTo(1f),
+                "The listener must stand directly beside a closed door to eavesdrop.");
         }
 
         [Test]
@@ -127,6 +128,10 @@ namespace InterrogationRoom.Voice.Tests
 
             Assert.That(result.VolumeMultiplier, Is.EqualTo(Tuning.OpenPortalVolume));
             Assert.That(result.LowPassCutoff, Is.EqualTo(Tuning.OpenPortalCutoff));
+            Assert.That(result.VolumeMultiplier, Is.GreaterThanOrEqualTo(0.8f),
+                "An open door is a normal, readable propagation path.");
+            Assert.That(result.LowPassCutoff, Is.GreaterThanOrEqualTo(12000f),
+                "An open door must not make speech sound as if it crossed a wall.");
         }
 
         [Test]
@@ -160,12 +165,26 @@ namespace InterrogationRoom.Voice.Tests
         {
             AnimationCurve curve = VoiceAudibilityModel.BuildDistanceRolloffCurve(
                 conversationalDistance: 2f,
-                audibleDistance: 15f);
+                audibleDistance: 10f);
 
-            Assert.That(curve.Evaluate(2f / 15f), Is.EqualTo(1f).Within(0.001f));
-            Assert.That(curve.Evaluate(8f / 15f), Is.LessThan(0.3f),
+            Assert.That(curve.Evaluate(2f / 10f), Is.EqualTo(1f).Within(0.001f));
+            Assert.That(curve.Evaluate(8f / 10f), Is.LessThan(0.1f),
                 "Speech beyond conversational range must no longer sound nearby.");
             Assert.That(curve.Evaluate(1f), Is.EqualTo(0f).Within(0.001f));
+        }
+
+        [Test]
+        public void LongUnobstructedCorridorRemainsFaintlyAudibleInsideTheLimit()
+        {
+            AnimationCurve curve = VoiceAudibilityModel.BuildDistanceRolloffCurve(
+                conversationalDistance: 2f,
+                audibleDistance: 10f);
+
+            float distantCorridorVolume = curve.Evaluate(9f / 10f);
+
+            Assert.That(distantCorridorVolume, Is.GreaterThan(0f));
+            Assert.That(distantCorridorVolume, Is.LessThan(0.1f),
+                "A distant clear corridor may carry voice, but it must sound distant.");
         }
 
         private static VoiceAudibility EvaluateClosedAtDoorDistance(float doorDistance)

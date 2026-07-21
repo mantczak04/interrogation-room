@@ -98,6 +98,39 @@ namespace InterrogationRoom.Voice.Tests
             Assert.That(result.ClosedPortalCount, Is.Zero);
         }
 
+        [Test]
+        public void StartRoomAndInterviewRoomRequireCrossingBothDoors()
+        {
+            var portals = new[]
+            {
+                new VoicePortal("sala-wspolna", "korytarz", false, new Vector3(-1f, 0f, 0f)),
+                new VoicePortal("korytarz", "pokoj-przesluchan", false, new Vector3(8.5f, 0f, 0f))
+            };
+
+            VoicePortalPath result = VoicePortalPathModel.Resolve(
+                "sala-wspolna",
+                "pokoj-przesluchan",
+                new Vector3(-2f, 0f, 0f),
+                new Vector3(9.5f, 0f, 0f),
+                portals);
+
+            Assert.That(result.PathKind, Is.EqualTo(VoicePathKind.ClosedPortals));
+            Assert.That(result.ClosedPortalCount, Is.EqualTo(2),
+                "The starting room and interview room must not behave like adjacent open space.");
+            Assert.That(
+                VoiceAudibilityModel.Evaluate(
+                    new VoiceAudibilityQuery
+                    {
+                        PathKind = result.PathKind,
+                        DirectDistance = 11.5f,
+                        PortalPathLength = result.PathLength,
+                        ClosedPortalCount = result.ClosedPortalCount,
+                        ListenerDistanceToNearestClosedPortal = result.ListenerDistanceToFirstClosedPortal
+                    },
+                    VoiceAudibilityTuning.Default).VolumeMultiplier,
+                Is.Zero);
+        }
+
         private static VoicePortalPath Resolve(VoicePortal portal)
         {
             return VoicePortalPathModel.Resolve(

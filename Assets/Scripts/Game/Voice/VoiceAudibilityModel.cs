@@ -72,15 +72,15 @@ namespace InterrogationRoom.Voice
         public static VoiceAudibilityTuning Default => new VoiceAudibilityTuning
         {
             ClearCutoff = 22000f,
-            OpenPortalVolume = 0.7f,
-            OpenPortalCutoff = 8000f,
-            OpenPathDetourHalfDistance = 6f,
-            ClosedPortalVolume = 0.18f,
-            ClosedPortalCutoff = 1000f,
-            EavesdropRange = 1.75f,
-            EavesdropFalloff = 1f,
-            WallVolume = 0.02f,
-            WallCutoff = 600f
+            OpenPortalVolume = 0.85f,
+            OpenPortalCutoff = 14000f,
+            OpenPathDetourHalfDistance = 8f,
+            ClosedPortalVolume = 0.1f,
+            ClosedPortalCutoff = 750f,
+            EavesdropRange = 0.75f,
+            EavesdropFalloff = 0.75f,
+            WallVolume = 0f,
+            WallCutoff = 500f
         };
     }
 

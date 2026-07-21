@@ -201,6 +201,33 @@ namespace InterrogationRoom.Gameplay.Tests
             Assert.That(wall.ToString(), Is.EqualTo("Wall"));
         }
 
+        [Test]
+        public void FullWallMutesParticipantTapImmediately()
+        {
+            Type roomType = FindAssemblyCSharpType("InterrogationRoom.Gameplay.Interaction.RoomVolume");
+            Type occlusionType = FindAssemblyCSharpType("VivoxVoiceOcclusion");
+            CreateRoom("Listener room", roomType, "listener-room", new Vector3(-2f, 1f, 0f));
+            CreateRoom("Speaker room", roomType, "speaker-room", new Vector3(2f, 1f, 0f));
+
+            GameObject listener = CreateObject("Listener");
+            listener.transform.position = new Vector3(-2f, 1f, 0f);
+            GameObject speaker = CreateObject("Speaker");
+            speaker.transform.position = new Vector3(2f, 1f, 0f);
+            GameObject tap = CreateObject("Participant tap");
+            var source = tap.AddComponent<AudioSource>();
+            Component occlusion = tap.AddComponent(occlusionType);
+
+            occlusionType.GetMethod("Configure")?.Invoke(
+                occlusion,
+                new object[] { listener.transform, speaker.transform, source, (LayerMask)~0 });
+            InvokePrivate(occlusion, "Update");
+
+            Assert.That(source.volume, Is.Zero,
+                "Crossing a full wall must hard-mute the tap without leaking speech during a fade.");
+            Assert.That(occlusionType.GetProperty("CurrentState")?.GetValue(occlusion)?.ToString(),
+                Is.EqualTo("Wall"));
+        }
+
         private Component CreateDoor(string name, Type doorType)
         {
             GameObject root = CreateObject(name);

@@ -54,14 +54,14 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private const string PlayerIdPrefix = "mirror-";
     private const float SessionRequestRetrySeconds = 1f;
     private const float SessionResolutionTimeoutSeconds = 10f;
-    private const float MaxAudibleDistance = 18f;
+    private const float MaxAudibleDistance = 10f;
 
     [Header("Session")]
     [SerializeField] private string channelPrefix = "interrogation-room";
     [SerializeField, Min(0.1f)] private float positionUpdateInterval = 0.3f;
 
     [Header("Playback")]
-    [SerializeField, Min(1f)] private float audibleDistance = 15f;
+    [SerializeField, Range(4f, MaxAudibleDistance)] private float audibleDistance = MaxAudibleDistance;
     [SerializeField, Min(0.5f)] private float conversationalDistance = 2f;
     [SerializeField, Min(0.1f)] private float audioFadeIntensity = 1.5f;
     [SerializeField] private LayerMask occlusionMask = ~0;

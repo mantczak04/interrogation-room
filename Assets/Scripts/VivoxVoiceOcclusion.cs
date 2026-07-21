@@ -16,7 +16,6 @@ public enum VoiceOcclusionState
 [RequireComponent(typeof(AudioLowPassFilter))]
 public sealed class VivoxVoiceOcclusion : MonoBehaviour
 {
-    private const float ClearCutoff = 22000f;
     private const float UpdateInterval = 0.1f;
 
     private readonly RaycastHit[] hits = new RaycastHit[16];
@@ -30,15 +29,7 @@ public sealed class VivoxVoiceOcclusion : MonoBehaviour
     private float nextUpdate;
 
     [Header("Acoustic presets")]
-    [SerializeField, Range(0f, 1f)] private float openPortalVolume = 0.7f;
-    [SerializeField, Min(10f)] private float openPortalCutoff = 8000f;
-    [SerializeField, Min(0.1f)] private float openPathDetourHalfDistance = 6f;
-    [SerializeField, Range(0f, 1f)] private float closedPortalVolume = 0.18f;
-    [SerializeField, Min(10f)] private float closedPortalCutoff = 1000f;
-    [SerializeField, Min(0.1f)] private float eavesdropRange = 1.75f;
-    [SerializeField, Min(0f)] private float eavesdropFalloff = 1f;
-    [SerializeField, Range(0f, 1f)] private float wallVolume = 0.02f;
-    [SerializeField, Min(10f)] private float wallCutoff = 600f;
+    [SerializeField] private VoiceAudibilityTuning tuning = VoiceAudibilityTuning.Default;
     [SerializeField, Min(0.1f)] private float volumeTransitionSpeed = 1.5f;
     [SerializeField, Min(10f)] private float cutoffTransitionSpeed = 30000f;
 
@@ -87,7 +78,7 @@ public sealed class VivoxVoiceOcclusion : MonoBehaviour
                 ? VoiceOcclusionState.Wall
                 : VoiceOcclusionState.SameRoom;
 
-        VoiceAudibility target = VoiceAudibilityModel.Evaluate(BuildQuery(state, path), BuildTuning());
+        VoiceAudibility target = VoiceAudibilityModel.Evaluate(BuildQuery(state, path), tuning);
         ApplySmoothly(state, target);
     }
 
@@ -206,23 +197,6 @@ public sealed class VivoxVoiceOcclusion : MonoBehaviour
         }
     }
 
-    private VoiceAudibilityTuning BuildTuning()
-    {
-        return new VoiceAudibilityTuning
-        {
-            ClearCutoff = ClearCutoff,
-            OpenPortalVolume = openPortalVolume,
-            OpenPortalCutoff = openPortalCutoff,
-            OpenPathDetourHalfDistance = openPathDetourHalfDistance,
-            ClosedPortalVolume = closedPortalVolume,
-            ClosedPortalCutoff = closedPortalCutoff,
-            EavesdropRange = eavesdropRange,
-            EavesdropFalloff = eavesdropFalloff,
-            WallVolume = wallVolume,
-            WallCutoff = wallCutoff
-        };
-    }
-
     private static VoicePathKind MapPathKind(VoiceOcclusionState state)
     {
         switch (state)
@@ -241,6 +215,13 @@ public sealed class VivoxVoiceOcclusion : MonoBehaviour
     private void ApplySmoothly(VoiceOcclusionState state, VoiceAudibility target)
     {
         CurrentState = state;
+        if (target.VolumeMultiplier <= 0f)
+        {
+            audioSource.volume = 0f;
+            lowPassFilter.cutoffFrequency = target.LowPassCutoff;
+            return;
+        }
+
         audioSource.volume = Mathf.MoveTowards(
             audioSource.volume,
             target.VolumeMultiplier,
@@ -255,6 +236,6 @@ public sealed class VivoxVoiceOcclusion : MonoBehaviour
     {
         CurrentState = state;
         audioSource.volume = 1f;
-        lowPassFilter.cutoffFrequency = ClearCutoff;
+        lowPassFilter.cutoffFrequency = tuning.ClearCutoff;
     }
 }

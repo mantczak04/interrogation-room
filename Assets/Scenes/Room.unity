@@ -21808,7 +21808,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::VivoxTest
   channelPrefix: interrogation-room
   positionUpdateInterval: 0.3
-  audibleDistance: 15
+  audibleDistance: 10
   conversationalDistance: 2
   audioFadeIntensity: 1.5
   occlusionMask:
