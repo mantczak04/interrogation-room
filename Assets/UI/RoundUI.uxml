@@ -8,25 +8,43 @@
                 <ui:Label text="Wyjdź z lobby" class="lobby-back-text" picking-mode="Ignore" />
             </ui:Button>
             <ui:VisualElement class="lobby-layout">
-                <ui:VisualElement class="lobby-controls dossier">
-                    <ui:Label text="PRZESŁUCHANIE" class="lobby-title stamp-font" />
+                <ui:VisualElement class="lobby-roster-panel">
+                    <ui:Label text="OBECNI NA POSTERUNKU" class="lobby-side-title stamp-font" />
+                    <ui:Label name="lobby-roster-count" text="Lista graczy" class="lobby-side-kicker" />
+                    <ui:VisualElement class="lobby-side-rule" />
+                    <ui:Label name="lobby-player-list-empty" text="Oczekiwanie na graczy…" class="lobby-player-list-empty" />
+                    <ui:ScrollView name="lobby-player-list" class="lobby-player-list" mode="Vertical" horizontal-scroller-visibility="Hidden" />
+                    <ui:Label text="V — wycisz / włącz mikrofon" class="lobby-voice-hint" />
+                </ui:VisualElement>
+                <ui:VisualElement class="lobby-controls lobby-settings-panel">
+                    <ui:Label text="USTAWIENIA" class="lobby-title stamp-font" />
                     <ui:Label text="LOBBY" class="lobby-kicker stamp-font" />
                     <ui:Label name="player-count-label" text="Gracze w lobby: 0/8" class="lobby-player-count" />
                     <ui:VisualElement class="document-rule" />
-                    <ui:Label text="Wybierz postać" class="section-title stamp-font" />
-                    <ui:VisualElement class="character-selector">
-                        <ui:Button name="previous-character-button" text="‹" class="character-arrow" focusable="false" />
-                        <ui:Label name="character-name-label" text="Małpa" class="character-name stamp-font" />
-                        <ui:Button name="next-character-button" text="›" class="character-arrow" focusable="false" />
+                    <ui:Label text="Ustawienia Rundy" class="section-title stamp-font" />
+                    <ui:VisualElement class="character-selector character-selector--legacy">
+                        <ui:Button name="legacy-previous-character-button" text="‹" class="character-arrow" focusable="false" />
+                        <ui:Label name="legacy-character-name-label" text="Małpa" class="character-name stamp-font" />
+                        <ui:Button name="legacy-next-character-button" text="›" class="character-arrow" focusable="false" />
                     </ui:VisualElement>
                     <ui:Toggle name="secret-objective-toggle" label="Włącz Sekretny Cel" value="true" class="lobby-toggle" />
                     <ui:Label name="secret-objective-summary" text="Sekretny Cel jest dostępny od 5 graczy." class="lobby-toggle-summary" />
                     <ui:Button name="invite-button" text="Zaproś znajomych" class="btn btn--quiet lobby-action" />
-                    <ui:Button name="start-button" text="Start Rundy" class="btn lobby-action lobby-start" />
+                    <ui:VisualElement name="start-button-hover-area" class="lobby-start-hover-area">
+                        <ui:Button name="start-button" text="Start Rundy" class="btn lobby-start" />
+                        <ui:Label name="start-button-hover-info" text="Wszyscy gracze muszą być gotowi." class="lobby-start-hover-info" picking-mode="Ignore" />
+                    </ui:VisualElement>
                     <ui:Label text="Rundę można rozpocząć dla 3–8 graczy." class="lobby-help" />
                 </ui:VisualElement>
                 <ui:VisualElement class="preview-column">
+                    <ui:Label text="TWOJA POSTAĆ" class="preview-kicker stamp-font" />
                     <ui:Image name="character-preview" class="character-preview" scale-mode="ScaleToFit" />
+                    <ui:VisualElement class="character-selector preview-character-selector">
+                        <ui:Button name="previous-character-button" text="‹" class="character-arrow" focusable="false" />
+                        <ui:Label name="character-name-label" text="Małpa" class="character-name stamp-font" />
+                        <ui:Button name="next-character-button" text="›" class="character-arrow" focusable="false" />
+                    </ui:VisualElement>
+                    <ui:Button name="lobby-ready-button" text="Gotowy" class="btn lobby-ready-button" />
                     <ui:Label text="Wygląd postaci nie zdradza roli." class="preview-caption" />
                 </ui:VisualElement>
             </ui:VisualElement>

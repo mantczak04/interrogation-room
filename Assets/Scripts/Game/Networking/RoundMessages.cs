@@ -162,6 +162,30 @@ namespace InterrogationRoom.Networking
     public struct RoundLobbyStateMessage : NetworkMessage
     {
         public int PlayerCount;
+        public bool SecretObjectiveEnabled;
+        public RoundLobbyPlayerMessage[] Players;
+    }
+
+    public struct RoundLobbyPlayerMessage
+    {
+        public int PlayerId;
+        public uint NetworkIdentityNetId;
+        public string DisplayName;
+        public bool IsHost;
+        public bool IsSimulated;
+        public bool IsReady;
+    }
+
+    /// <summary>Client-authored public lobby profile. Sender identity still comes from Mirror.</summary>
+    public struct RoundLobbyProfileMessage : NetworkMessage
+    {
+        public string DisplayName;
+    }
+
+    /// <summary>Client lobby-ready intention. Player identity is derived from the authenticated sender.</summary>
+    public struct RoundLobbyReadyMessage : NetworkMessage
+    {
+        public bool IsReady;
     }
 
     public struct AlibiEntryMessage
@@ -437,7 +461,11 @@ namespace InterrogationRoom.Networking
                 && Writer<RoundLobbyResetMessage>.write != null
                 && Reader<RoundLobbyResetMessage>.read != null
                 && Writer<RoundLobbyStateMessage>.write != null
-                && Reader<RoundLobbyStateMessage>.read != null)
+                && Reader<RoundLobbyStateMessage>.read != null
+                && Writer<RoundLobbyProfileMessage>.write != null
+                && Reader<RoundLobbyProfileMessage>.read != null
+                && Writer<RoundLobbyReadyMessage>.write != null
+                && Reader<RoundLobbyReadyMessage>.read != null)
                 return;
 
             Writer<RoundIntentMessage>.write = WriteRoundIntent;
@@ -450,6 +478,10 @@ namespace InterrogationRoom.Networking
             Reader<RoundLobbyResetMessage>.read = ReadRoundLobbyReset;
             Writer<RoundLobbyStateMessage>.write = WriteRoundLobbyState;
             Reader<RoundLobbyStateMessage>.read = ReadRoundLobbyState;
+            Writer<RoundLobbyProfileMessage>.write = WriteRoundLobbyProfile;
+            Reader<RoundLobbyProfileMessage>.read = ReadRoundLobbyProfile;
+            Writer<RoundLobbyReadyMessage>.write = WriteRoundLobbyReady;
+            Reader<RoundLobbyReadyMessage>.read = ReadRoundLobbyReady;
             _registered = true;
         }
 
@@ -603,10 +635,63 @@ namespace InterrogationRoom.Networking
         public static void WriteRoundLobbyState(this NetworkWriter writer, RoundLobbyStateMessage message)
         {
             writer.WriteInt(message.PlayerCount);
+            writer.WriteBool(message.SecretObjectiveEnabled);
+            var players = message.Players ?? Array.Empty<RoundLobbyPlayerMessage>();
+            if (players.Length > MaxPlayers)
+                throw new ArgumentOutOfRangeException(nameof(message), $"Lobby cannot contain more than {MaxPlayers} presented players.");
+
+            writer.WriteByte((byte)players.Length);
+            foreach (RoundLobbyPlayerMessage player in players)
+            {
+                writer.WriteInt(player.PlayerId);
+                writer.WriteUInt(player.NetworkIdentityNetId);
+                writer.WriteString(player.DisplayName);
+                writer.WriteBool(player.IsHost);
+                writer.WriteBool(player.IsSimulated);
+                writer.WriteBool(player.IsReady);
+            }
         }
 
-        public static RoundLobbyStateMessage ReadRoundLobbyState(this NetworkReader reader) =>
-            new RoundLobbyStateMessage { PlayerCount = reader.ReadInt() };
+        public static RoundLobbyStateMessage ReadRoundLobbyState(this NetworkReader reader)
+        {
+            int playerCount = reader.ReadInt();
+            bool secretObjectiveEnabled = reader.ReadBool();
+            int presentedCount = reader.ReadByte();
+            var players = new RoundLobbyPlayerMessage[presentedCount];
+            for (int index = 0; index < presentedCount; index++)
+            {
+                players[index] = new RoundLobbyPlayerMessage
+                {
+                    PlayerId = reader.ReadInt(),
+                    NetworkIdentityNetId = reader.ReadUInt(),
+                    DisplayName = reader.ReadString(),
+                    IsHost = reader.ReadBool(),
+                    IsSimulated = reader.ReadBool(),
+                    IsReady = reader.ReadBool()
+                };
+            }
+
+            return new RoundLobbyStateMessage
+            {
+                PlayerCount = playerCount,
+                SecretObjectiveEnabled = secretObjectiveEnabled,
+                Players = players
+            };
+        }
+
+        public static void WriteRoundLobbyProfile(this NetworkWriter writer, RoundLobbyProfileMessage message)
+        {
+            writer.WriteString(message.DisplayName);
+        }
+
+        public static RoundLobbyProfileMessage ReadRoundLobbyProfile(this NetworkReader reader) =>
+            new RoundLobbyProfileMessage { DisplayName = reader.ReadString() };
+
+        public static void WriteRoundLobbyReady(this NetworkWriter writer, RoundLobbyReadyMessage message) =>
+            writer.WriteBool(message.IsReady);
+
+        public static RoundLobbyReadyMessage ReadRoundLobbyReady(this NetworkReader reader) =>
+            new RoundLobbyReadyMessage { IsReady = reader.ReadBool() };
 
         public static void WriteRoundView(this NetworkWriter writer, RoundViewMessage message)
         {

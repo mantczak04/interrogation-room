@@ -162,6 +162,9 @@ namespace InterrogationRoom.UI
         private Label _resultReasonLabel;
         private Label _rejectionLabel;
         private Button _startButton;
+        private VisualElement _startButtonHoverArea;
+        private Label _startButtonHoverInfo;
+        private Button _lobbyReadyButton;
         private Label _playerCountLabel;
         private Toggle _secretObjectiveToggle;
         private Label _secretObjectiveSummary;
@@ -172,6 +175,9 @@ namespace InterrogationRoom.UI
         private bool _developerMenuOpen;
         private bool _unlimitedRound;
         private bool _privatePanelExpanded = true;
+        private bool _startButtonHovered;
+        private bool _startButtonCanStart;
+        private string _startButtonBlockedMessage;
         private RoundPhase? _lastRenderedPhase;
         private readonly Dictionary<TextElement, string> _staticPolishText = new Dictionary<TextElement, string>();
 
@@ -211,6 +217,9 @@ namespace InterrogationRoom.UI
             coordinator.IntentRejected += OnIntentRejected;
             coordinator.LobbyResetReceived += OnLobbyResetReceived;
             _startButton.clicked += OnStartClicked;
+            _startButtonHoverArea.RegisterCallback<PointerEnterEvent>(OnStartButtonPointerEnter);
+            _startButtonHoverArea.RegisterCallback<PointerLeaveEvent>(OnStartButtonPointerLeave);
+            _lobbyReadyButton.clicked += OnLobbyReadyClicked;
             _secretObjectiveToggle.RegisterValueChangedCallback(OnSecretObjectiveChanged);
             _readyButton.clicked += OnReadyClicked;
             _privateToggleButton.clicked += TogglePrivatePanel;
@@ -235,6 +244,13 @@ namespace InterrogationRoom.UI
             }
             if (_startButton != null)
                 _startButton.clicked -= OnStartClicked;
+            if (_startButtonHoverArea != null)
+            {
+                _startButtonHoverArea.UnregisterCallback<PointerEnterEvent>(OnStartButtonPointerEnter);
+                _startButtonHoverArea.UnregisterCallback<PointerLeaveEvent>(OnStartButtonPointerLeave);
+            }
+            if (_lobbyReadyButton != null)
+                _lobbyReadyButton.clicked -= OnLobbyReadyClicked;
             if (_secretObjectiveToggle != null)
                 _secretObjectiveToggle.UnregisterValueChangedCallback(OnSecretObjectiveChanged);
             if (_readyButton != null)
@@ -326,7 +342,7 @@ namespace InterrogationRoom.UI
             panelSettings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
             panelSettings.referenceResolution = new Vector2Int(1920, 1080);
             panelSettings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
-            panelSettings.match = 0.5f;
+            panelSettings.match = 1f;
         }
 
         /// <summary>
@@ -495,23 +511,36 @@ namespace InterrogationRoom.UI
         {
             bool connected = NetworkClient.isConnected || NetworkServer.active;
             int playerCount = coordinator.PublicLobbyPlayerCount;
+            int presentedPlayerCount = coordinator.PublicLobbyPlayers.Count;
             SetVisible(_lobbyPanel, _lobbyMenuVisible || connected);
             SetVisible(_preparationPanel, false);
             SetVisible(_hudPanel, false);
             SetVisible(_resultPanel, false);
             SetVisible(_privatePanel, false);
-            var canStart = coordinator.IsLocalHost
-                && playerCount >= RoundEngine.MinPlayers
+            bool validPlayerCount = playerCount >= RoundEngine.MinPlayers
                 && playerCount <= RoundEngine.MaxPlayers;
-            SetVisible(_startButton, coordinator.IsLocalHost);
-            SetVisible(_secretObjectiveToggle, coordinator.IsLocalHost);
-            SetVisible(_secretObjectiveSummary, coordinator.IsLocalHost);
+            var canStart = coordinator.IsLocalHost
+                && validPlayerCount
+                && coordinator.AreAllLobbyPlayersReady;
+            SetVisible(_startButtonHoverArea, coordinator.IsLocalHost);
+            SetVisible(_secretObjectiveToggle, true);
+            SetVisible(_secretObjectiveSummary, true);
             _startButton.SetEnabled(canStart);
-            _startButton.text = canStart
-                ? UiText.Get("Start Rundy")
-                : $"{UiText.Get("Start Rundy")} ({playerCount}/{RoundEngine.MinPlayers})";
-            _playerCountLabel.text = $"{UiText.Get("Gracze w lobby")}: {playerCount}/{RoundEngine.MaxPlayers}";
+            _startButtonCanStart = canStart;
+            _startButtonBlockedMessage = canStart
+                ? string.Empty
+                : UiText.Get("Wszyscy gracze muszą być gotowi.");
+            _startButton.tooltip = string.Empty;
+            RefreshStartButtonHoverInfo();
+            _startButton.text = UiText.Get("Start Rundy");
+            _playerCountLabel.text = presentedPlayerCount == playerCount
+                ? $"{UiText.Get("Gracze w lobby")}: {playerCount}/{RoundEngine.MaxPlayers}"
+                : $"{UiText.Get("Podgląd listy")}: {presentedPlayerCount}/{RoundEngine.MaxPlayers} • {UiText.Get("prawdziwi")}: {playerCount}";
             _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
+            SetVisible(_lobbyReadyButton, connected);
+            bool localReady = coordinator.IsLocalLobbyReady;
+            _lobbyReadyButton.text = UiText.Get(localReady ? "Anuluj gotowość" : "Gotowy");
+            _lobbyReadyButton.EnableInClassList("lobby-ready-button--active", localReady);
             bool secretObjectiveAvailable = playerCount >= RoundEngine.MinPlayersForSecretObjective;
             _secretObjectiveToggle.SetEnabled(coordinator.IsLocalHost && secretObjectiveAvailable);
             _secretObjectiveSummary.text = secretObjectiveAvailable
@@ -558,6 +587,9 @@ namespace InterrogationRoom.UI
             _resultReasonLabel = Required<Label>(root, "result-reason-label");
             _rejectionLabel = Required<Label>(root, "rejection-label");
             _startButton = Required<Button>(root, "start-button");
+            _startButtonHoverArea = Required<VisualElement>(root, "start-button-hover-area");
+            _startButtonHoverInfo = Required<Label>(root, "start-button-hover-info");
+            _lobbyReadyButton = Required<Button>(root, "lobby-ready-button");
             _playerCountLabel = Required<Label>(root, "player-count-label");
             _secretObjectiveToggle = Required<Toggle>(root, "secret-objective-toggle");
             _secretObjectiveSummary = Required<Label>(root, "secret-objective-summary");
@@ -597,6 +629,34 @@ namespace InterrogationRoom.UI
         }
 
         private void OnStartClicked() => coordinator.RequestStartRound();
+
+        private void OnStartButtonPointerEnter(PointerEnterEvent pointerEvent)
+        {
+            _startButtonHovered = true;
+            RefreshStartButtonHoverInfo();
+        }
+
+        private void OnStartButtonPointerLeave(PointerLeaveEvent pointerEvent)
+        {
+            _startButtonHovered = false;
+            RefreshStartButtonHoverInfo();
+        }
+
+        private void RefreshStartButtonHoverInfo()
+        {
+            if (_startButtonHoverInfo == null)
+                return;
+
+            _startButtonHoverInfo.text = _startButtonBlockedMessage ?? string.Empty;
+            SetVisible(
+                _startButtonHoverInfo,
+                _startButtonHovered &&
+                !_startButtonCanStart &&
+                !string.IsNullOrWhiteSpace(_startButtonBlockedMessage));
+        }
+
+        private void OnLobbyReadyClicked() =>
+            coordinator.RequestSetLobbyReady(!coordinator.IsLocalLobbyReady);
 
         private void OnSecretObjectiveChanged(ChangeEvent<bool> changeEvent)
         {

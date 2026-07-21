@@ -44,6 +44,9 @@ namespace InterrogationRoom.Networking
         private readonly HashSet<int> _rejectedLateJoiners = new HashSet<int>();
         private readonly Dictionary<int, IRoundHitSource> _hitSourcesByPlayerId =
             new Dictionary<int, IRoundHitSource>();
+        private readonly Dictionary<int, string> _lobbyDisplayNamesByPlayerId =
+            new Dictionary<int, string>();
+        private readonly HashSet<int> _lobbyReadyPlayerIds = new HashSet<int>();
 
         private RoundEngine _engine = new RoundEngine();
         private RoundPhase _phase = RoundPhase.Lobby;
@@ -52,6 +55,11 @@ namespace InterrogationRoom.Networking
         private bool _hostAllowsSecretObjective = true;
         private int _publicLobbyPlayerCount;
         private int _lastBroadcastLobbyPlayerCount = -1;
+        private LobbyPlayerInfo[] _publicLobbyPlayers = Array.Empty<LobbyPlayerInfo>();
+        private bool _lobbyStateDirty = true;
+        private bool _lobbyProfileSent;
+        private string _localLobbyDisplayName;
+        private int _developerLobbyFakePlayerCount;
         private double _roundDeadline;
         private double _roundStartedAtNetworkTime;
         private double _preparationDeadline;
@@ -65,6 +73,32 @@ namespace InterrogationRoom.Networking
         public int PublicLobbyPlayerCount => NetworkServer.active
             ? ConnectedPlayerCount
             : _publicLobbyPlayerCount;
+        public IReadOnlyList<LobbyPlayerInfo> PublicLobbyPlayers => _publicLobbyPlayers;
+        public bool IsLocalLobbyReady
+        {
+            get
+            {
+                uint localNetId = NetworkClient.localPlayer != null
+                    ? NetworkClient.localPlayer.netId
+                    : 0u;
+                return localNetId != 0u && _publicLobbyPlayers.Any(player =>
+                    !player.IsSimulated &&
+                    player.NetworkIdentityNetId == localNetId &&
+                    player.IsReady);
+            }
+        }
+        public bool AreAllLobbyPlayersReady
+        {
+            get
+            {
+                LobbyPlayerInfo[] realPlayers = _publicLobbyPlayers
+                    .Where(player => !player.IsSimulated)
+                    .ToArray();
+                return realPlayers.Length > 0 && realPlayers.All(player => player.IsReady);
+            }
+        }
+        public int DeveloperLobbyFakePlayerCount =>
+            DeveloperToolsAvailable ? _developerLobbyFakePlayerCount : 0;
         public bool AllowsPhysicalRoundActions => NetworkServer.active
             ? _phase == RoundPhase.Round
             : CurrentView?.Phase == RoundPhase.Round;
@@ -87,6 +121,7 @@ namespace InterrogationRoom.Networking
         public event Action<PlayerRoundView, double> ViewReceived;
         public event Action<string> IntentRejected;
         public event Action LobbyResetReceived;
+        public event Action LobbyStateChanged;
         public event Action ServerRoundReset;
         public event Action<NetworkIdentity> ServerExecutionAccepted;
         public event Action ServerGameplayRoundStarted;
@@ -108,7 +143,11 @@ namespace InterrogationRoom.Networking
         private void OnDisable()
         {
             if (_serverHandlerRegistered && NetworkServer.active)
+            {
                 NetworkServer.UnregisterHandler<RoundIntentMessage>();
+                NetworkServer.UnregisterHandler<RoundLobbyProfileMessage>();
+                NetworkServer.UnregisterHandler<RoundLobbyReadyMessage>();
+            }
             if (_clientHandlersRegistered && NetworkClient.active)
             {
                 NetworkClient.UnregisterHandler<RoundViewMessage>();
@@ -123,6 +162,8 @@ namespace InterrogationRoom.Networking
             CurrentRoundEndsAtNetworkTime = 0d;
             CurrentPreparationEndsAtNetworkTime = 0d;
             _publicLobbyPlayerCount = 0;
+            _publicLobbyPlayers = Array.Empty<LobbyPlayerInfo>();
+            _lobbyProfileSent = false;
         }
 
         public void RequestStartRound()
@@ -145,12 +186,52 @@ namespace InterrogationRoom.Networking
             SendIntent(RoundIntentMessage.ReturnToLobby());
         }
 
+        public void RequestSetLobbyReady(bool isReady)
+        {
+            if (NetworkServer.activeHost && NetworkServer.localConnection != null)
+            {
+                OnServerLobbyReady(
+                    NetworkServer.localConnection,
+                    new RoundLobbyReadyMessage { IsReady = isReady });
+                return;
+            }
+
+            if (NetworkClient.isConnected)
+                NetworkClient.Send(new RoundLobbyReadyMessage { IsReady = isReady });
+        }
+
+        public void SetLocalLobbyDisplayName(string displayName)
+        {
+            _localLobbyDisplayName = LobbyPlayerPresentation.NormalizeDisplayName(
+                displayName,
+                "Gracz");
+            _lobbyProfileSent = false;
+        }
+
         public bool TrySetSecretObjectiveEnabled(bool enabled)
         {
             if (!IsLocalHost || _phase != RoundPhase.Lobby)
                 return false;
 
             _hostAllowsSecretObjective = enabled;
+            _lobbyStateDirty = true;
+            BroadcastLobbyState(force: true);
+            return true;
+        }
+
+        public bool TrySetDeveloperLobbyFakePlayerCount(int count)
+        {
+            if (!DeveloperToolsAvailable || !IsLocalHost || _phase != RoundPhase.Lobby)
+                return false;
+
+            int maxFakePlayers = Math.Max(0, RoundEngine.MaxPlayers - ConnectedPlayerCount);
+            int boundedCount = Math.Max(0, Math.Min(count, maxFakePlayers));
+            if (_developerLobbyFakePlayerCount == boundedCount)
+                return true;
+
+            _developerLobbyFakePlayerCount = boundedCount;
+            _lobbyStateDirty = true;
+            BroadcastLobbyState(force: true);
             return true;
         }
 
@@ -417,6 +498,8 @@ namespace InterrogationRoom.Networking
             if (!_serverHandlerRegistered)
             {
                 NetworkServer.RegisterHandler<RoundIntentMessage>(OnServerIntent);
+                NetworkServer.RegisterHandler<RoundLobbyProfileMessage>(OnServerLobbyProfile);
+                NetworkServer.RegisterHandler<RoundLobbyReadyMessage>(OnServerLobbyReady);
                 _serverHandlerRegistered = true;
             }
 
@@ -430,17 +513,21 @@ namespace InterrogationRoom.Networking
             {
                 _clientHandlersRegistered = false;
                 _publicLobbyPlayerCount = 0;
+                _publicLobbyPlayers = Array.Empty<LobbyPlayerInfo>();
+                _lobbyProfileSent = false;
                 return;
             }
 
-            if (_clientHandlersRegistered)
-                return;
+            if (!_clientHandlersRegistered)
+            {
+                NetworkClient.RegisterHandler<RoundViewMessage>(OnClientView);
+                NetworkClient.RegisterHandler<RoundIntentRejectedMessage>(OnClientIntentRejected);
+                NetworkClient.RegisterHandler<RoundLobbyResetMessage>(OnClientLobbyReset);
+                NetworkClient.RegisterHandler<RoundLobbyStateMessage>(OnClientLobbyState);
+                _clientHandlersRegistered = true;
+            }
 
-            NetworkClient.RegisterHandler<RoundViewMessage>(OnClientView);
-            NetworkClient.RegisterHandler<RoundIntentRejectedMessage>(OnClientIntentRejected);
-            NetworkClient.RegisterHandler<RoundLobbyResetMessage>(OnClientLobbyReset);
-            NetworkClient.RegisterHandler<RoundLobbyStateMessage>(OnClientLobbyState);
-            _clientHandlersRegistered = true;
+            TrySendLobbyProfile();
         }
 
         private void SynchronizeConnections()
@@ -461,6 +548,7 @@ namespace InterrogationRoom.Networking
                 if (_phase == RoundPhase.Lobby)
                 {
                     _connectionsByPlayerId.Add(playerId.Value, connection);
+                    _lobbyStateDirty = true;
                     continue;
                 }
 
@@ -484,11 +572,76 @@ namespace InterrogationRoom.Networking
             {
                 UnbindHitSource(disconnectedId);
                 _connectionsByPlayerId.Remove(disconnectedId);
+                _lobbyDisplayNamesByPlayerId.Remove(disconnectedId);
+                _lobbyReadyPlayerIds.Remove(disconnectedId);
+                _lobbyStateDirty = true;
             }
             _rejectedLateJoiners.RemoveWhere(id => !connectedIds.Contains(id));
 
+            int maxFakePlayers = Math.Max(0, RoundEngine.MaxPlayers - ConnectedPlayerCount);
+            if (_developerLobbyFakePlayerCount > maxFakePlayers)
+            {
+                _developerLobbyFakePlayerCount = maxFakePlayers;
+                _lobbyStateDirty = true;
+            }
+
             if (_phase == RoundPhase.Lobby)
                 BroadcastLobbyState();
+        }
+
+        private void OnServerLobbyProfile(
+            NetworkConnectionToClient sender,
+            RoundLobbyProfileMessage message)
+        {
+            if (sender == null || !sender.isAuthenticated || _phase != RoundPhase.Lobby)
+                return;
+
+            PlayerId playerId = ConnectionToPlayerId(sender);
+            string fallback = $"Gracz {playerId.Value + 1}";
+            string normalized = LobbyPlayerPresentation.NormalizeDisplayName(message.DisplayName, fallback);
+            if (_lobbyDisplayNamesByPlayerId.TryGetValue(playerId.Value, out string current) &&
+                string.Equals(current, normalized, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _lobbyDisplayNamesByPlayerId[playerId.Value] = normalized;
+            _lobbyStateDirty = true;
+            BroadcastLobbyState(force: true);
+        }
+
+        private void TrySendLobbyProfile()
+        {
+            if (_lobbyProfileSent || !NetworkClient.isConnected || NetworkClient.localPlayer == null)
+                return;
+
+            uint localNetId = NetworkClient.localPlayer.netId;
+            string displayName = LobbyPlayerPresentation.NormalizeDisplayName(
+                _localLobbyDisplayName,
+                $"Gracz {localNetId}");
+            NetworkClient.Send(new RoundLobbyProfileMessage { DisplayName = displayName });
+            _lobbyProfileSent = true;
+        }
+
+        private void OnServerLobbyReady(
+            NetworkConnectionToClient sender,
+            RoundLobbyReadyMessage message)
+        {
+            if (sender == null || !sender.isAuthenticated || _phase != RoundPhase.Lobby)
+                return;
+
+            PlayerId playerId = ConnectionToPlayerId(sender);
+            if (!_connectionsByPlayerId.ContainsKey(playerId.Value))
+                _connectionsByPlayerId[playerId.Value] = sender;
+
+            bool changed = message.IsReady
+                ? _lobbyReadyPlayerIds.Add(playerId.Value)
+                : _lobbyReadyPlayerIds.Remove(playerId.Value);
+            if (!changed)
+                return;
+
+            _lobbyStateDirty = true;
+            BroadcastLobbyState(force: true);
         }
 
         private void OnServerIntent(NetworkConnectionToClient sender, RoundIntentMessage message)
@@ -556,6 +709,13 @@ namespace InterrogationRoom.Networking
 
         private void StartRound(NetworkConnectionToClient sender)
         {
+            if (_connectionsByPlayerId.Count == 0 ||
+                !_connectionsByPlayerId.Keys.All(_lobbyReadyPlayerIds.Contains))
+            {
+                Reject(sender, "All players must be ready before the Runda starts.");
+                return;
+            }
+
             var cases = AvailableCases();
             var caseIndex = SelectRandomValidCaseIndex(
                 cases,
@@ -628,6 +788,7 @@ namespace InterrogationRoom.Networking
             _phase = RoundPhase.Lobby;
             _developerPlan = null;
             _hostAllowsSecretObjective = true;
+            _lobbyReadyPlayerIds.Clear();
             _roundDeadline = 0d;
             _roundStartedAtNetworkTime = 0d;
             _preparationDeadline = 0d;
@@ -1076,10 +1237,16 @@ namespace InterrogationRoom.Networking
         private void BroadcastLobbyState(bool force = false)
         {
             int playerCount = ConnectedPlayerCount;
-            if (!force && playerCount == _lastBroadcastLobbyPlayerCount)
+            if (!force && !_lobbyStateDirty && playerCount == _lastBroadcastLobbyPlayerCount)
                 return;
 
-            var message = new RoundLobbyStateMessage { PlayerCount = playerCount };
+            RoundLobbyPlayerMessage[] players = BuildLobbyPlayerMessages();
+            var message = new RoundLobbyStateMessage
+            {
+                PlayerCount = playerCount,
+                SecretObjectiveEnabled = _hostAllowsSecretObjective,
+                Players = players
+            };
             foreach (var connection in _connectionsByPlayerId.Values)
             {
                 if (connection != null &&
@@ -1091,7 +1258,64 @@ namespace InterrogationRoom.Networking
             }
 
             _publicLobbyPlayerCount = playerCount;
+            _publicLobbyPlayers = ToLobbyPlayerInfo(players);
             _lastBroadcastLobbyPlayerCount = playerCount;
+            _lobbyStateDirty = false;
+            LobbyStateChanged?.Invoke();
+        }
+
+        private RoundLobbyPlayerMessage[] BuildLobbyPlayerMessages()
+        {
+            var players = new List<RoundLobbyPlayerMessage>(RoundEngine.MaxPlayers);
+            foreach (KeyValuePair<int, NetworkConnectionToClient> entry in
+                     _connectionsByPlayerId.OrderBy(entry => entry.Key))
+            {
+                NetworkConnectionToClient connection = entry.Value;
+                string fallback = $"Gracz {entry.Key + 1}";
+                string displayName = _lobbyDisplayNamesByPlayerId.TryGetValue(entry.Key, out string knownName)
+                    ? knownName
+                    : fallback;
+                players.Add(new RoundLobbyPlayerMessage
+                {
+                    PlayerId = entry.Key,
+                    NetworkIdentityNetId = connection?.identity != null ? connection.identity.netId : 0u,
+                    DisplayName = LobbyPlayerPresentation.NormalizeDisplayName(displayName, fallback),
+                    IsHost = NetworkServer.activeHost && ReferenceEquals(connection, NetworkServer.localConnection),
+                    IsSimulated = false,
+                    IsReady = _lobbyReadyPlayerIds.Contains(entry.Key)
+                });
+            }
+
+            IReadOnlyList<LobbyPlayerInfo> simulatedPlayers =
+                LobbyPlayerPresentation.CreateSimulatedPlayers(_developerLobbyFakePlayerCount);
+            foreach (LobbyPlayerInfo simulated in simulatedPlayers)
+            {
+                players.Add(new RoundLobbyPlayerMessage
+                {
+                    PlayerId = simulated.PlayerId,
+                    NetworkIdentityNetId = 0u,
+                    DisplayName = simulated.DisplayName,
+                    IsHost = false,
+                    IsSimulated = true,
+                    IsReady = true
+                });
+            }
+
+            return players.Take(RoundEngine.MaxPlayers).ToArray();
+        }
+
+        private static LobbyPlayerInfo[] ToLobbyPlayerInfo(RoundLobbyPlayerMessage[] players)
+        {
+            if (players == null || players.Length == 0)
+                return Array.Empty<LobbyPlayerInfo>();
+
+            return players.Select(player => new LobbyPlayerInfo(
+                player.PlayerId,
+                player.NetworkIdentityNetId,
+                player.DisplayName,
+                player.IsHost,
+                player.IsSimulated,
+                player.IsReady)).ToArray();
         }
 
         private static PlayerId ConnectionToPlayerId(NetworkConnectionToClient connection)
@@ -1147,6 +1371,9 @@ namespace InterrogationRoom.Networking
         private void OnClientLobbyState(RoundLobbyStateMessage message)
         {
             _publicLobbyPlayerCount = Math.Max(0, message.PlayerCount);
+            _hostAllowsSecretObjective = message.SecretObjectiveEnabled;
+            _publicLobbyPlayers = ToLobbyPlayerInfo(message.Players);
+            LobbyStateChanged?.Invoke();
         }
 
         private void ResetServerRuntime()
@@ -1156,13 +1383,18 @@ namespace InterrogationRoom.Networking
 
             _serverHandlerRegistered = false;
             _connectionsByPlayerId.Clear();
+            _lobbyDisplayNamesByPlayerId.Clear();
+            _lobbyReadyPlayerIds.Clear();
             _rejectedLateJoiners.Clear();
             _engine = new RoundEngine();
             _phase = RoundPhase.Lobby;
             _developerPlan = null;
             _hostAllowsSecretObjective = true;
             _publicLobbyPlayerCount = 0;
+            _publicLobbyPlayers = Array.Empty<LobbyPlayerInfo>();
             _lastBroadcastLobbyPlayerCount = -1;
+            _lobbyStateDirty = true;
+            _lobbyProfileSent = false;
             _roundDeadline = 0d;
             _roundStartedAtNetworkTime = 0d;
             _preparationDeadline = 0d;

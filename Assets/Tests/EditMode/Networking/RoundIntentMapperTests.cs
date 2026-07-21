@@ -191,16 +191,67 @@ namespace InterrogationRoom.Networking.Tests
                     Assert.That(reader.Read<RoundLobbyResetMessage>(), Is.TypeOf<RoundLobbyResetMessage>());
             }
 
-            var lobbyState = new RoundLobbyStateMessage { PlayerCount = 5 };
+            var lobbyState = new RoundLobbyStateMessage
+            {
+                PlayerCount = 2,
+                SecretObjectiveEnabled = true,
+                Players = new[]
+                {
+                    new RoundLobbyPlayerMessage
+                    {
+                        PlayerId = 0,
+                        NetworkIdentityNetId = 42,
+                        DisplayName = "Łukasz Śledź",
+                        IsHost = true,
+                        IsSimulated = false,
+                        IsReady = true
+                    },
+                    new RoundLobbyPlayerMessage
+                    {
+                        PlayerId = -1,
+                        DisplayName = "Alicja Żur",
+                        IsSimulated = true
+                    }
+                }
+            };
             using (var writer = NetworkWriterPool.Get())
             {
                 writer.Write(lobbyState);
                 using (var reader = NetworkReaderPool.Get(writer.ToArraySegment()))
-                    Assert.That(reader.Read<RoundLobbyStateMessage>().PlayerCount, Is.EqualTo(5));
+                {
+                    RoundLobbyStateMessage restoredLobby = reader.Read<RoundLobbyStateMessage>();
+                    Assert.That(restoredLobby.PlayerCount, Is.EqualTo(2));
+                    Assert.That(restoredLobby.SecretObjectiveEnabled, Is.True);
+                    Assert.That(restoredLobby.Players, Has.Length.EqualTo(2));
+                    Assert.That(restoredLobby.Players[0].DisplayName, Is.EqualTo("Łukasz Śledź"));
+                    Assert.That(restoredLobby.Players[0].NetworkIdentityNetId, Is.EqualTo(42));
+                    Assert.That(restoredLobby.Players[0].IsHost, Is.True);
+                    Assert.That(restoredLobby.Players[0].IsReady, Is.True);
+                    Assert.That(restoredLobby.Players[1].IsSimulated, Is.True);
+                }
+            }
+
+            using (var writer = NetworkWriterPool.Get())
+            {
+                writer.Write(new RoundLobbyReadyMessage { IsReady = true });
+                using (var reader = NetworkReaderPool.Get(writer.ToArraySegment()))
+                    Assert.That(reader.Read<RoundLobbyReadyMessage>().IsReady, Is.True);
+            }
+
+            using (var writer = NetworkWriterPool.Get())
+            {
+                writer.Write(new RoundLobbyProfileMessage { DisplayName = "Zośka Bąk" });
+                using (var reader = NetworkReaderPool.Get(writer.ToArraySegment()))
+                    Assert.That(reader.Read<RoundLobbyProfileMessage>().DisplayName, Is.EqualTo("Zośka Bąk"));
             }
 
             Assert.That(typeof(RoundLobbyStateMessage).GetFields().Select(field => field.Name),
-                Is.EqualTo(new[] { nameof(RoundLobbyStateMessage.PlayerCount) }),
+                Is.EqualTo(new[]
+                {
+                    nameof(RoundLobbyStateMessage.PlayerCount),
+                    nameof(RoundLobbyStateMessage.SecretObjectiveEnabled),
+                    nameof(RoundLobbyStateMessage.Players)
+                }),
                 "Public lobby synchronization must not grow into a secret-bearing payload.");
         }
 

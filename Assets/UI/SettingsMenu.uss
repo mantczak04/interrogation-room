@@ -106,7 +106,7 @@
     margin-right: var(--space-2);
 }
 
-.settings-language-row > .btn:last-child {
+#english-button {
     margin-right: 0;
 }
 

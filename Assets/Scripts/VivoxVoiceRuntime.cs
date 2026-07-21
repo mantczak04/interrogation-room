@@ -25,6 +25,17 @@ internal struct VivoxVoiceSessionResponseMessage : NetworkMessage
     public string SessionId;
 }
 
+internal struct VivoxLocalSpeakingStateMessage : NetworkMessage
+{
+    public bool IsSpeaking;
+}
+
+internal struct VivoxSpeakingStateMessage : NetworkMessage
+{
+    public uint NetworkIdentityNetId;
+    public bool IsSpeaking;
+}
+
 [DisallowMultipleComponent]
 public sealed class VivoxVoiceRuntime : MonoBehaviour
 {
@@ -63,6 +74,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private readonly Dictionary<string, GameObject> participantTaps = new();
     private readonly Dictionary<string, VivoxParticipant> pendingParticipants = new();
+    private readonly VoiceSpeakingState networkSpeakingState = new();
 
     private GameObject localPlayer;
     private string activeSessionId;
@@ -77,6 +89,8 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private bool isJoining;
     private bool isDisconnecting;
     private bool isShuttingDown;
+    private bool localSpeechDetected;
+    private bool localSpeakingStateSent;
     private TaskCompletionSource<string> pendingSessionId;
 
     public VoiceConnectionState ConnectionState { get; private set; } = VoiceConnectionState.WaitingForNetwork;
@@ -183,7 +197,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             var loginOptions = new LoginOptions
             {
                 PlayerId = playerId,
-                DisplayName = $"Player {localNetId}"
+                DisplayName = LobbyDisplayNameProvider.Resolve($"Gracz {localNetId}")
             };
 
             await VivoxService.Instance.LoginAsync(loginOptions);
@@ -210,6 +224,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             VivoxService.Instance.Set3DPosition(localPlayer, activeChannelName);
             nextPositionUpdate = Time.unscaledTime + positionUpdateInterval;
             isReady = true;
+            PublishLocalSpeakingState(false, force: true);
             SetConnectionState(
                 VivoxService.Instance.AvailableInputDevices.Count == 0
                     ? VoiceConnectionState.NoInputDevice
@@ -431,6 +446,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         if (isMuted)
         {
             VivoxService.Instance.MuteInputDevice();
+            PublishLocalSpeakingState(false);
             SetMicColor(micMutedColor);
         }
         else
@@ -442,7 +458,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private void UpdateMicActivity()
     {
-        if (isMuted || micIcon == null || string.IsNullOrEmpty(activeChannelName))
+        if (isMuted || string.IsNullOrEmpty(activeChannelName))
         {
             return;
         }
@@ -452,7 +468,38 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
                 out var participants) &&
             participants.FirstOrDefault(participant => participant.IsSelf)?.SpeechDetected == true;
 
+        PublishLocalSpeakingState(isSpeaking);
         SetMicColor(isSpeaking ? micSpeakingColor : micNormalColor);
+    }
+
+    private void PublishLocalSpeakingState(bool isSpeaking, bool force = false)
+    {
+        bool normalizedState = !isMuted && isSpeaking;
+        if (!force && localSpeakingStateSent && localSpeechDetected == normalizedState)
+            return;
+
+        localSpeechDetected = normalizedState;
+        if (!NetworkClient.active || NetworkClient.connection == null)
+            return;
+
+        NetworkClient.Send(new VivoxLocalSpeakingStateMessage
+        {
+            IsSpeaking = normalizedState
+        });
+        localSpeakingStateSent = true;
+    }
+
+    public bool IsNetworkPlayerSpeaking(uint networkIdentityNetId)
+    {
+        if (!isReady || networkIdentityNetId == 0)
+            return false;
+
+        uint localNetId = NetworkClient.localPlayer != null
+            ? NetworkClient.localPlayer.netId
+            : 0u;
+        return localNetId == networkIdentityNetId
+            ? localSpeechDetected
+            : networkSpeakingState.IsSpeaking(networkIdentityNetId);
     }
 
     private async Task DisconnectAndWaitForReconnectAsync()
@@ -476,6 +523,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         }
 
         isDisconnecting = true;
+        PublishLocalSpeakingState(false, force: true);
         isReady = false;
         service.ParticipantAddedToChannel -= OnParticipantAdded;
         service.ParticipantRemovedFromChannel -= OnParticipantRemoved;
@@ -507,6 +555,9 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             activeSessionId = null;
             activeChannelName = null;
             localPlayer = null;
+            localSpeechDetected = false;
+            localSpeakingStateSent = false;
+            networkSpeakingState.Clear();
             isDisconnecting = false;
             if (!isShuttingDown)
                 SetConnectionState(VoiceConnectionState.Disconnected);
@@ -533,6 +584,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         if (serverActive && !serverHandlerRegistered)
         {
             NetworkServer.ReplaceHandler<VivoxVoiceSessionRequestMessage>(OnSessionIdRequested);
+            NetworkServer.ReplaceHandler<VivoxLocalSpeakingStateMessage>(OnLocalSpeakingStateReceived);
             serverHandlerRegistered = true;
         }
         else if (!serverActive)
@@ -543,6 +595,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         if (NetworkClient.active && !clientHandlerRegistered)
         {
             NetworkClient.ReplaceHandler<VivoxVoiceSessionResponseMessage>(OnSessionIdReceived);
+            NetworkClient.ReplaceHandler<VivoxSpeakingStateMessage>(OnSpeakingStateReceived);
             clientHandlerRegistered = true;
         }
         else if (!NetworkClient.active)
@@ -556,12 +609,14 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         if (serverHandlerRegistered)
         {
             NetworkServer.UnregisterHandler<VivoxVoiceSessionRequestMessage>();
+            NetworkServer.UnregisterHandler<VivoxLocalSpeakingStateMessage>();
             serverHandlerRegistered = false;
         }
 
         if (clientHandlerRegistered)
         {
             NetworkClient.UnregisterHandler<VivoxVoiceSessionResponseMessage>();
+            NetworkClient.UnregisterHandler<VivoxSpeakingStateMessage>();
             clientHandlerRegistered = false;
         }
     }
@@ -582,6 +637,26 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         {
             pendingSessionId?.TrySetResult(message.SessionId);
         }
+    }
+
+    private void OnLocalSpeakingStateReceived(
+        NetworkConnectionToClient connection,
+        VivoxLocalSpeakingStateMessage message)
+    {
+        uint netId = connection?.identity != null ? connection.identity.netId : 0u;
+        if (netId == 0u)
+            return;
+
+        NetworkServer.SendToAll(new VivoxSpeakingStateMessage
+        {
+            NetworkIdentityNetId = netId,
+            IsSpeaking = message.IsSpeaking
+        });
+    }
+
+    private void OnSpeakingStateReceived(VivoxSpeakingStateMessage message)
+    {
+        networkSpeakingState.Apply(message.NetworkIdentityNetId, message.IsSpeaking);
     }
 
     private string EnsureHostSessionId()

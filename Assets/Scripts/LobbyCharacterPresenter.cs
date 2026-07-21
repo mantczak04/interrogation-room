@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Text;
 using InterrogationRoom.Gameplay.Characters;
 using InterrogationRoom.Networking;
 using InterrogationRoom.UI;
@@ -18,7 +20,11 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
     private Button nextCharacterButton;
     private Button inviteButton;
     private Image characterPreviewImage;
+    private ScrollView playerList;
+    private Label playerListEmptyLabel;
+    private Label rosterCountLabel;
     private VisualElement lobbyPanel;
+    private VivoxVoiceRuntime voiceRuntime;
     private PlayerController previewPlayer;
     private CharacterId? selectedCharacter;
     private CharacterId? renderedCharacter;
@@ -27,11 +33,17 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
     private Camera previewCamera;
     private RenderTexture previewTexture;
     private bool bound;
+    private float nextRosterRefresh;
+    private string renderedRosterSignature;
+    private uint renderedLocalNetId;
+    private readonly Dictionary<int, VisualElement> speakerIndicators = new();
+    private readonly Dictionary<int, uint> speakerNetIds = new();
 
     public void Configure(NetworkRoundCoordinator roundCoordinator, SteamLobby lobby)
     {
         coordinator = roundCoordinator;
         steamLobby = lobby;
+        coordinator?.SetLocalLobbyDisplayName(LobbyDisplayNameProvider.Resolve("Gracz lokalny"));
     }
 
     private void Start()
@@ -64,6 +76,12 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
             RefreshCharacterPreview(localPlayer);
         else
             DestroyPreview();
+
+        if (Time.unscaledTime >= nextRosterRefresh)
+        {
+            RefreshPlayerRoster();
+            nextRosterRefresh = Time.unscaledTime + 0.1f;
+        }
     }
 
     private void OnDisable()
@@ -76,6 +94,9 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         }
 
         bound = false;
+        speakerIndicators.Clear();
+        speakerNetIds.Clear();
+        renderedRosterSignature = null;
         DestroyPreview();
     }
 
@@ -88,10 +109,113 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         nextCharacterButton = Required<Button>(root, "next-character-button");
         inviteButton = Required<Button>(root, "invite-button");
         characterPreviewImage = Required<Image>(root, "character-preview");
+        playerList = Required<ScrollView>(root, "lobby-player-list");
+        playerListEmptyLabel = Required<Label>(root, "lobby-player-list-empty");
+        rosterCountLabel = Required<Label>(root, "lobby-roster-count");
         previousCharacterButton.clicked += OnPreviousCharacterClicked;
         nextCharacterButton.clicked += OnNextCharacterClicked;
         inviteButton.clicked += OnInviteClicked;
         bound = true;
+        RefreshPlayerRoster(force: true);
+    }
+
+    private void RefreshPlayerRoster(bool force = false)
+    {
+        if (coordinator == null || playerList == null)
+            return;
+
+        IReadOnlyList<LobbyPlayerInfo> players = coordinator.PublicLobbyPlayers;
+        string signature = BuildRosterSignature(players);
+        uint localNetId = NetworkClient.localPlayer != null ? NetworkClient.localPlayer.netId : 0u;
+        if (force || signature != renderedRosterSignature || localNetId != renderedLocalNetId)
+        {
+            renderedRosterSignature = signature;
+            renderedLocalNetId = localNetId;
+            RebuildPlayerRoster(players);
+        }
+
+        if (voiceRuntime == null)
+            voiceRuntime = FindFirstObjectByType<VivoxVoiceRuntime>();
+
+        foreach (KeyValuePair<int, VisualElement> entry in speakerIndicators)
+        {
+            bool speaking = speakerNetIds.TryGetValue(entry.Key, out uint netId) &&
+                voiceRuntime != null &&
+                voiceRuntime.IsNetworkPlayerSpeaking(netId);
+            SetVisible(entry.Value, speaking);
+        }
+    }
+
+    private void RebuildPlayerRoster(IReadOnlyList<LobbyPlayerInfo> players)
+    {
+        playerList.Clear();
+        speakerIndicators.Clear();
+        speakerNetIds.Clear();
+        SetVisible(playerListEmptyLabel, players == null || players.Count == 0);
+        rosterCountLabel.text = $"{UiText.Get("Gracze w lobby")}: {players?.Count ?? 0}/8";
+        if (players == null)
+            return;
+
+        uint localNetId = NetworkClient.localPlayer != null ? NetworkClient.localPlayer.netId : 0u;
+        for (int index = 0; index < players.Count; index++)
+        {
+            LobbyPlayerInfo player = players[index];
+            var row = new VisualElement();
+            row.AddToClassList("lobby-player-row");
+            row.EnableInClassList("lobby-player-row--local", localNetId != 0 && player.NetworkIdentityNetId == localNetId);
+            row.EnableInClassList("lobby-player-row--simulated", player.IsSimulated);
+
+            var number = new Label((index + 1).ToString("00"));
+            number.AddToClassList("lobby-player-number");
+            row.Add(number);
+
+            var identity = new VisualElement();
+            identity.AddToClassList("lobby-player-identity");
+            var name = new Label(player.DisplayName);
+            name.AddToClassList("lobby-player-name");
+            identity.Add(name);
+
+            var hostLabel = new Label(player.IsHost ? $"({UiText.Get("Host")})" : string.Empty);
+            hostLabel.AddToClassList("lobby-player-host");
+            identity.Add(hostLabel);
+
+            var readyLabel = new Label(player.IsReady ? UiText.Get("GOTOWY") : string.Empty);
+            readyLabel.AddToClassList("lobby-player-ready");
+            identity.Add(readyLabel);
+            row.Add(identity);
+
+            VisualElement speaker = CreateSpeakerIndicator();
+            row.Add(speaker);
+            speakerIndicators[player.PlayerId] = speaker;
+            speakerNetIds[player.PlayerId] = player.NetworkIdentityNetId;
+            SetVisible(speaker, false);
+            playerList.Add(row);
+        }
+    }
+
+    private static VisualElement CreateSpeakerIndicator()
+    {
+        var indicator = new VisualElement();
+        indicator.AddToClassList("lobby-speaker-indicator");
+        return indicator;
+    }
+
+    private static string BuildRosterSignature(IReadOnlyList<LobbyPlayerInfo> players)
+    {
+        if (players == null || players.Count == 0)
+            return string.Empty;
+
+        var signature = new StringBuilder(players.Count * 32);
+        foreach (LobbyPlayerInfo player in players)
+        {
+            signature.Append(player.PlayerId).Append('|')
+                .Append(player.NetworkIdentityNetId).Append('|')
+                .Append(player.DisplayName).Append('|')
+                .Append(player.IsHost).Append('|')
+                .Append(player.IsSimulated).Append('|')
+                .Append(player.IsReady).Append(';');
+        }
+        return signature.ToString();
     }
 
     private void OnPreviousCharacterClicked() => SelectCharacter(-1);

@@ -16,6 +16,12 @@ namespace InterrogationRoom.Debugging
     [DisallowMultipleComponent]
     public sealed class RoundDeveloperPanel : MonoBehaviour
     {
+        private const float ReferenceHeight = 1080f;
+        private const float PanelWidth = 480f;
+        private const float PanelMaxHeight = 690f;
+        private const float PanelMargin = 12f;
+        private const float ShortcutStripHeight = 68f;
+
         [SerializeField] private NetworkRoundCoordinator coordinator;
 
         private bool _isVisible;
@@ -59,10 +65,36 @@ namespace InterrogationRoom.Debugging
 
             InitializeStyles();
 
-            const float panelWidth = 480f;
-            const float shortcutStripHeight = 68f;
-            float panelHeight = Mathf.Min(Screen.height - 24f - shortcutStripHeight, 690f);
-            var area = new Rect(Screen.width - panelWidth - 12f, 12f, panelWidth, panelHeight);
+            float guiScale = CalculateGuiScale(Screen.height);
+            float virtualWidth = Screen.width / guiScale;
+            float virtualHeight = Screen.height / guiScale;
+            Matrix4x4 previousMatrix = GUI.matrix;
+            try
+            {
+                GUI.matrix = Matrix4x4.Scale(new Vector3(guiScale, guiScale, 1f));
+                DrawPanel(virtualWidth, virtualHeight);
+            }
+            finally
+            {
+                GUI.matrix = previousMatrix;
+            }
+        }
+
+        public static float CalculateGuiScale(int screenHeight)
+        {
+            return Mathf.Max(0.01f, screenHeight / ReferenceHeight);
+        }
+
+        private void DrawPanel(float virtualWidth, float virtualHeight)
+        {
+            float panelHeight = Mathf.Min(
+                virtualHeight - (PanelMargin * 2f) - ShortcutStripHeight,
+                PanelMaxHeight);
+            var area = new Rect(
+                virtualWidth - PanelWidth - PanelMargin,
+                PanelMargin,
+                PanelWidth,
+                panelHeight);
             GUILayout.BeginArea(area, _boxStyle);
             GUILayout.Label(UiText.Get("AKTA TESTOWE • NARZĘDZIA RUNDY"), _labelStyle);
             GUILayout.BeginHorizontal();
@@ -117,6 +149,8 @@ namespace InterrogationRoom.Debugging
                     connected.Count),
                 _labelStyle);
 
+            DrawLobbyRosterPreviewControls(connected.Count);
+
             if (connected.Count == 0)
             {
                 GUILayout.Label(UiText.Get(
@@ -159,6 +193,34 @@ namespace InterrogationRoom.Debugging
             GUILayout.Label(
                 UiText.Get("Wybór scenariusza wymusza rolę testowanego gracza. Runda nie kończy się automatycznie po czasie. Panel działa tylko w Editorze i Development Buildzie."),
                 _labelStyle);
+        }
+
+        private void DrawLobbyRosterPreviewControls(int connectedPlayerCount)
+        {
+            GUILayout.Space(8f);
+            GUILayout.Label(UiText.Get("Podgląd listy lobby"), _headerStyle);
+            GUILayout.Label(
+                UiText.Format(
+                    "Gracze testowi: {0}. Są widoczni wyłącznie w lobby i nie wchodzą do Rundy.",
+                    coordinator.DeveloperLobbyFakePlayerCount),
+                _labelStyle);
+
+            GUILayout.BeginHorizontal();
+            GUI.enabled = coordinator.DeveloperLobbyFakePlayerCount > 0;
+            if (GUILayout.Button("−1", _buttonStyle))
+                coordinator.TrySetDeveloperLobbyFakePlayerCount(coordinator.DeveloperLobbyFakePlayerCount - 1);
+            GUI.enabled = connectedPlayerCount + coordinator.DeveloperLobbyFakePlayerCount < RoundEngine.MaxPlayers;
+            if (GUILayout.Button("+1", _buttonStyle))
+                coordinator.TrySetDeveloperLobbyFakePlayerCount(coordinator.DeveloperLobbyFakePlayerCount + 1);
+            GUI.enabled = true;
+            if (GUILayout.Button(UiText.Get("Pokaż 5 graczy"), _buttonStyle))
+                coordinator.TrySetDeveloperLobbyFakePlayerCount(Math.Max(0, 5 - connectedPlayerCount));
+            if (GUILayout.Button(UiText.Get("Pokaż 8 graczy"), _buttonStyle))
+                coordinator.TrySetDeveloperLobbyFakePlayerCount(Math.Max(0, 8 - connectedPlayerCount));
+            GUILayout.EndHorizontal();
+
+            if (GUILayout.Button(UiText.Get("Usuń graczy testowych"), _buttonStyle))
+                coordinator.TrySetDeveloperLobbyFakePlayerCount(0);
         }
 
         private void DrawStartButton(string label, RoundDeveloperScenario scenario)
