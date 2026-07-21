@@ -32,6 +32,7 @@ namespace InterrogationRoom.UI
                 ["Polski"] = "Polish",
                 ["Angielski"] = "English",
                 ["V — wycisz / włącz mikrofon"] = "V — mute / unmute microphone",
+                ["LIMIT RUNDY"] = "ROUND LIMIT",
                 ["Wróć do menu"] = "Back to menu",
                 ["Wróć do gry"] = "Back to game",
                 ["Opuść Rundę"] = "Leave Round",

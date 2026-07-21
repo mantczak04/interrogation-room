@@ -22,6 +22,13 @@
                     <ui:Label name="player-count-label" text="Gracze w lobby: 0/8" class="lobby-player-count" />
                     <ui:VisualElement class="document-rule" />
                     <ui:Label text="Ustawienia Rundy" class="section-title stamp-font" />
+                    <ui:Label text="LIMIT RUNDY" class="lobby-round-limit-title stamp-font" />
+                    <ui:VisualElement class="lobby-round-limit-options">
+                        <ui:Button name="round-limit-5-button" text="5 MIN" class="btn btn--quiet lobby-round-limit-button" />
+                        <ui:Button name="round-limit-10-button" text="10 MIN" class="btn btn--quiet lobby-round-limit-button" />
+                        <ui:Button name="round-limit-15-button" text="15 MIN" class="btn btn--quiet lobby-round-limit-button" />
+                        <ui:Button name="round-limit-20-button" text="20 MIN" class="btn btn--quiet lobby-round-limit-button lobby-round-limit-button--last" />
+                    </ui:VisualElement>
                     <ui:VisualElement class="character-selector character-selector--legacy">
                         <ui:Button name="legacy-previous-character-button" text="‹" class="character-arrow" focusable="false" />
                         <ui:Label name="legacy-character-name-label" text="Małpa" class="character-name stamp-font" />

@@ -4,12 +4,28 @@ namespace InterrogationRoom.Networking
 {
     public static class RoundLobbyRules
     {
+        public const int DefaultRoundLimitMinutes = 10;
+
         public static int ResolveSecretObjectiveCount(int playerCount, bool hostAllowsSecretObjective) =>
             playerCount >= RoundEngine.MinPlayersForSecretObjective
             && playerCount <= RoundEngine.MaxPlayers
             && hostAllowsSecretObjective
                 ? 1
                 : 0;
+
+        public static bool IsRoundLimitMinutesAllowed(int minutes) =>
+            minutes == 5 || minutes == 10 || minutes == 15 || minutes == 20;
+
+        public static bool CanSetRoundLimit(bool isHost, RoundPhase phase, int minutes) =>
+            isHost && phase == RoundPhase.Lobby && IsRoundLimitMinutesAllowed(minutes);
+
+        public static double ToRoundLimitSeconds(int minutes)
+        {
+            if (!IsRoundLimitMinutesAllowed(minutes))
+                throw new System.ArgumentOutOfRangeException(nameof(minutes));
+
+            return minutes * 60d;
+        }
     }
 
     /// <summary>

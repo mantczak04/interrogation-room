@@ -29,6 +29,42 @@ namespace InterrogationRoom.Networking.Tests
                 Is.EqualTo(expected));
         }
 
+        [TestCase(4, false)]
+        [TestCase(5, true)]
+        [TestCase(10, true)]
+        [TestCase(15, true)]
+        [TestCase(20, true)]
+        [TestCase(21, false)]
+        public void LobbyRoundLimit_AllowsOnlyApprovedMinutePresets(int minutes, bool expected)
+        {
+            Assert.That(RoundLobbyRules.IsRoundLimitMinutesAllowed(minutes), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void LobbyRoundLimit_DefaultsToTenMinutesAndConvertsOnServerBoundary()
+        {
+            Assert.That(RoundLobbyRules.DefaultRoundLimitMinutes, Is.EqualTo(10));
+            Assert.That(RoundLobbyRules.ToRoundLimitSeconds(15), Is.EqualTo(900d));
+        }
+
+        [TestCase(true, RoundPhase.Lobby, 5, true)]
+        [TestCase(true, RoundPhase.Lobby, 20, true)]
+        [TestCase(false, RoundPhase.Lobby, 10, false)]
+        [TestCase(true, RoundPhase.Preparation, 10, false)]
+        [TestCase(true, RoundPhase.Round, 15, false)]
+        [TestCase(true, RoundPhase.Finished, 20, false)]
+        [TestCase(true, RoundPhase.Lobby, 7, false)]
+        public void LobbyRoundLimit_RequiresHostLobbyAuthorityAndApprovedPreset(
+            bool isHost,
+            RoundPhase phase,
+            int minutes,
+            bool expected)
+        {
+            Assert.That(
+                RoundLobbyRules.CanSetRoundLimit(isHost, phase, minutes),
+                Is.EqualTo(expected));
+        }
+
         [Test]
         public void IntentPayloadContainsNoClientAuthoredPlayerIdentity()
         {
@@ -195,6 +231,7 @@ namespace InterrogationRoom.Networking.Tests
             {
                 PlayerCount = 2,
                 SecretObjectiveEnabled = true,
+                RoundLimitMinutes = 15,
                 Players = new[]
                 {
                     new RoundLobbyPlayerMessage
@@ -222,6 +259,7 @@ namespace InterrogationRoom.Networking.Tests
                     RoundLobbyStateMessage restoredLobby = reader.Read<RoundLobbyStateMessage>();
                     Assert.That(restoredLobby.PlayerCount, Is.EqualTo(2));
                     Assert.That(restoredLobby.SecretObjectiveEnabled, Is.True);
+                    Assert.That(restoredLobby.RoundLimitMinutes, Is.EqualTo(15));
                     Assert.That(restoredLobby.Players, Has.Length.EqualTo(2));
                     Assert.That(restoredLobby.Players[0].DisplayName, Is.EqualTo("Łukasz Śledź"));
                     Assert.That(restoredLobby.Players[0].NetworkIdentityNetId, Is.EqualTo(42));
@@ -250,6 +288,7 @@ namespace InterrogationRoom.Networking.Tests
                 {
                     nameof(RoundLobbyStateMessage.PlayerCount),
                     nameof(RoundLobbyStateMessage.SecretObjectiveEnabled),
+                    nameof(RoundLobbyStateMessage.RoundLimitMinutes),
                     nameof(RoundLobbyStateMessage.Players)
                 }),
                 "Public lobby synchronization must not grow into a secret-bearing payload.");

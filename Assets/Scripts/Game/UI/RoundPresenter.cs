@@ -166,6 +166,10 @@ namespace InterrogationRoom.UI
         private Label _startButtonHoverInfo;
         private Button _lobbyReadyButton;
         private Label _playerCountLabel;
+        private Button _roundLimit5Button;
+        private Button _roundLimit10Button;
+        private Button _roundLimit15Button;
+        private Button _roundLimit20Button;
         private Toggle _secretObjectiveToggle;
         private Label _secretObjectiveSummary;
         private Button _returnToLobbyButton;
@@ -220,6 +224,10 @@ namespace InterrogationRoom.UI
             _startButtonHoverArea.RegisterCallback<PointerEnterEvent>(OnStartButtonPointerEnter);
             _startButtonHoverArea.RegisterCallback<PointerLeaveEvent>(OnStartButtonPointerLeave);
             _lobbyReadyButton.clicked += OnLobbyReadyClicked;
+            _roundLimit5Button.clicked += OnRoundLimit5Clicked;
+            _roundLimit10Button.clicked += OnRoundLimit10Clicked;
+            _roundLimit15Button.clicked += OnRoundLimit15Clicked;
+            _roundLimit20Button.clicked += OnRoundLimit20Clicked;
             _secretObjectiveToggle.RegisterValueChangedCallback(OnSecretObjectiveChanged);
             _readyButton.clicked += OnReadyClicked;
             _privateToggleButton.clicked += TogglePrivatePanel;
@@ -251,6 +259,14 @@ namespace InterrogationRoom.UI
             }
             if (_lobbyReadyButton != null)
                 _lobbyReadyButton.clicked -= OnLobbyReadyClicked;
+            if (_roundLimit5Button != null)
+                _roundLimit5Button.clicked -= OnRoundLimit5Clicked;
+            if (_roundLimit10Button != null)
+                _roundLimit10Button.clicked -= OnRoundLimit10Clicked;
+            if (_roundLimit15Button != null)
+                _roundLimit15Button.clicked -= OnRoundLimit15Clicked;
+            if (_roundLimit20Button != null)
+                _roundLimit20Button.clicked -= OnRoundLimit20Clicked;
             if (_secretObjectiveToggle != null)
                 _secretObjectiveToggle.UnregisterValueChangedCallback(OnSecretObjectiveChanged);
             if (_readyButton != null)
@@ -537,6 +553,7 @@ namespace InterrogationRoom.UI
                 ? $"{UiText.Get("Gracze w lobby")}: {playerCount}/{RoundEngine.MaxPlayers}"
                 : $"{UiText.Get("Podgląd listy")}: {presentedPlayerCount}/{RoundEngine.MaxPlayers} • {UiText.Get("prawdziwi")}: {playerCount}";
             _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
+            RefreshRoundLimitButtons();
             SetVisible(_lobbyReadyButton, connected);
             bool localReady = coordinator.IsLocalLobbyReady;
             _lobbyReadyButton.text = UiText.Get(localReady ? "Anuluj gotowość" : "Gotowy");
@@ -591,6 +608,10 @@ namespace InterrogationRoom.UI
             _startButtonHoverInfo = Required<Label>(root, "start-button-hover-info");
             _lobbyReadyButton = Required<Button>(root, "lobby-ready-button");
             _playerCountLabel = Required<Label>(root, "player-count-label");
+            _roundLimit5Button = Required<Button>(root, "round-limit-5-button");
+            _roundLimit10Button = Required<Button>(root, "round-limit-10-button");
+            _roundLimit15Button = Required<Button>(root, "round-limit-15-button");
+            _roundLimit20Button = Required<Button>(root, "round-limit-20-button");
             _secretObjectiveToggle = Required<Toggle>(root, "secret-objective-toggle");
             _secretObjectiveSummary = Required<Label>(root, "secret-objective-summary");
             _returnToLobbyButton = Required<Button>(root, "return-to-lobby-button");
@@ -657,6 +678,37 @@ namespace InterrogationRoom.UI
 
         private void OnLobbyReadyClicked() =>
             coordinator.RequestSetLobbyReady(!coordinator.IsLocalLobbyReady);
+
+        private void OnRoundLimit5Clicked() => SelectRoundLimit(5);
+        private void OnRoundLimit10Clicked() => SelectRoundLimit(10);
+        private void OnRoundLimit15Clicked() => SelectRoundLimit(15);
+        private void OnRoundLimit20Clicked() => SelectRoundLimit(20);
+
+        private void SelectRoundLimit(int minutes)
+        {
+            coordinator.TrySetRoundLimitMinutes(minutes);
+            RenderLobby();
+        }
+
+        private void RefreshRoundLimitButtons()
+        {
+            bool editable = coordinator.IsLocalHost && coordinator.CurrentView == null;
+            int selectedMinutes = coordinator.RoundLimitMinutes;
+            RefreshRoundLimitButton(_roundLimit5Button, 5, selectedMinutes, editable);
+            RefreshRoundLimitButton(_roundLimit10Button, 10, selectedMinutes, editable);
+            RefreshRoundLimitButton(_roundLimit15Button, 15, selectedMinutes, editable);
+            RefreshRoundLimitButton(_roundLimit20Button, 20, selectedMinutes, editable);
+        }
+
+        private static void RefreshRoundLimitButton(
+            Button button,
+            int minutes,
+            int selectedMinutes,
+            bool editable)
+        {
+            button.SetEnabled(editable);
+            button.EnableInClassList("lobby-round-limit-button--selected", minutes == selectedMinutes);
+        }
 
         private void OnSecretObjectiveChanged(ChangeEvent<bool> changeEvent)
         {

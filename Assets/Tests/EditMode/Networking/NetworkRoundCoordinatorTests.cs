@@ -28,6 +28,19 @@ namespace InterrogationRoom.Networking.Tests
                 Is.EqualTo(expected));
         }
 
+        [TestCase(5, 400d)]
+        [TestCase(10, 700d)]
+        [TestCase(15, 1000d)]
+        [TestCase(20, 1300d)]
+        public void CalculateRoundDeadline_UsesHostSelectedSharedLimit(
+            int minutes,
+            double expectedDeadline)
+        {
+            Assert.That(
+                NetworkRoundCoordinator.CalculateRoundDeadline(100d, minutes),
+                Is.EqualTo(expectedDeadline));
+        }
+
         [Test]
         public void PreparationLimit_UsesApprovedThirtySecondMaximum()
         {

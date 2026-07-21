@@ -163,6 +163,7 @@ namespace InterrogationRoom.Networking
     {
         public int PlayerCount;
         public bool SecretObjectiveEnabled;
+        public int RoundLimitMinutes;
         public RoundLobbyPlayerMessage[] Players;
     }
 
@@ -636,6 +637,7 @@ namespace InterrogationRoom.Networking
         {
             writer.WriteInt(message.PlayerCount);
             writer.WriteBool(message.SecretObjectiveEnabled);
+            writer.WriteInt(message.RoundLimitMinutes);
             var players = message.Players ?? Array.Empty<RoundLobbyPlayerMessage>();
             if (players.Length > MaxPlayers)
                 throw new ArgumentOutOfRangeException(nameof(message), $"Lobby cannot contain more than {MaxPlayers} presented players.");
@@ -656,6 +658,7 @@ namespace InterrogationRoom.Networking
         {
             int playerCount = reader.ReadInt();
             bool secretObjectiveEnabled = reader.ReadBool();
+            int roundLimitMinutes = reader.ReadInt();
             int presentedCount = reader.ReadByte();
             var players = new RoundLobbyPlayerMessage[presentedCount];
             for (int index = 0; index < presentedCount; index++)
@@ -675,6 +678,7 @@ namespace InterrogationRoom.Networking
             {
                 PlayerCount = playerCount,
                 SecretObjectiveEnabled = secretObjectiveEnabled,
+                RoundLimitMinutes = roundLimitMinutes,
                 Players = players
             };
         }

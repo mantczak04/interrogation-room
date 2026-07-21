@@ -35,10 +35,6 @@ namespace InterrogationRoom.Networking
         [Tooltip("Authorowane Osobiste Sprawy losowane i przypisywane Niewinnym przez RoundEngine.")]
         private List<PersonalMatterAsset> personalMatterAssets = new List<PersonalMatterAsset>();
 
-        [SerializeField, Min(1f)]
-        [Tooltip("Limit Rundy measured authoritatively by the server, in seconds.")]
-        private float roundLimitSeconds = 600f;
-
         private readonly Dictionary<int, NetworkConnectionToClient> _connectionsByPlayerId =
             new Dictionary<int, NetworkConnectionToClient>();
         private readonly HashSet<int> _rejectedLateJoiners = new HashSet<int>();
@@ -53,6 +49,7 @@ namespace InterrogationRoom.Networking
         private bool _serverHandlerRegistered;
         private bool _clientHandlersRegistered;
         private bool _hostAllowsSecretObjective = true;
+        private int _roundLimitMinutes = RoundLobbyRules.DefaultRoundLimitMinutes;
         private int _publicLobbyPlayerCount;
         private int _lastBroadcastLobbyPlayerCount = -1;
         private LobbyPlayerInfo[] _publicLobbyPlayers = Array.Empty<LobbyPlayerInfo>();
@@ -103,6 +100,7 @@ namespace InterrogationRoom.Networking
             ? _phase == RoundPhase.Round
             : CurrentView?.Phase == RoundPhase.Round;
         public bool HostAllowsSecretObjective => _hostAllowsSecretObjective;
+        public int RoundLimitMinutes => _roundLimitMinutes;
         public static bool DeveloperToolsAvailable => Application.isEditor || Debug.isDebugBuild;
         public RoundDeveloperPlan ActiveDeveloperPlan => DeveloperToolsAvailable ? _developerPlan : null;
         public bool IsDeveloperRoundUnlimited => DeveloperToolsAvailable && _developerPlan != null;
@@ -163,6 +161,7 @@ namespace InterrogationRoom.Networking
             CurrentPreparationEndsAtNetworkTime = 0d;
             _publicLobbyPlayerCount = 0;
             _publicLobbyPlayers = Array.Empty<LobbyPlayerInfo>();
+            _roundLimitMinutes = RoundLobbyRules.DefaultRoundLimitMinutes;
             _lobbyProfileSent = false;
         }
 
@@ -214,6 +213,20 @@ namespace InterrogationRoom.Networking
                 return false;
 
             _hostAllowsSecretObjective = enabled;
+            _lobbyStateDirty = true;
+            BroadcastLobbyState(force: true);
+            return true;
+        }
+
+        public bool TrySetRoundLimitMinutes(int minutes)
+        {
+            if (!RoundLobbyRules.CanSetRoundLimit(IsLocalHost, _phase, minutes))
+                return false;
+
+            if (_roundLimitMinutes == minutes)
+                return true;
+
+            _roundLimitMinutes = minutes;
             _lobbyStateDirty = true;
             BroadcastLobbyState(force: true);
             return true;
@@ -514,6 +527,7 @@ namespace InterrogationRoom.Networking
                 _clientHandlersRegistered = false;
                 _publicLobbyPlayerCount = 0;
                 _publicLobbyPlayers = Array.Empty<LobbyPlayerInfo>();
+                _roundLimitMinutes = RoundLobbyRules.DefaultRoundLimitMinutes;
                 _lobbyProfileSent = false;
                 return;
             }
@@ -982,7 +996,9 @@ namespace InterrogationRoom.Networking
             {
                 _preparationDeadline = 0d;
                 _roundStartedAtNetworkTime = NetworkTime.time;
-                _roundDeadline = _roundStartedAtNetworkTime + roundLimitSeconds;
+                _roundDeadline = CalculateRoundDeadline(
+                    _roundStartedAtNetworkTime,
+                    _roundLimitMinutes);
                 ServerGameplayRoundStarted?.Invoke();
             }
             else if (_phase == RoundPhase.Finished)
@@ -1191,6 +1207,9 @@ namespace InterrogationRoom.Networking
             !developerRoundUnlimited &&
             now >= deadline;
 
+        public static double CalculateRoundDeadline(double roundStartedAtNetworkTime, int minutes) =>
+            roundStartedAtNetworkTime + RoundLobbyRules.ToRoundLimitSeconds(minutes);
+
         /// <summary>Missing Gotowość never blocks the Runda: the deadline always ends Przygotowanie.</summary>
         public static bool ShouldEndPreparation(
             RoundPhase phase,
@@ -1245,6 +1264,7 @@ namespace InterrogationRoom.Networking
             {
                 PlayerCount = playerCount,
                 SecretObjectiveEnabled = _hostAllowsSecretObjective,
+                RoundLimitMinutes = _roundLimitMinutes,
                 Players = players
             };
             foreach (var connection in _connectionsByPlayerId.Values)
@@ -1372,6 +1392,9 @@ namespace InterrogationRoom.Networking
         {
             _publicLobbyPlayerCount = Math.Max(0, message.PlayerCount);
             _hostAllowsSecretObjective = message.SecretObjectiveEnabled;
+            _roundLimitMinutes = RoundLobbyRules.IsRoundLimitMinutesAllowed(message.RoundLimitMinutes)
+                ? message.RoundLimitMinutes
+                : RoundLobbyRules.DefaultRoundLimitMinutes;
             _publicLobbyPlayers = ToLobbyPlayerInfo(message.Players);
             LobbyStateChanged?.Invoke();
         }
@@ -1390,6 +1413,7 @@ namespace InterrogationRoom.Networking
             _phase = RoundPhase.Lobby;
             _developerPlan = null;
             _hostAllowsSecretObjective = true;
+            _roundLimitMinutes = RoundLobbyRules.DefaultRoundLimitMinutes;
             _publicLobbyPlayerCount = 0;
             _publicLobbyPlayers = Array.Empty<LobbyPlayerInfo>();
             _lastBroadcastLobbyPlayerCount = -1;
