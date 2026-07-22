@@ -9,19 +9,38 @@
             <ui:VisualElement class="settings-rule" />
             <ui:Label name="context-hint" class="settings-hint" text="" />
 
-            <ui:VisualElement class="settings-row">
-                <ui:Label name="sensitivity-caption" class="settings-caption" text="Czułość myszy" />
-                <ui:Label name="sensitivity-value" class="settings-value" text="1.0" />
-            </ui:VisualElement>
-            <ui:Slider name="sensitivity-slider" class="settings-slider" low-value="0.1" high-value="5" />
+            <ui:ScrollView name="settings-scroll" class="settings-scroll" mode="Vertical" horizontal-scroller-visibility="Hidden">
+                <ui:VisualElement class="settings-row">
+                    <ui:Label name="sensitivity-caption" class="settings-caption" text="Czułość myszy" />
+                    <ui:Label name="sensitivity-value" class="settings-value" text="1.0" />
+                </ui:VisualElement>
+                <ui:Slider name="sensitivity-slider" class="settings-slider" low-value="0.1" high-value="5" />
 
-            <ui:Label name="language-caption" class="settings-caption" text="Język" />
-            <ui:VisualElement class="settings-language-row">
-                <ui:Button name="polish-button" class="btn btn--paper" text="Polski" />
-                <ui:Button name="english-button" class="btn btn--paper" text="Angielski" />
-            </ui:VisualElement>
+                <ui:Label name="language-caption" class="settings-caption" text="Język" />
+                <ui:VisualElement class="settings-language-row">
+                    <ui:Button name="polish-button" class="btn btn--paper" text="Polski" />
+                    <ui:Button name="english-button" class="btn btn--paper" text="Angielski" />
+                </ui:VisualElement>
 
-            <ui:Label name="voice-hint" class="settings-hint" text="" />
+                <ui:VisualElement class="settings-section-rule" />
+                <ui:VisualElement class="settings-row">
+                    <ui:Label name="microphone-caption" class="settings-caption" text="Twój mikrofon" />
+                    <ui:Label name="microphone-level-value" class="settings-value" text="100%" />
+                </ui:VisualElement>
+                <ui:Slider name="microphone-level-slider" class="settings-slider" low-value="0" high-value="200" />
+                <ui:Label name="microphone-state" class="settings-voice-state" text="MIKROFON WŁĄCZONY" />
+                <ui:VisualElement class="settings-voice-actions">
+                    <ui:Button name="microphone-mute-button" class="btn btn--paper" text="Wycisz mikrofon" />
+                    <ui:Button name="microphone-test-button" class="btn btn--paper" text="Odsłuch mikrofonu" />
+                </ui:VisualElement>
+                <ui:Label name="microphone-test-status" class="settings-hint settings-voice-hint" text="" />
+
+                <ui:Label name="participant-volume-caption" class="settings-caption" text="Głośność rozmówców" />
+                <ui:Label name="voice-participant-list-empty" class="settings-hint" text="Kontrolki rozmówców pojawią się po dołączeniu do lobby." />
+                <ui:ScrollView name="voice-participant-list" class="voice-participant-list" mode="Vertical" horizontal-scroller-visibility="Hidden" />
+
+                <ui:Label name="voice-hint" class="settings-hint" text="" />
+            </ui:ScrollView>
 
             <ui:Button name="back-button" class="btn btn--ink settings-action" text="Wróć do menu" />
 

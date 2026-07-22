@@ -456,6 +456,7 @@
 
 .lobby-player-row {
     min-height: 58px;
+    position: relative;
     flex-direction: row;
     align-items: center;
     padding: 8px 6px;
@@ -530,6 +531,16 @@
     background-image: url("project://database/Assets/UI/Speaker_Icon.png");
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: var(--amber);
+}
+
+.lobby-player-voice-state {
+    position: absolute;
+    right: 6px;
+    bottom: 3px;
+    color: var(--graphite-300);
+    font-size: 8px;
+    letter-spacing: 0.5px;
+    -unity-font-style: bold;
 }
 
 .lobby-start-hover-area {

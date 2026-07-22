@@ -37,6 +37,48 @@ namespace InterrogationRoom.UI.Tests
         }
 
         [Test]
+        public void VoiceSettings_WithoutStoredValues_UseSafeDefaults()
+        {
+            Assert.That(settings.MicrophoneLevelPercent, Is.EqualTo(100f));
+            Assert.That(settings.MicrophoneMuted, Is.False);
+        }
+
+        [TestCase(-10f, 0f)]
+        [TestCase(0f, 0f)]
+        [TestCase(100f, 100f)]
+        [TestCase(200f, 200f)]
+        [TestCase(250f, 200f)]
+        public void SetMicrophoneLevelPercent_ClampsAndPersists(float requested, float expected)
+        {
+            settings.SetMicrophoneLevelPercent(requested);
+
+            Assert.That(settings.MicrophoneLevelPercent, Is.EqualTo(expected));
+            Assert.That(store.Values[GameSettings.MicrophoneLevelKey], Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void SetMicrophoneMuted_PersistsAndRaisesChanged()
+        {
+            int raised = 0;
+            settings.Changed += () => raised++;
+
+            settings.SetMicrophoneMuted(true);
+
+            Assert.That(settings.MicrophoneMuted, Is.True);
+            Assert.That(store.Values[GameSettings.MicrophoneMutedKey], Is.EqualTo(1f));
+            Assert.That(raised, Is.EqualTo(1));
+        }
+
+        [TestCase(0f, -50)]
+        [TestCase(50f, -6)]
+        [TestCase(100f, 0)]
+        [TestCase(200f, 6)]
+        public void VoicePercentToVivoxVolume_UsesDecibelScale(float percent, int expected)
+        {
+            Assert.That(GameSettings.VoicePercentToVivoxVolume(percent), Is.EqualTo(expected));
+        }
+
+        [Test]
         public void Language_WithoutStoredValue_DefaultsToPolish()
         {
             Assert.That(settings.Language, Is.EqualTo(UiLanguage.Polish));

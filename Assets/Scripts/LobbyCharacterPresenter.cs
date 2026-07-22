@@ -38,6 +38,7 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
     private uint renderedLocalNetId;
     private readonly Dictionary<int, VisualElement> speakerIndicators = new();
     private readonly Dictionary<int, uint> speakerNetIds = new();
+    private readonly Dictionary<int, Label> microphoneStateLabels = new();
 
     public void Configure(NetworkRoundCoordinator roundCoordinator, SteamLobby lobby)
     {
@@ -96,6 +97,7 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         bound = false;
         speakerIndicators.Clear();
         speakerNetIds.Clear();
+        microphoneStateLabels.Clear();
         renderedRosterSignature = null;
         DestroyPreview();
     }
@@ -139,10 +141,27 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
 
         foreach (KeyValuePair<int, VisualElement> entry in speakerIndicators)
         {
-            bool speaking = speakerNetIds.TryGetValue(entry.Key, out uint netId) &&
+            bool hasNetworkPlayer = speakerNetIds.TryGetValue(entry.Key, out uint netId) && netId != 0u;
+            bool speaking = hasNetworkPlayer &&
                 voiceRuntime != null &&
                 voiceRuntime.IsNetworkPlayerSpeaking(netId);
             SetVisible(entry.Value, speaking);
+
+            if (!microphoneStateLabels.TryGetValue(entry.Key, out Label stateLabel))
+                continue;
+
+            bool locallyMuted = hasNetworkPlayer &&
+                voiceRuntime != null &&
+                voiceRuntime.IsParticipantLocallyMuted(netId);
+            bool microphoneMuted = hasNetworkPlayer &&
+                voiceRuntime != null &&
+                voiceRuntime.IsNetworkPlayerMicrophoneMuted(netId);
+            stateLabel.text = locallyMuted
+                ? UiText.Get("WYCISZONY LOKALNIE")
+                : microphoneMuted
+                    ? UiText.Get("MIKROFON WYCISZONY")
+                    : string.Empty;
+            SetVisible(stateLabel, !string.IsNullOrEmpty(stateLabel.text));
         }
     }
 
@@ -151,6 +170,7 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         playerList.Clear();
         speakerIndicators.Clear();
         speakerNetIds.Clear();
+        microphoneStateLabels.Clear();
         SetVisible(playerListEmptyLabel, players == null || players.Count == 0);
         rosterCountLabel.text = $"{UiText.Get("Gracze w lobby")}: {players?.Count ?? 0}/8";
         if (players == null)
@@ -186,9 +206,15 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
 
             VisualElement speaker = CreateSpeakerIndicator();
             row.Add(speaker);
+
+            var microphoneState = new Label();
+            microphoneState.AddToClassList("lobby-player-voice-state");
+            row.Add(microphoneState);
             speakerIndicators[player.PlayerId] = speaker;
             speakerNetIds[player.PlayerId] = player.NetworkIdentityNetId;
+            microphoneStateLabels[player.PlayerId] = microphoneState;
             SetVisible(speaker, false);
+            SetVisible(microphoneState, false);
             playerList.Add(row);
         }
     }

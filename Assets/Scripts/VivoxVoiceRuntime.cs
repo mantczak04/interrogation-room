@@ -5,6 +5,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using InterrogationRoom.Domain;
+using InterrogationRoom.Networking;
+using InterrogationRoom.Settings;
 using InterrogationRoom.Voice;
 using Mirror;
 using Unity.Services.Authentication;
@@ -28,12 +31,14 @@ internal struct VivoxVoiceSessionResponseMessage : NetworkMessage
 internal struct VivoxLocalSpeakingStateMessage : NetworkMessage
 {
     public bool IsSpeaking;
+    public bool IsMuted;
 }
 
 internal struct VivoxSpeakingStateMessage : NetworkMessage
 {
     public uint NetworkIdentityNetId;
     public bool IsSpeaking;
+    public bool IsMuted;
 }
 
 [DisallowMultipleComponent]
@@ -74,9 +79,14 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private readonly Dictionary<string, GameObject> participantTaps = new();
     private readonly Dictionary<string, VivoxParticipant> pendingParticipants = new();
+    private readonly Dictionary<uint, VivoxParticipant> participantsByNetId = new();
+    private readonly Dictionary<uint, float> participantVolumePercent = new();
+    private readonly HashSet<uint> locallyMutedParticipants = new();
     private readonly VoiceSpeakingState networkSpeakingState = new();
+    private readonly Dictionary<uint, VivoxSpeakingStateMessage> serverSpeakingStates = new();
 
     private GameObject localPlayer;
+    private NetworkRoundCoordinator roundCoordinator;
     private string activeSessionId;
     private string activeChannelName;
     private string hostSessionId;
@@ -84,16 +94,28 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private bool wasServerActive;
     private bool serverHandlerRegistered;
     private bool clientHandlerRegistered;
-    private bool isMuted;
     private bool isReady;
     private bool isJoining;
+    private bool isSwitchingChannel;
+    private bool isSpatialChannel;
+    private bool microphoneTestActive;
     private bool isDisconnecting;
     private bool isShuttingDown;
     private bool localSpeechDetected;
     private bool localSpeakingStateSent;
+    private bool localMutedStateSent;
     private TaskCompletionSource<string> pendingSessionId;
 
+    public static VivoxVoiceRuntime Instance { get; private set; }
+
+    public event Action VoiceStateChanged;
+
     public VoiceConnectionState ConnectionState { get; private set; } = VoiceConnectionState.WaitingForNetwork;
+    public bool IsReady => isReady;
+    public bool IsSpatialVoice => isSpatialChannel;
+    public bool IsLocalMicrophoneMuted =>
+        GameSettingsService.Current.MicrophoneMuted || microphoneTestActive;
+    public float MicrophoneLevelPercent => GameSettingsService.Current.MicrophoneLevelPercent;
 
     private float EffectiveAudibleDistance => Mathf.Min(audibleDistance, MaxAudibleDistance);
 
@@ -101,6 +123,12 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         tap != null &&
         tap.TryGetComponent(out VivoxVoiceOcclusion occlusion) &&
         occlusion.IsActivelyAttenuated);
+
+    private void Awake()
+    {
+        Instance = this;
+        GameSettingsService.Current.Changed += OnGameSettingsChanged;
+    }
 
     private async void Start()
     {
@@ -130,7 +158,11 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
         RetryPendingParticipants();
 
-        if (Time.unscaledTime >= nextPositionUpdate)
+        bool wantsSpatialVoice = ResolveWantsSpatialVoice();
+        if (!isSwitchingChannel && wantsSpatialVoice != isSpatialChannel)
+            _ = SwitchVoiceChannelAsync(wantsSpatialVoice);
+
+        if (isSpatialChannel && Time.unscaledTime >= nextPositionUpdate)
         {
             VivoxService.Instance.Set3DPosition(localPlayer, activeChannelName);
             nextPositionUpdate = Time.unscaledTime + positionUpdateInterval;
@@ -206,30 +238,14 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
             VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
 
-            SetConnectionState(VoiceConnectionState.JoiningChannel);
-            int channelAudibleDistance = Mathf.Max(2, Mathf.RoundToInt(EffectiveAudibleDistance));
-            int channelConversationalDistance = Mathf.Clamp(
-                Mathf.RoundToInt(conversationalDistance),
-                1,
-                channelAudibleDistance - 1);
-            await VivoxService.Instance.JoinPositionalChannelAsync(
-                activeChannelName,
-                ChatCapability.AudioOnly,
-                new Channel3DProperties(
-                    channelAudibleDistance,
-                    channelConversationalDistance,
-                    audioFadeIntensity,
-                    AudioFadeModel.InverseByDistance));
-
-            VivoxService.Instance.Set3DPosition(localPlayer, activeChannelName);
-            nextPositionUpdate = Time.unscaledTime + positionUpdateInterval;
-            isReady = true;
+            VivoxService.Instance.EnableAcousticEchoCancellation();
+            await JoinVoiceChannelAsync(ResolveWantsSpatialVoice());
             PublishLocalSpeakingState(false, force: true);
             SetConnectionState(
                 VivoxService.Instance.AvailableInputDevices.Count == 0
                     ? VoiceConnectionState.NoInputDevice
                     : VoiceConnectionState.Ready);
-            Debug.Log($"[Vivox] Joined positional channel '{activeChannelName}'.");
+            Debug.Log($"[Vivox] Joined {(isSpatialChannel ? "spatial" : "global")} channel '{activeChannelName}'.");
         }
         catch (Exception exception)
         {
@@ -317,19 +333,25 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
         AudioSource audioSource = tapObject.GetComponent<AudioSource>();
         float maxDistance = EffectiveAudibleDistance;
-        audioSource.spatialBlend = 1f;
-        audioSource.rolloffMode = AudioRolloffMode.Custom;
-        audioSource.minDistance = 1f;
-        audioSource.maxDistance = maxDistance;
-        audioSource.SetCustomCurve(
-            AudioSourceCurveType.CustomRolloff,
-            VoiceAudibilityModel.BuildDistanceRolloffCurve(conversationalDistance, maxDistance));
+        audioSource.spatialBlend = isSpatialChannel ? 1f : 0f;
+        if (isSpatialChannel)
+        {
+            audioSource.rolloffMode = AudioRolloffMode.Custom;
+            audioSource.minDistance = 1f;
+            audioSource.maxDistance = maxDistance;
+            audioSource.SetCustomCurve(
+                AudioSourceCurveType.CustomRolloff,
+                VoiceAudibilityModel.BuildDistanceRolloffCurve(conversationalDistance, maxDistance));
 
-        VivoxVoiceOcclusion occlusion = tapObject.AddComponent<VivoxVoiceOcclusion>();
-        occlusion.Configure(localPlayer.transform, identity.transform, audioSource, occlusionMask);
+            VivoxVoiceOcclusion occlusion = tapObject.AddComponent<VivoxVoiceOcclusion>();
+            occlusion.Configure(localPlayer.transform, identity.transform, audioSource, occlusionMask);
+        }
 
         participantTaps[participant.PlayerId] = tapObject;
+        participantsByNetId[identity.netId] = participant;
+        ApplyParticipantSettings(identity.netId, participant);
         pendingParticipants.Remove(participant.PlayerId);
+        VoiceStateChanged?.Invoke();
         return true;
     }
 
@@ -345,6 +367,10 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         {
             Destroy(tapObject);
         }
+
+        if (TryParsePlayerId(activeSessionId, participant.PlayerId, out uint netId))
+            participantsByNetId.Remove(netId);
+        VoiceStateChanged?.Invoke();
     }
 
     private void RetryPendingParticipants()
@@ -398,7 +424,179 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
                 playerId[expectedPrefix.Length..],
                 NumberStyles.None,
                 CultureInfo.InvariantCulture,
-                out netId);
+            out netId);
+    }
+
+    internal static string BuildModeChannelName(string prefix, string sessionId, bool spatial) =>
+        $"{BuildChannelName(prefix, sessionId)}-{(spatial ? "round" : "lobby")}";
+
+    public float GetParticipantVolumePercent(uint networkIdentityNetId) =>
+        participantVolumePercent.TryGetValue(networkIdentityNetId, out float volume)
+            ? volume
+            : GameSettings.DefaultVoicePercent;
+
+    public void SetParticipantVolumePercent(uint networkIdentityNetId, float volumePercent)
+    {
+        if (networkIdentityNetId == 0u)
+            return;
+
+        float clamped = GameSettings.ClampVoicePercent(volumePercent);
+        participantVolumePercent[networkIdentityNetId] = clamped;
+        if (participantsByNetId.TryGetValue(networkIdentityNetId, out VivoxParticipant participant))
+            participant.SetLocalVolume(GameSettings.VoicePercentToVivoxVolume(clamped));
+        VoiceStateChanged?.Invoke();
+    }
+
+    public bool IsParticipantLocallyMuted(uint networkIdentityNetId) =>
+        networkIdentityNetId != 0u && locallyMutedParticipants.Contains(networkIdentityNetId);
+
+    public void SetParticipantLocallyMuted(uint networkIdentityNetId, bool muted)
+    {
+        if (networkIdentityNetId == 0u)
+            return;
+
+        if (muted)
+            locallyMutedParticipants.Add(networkIdentityNetId);
+        else
+            locallyMutedParticipants.Remove(networkIdentityNetId);
+
+        if (participantsByNetId.TryGetValue(networkIdentityNetId, out VivoxParticipant participant))
+        {
+            if (muted)
+                participant.MutePlayerLocally();
+            else
+                participant.UnmutePlayerLocally();
+        }
+
+        VoiceStateChanged?.Invoke();
+    }
+
+    public void SetLocalMicrophoneMuted(bool muted) =>
+        GameSettingsService.Current.SetMicrophoneMuted(muted);
+
+    public void SetLocalMicrophoneLevelPercent(float percent) =>
+        GameSettingsService.Current.SetMicrophoneLevelPercent(percent);
+
+    public void SetMicrophoneTestActive(bool active)
+    {
+        if (microphoneTestActive == active)
+            return;
+
+        microphoneTestActive = active;
+        ApplyMuteState();
+        VoiceStateChanged?.Invoke();
+    }
+
+    private void OnGameSettingsChanged()
+    {
+        ApplyMuteState();
+        VoiceStateChanged?.Invoke();
+    }
+
+    private bool ResolveWantsSpatialVoice()
+    {
+        if (roundCoordinator == null)
+            roundCoordinator = FindFirstObjectByType<NetworkRoundCoordinator>();
+
+        PlayerRoundView view = roundCoordinator != null ? roundCoordinator.CurrentView : null;
+        return view != null && view.Phase != RoundPhase.Lobby;
+    }
+
+    private async Task SwitchVoiceChannelAsync(bool spatial)
+    {
+        if (isSwitchingChannel || string.IsNullOrEmpty(activeSessionId))
+            return;
+
+        try
+        {
+            await JoinVoiceChannelAsync(spatial);
+            PublishLocalSpeakingState(false, force: true);
+            SetConnectionState(
+                VivoxService.Instance.AvailableInputDevices.Count == 0
+                    ? VoiceConnectionState.NoInputDevice
+                    : VoiceConnectionState.Ready);
+        }
+        catch (Exception exception)
+        {
+            SetConnectionState(VoiceConnectionState.Faulted);
+            Debug.LogException(exception, this);
+        }
+    }
+
+    private async Task JoinVoiceChannelAsync(bool spatial)
+    {
+        isSwitchingChannel = true;
+        isReady = false;
+        SetConnectionState(VoiceConnectionState.JoiningChannel);
+
+        try
+        {
+            if (!string.IsNullOrEmpty(activeChannelName) &&
+                VivoxService.Instance.ActiveChannels.ContainsKey(activeChannelName))
+            {
+                await VivoxService.Instance.LeaveChannelAsync(activeChannelName);
+            }
+
+            DestroyParticipantTaps();
+            activeChannelName = BuildModeChannelName(channelPrefix, activeSessionId, spatial);
+            if (spatial)
+            {
+                int channelAudibleDistance = Mathf.Max(2, Mathf.RoundToInt(EffectiveAudibleDistance));
+                int channelConversationalDistance = Mathf.Clamp(
+                    Mathf.RoundToInt(conversationalDistance),
+                    1,
+                    channelAudibleDistance - 1);
+                await VivoxService.Instance.JoinPositionalChannelAsync(
+                    activeChannelName,
+                    ChatCapability.AudioOnly,
+                    new Channel3DProperties(
+                        channelAudibleDistance,
+                        channelConversationalDistance,
+                        audioFadeIntensity,
+                        AudioFadeModel.InverseByDistance));
+                VivoxService.Instance.Set3DPosition(localPlayer, activeChannelName);
+                nextPositionUpdate = Time.unscaledTime + positionUpdateInterval;
+            }
+            else
+            {
+                await VivoxService.Instance.JoinGroupChannelAsync(
+                    activeChannelName,
+                    ChatCapability.AudioOnly);
+            }
+
+            isSpatialChannel = spatial;
+            isReady = true;
+            ApplyMuteState();
+            VoiceStateChanged?.Invoke();
+            Debug.Log($"[Vivox] Voice mode: {(spatial ? "spatial Runda" : "global lobby")}.");
+        }
+        finally
+        {
+            isSwitchingChannel = false;
+        }
+    }
+
+    private void DestroyParticipantTaps()
+    {
+        foreach (GameObject tapObject in participantTaps.Values)
+        {
+            if (tapObject != null)
+                Destroy(tapObject);
+        }
+
+        participantTaps.Clear();
+        pendingParticipants.Clear();
+        participantsByNetId.Clear();
+    }
+
+    private void ApplyParticipantSettings(uint netId, VivoxParticipant participant)
+    {
+        participant.SetLocalVolume(
+            GameSettings.VoicePercentToVivoxVolume(GetParticipantVolumePercent(netId)));
+        if (IsParticipantLocallyMuted(netId))
+            participant.MutePlayerLocally();
+        else
+            participant.UnmutePlayerLocally();
     }
 
     private static string BuildServicesProfileId(string sessionId, uint netId)
@@ -437,13 +635,24 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             return;
         }
 
-        isMuted = !isMuted;
-        ApplyMuteState();
+        GameSettingsService.Current.SetMicrophoneMuted(
+            !GameSettingsService.Current.MicrophoneMuted);
     }
 
     private void ApplyMuteState()
     {
-        if (isMuted)
+        if (VivoxService.Instance == null ||
+            VivoxService.Instance.InitializationState == VivoxInitializationState.Uninitialized ||
+            !VivoxService.Instance.IsLoggedIn)
+        {
+            return;
+        }
+
+        VivoxService.Instance.SetInputDeviceVolume(
+            GameSettings.VoicePercentToVivoxVolume(
+                GameSettingsService.Current.MicrophoneLevelPercent));
+
+        if (IsLocalMicrophoneMuted)
         {
             VivoxService.Instance.MuteInputDevice();
             PublishLocalSpeakingState(false);
@@ -458,7 +667,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private void UpdateMicActivity()
     {
-        if (isMuted || string.IsNullOrEmpty(activeChannelName))
+        if (IsLocalMicrophoneMuted || string.IsNullOrEmpty(activeChannelName))
         {
             return;
         }
@@ -474,9 +683,15 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private void PublishLocalSpeakingState(bool isSpeaking, bool force = false)
     {
-        bool normalizedState = !isMuted && isSpeaking;
-        if (!force && localSpeakingStateSent && localSpeechDetected == normalizedState)
+        bool muted = IsLocalMicrophoneMuted;
+        bool normalizedState = !muted && isSpeaking;
+        if (!force &&
+            localSpeakingStateSent &&
+            localSpeechDetected == normalizedState &&
+            localMutedStateSent == muted)
+        {
             return;
+        }
 
         localSpeechDetected = normalizedState;
         if (!NetworkClient.active || NetworkClient.connection == null)
@@ -484,9 +699,12 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
         NetworkClient.Send(new VivoxLocalSpeakingStateMessage
         {
-            IsSpeaking = normalizedState
+            IsSpeaking = normalizedState,
+            IsMuted = muted
         });
         localSpeakingStateSent = true;
+        localMutedStateSent = muted;
+        VoiceStateChanged?.Invoke();
     }
 
     public bool IsNetworkPlayerSpeaking(uint networkIdentityNetId)
@@ -500,6 +718,19 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         return localNetId == networkIdentityNetId
             ? localSpeechDetected
             : networkSpeakingState.IsSpeaking(networkIdentityNetId);
+    }
+
+    public bool IsNetworkPlayerMicrophoneMuted(uint networkIdentityNetId)
+    {
+        if (networkIdentityNetId == 0u)
+            return false;
+
+        uint localNetId = NetworkClient.localPlayer != null
+            ? NetworkClient.localPlayer.netId
+            : 0u;
+        return localNetId == networkIdentityNetId
+            ? IsLocalMicrophoneMuted
+            : networkSpeakingState.IsMuted(networkIdentityNetId);
     }
 
     private async Task DisconnectAndWaitForReconnectAsync()
@@ -548,8 +779,9 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         }
         finally
         {
-            participantTaps.Clear();
-            pendingParticipants.Clear();
+            DestroyParticipantTaps();
+            participantVolumePercent.Clear();
+            locallyMutedParticipants.Clear();
             pendingSessionId?.TrySetCanceled();
             pendingSessionId = null;
             activeSessionId = null;
@@ -557,6 +789,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             localPlayer = null;
             localSpeechDetected = false;
             localSpeakingStateSent = false;
+            localMutedStateSent = false;
             networkSpeakingState.Clear();
             isDisconnecting = false;
             if (!isShuttingDown)
@@ -567,6 +800,9 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private async void OnDestroy()
     {
         isShuttingDown = true;
+        GameSettingsService.Current.Changed -= OnGameSettingsChanged;
+        if (Instance == this)
+            Instance = null;
         UnregisterNetworkMessageHandlers();
         await DisconnectAsync(logout: true);
     }
@@ -577,6 +813,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         if (wasServerActive && !serverActive)
         {
             hostSessionId = null;
+            serverSpeakingStates.Clear();
         }
 
         wasServerActive = serverActive;
@@ -629,6 +866,9 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         {
             SessionId = EnsureHostSessionId()
         });
+
+        foreach (VivoxSpeakingStateMessage state in serverSpeakingStates.Values)
+            connection.Send(state);
     }
 
     private void OnSessionIdReceived(VivoxVoiceSessionResponseMessage message)
@@ -647,16 +887,23 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         if (netId == 0u)
             return;
 
-        NetworkServer.SendToAll(new VivoxSpeakingStateMessage
+        var state = new VivoxSpeakingStateMessage
         {
             NetworkIdentityNetId = netId,
-            IsSpeaking = message.IsSpeaking
-        });
+            IsSpeaking = message.IsSpeaking,
+            IsMuted = message.IsMuted
+        };
+        serverSpeakingStates[netId] = state;
+        NetworkServer.SendToAll(state);
     }
 
     private void OnSpeakingStateReceived(VivoxSpeakingStateMessage message)
     {
-        networkSpeakingState.Apply(message.NetworkIdentityNetId, message.IsSpeaking);
+        networkSpeakingState.Apply(
+            message.NetworkIdentityNetId,
+            message.IsSpeaking,
+            message.IsMuted);
+        VoiceStateChanged?.Invoke();
     }
 
     private string EnsureHostSessionId()
