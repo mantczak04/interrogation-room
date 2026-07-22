@@ -8,6 +8,13 @@ Project design documents are written in Polish. Preserve the canonical Polish do
 
 Start project workflows with [ask-interrogation-room](./.agents/skills/ask-interrogation-room/SKILL.md). Repository skills take precedence over similarly named global skills for work in this project; `AGENTS.md` remains the policy source of truth.
 
+### OpenCode compatibility
+
+- At the start of every OpenCode session, load the global `i-have-adhd` skill and use its action-first, numbered, low-noise response format throughout the session.
+- OpenCode discovers the project workflows under `.agents/skills/`; do not duplicate them under `.opencode/skills/`.
+- The project-level `opencode.json` owns the OpenCode connection to `unityMCP` at `http://127.0.0.1:8080/mcp`.
+- If the ADHD skill cannot be loaded, continue with the same response constraints and report the missing skill briefly.
+
 ## Start Here
 
 Before changing code, read only the documents required for the current task:

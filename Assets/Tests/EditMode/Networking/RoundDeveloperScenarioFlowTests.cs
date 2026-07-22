@@ -116,6 +116,70 @@ namespace InterrogationRoom.Networking.Tests
             }
         }
 
+        [TestCase(RoundDeveloperTask.PersonalMatterFinish, "osobista-sprawa-zakoncz")]
+        [TestCase(RoundDeveloperTask.SecretObjectivePlant, "wrobienie-podloz")]
+        [TestCase(RoundDeveloperTask.EscapeOpenRoute, "escape-open-route")]
+        public void SelectedTask_PreparesTheImmediatelyTestableStep(
+            RoundDeveloperTask task,
+            string expectedStepId)
+        {
+            int playerCount = RoundDeveloperTaskCatalog.ScenarioFor(task)
+                              == RoundDeveloperScenario.SecretObjective
+                ? 5
+                : 4;
+            var controlled = new PlayerId(0);
+            Assert.That(RoundDeveloperScenarioPlanner.TryCreate(
+                TestCase(),
+                new[] { controlled },
+                controlled,
+                playerCount,
+                RoundDeveloperTaskCatalog.ScenarioFor(task),
+                out var plan,
+                out var reason), Is.True, reason);
+
+            var engine = Start(plan);
+            Assert.That(RoundDeveloperTaskSetup.TryPrepare(
+                engine,
+                plan,
+                task,
+                out reason), Is.True, reason);
+
+            var view = engine.ViewFor(controlled);
+            Assert.That(view.Phase, Is.EqualTo(RoundPhase.Round));
+            string currentStep = view.Role == RoundRole.Guilty
+                ? view.EscapePlan.CurrentStep?.Value
+                : view.PrivateObjective.CurrentStep?.Value;
+            Assert.That(currentStep, Is.EqualTo(expectedStepId));
+        }
+
+        [TestCase(RoundDeveloperTask.EscapeFinalVent, "escape-exit-a")]
+        [TestCase(RoundDeveloperTask.EscapeFinalGate, "escape-exit-b")]
+        public void SelectedFinalEscapeTask_PreparesOnlyTheRequestedExit(
+            RoundDeveloperTask task,
+            string expectedExitId)
+        {
+            var controlled = new PlayerId(0);
+            Assert.That(RoundDeveloperScenarioPlanner.TryCreate(
+                TestCase(),
+                new[] { controlled },
+                controlled,
+                4,
+                RoundDeveloperScenario.GuiltyEscape,
+                out var plan,
+                out var reason), Is.True, reason);
+            var engine = Start(plan);
+
+            Assert.That(RoundDeveloperTaskSetup.TryPrepare(
+                engine,
+                plan,
+                task,
+                out reason), Is.True, reason);
+
+            var exits = engine.ViewFor(controlled).EscapePlan.ExitOptions;
+            Assert.That(exits.Single(exit => exit.Id.Value == expectedExitId).IsPrepared, Is.True);
+            Assert.That(exits.Count(exit => exit.IsPrepared), Is.EqualTo(1));
+        }
+
         private static RoundEngine Start(RoundDeveloperPlan plan)
         {
             var engine = new RoundEngine();

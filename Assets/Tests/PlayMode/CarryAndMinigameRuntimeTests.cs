@@ -128,6 +128,34 @@ namespace InterrogationRoom.Gameplay.Tests
             Assert.That(targetType.GetProperty("HasActiveInteractor").GetValue(target), Is.False);
         }
 
+        [TestCase("PersonalMatterFinish", "personal-document")]
+        [TestCase("SecretObjectivePlant", "suspicious-token")]
+        public void DeveloperTaskPreparationGivesTheRequiredItemToTheControlledPlayer(
+            string taskName,
+            string itemId)
+        {
+            Type binderType = FindAssemblyCSharpType(
+                "InterrogationRoom.Gameplay.Interaction.RoundPhysicalActionBinder");
+            Type itemType = FindAssemblyCSharpType(
+                "InterrogationRoom.Gameplay.Items.NetworkCarryableItem");
+            Type taskType = FindAssemblyCSharpType(
+                "InterrogationRoom.Networking.RoundDeveloperTask");
+            GameObject integrationRoot = CreateObject("Physical integration");
+            integrationRoot.SetActive(false);
+            Component item = CreateCarryable("Required item", itemType, itemId);
+            item.transform.SetParent(integrationRoot.transform);
+            Component binder = integrationRoot.AddComponent(binderType);
+            binderType.GetMethod("RefreshBindings").Invoke(binder, null);
+            NetworkIdentity actor = CreateIdentity("Controlled player");
+            object task = Enum.Parse(taskType, taskName);
+
+            Assert.That(binderType.GetMethod("TryPrepareDeveloperTaskServer")
+                .Invoke(binder, new[] { actor, task }), Is.True);
+            Assert.That(itemType.GetProperty("IsCarried").GetValue(item), Is.True);
+            Assert.That(itemType.GetMethod("IsCarriedBy")
+                .Invoke(item, new object[] { actor }), Is.True);
+        }
+
         private Component CreateCarryable(string name, Type itemType, string itemId)
         {
             GameObject itemObject = CreateObject(name);

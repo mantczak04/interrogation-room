@@ -166,5 +166,39 @@ namespace InterrogationRoom.Networking.Tests
                 out _, out var controllerReason), Is.False);
             Assert.That(controllerReason, Does.Contain("connected player"));
         }
+
+        [TestCase(RoundDeveloperTask.PersonalMatterPrepare, RoundDeveloperScenario.PersonalMatter, RoundRole.Innocent)]
+        [TestCase(RoundDeveloperTask.PersonalMatterFinish, RoundDeveloperScenario.PersonalMatter, RoundRole.Innocent)]
+        [TestCase(RoundDeveloperTask.SecretObjectivePrepare, RoundDeveloperScenario.SecretObjective, RoundRole.Innocent)]
+        [TestCase(RoundDeveloperTask.SecretObjectivePlant, RoundDeveloperScenario.SecretObjective, RoundRole.Innocent)]
+        [TestCase(RoundDeveloperTask.AlibiClue, RoundDeveloperScenario.GuiltyEscape, RoundRole.Guilty)]
+        [TestCase(RoundDeveloperTask.EscapeFindTool, RoundDeveloperScenario.GuiltyEscape, RoundRole.Guilty)]
+        [TestCase(RoundDeveloperTask.EscapeOpenRoute, RoundDeveloperScenario.GuiltyEscape, RoundRole.Guilty)]
+        [TestCase(RoundDeveloperTask.EscapePrepareVent, RoundDeveloperScenario.GuiltyEscape, RoundRole.Guilty)]
+        [TestCase(RoundDeveloperTask.EscapeFinalVent, RoundDeveloperScenario.GuiltyEscape, RoundRole.Guilty)]
+        [TestCase(RoundDeveloperTask.EscapePrepareGate, RoundDeveloperScenario.GuiltyEscape, RoundRole.Guilty)]
+        [TestCase(RoundDeveloperTask.EscapeFinalGate, RoundDeveloperScenario.GuiltyEscape, RoundRole.Guilty)]
+        public void TaskCatalog_MapsEachTaskToItsRoleAndScenario(
+            RoundDeveloperTask task,
+            RoundDeveloperScenario expectedScenario,
+            RoundRole expectedRole)
+        {
+            Assert.That(RoundDeveloperTaskCatalog.ScenarioFor(task), Is.EqualTo(expectedScenario));
+            Assert.That(RoundDeveloperTaskCatalog.RoleFor(task), Is.EqualTo(expectedRole));
+        }
+
+        [Test]
+        public void TaskCatalog_NextCyclesWithinTheSelectedRole()
+        {
+            Assert.That(
+                RoundDeveloperTaskCatalog.Next(RoundDeveloperTask.PersonalMatterFinish),
+                Is.EqualTo(RoundDeveloperTask.SecretObjectivePrepare));
+            Assert.That(
+                RoundDeveloperTaskCatalog.Next(RoundDeveloperTask.SecretObjectivePlant),
+                Is.EqualTo(RoundDeveloperTask.PersonalMatterPrepare));
+            Assert.That(
+                RoundDeveloperTaskCatalog.Next(RoundDeveloperTask.EscapeFinalGate),
+                Is.EqualTo(RoundDeveloperTask.AlibiClue));
+        }
     }
 }

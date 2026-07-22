@@ -28,6 +28,7 @@ namespace InterrogationRoom.Debugging
         private bool _expanded = true;
         private int _targetPlayerCount = RoundEngine.MinPlayers;
         private int _controlledPlayerId;
+        private RoundRole _selectedRole = RoundRole.Innocent;
         private string _status;
         private Vector2 _scroll;
         private GUIStyle _boxStyle;
@@ -182,13 +183,28 @@ namespace InterrogationRoom.Debugging
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(UiText.Get("Scenariusz"), _headerStyle);
-            DrawStartButton(UiText.Get("Niewinny — Osobista Sprawa"), RoundDeveloperScenario.PersonalMatter);
-            GUI.enabled = _targetPlayerCount >= RoundEngine.MinPlayersForSecretObjective;
-            DrawStartButton(UiText.Get("Niewinny — Sekretny Cel"), RoundDeveloperScenario.SecretObjective);
+            GUILayout.Label(UiText.Get("Rola"), _headerStyle);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(
+                    (_selectedRole == RoundRole.Innocent ? "✓ " : string.Empty) + UiText.Get("Niewinny"),
+                    _buttonStyle))
+                _selectedRole = RoundRole.Innocent;
+            if (GUILayout.Button(
+                    (_selectedRole == RoundRole.Guilty ? "✓ " : string.Empty) + UiText.Get("Winny"),
+                    _buttonStyle))
+                _selectedRole = RoundRole.Guilty;
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label(UiText.Get("Konkretne zadanie lub minigierka"), _headerStyle);
+            foreach (RoundDeveloperTask task in RoundDeveloperTaskCatalog.TasksFor(_selectedRole))
+            {
+                bool requiresSecretObjective =
+                    RoundDeveloperTaskCatalog.ScenarioFor(task) == RoundDeveloperScenario.SecretObjective;
+                GUI.enabled = !requiresSecretObjective
+                              || _targetPlayerCount >= RoundEngine.MinPlayersForSecretObjective;
+                DrawTaskStartButton(task);
+            }
             GUI.enabled = true;
-            DrawStartButton(UiText.Get("Winny — Trop i Ucieczka"), RoundDeveloperScenario.GuiltyEscape);
-            DrawStartButton(UiText.Get("Detektyw — Incydenty"), RoundDeveloperScenario.DetectiveIncidents);
 
             GUILayout.Label(
                 UiText.Get("Wybór scenariusza wymusza rolę testowanego gracza. Runda nie kończy się automatycznie po czasie. Panel działa tylko w Editorze i Development Buildzie."),
@@ -240,10 +256,30 @@ namespace InterrogationRoom.Debugging
                 : UiText.Get("Nie udało się uruchomić scenariusza.");
         }
 
+        private void DrawTaskStartButton(RoundDeveloperTask task)
+        {
+            if (!GUILayout.Button(TaskLabel(task), _buttonStyle))
+                return;
+
+            bool started = coordinator.TryStartDeveloperTask(
+                task,
+                _targetPlayerCount,
+                new PlayerId(_controlledPlayerId),
+                out var reason);
+            if (!started)
+                Debug.LogWarning($"[RoundDeveloperPanel] Task start rejected: {reason}", this);
+            _status = started
+                ? UiText.Get("Zadanie uruchomione i gotowe do testu.")
+                : UiText.Get("Nie udało się uruchomić zadania.");
+        }
+
         private void DrawActiveScenario(RoundDeveloperPlan plan)
         {
             var view = coordinator.DeveloperControlledView;
-            GUILayout.Label(ScenarioLabel(plan.Scenario), _headerStyle);
+            RoundDeveloperTask? activeTask = coordinator.ActiveDeveloperTask;
+            GUILayout.Label(
+                activeTask.HasValue ? TaskLabel(activeTask.Value) : ScenarioLabel(plan.Scenario),
+                _headerStyle);
             GUILayout.Label(
                 UiText.Format(
                     "Testowany: Gracz {0} | skład {1} ({2} prawdziwych + {3} technicznych)",
@@ -252,6 +288,29 @@ namespace InterrogationRoom.Debugging
                     plan.ConnectedPlayerCount,
                     plan.TechnicalPlayerCount),
                 _labelStyle);
+
+            if (activeTask.HasValue)
+            {
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button(UiText.Get("Reset zadania"), _buttonStyle))
+                {
+                    RunTaskControl(coordinator.TryResetDeveloperTask, "Zadanie zresetowane.");
+                    GUILayout.EndHorizontal();
+                    GUIUtility.ExitGUI();
+                }
+                if (GUILayout.Button(UiText.Get("Następne zadanie"), _buttonStyle))
+                {
+                    RunTaskControl(coordinator.TryStartNextDeveloperTask, "Uruchomiono następne zadanie.");
+                    GUILayout.EndHorizontal();
+                    GUIUtility.ExitGUI();
+                }
+                GUILayout.EndHorizontal();
+                if (GUILayout.Button(UiText.Get("Wybór roli i zadania"), _buttonStyle))
+                {
+                    RunTaskControl(coordinator.TryExitDeveloperTask, "Wrócono do wyboru zadania.");
+                    GUIUtility.ExitGUI();
+                }
+            }
 
             if (view == null)
             {
@@ -264,7 +323,11 @@ namespace InterrogationRoom.Debugging
                 "Rola: {0} | faza: {1}",
                 RoleLabel(view.Role),
                 UiText.Get(view.Phase.ToString())), _labelStyle);
-            GUILayout.Label(DescribeNextStep(plan, view), _labelStyle);
+            GUILayout.Label(
+                activeTask.HasValue
+                    ? DescribeTask(activeTask.Value)
+                    : DescribeNextStep(plan, view),
+                _labelStyle);
 
             if (view.Phase == RoundPhase.Preparation)
             {
@@ -294,6 +357,16 @@ namespace InterrogationRoom.Debugging
                 if (GUILayout.Button(UiText.Get("Wróć do lobby i zresetuj świat"), _buttonStyle))
                     coordinator.RequestReturnToLobby();
             }
+        }
+
+        private delegate bool TaskControl(out string rejectionReason);
+
+        private void RunTaskControl(TaskControl control, string successMessage)
+        {
+            bool accepted = control(out var reason);
+            if (!accepted)
+                Debug.LogWarning($"[RoundDeveloperPanel] Task control rejected: {reason}", this);
+            _status = UiText.Get(accepted ? successMessage : "Operacja zadania została odrzucona.");
         }
 
         private void DrawDeveloperEndings(RoundDeveloperPlan plan)
@@ -418,6 +491,56 @@ namespace InterrogationRoom.Debugging
                 case RoundDeveloperScenario.GuiltyEscape: return UiText.Get("WINNY — TROP I UCIECZKA");
                 case RoundDeveloperScenario.DetectiveIncidents: return UiText.Get("DETEKTYW — INCYDENTY");
                 default: return scenario.ToString();
+            }
+        }
+
+        private static string TaskLabel(RoundDeveloperTask task)
+        {
+            switch (task)
+            {
+                case RoundDeveloperTask.PersonalMatterPrepare: return UiText.Get("Osobista Sprawa: Przeszukiwanie akt");
+                case RoundDeveloperTask.PersonalMatterFinish: return UiText.Get("Osobista Sprawa: Ukrycie dokumentu");
+                case RoundDeveloperTask.SecretObjectivePrepare: return UiText.Get("Sekretny Cel: Zabranie przedmiotu");
+                case RoundDeveloperTask.SecretObjectivePlant: return UiText.Get("Sekretny Cel: Podłożenie przedmiotu");
+                case RoundDeveloperTask.AlibiClue: return UiText.Get("Trop do Alibi: Paragon");
+                case RoundDeveloperTask.EscapeFindTool: return UiText.Get("Plan Ucieczki: Maintenance Cabinet");
+                case RoundDeveloperTask.EscapeOpenRoute: return UiText.Get("Minigierka: Terminal kartoteki");
+                case RoundDeveloperTask.EscapePrepareVent: return UiText.Get("Plan Ucieczki: Vent Control");
+                case RoundDeveloperTask.EscapeFinalVent: return UiText.Get("Finał Ucieczki: Service Vent");
+                case RoundDeveloperTask.EscapePrepareGate: return UiText.Get("Minigierka: Zamek szyfrowy");
+                case RoundDeveloperTask.EscapeFinalGate: return UiText.Get("Finał Ucieczki: Loading Gate Exit");
+                default: return task.ToString();
+            }
+        }
+
+        private static string DescribeTask(RoundDeveloperTask task)
+        {
+            switch (task)
+            {
+                case RoundDeveloperTask.PersonalMatterPrepare:
+                    return UiText.Get("Podejdź do Records Cabinet i ukończ Przeszukiwanie akt.");
+                case RoundDeveloperTask.PersonalMatterFinish:
+                    return UiText.Get("Dokument jest przygotowany. Zanieś go do Locker albo Archive Slot.");
+                case RoundDeveloperTask.SecretObjectivePrepare:
+                    return UiText.Get("Podejdź do Evidence Tray i zabierz podejrzany przedmiot.");
+                case RoundDeveloperTask.SecretObjectivePlant:
+                    return UiText.Get("Przedmiot jest przygotowany. Podłóż go w Target Locker.");
+                case RoundDeveloperTask.AlibiClue:
+                    return UiText.Get("Przeszukaj Crumpled Receipt, aby zdobyć Trop do Alibi.");
+                case RoundDeveloperTask.EscapeFindTool:
+                    return UiText.Get("Przeszukaj Maintenance Cabinet.");
+                case RoundDeveloperTask.EscapeOpenRoute:
+                    return UiText.Get("Podejdź do Service Panel i ukończ Terminal kartoteki.");
+                case RoundDeveloperTask.EscapePrepareVent:
+                    return UiText.Get("Podejdź do Vent Control i przygotuj wyjście.");
+                case RoundDeveloperTask.EscapeFinalVent:
+                    return UiText.Get("Service Vent jest przygotowany. Ukończ albo przerwij finał Ucieczki.");
+                case RoundDeveloperTask.EscapePrepareGate:
+                    return UiText.Get("Podejdź do Loading Gate Control i ukończ Zamek szyfrowy.");
+                case RoundDeveloperTask.EscapeFinalGate:
+                    return UiText.Get("Loading Gate Exit jest przygotowany. Ukończ albo przerwij finał Ucieczki.");
+                default:
+                    return string.Empty;
             }
         }
 

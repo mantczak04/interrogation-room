@@ -20,6 +20,7 @@ public sealed class PlayerWorldNameplate : MonoBehaviour
     private Canvas canvas;
     private TextMeshProUGUI label;
     private Camera viewingCamera;
+    private Renderer[] playerRenderers;
     private bool hasDisplayName;
     private float nextCoordinatorLookup;
 
@@ -39,6 +40,7 @@ public sealed class PlayerWorldNameplate : MonoBehaviour
     private void Initialize(PlayerController player)
     {
         owner = player;
+        playerRenderers = owner.GetComponentsInChildren<Renderer>(true);
         EnsureVisuals();
         ResolveCoordinator(force: true);
         RefreshDisplayName();
@@ -179,11 +181,11 @@ public sealed class PlayerWorldNameplate : MonoBehaviour
     private Vector3 ResolveWorldAnchor()
     {
         float top = owner.transform.position.y + DefaultHeadHeight;
-        Renderer[] renderers = owner.GetComponentsInChildren<Renderer>(false);
-        for (int index = 0; index < renderers.Length; index++)
+        for (int index = 0; index < playerRenderers.Length; index++)
         {
-            Renderer playerRenderer = renderers[index];
+            Renderer playerRenderer = playerRenderers[index];
             if (playerRenderer == null ||
+                !playerRenderer.gameObject.activeInHierarchy ||
                 !playerRenderer.enabled ||
                 !(playerRenderer is SkinnedMeshRenderer) &&
                 !(playerRenderer is MeshRenderer))

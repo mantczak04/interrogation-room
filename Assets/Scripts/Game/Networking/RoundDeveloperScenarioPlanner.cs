@@ -21,6 +21,244 @@ namespace InterrogationRoom.Networking
         ExecuteSecretTarget
     }
 
+    public enum RoundDeveloperTask
+    {
+        PersonalMatterPrepare,
+        PersonalMatterFinish,
+        SecretObjectivePrepare,
+        SecretObjectivePlant,
+        AlibiClue,
+        EscapeFindTool,
+        EscapeOpenRoute,
+        EscapePrepareVent,
+        EscapeFinalVent,
+        EscapePrepareGate,
+        EscapeFinalGate
+    }
+
+    public static class RoundDeveloperTaskCatalog
+    {
+        private static readonly RoundDeveloperTask[] InnocentTasks =
+        {
+            RoundDeveloperTask.PersonalMatterPrepare,
+            RoundDeveloperTask.PersonalMatterFinish,
+            RoundDeveloperTask.SecretObjectivePrepare,
+            RoundDeveloperTask.SecretObjectivePlant
+        };
+
+        private static readonly RoundDeveloperTask[] GuiltyTasks =
+        {
+            RoundDeveloperTask.AlibiClue,
+            RoundDeveloperTask.EscapeFindTool,
+            RoundDeveloperTask.EscapeOpenRoute,
+            RoundDeveloperTask.EscapePrepareVent,
+            RoundDeveloperTask.EscapeFinalVent,
+            RoundDeveloperTask.EscapePrepareGate,
+            RoundDeveloperTask.EscapeFinalGate
+        };
+
+        public static IReadOnlyList<RoundDeveloperTask> TasksFor(RoundRole role)
+        {
+            switch (role)
+            {
+                case RoundRole.Innocent: return InnocentTasks;
+                case RoundRole.Guilty: return GuiltyTasks;
+                default: return Array.Empty<RoundDeveloperTask>();
+            }
+        }
+
+        public static RoundDeveloperScenario ScenarioFor(RoundDeveloperTask task)
+        {
+            switch (task)
+            {
+                case RoundDeveloperTask.PersonalMatterPrepare:
+                case RoundDeveloperTask.PersonalMatterFinish:
+                    return RoundDeveloperScenario.PersonalMatter;
+                case RoundDeveloperTask.SecretObjectivePrepare:
+                case RoundDeveloperTask.SecretObjectivePlant:
+                    return RoundDeveloperScenario.SecretObjective;
+                default:
+                    return RoundDeveloperScenario.GuiltyEscape;
+            }
+        }
+
+        public static RoundRole RoleFor(RoundDeveloperTask task) =>
+            ScenarioFor(task) == RoundDeveloperScenario.GuiltyEscape
+                ? RoundRole.Guilty
+                : RoundRole.Innocent;
+
+        public static RoundDeveloperTask Next(RoundDeveloperTask task)
+        {
+            IReadOnlyList<RoundDeveloperTask> tasks = TasksFor(RoleFor(task));
+            int index = tasks.IndexOf(task);
+            return tasks[(index + 1) % tasks.Count];
+        }
+
+        private static int IndexOf(
+            this IReadOnlyList<RoundDeveloperTask> tasks,
+            RoundDeveloperTask task)
+        {
+            for (var index = 0; index < tasks.Count; index++)
+            {
+                if (tasks[index] == task)
+                    return index;
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(task), task, "Unknown developer task.");
+        }
+    }
+
+    public static class RoundDeveloperTaskSetup
+    {
+        public static bool TryPrepare(
+            RoundEngine engine,
+            RoundDeveloperPlan plan,
+            RoundDeveloperTask task,
+            out string rejectionReason)
+        {
+            return TryPrepare(
+                engine,
+                plan,
+                task,
+                command => engine.Handle(command).Accepted,
+                out rejectionReason);
+        }
+
+        public static bool TryPrepare(
+            RoundEngine engine,
+            RoundDeveloperPlan plan,
+            RoundDeveloperTask task,
+            Func<RoundCommand, bool> submit,
+            out string rejectionReason)
+        {
+            if (engine == null)
+                throw new ArgumentNullException(nameof(engine));
+            if (plan == null)
+                throw new ArgumentNullException(nameof(plan));
+            if (submit == null)
+                throw new ArgumentNullException(nameof(submit));
+            if (RoundDeveloperTaskCatalog.ScenarioFor(task) != plan.Scenario)
+                return Reject("The selected task does not belong to the active scenario.", out rejectionReason);
+            if (!Handle(submit, new RoundCommand.EndPreparation(), out rejectionReason))
+                return false;
+
+            switch (task)
+            {
+                case RoundDeveloperTask.PersonalMatterFinish:
+                case RoundDeveloperTask.SecretObjectivePlant:
+                    return AdvanceCurrentObjective(engine, submit, plan.ControlledPlayer, out rejectionReason);
+
+                case RoundDeveloperTask.EscapeOpenRoute:
+                    return AdvanceCommonEscapeSteps(engine, submit, plan.ControlledPlayer, 1, out rejectionReason);
+
+                case RoundDeveloperTask.EscapePrepareVent:
+                case RoundDeveloperTask.EscapePrepareGate:
+                    return AdvanceAllCommonEscapeSteps(engine, submit, plan.ControlledPlayer, out rejectionReason);
+
+                case RoundDeveloperTask.EscapeFinalVent:
+                    return PrepareExit(engine, submit, plan.ControlledPlayer, 0, out rejectionReason);
+
+                case RoundDeveloperTask.EscapeFinalGate:
+                    return PrepareExit(engine, submit, plan.ControlledPlayer, 1, out rejectionReason);
+
+                default:
+                    rejectionReason = null;
+                    return true;
+            }
+        }
+
+        private static bool AdvanceCurrentObjective(
+            RoundEngine engine,
+            Func<RoundCommand, bool> submit,
+            PlayerId player,
+            out string rejectionReason)
+        {
+            PrivateObjectiveView objective = engine.ViewFor(player)?.PrivateObjective;
+            if (objective?.CurrentStep == null)
+                return Reject("The selected player has no current Prywatny Cel step.", out rejectionReason);
+
+            return Handle(submit, new RoundCommand.AdvancePrivateObjective(
+                player,
+                objective.Id,
+                objective.CurrentStep.Value), out rejectionReason);
+        }
+
+        private static bool AdvanceAllCommonEscapeSteps(
+            RoundEngine engine,
+            Func<RoundCommand, bool> submit,
+            PlayerId player,
+            out string rejectionReason)
+        {
+            while (engine.ViewFor(player)?.EscapePlan?.CurrentStep != null)
+            {
+                if (!AdvanceCommonEscapeSteps(engine, submit, player, 1, out rejectionReason))
+                    return false;
+            }
+
+            rejectionReason = null;
+            return true;
+        }
+
+        private static bool AdvanceCommonEscapeSteps(
+            RoundEngine engine,
+            Func<RoundCommand, bool> submit,
+            PlayerId player,
+            int count,
+            out string rejectionReason)
+        {
+            for (var index = 0; index < count; index++)
+            {
+                EscapePlanView plan = engine.ViewFor(player)?.EscapePlan;
+                if (plan?.CurrentStep == null)
+                    return Reject("The selected player has no current Plan Ucieczki step.", out rejectionReason);
+                if (!Handle(submit, new RoundCommand.PrepareEscape(
+                    player,
+                    plan.Id,
+                    plan.CurrentStep.Value), out rejectionReason))
+                    return false;
+            }
+
+            rejectionReason = null;
+            return true;
+        }
+
+        private static bool PrepareExit(
+            RoundEngine engine,
+            Func<RoundCommand, bool> submit,
+            PlayerId player,
+            int exitIndex,
+            out string rejectionReason)
+        {
+            if (!AdvanceAllCommonEscapeSteps(engine, submit, player, out rejectionReason))
+                return false;
+
+            EscapePlanView plan = engine.ViewFor(player)?.EscapePlan;
+            if (plan == null || exitIndex < 0 || exitIndex >= plan.ExitOptions.Count)
+                return Reject("The selected Plan Ucieczki exit is unavailable.", out rejectionReason);
+
+            return Handle(submit, new RoundCommand.PrepareEscape(
+                player,
+                plan.Id,
+                plan.ExitOptions[exitIndex].PreparationStepId), out rejectionReason);
+        }
+
+        private static bool Handle(
+            Func<RoundCommand, bool> submit,
+            RoundCommand command,
+            out string rejectionReason)
+        {
+            bool accepted = submit(command);
+            rejectionReason = accepted ? null : "RoundEngine rejected the developer task setup.";
+            return accepted;
+        }
+
+        private static bool Reject(string reason, out string rejectionReason)
+        {
+            rejectionReason = reason;
+            return false;
+        }
+    }
+
     /// <summary>
     /// Deterministic host-only setup for exercising a real Runda with fewer
     /// connected clients. Technical players exist only in the domain roster;

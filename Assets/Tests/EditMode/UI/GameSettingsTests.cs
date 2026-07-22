@@ -100,6 +100,20 @@ namespace InterrogationRoom.UI.Tests
         }
 
         [Test]
+        public void UiText_LocalizesDeveloperTaskCopyInEnglish()
+        {
+            Assert.That(
+                UiText.Get("Reset zadania", UiLanguage.English),
+                Is.EqualTo("Reset task"));
+            Assert.That(
+                UiText.Get("Osobista Sprawa: Przeszukiwanie akt", UiLanguage.English),
+                Is.EqualTo("Personal Matter: File Search"));
+            Assert.That(
+                UiText.Get("Podejdź do Vent Control i przygotuj wyjście.", UiLanguage.English),
+                Is.EqualTo("Approach the Vent Control and prepare the exit."));
+        }
+
+        [Test]
         public void MouseSensitivity_WithoutStoredValue_UsesConfiguredFallback()
         {
             settings.SetMouseSensitivityFallback(3.5f);

@@ -61,6 +61,7 @@ namespace InterrogationRoom.Networking
         private double _roundStartedAtNetworkTime;
         private double _preparationDeadline;
         private RoundDeveloperPlan _developerPlan;
+        private RoundDeveloperTask? _activeDeveloperTask;
 
         public PlayerRoundView CurrentView { get; private set; }
         public double CurrentRoundEndsAtNetworkTime { get; private set; }
@@ -103,6 +104,8 @@ namespace InterrogationRoom.Networking
         public int RoundLimitMinutes => _roundLimitMinutes;
         public static bool DeveloperToolsAvailable => Application.isEditor || Debug.isDebugBuild;
         public RoundDeveloperPlan ActiveDeveloperPlan => DeveloperToolsAvailable ? _developerPlan : null;
+        public RoundDeveloperTask? ActiveDeveloperTask =>
+            DeveloperToolsAvailable ? _activeDeveloperTask : null;
         public bool IsDeveloperRoundUnlimited => DeveloperToolsAvailable && _developerPlan != null;
         public PlayerRoundView DeveloperControlledView =>
             DeveloperToolsAvailable && _developerPlan != null
@@ -124,6 +127,7 @@ namespace InterrogationRoom.Networking
         public event Action<NetworkIdentity> ServerExecutionAccepted;
         public event Action ServerGameplayRoundStarted;
         public event Action ServerGameplayRoundEnded;
+        public event Func<NetworkIdentity, RoundDeveloperTask, bool> ServerDeveloperTaskPreparing;
 
         private void Awake()
         {
@@ -297,6 +301,7 @@ namespace InterrogationRoom.Networking
             }
 
             _developerPlan = plan;
+            _activeDeveloperTask = null;
             if (Submit(null, new RoundCommand.StartRound(
                     definition,
                     plan.Players,
@@ -309,6 +314,105 @@ namespace InterrogationRoom.Networking
 
             _developerPlan = null;
             return RejectDeveloper("RoundEngine rejected the prepared developer scenario.", out rejectionReason);
+        }
+
+        public bool TryStartDeveloperTask(
+            RoundDeveloperTask task,
+            int targetPlayerCount,
+            PlayerId controlledPlayer,
+            out string rejectionReason)
+        {
+            RoundDeveloperScenario scenario = RoundDeveloperTaskCatalog.ScenarioFor(task);
+            if (!TryStartDeveloperScenario(
+                    scenario,
+                    targetPlayerCount,
+                    controlledPlayer,
+                    out rejectionReason))
+            {
+                return false;
+            }
+
+            _activeDeveloperTask = task;
+            if (RoundDeveloperTaskSetup.TryPrepare(
+                    _engine,
+                    _developerPlan,
+                    task,
+                    command => Submit(null, command),
+                    out rejectionReason))
+            {
+                if (TryPreparePhysicalDeveloperTask(task))
+                    return true;
+
+                rejectionReason = "The physical scene could not prepare the selected developer task.";
+            }
+
+            ResetRoundToLobby();
+            return false;
+        }
+
+        private bool TryPreparePhysicalDeveloperTask(RoundDeveloperTask task)
+        {
+            if (!_connectionsByPlayerId.TryGetValue(
+                    _developerPlan.ControlledPlayer.Value,
+                    out NetworkConnectionToClient connection) ||
+                connection?.identity == null)
+            {
+                return false;
+            }
+
+            Delegate[] handlers = ServerDeveloperTaskPreparing?.GetInvocationList();
+            if (handlers == null || handlers.Length == 0)
+                return true;
+
+            foreach (Delegate handler in handlers)
+            {
+                if (!((Func<NetworkIdentity, RoundDeveloperTask, bool>)handler)(connection.identity, task))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public bool TryResetDeveloperTask(out string rejectionReason)
+        {
+            if (!_activeDeveloperTask.HasValue || _developerPlan == null)
+                return RejectDeveloper("No developer task is active.", out rejectionReason);
+            if (!NetworkServer.activeHost || !IsLocalHost)
+                return RejectDeveloper("Only the local host may reset a developer task.", out rejectionReason);
+
+            RoundDeveloperTask task = _activeDeveloperTask.Value;
+            int playerCount = _developerPlan.Players.Count;
+            PlayerId controlledPlayer = _developerPlan.ControlledPlayer;
+            ResetRoundToLobby();
+            return TryStartDeveloperTask(task, playerCount, controlledPlayer, out rejectionReason);
+        }
+
+        public bool TryStartNextDeveloperTask(out string rejectionReason)
+        {
+            if (!_activeDeveloperTask.HasValue || _developerPlan == null)
+                return RejectDeveloper("No developer task is active.", out rejectionReason);
+
+            RoundDeveloperTask next = RoundDeveloperTaskCatalog.Next(_activeDeveloperTask.Value);
+            int playerCount = Math.Max(
+                _developerPlan.Players.Count,
+                RoundDeveloperTaskCatalog.ScenarioFor(next) == RoundDeveloperScenario.SecretObjective
+                    ? RoundEngine.MinPlayersForSecretObjective
+                    : RoundEngine.MinPlayers);
+            PlayerId controlledPlayer = _developerPlan.ControlledPlayer;
+            ResetRoundToLobby();
+            return TryStartDeveloperTask(next, playerCount, controlledPlayer, out rejectionReason);
+        }
+
+        public bool TryExitDeveloperTask(out string rejectionReason)
+        {
+            if (_developerPlan == null)
+                return RejectDeveloper("No developer task is active.", out rejectionReason);
+            if (!NetworkServer.activeHost || !IsLocalHost)
+                return RejectDeveloper("Only the local host may exit a developer task.", out rejectionReason);
+
+            ResetRoundToLobby();
+            rejectionReason = null;
+            return true;
         }
 
         public bool TryFinishDeveloperScenario(
@@ -787,6 +891,11 @@ namespace InterrogationRoom.Networking
                 return;
             }
 
+            ResetRoundToLobby();
+        }
+
+        private void ResetRoundToLobby()
+        {
             foreach (var connection in _connectionsByPlayerId.Values)
             {
                 if (connection?.identity == null)
@@ -801,6 +910,7 @@ namespace InterrogationRoom.Networking
             _engine = new RoundEngine();
             _phase = RoundPhase.Lobby;
             _developerPlan = null;
+            _activeDeveloperTask = null;
             _hostAllowsSecretObjective = true;
             _lobbyReadyPlayerIds.Clear();
             _roundDeadline = 0d;
@@ -1412,6 +1522,7 @@ namespace InterrogationRoom.Networking
             _engine = new RoundEngine();
             _phase = RoundPhase.Lobby;
             _developerPlan = null;
+            _activeDeveloperTask = null;
             _hostAllowsSecretObjective = true;
             _roundLimitMinutes = RoundLobbyRules.DefaultRoundLimitMinutes;
             _publicLobbyPlayerCount = 0;

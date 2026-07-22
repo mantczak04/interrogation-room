@@ -61,6 +61,7 @@ namespace InterrogationRoom.Gameplay.Interaction
 
             coordinator.ServerRoundReset += ResetPhysicalStateServer;
             coordinator.ServerExecutionAccepted += OnExecutionAcceptedServer;
+            coordinator.ServerDeveloperTaskPreparing += TryPrepareDeveloperTaskServer;
         }
 
         private void OnDisable()
@@ -69,6 +70,7 @@ namespace InterrogationRoom.Gameplay.Interaction
             {
                 coordinator.ServerRoundReset -= ResetPhysicalStateServer;
                 coordinator.ServerExecutionAccepted -= OnExecutionAcceptedServer;
+                coordinator.ServerDeveloperTaskPreparing -= TryPrepareDeveloperTaskServer;
             }
 
             UnsubscribeActions();
@@ -282,6 +284,29 @@ namespace InterrogationRoom.Gameplay.Interaction
                 item.ResetInteractionStateServer();
             foreach (QuietIncidentDiscoveryProbe probe in discoveryProbes)
                 probe.ResetDiscoveryStateServer();
+        }
+
+        [Server]
+        public bool TryPrepareDeveloperTaskServer(
+            NetworkIdentity actor,
+            RoundDeveloperTask task)
+        {
+            string requiredItemId;
+            switch (task)
+            {
+                case RoundDeveloperTask.PersonalMatterFinish:
+                    requiredItemId = "personal-document";
+                    break;
+                case RoundDeveloperTask.SecretObjectivePlant:
+                    requiredItemId = "suspicious-token";
+                    break;
+                default:
+                    return true;
+            }
+
+            NetworkCarryableItem item = carryableItems.FirstOrDefault(
+                candidate => candidate != null && candidate.ItemId == requiredItemId);
+            return item != null && item.TryPickupServer(actor);
         }
 
         private void AuthorizePreparedExitRetry(string preparationStepId)
