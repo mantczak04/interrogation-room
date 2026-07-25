@@ -84,6 +84,9 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
     [SyncVar(hook = nameof(OnDeadChanged))]
     private bool isDead;
 
+    [SyncVar(hook = nameof(OnDanceIndexChanged))]
+    private int danceIndex;
+
     [SyncVar(hook = nameof(OnDancingChanged))]
     private bool isDancing;
 
@@ -102,7 +105,9 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
     private static readonly int PunchVariantParameter = Animator.StringToHash("PunchVariant");
     private static readonly int IsDeadParameter = Animator.StringToHash("IsDead");
     private static readonly int DanceParameter = Animator.StringToHash("Dance");
+    private static readonly int DanceIndexParameter = Animator.StringToHash("DanceIndex");
     private int nextPunchVariant;
+    private DanceRadialMenu danceRadialMenu;
 
     public static bool CursorReleased => PlayerInputGate.CursorReleased;
 
@@ -223,12 +228,14 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
         mouseSensitivity = settings.MouseSensitivity;
         settings.Changed += ApplyGameSettings;
 
+        danceRadialMenu = gameObject.AddComponent<DanceRadialMenu>();
         SetCursorReleased(false);
     }
 
     public override void OnStopLocalPlayer()
     {
         GameSettingsService.Current.Changed -= ApplyGameSettings;
+        danceRadialMenu?.Cancel();
         SetCursorReleased(true);
     }
 
@@ -241,6 +248,13 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
     {
         if (!isLocalPlayer)
         {
+            return;
+        }
+
+        if (danceRadialMenu != null && danceRadialMenu.IsOpen)
+        {
+            HandleDanceRadialMenu();
+            SetMovementAnimationIdle();
             return;
         }
 
@@ -266,9 +280,24 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
 
         bool interactionMovementLocked = playerInteractor != null && playerInteractor.IsMovementLocked;
 
-        if (!interactionMovementLocked && WasDancePressed())
+        bool hasWeapon = playerWeaponController != null && playerWeaponController.HasWeapon;
+        if (isDancing && hasWeapon)
         {
-            CmdToggleDance();
+            SetDancingLocally(false);
+            CmdStopDance();
+        }
+
+        if (!interactionMovementLocked &&
+            WasDancePressed() &&
+            (isDancing || CharacterActionRules.CanDance(
+                isDead,
+                isSeated,
+                hasWeapon,
+                SupportsDance(characterId))))
+        {
+            danceRadialMenu?.Open(isDancing);
+            SetMovementAnimationIdle();
+            return;
         }
 
         if (!interactionMovementLocked && WasPunchPressed() && CharacterActionRules.CanPunch(
@@ -434,23 +463,27 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
     }
 
     [Command]
-    private void CmdToggleDance()
+    private void CmdSelectDance(int selectedDance)
     {
-        bool hasWeapon = playerWeaponController != null && playerWeaponController.HasWeapon;
-        if (isDancing)
-        {
-            isDancing = false;
+        if (!DanceRadialSelection.IsValid(selectedDance))
             return;
-        }
 
+        bool hasWeapon = playerWeaponController != null && playerWeaponController.HasWeapon;
         if (CharacterActionRules.CanDance(isDead, isSeated, hasWeapon, SupportsDance(characterId)))
         {
+            danceIndex = selectedDance;
             isDancing = true;
         }
     }
 
     [Command]
     private void CmdStopDance()
+    {
+        StopDanceServer();
+    }
+
+    [Server]
+    public void StopDanceServer()
     {
         isDancing = false;
     }
@@ -575,6 +608,7 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
             SetMovementAnimationIdle();
             animator.SetBool(IsSeatedParameter, isSeated);
             animator.SetBool(IsDeadParameter, isDead);
+            SetDanceIndexLocally(danceIndex);
             SetDancingLocally(isDancing && selected.supportsDance);
         }
 
@@ -858,11 +892,53 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
         SetDancingLocally(dancing);
     }
 
+    private void OnDanceIndexChanged(int _, int selectedDance)
+    {
+        SetDanceIndexLocally(selectedDance);
+    }
+
     private void SetDancingLocally(bool dancing)
     {
         if (animator != null && HasAnimatorParameter(DanceParameter, AnimatorControllerParameterType.Bool))
         {
+            SetDanceIndexLocally(danceIndex);
             animator.SetBool(DanceParameter, dancing);
+        }
+    }
+
+    private void SetDanceIndexLocally(int selectedDance)
+    {
+        if (animator != null &&
+            HasAnimatorParameter(DanceIndexParameter, AnimatorControllerParameterType.Float))
+        {
+            animator.SetFloat(DanceIndexParameter, selectedDance);
+        }
+    }
+
+    private void HandleDanceRadialMenu()
+    {
+        bool hasWeapon = playerWeaponController != null && playerWeaponController.HasWeapon;
+        bool movementLocked = playerInteractor != null && playerInteractor.IsMovementLocked;
+        if (isDead || isSeated || hasWeapon || movementLocked)
+        {
+            danceRadialMenu.Cancel();
+            if (isDancing)
+                CmdStopDance();
+            return;
+        }
+
+        danceRadialMenu.RefreshSelection();
+        if (!WasDanceReleased())
+            return;
+
+        int selectedDance = danceRadialMenu.Close();
+        if (DanceRadialSelection.IsValid(selectedDance))
+        {
+            CmdSelectDance(selectedDance);
+        }
+        else if (isDancing)
+        {
+            CmdStopDance();
         }
     }
 
@@ -1289,6 +1365,15 @@ public class PlayerController : NetworkBehaviour, IRoundEliminationPort, IRoundR
         return Keyboard.current != null && Keyboard.current.tKey.wasPressedThisFrame;
 #else
         return Input.GetKeyDown(KeyCode.T);
+#endif
+    }
+
+    private bool WasDanceReleased()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null && Keyboard.current.tKey.wasReleasedThisFrame;
+#else
+        return Input.GetKeyUp(KeyCode.T);
 #endif
     }
 }

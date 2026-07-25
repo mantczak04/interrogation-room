@@ -119,6 +119,7 @@ namespace InterrogationRoom.Gameplay.Weapons
             }
 
             hasWeapon = true;
+            GetComponent<PlayerController>()?.StopDanceServer();
             return true;
         }
 
