@@ -19,7 +19,7 @@
 }
 
 .lobby-screen {
-    background-image: url("project://database/Assets/UI/Sprites/MainMenuBackground.jpg");
+    background-image: url("project://database/Assets/Scenes/MainMenu/5d006397-6eb9-4f3f-ba4e-1b24d9f4b3ed.png");
     -unity-background-scale-mode: scale-and-crop;
 }
 
@@ -28,20 +28,36 @@
 }
 
 /*
- * The panels are centred and sized to their content rather than stretched to
- * the full height. Stretching left the controls floating in a tall empty box
- * with the key art hidden behind it; hugging the content lets the room show
- * around the edges, which is what the main menu does.
+ * The lobby borrows the main menu's grammar wholesale: type set straight on
+ * the art, no framed cards. Each side column stands on a floor-to-ceiling
+ * wash — the same device as .menu-wash — so the text stays readable without
+ * boxing it in.
  */
+.lobby-wash {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 30%;
+    /* A baked gradient, not a flat block: a solid wash left a hard vertical
+       seam across the key art. The right wash reuses the texture mirrored. */
+    background-image: url("project://database/Assets/UI/Sprites/LobbyWashGradient.png");
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+.lobby-wash--left { left: 0; }
+
+.lobby-wash--right {
+    right: 0;
+    scale: -1 1;
+}
+
+/* Positioning context only; the three parts place themselves. */
 .lobby-layout {
     position: absolute;
-    left: 8%;
-    right: 8%;
-    top: 7%;
-    bottom: 6%;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
+    left: 5%;
+    right: 5%;
+    top: 0;
+    bottom: 0;
 }
 
 .dossier {
@@ -67,34 +83,41 @@
     position: absolute;
     left: 3%;
     top: 4%;
+    height: 44px;
     flex-direction: row;
     align-items: center;
-    padding: 6px 18px 6px 12px;
+    padding: 0 18px 0 12px;
     margin: 0;
     border-width: 0;
     border-radius: 0;
     background-color: rgba(0, 0, 0, 0);
 }
 
-/*
- * Glyph and label are separate elements because they need different sizes.
- * As one string the guillemet rendered at the label's size, which left a tick
- * mark next to full-height caps. Both ignore picking so the button keeps the
- * whole row as its click target.
- */
+/* Draw the arrow instead of using a font glyph, so font ascenders and
+ * baselines cannot push it off the button's vertical center. */
 .lobby-back-glyph {
-    font-size: 34px;
-    color: var(--text-hi);
-    margin-right: 10px;
-    padding-bottom: 6px;
-    -unity-text-align: middle-center;
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    margin-right: 16px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-right-color: var(--text-hi);
+    border-bottom-color: var(--text-hi);
+    rotate: 135deg;
+    translate: 0 0.5px;
 }
 
 .lobby-back-text {
-    font-size: 19px;
+    /* Same stamp face as every other lobby header; Lato here read as a
+       different app. */
+    -unity-font-definition: url("project://database/Assets/UI/Fonts/Staatliches-Regular.ttf");
+    height: 44px;
+    font-size: 20px;
     color: var(--text-hi);
-    letter-spacing: 1px;
-    -unity-text-align: middle-left;
+    letter-spacing: 2px;
+    padding: 0;
+    -unity-text-align: middle-center;
 }
 
 .lobby-back:hover,
@@ -107,9 +130,19 @@
     color: var(--amber);
 }
 
+.lobby-back:hover .lobby-back-glyph {
+    border-right-color: var(--amber);
+    border-bottom-color: var(--amber);
+}
+
 .lobby-back:active .lobby-back-glyph,
 .lobby-back:active .lobby-back-text {
     color: var(--amber-dim);
+}
+
+.lobby-back:active .lobby-back-glyph {
+    border-right-color: var(--amber-dim);
+    border-bottom-color: var(--amber-dim);
 }
 
 .lobby-back:focus,
@@ -117,28 +150,11 @@
     background-color: rgba(0, 0, 0, 0);
 }
 
-.lobby-controls {
-    width: 42%;
-    max-width: 560px;
-    min-width: 430px;
-    padding: 36px 40px 40px 40px;
-}
-
-.lobby-title {
-    font-size: 38px;
-    letter-spacing: 3px;
-}
-
 .lobby-kicker,
 .document-kicker {
     font-size: 15px;
     color: var(--amber);
     letter-spacing: 3px;
-    margin-bottom: 16px;
-}
-
-.lobby-player-count {
-    font-size: 18px;
     margin-bottom: 16px;
 }
 
@@ -178,30 +194,79 @@
     border-radius: 2px;
 }
 
-/* Buttons come from Theme.uss (.btn and its modifiers). Only layout lives here. */
-
-.lobby-action {
-    height: 46px;
-    margin-top: 12px;
+/* Separates the settings block from the action list below it. */
+.lobby-actions-rule {
+    width: 68%;
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-2);
 }
 
 /*
- * Start is the one action on the screen, so it stays the widest and tallest
- * element — but while the lobby is short of players it is an unavailable
- * action, not a dead grey slab. Outline only, so the eye reads "not yet"
- * rather than "broken".
+ * Host actions are menu entries, not slabs — the same grammar as the main
+ * menu list. Chrome is stripped from the .btn base; hover slides amber,
+ * pressed dims, exactly like .menu-entry.
+ */
+.lobby-action {
+    height: auto;
+    margin-top: var(--space-3);
+    padding: 4px 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: var(--paper-dark);
+    font-size: var(--type-lead);
+    letter-spacing: 3px;
+    -unity-text-align: middle-left;
+    transition-property: color, translate;
+    transition-duration: 0.10s;
+}
+
+.lobby-action:hover {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: var(--amber);
+    translate: 8px 0;
+}
+
+.lobby-action:active {
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--amber-dim);
+}
+
+/*
+ * Start is the loudest line on the sheet, not the biggest box: subtitle size
+ * where the other entries are lead. Disabled it fades to graphite — an
+ * unavailable action, not a dead grey slab.
  */
 .lobby-start {
-    height: 54px;
+    height: auto;
     width: 100%;
     margin-top: 0;
+    padding: 4px 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: var(--paper-bright);
+    font-size: var(--type-subtitle);
+    letter-spacing: 3px;
+    -unity-text-align: middle-left;
+    transition-property: color, translate;
+    transition-duration: 0.10s;
+}
+
+.lobby-start:hover {
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--amber);
+    translate: 8px 0;
+}
+
+.lobby-start:active {
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--amber-dim);
 }
 
 .lobby-start:disabled {
     background-color: rgba(0, 0, 0, 0);
-    color: var(--graphite-300);
-    border-width: 1px;
-    border-color: var(--graphite-500);
+    color: var(--graphite-500);
+    border-width: 0;
     opacity: 1;
 }
 
@@ -277,38 +342,68 @@
 .lobby-toggle { margin-top: 12px; }
 
 .lobby-round-limit-title {
-    margin-top: 2px;
-    margin-bottom: 6px;
-    color: var(--graphite-300);
-    font-size: 12px;
-    letter-spacing: 1px;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-2);
+    color: var(--amber);
+    font-size: var(--type-kicker);
+    letter-spacing: 2px;
 }
 
 .lobby-round-limit-options {
-    height: 38px;
+    height: auto;
     flex-direction: row;
-    margin-bottom: 2px;
+    margin-bottom: var(--space-2);
 }
 
+/*
+ * Time limits are type, not chips. The chosen value is underlined in amber
+ * the way a detective circles a figure in a report; the rest wait in
+ * graphite. All chrome from .btn/.btn--quiet is stripped here.
+ */
 .lobby-round-limit-button {
-    flex-grow: 1;
-    height: 38px;
-    margin-top: 0;
-    margin-right: 4px;
-    padding-left: 0;
-    padding-right: 0;
-    font-size: 12px;
+    flex-grow: 0;
+    height: auto;
+    margin: 0 var(--space-6) 0 0;
+    padding: 2px 0 6px 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-bottom-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+    color: var(--graphite-300);
+    font-size: var(--type-body);
+    letter-spacing: 2px;
 }
 
 .lobby-round-limit-button--last {
     margin-right: 0;
 }
 
+.lobby-round-limit-button:hover {
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgba(0, 0, 0, 0);
+    color: var(--text-hi);
+}
+
+.lobby-round-limit-button:active {
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgba(0, 0, 0, 0);
+    color: var(--amber-dim);
+    translate: 0 1px;
+}
+
+.lobby-round-limit-button:disabled {
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--graphite-500);
+    opacity: 1;
+}
+
 .lobby-round-limit-button--selected,
+.lobby-round-limit-button--selected:hover,
 .lobby-round-limit-button--selected:disabled {
-    color: var(--ink);
-    background-color: var(--amber);
-    border-color: var(--amber);
+    color: var(--amber);
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgba(0, 0, 0, 0);
+    border-bottom-color: var(--amber);
     opacity: 1;
 }
 
@@ -359,26 +454,22 @@
     margin-top: 10px;
 }
 
-/* Lobby is one composition, not a row of cards: public roster and host
- * settings frame the local character without boxing the preview itself. */
-.lobby-layout {
-    left: 4%;
-    right: 4%;
-    top: 8%;
-    bottom: 5%;
-    align-items: stretch;
-}
-
+/*
+ * The side columns are the main menu's content block twice over: kicker,
+ * stamp title, brass rule, then a list of type. No card background — the
+ * wash behind them carries the readability.
+ */
 .lobby-roster-panel,
 .lobby-settings-panel {
     position: absolute;
-    top: 12%;
-    bottom: 10%;
+    top: 14%;
+    bottom: auto;
+    max-height: 78%;
     width: 18%;
-    min-width: 360px;
-    max-width: 460px;
-    padding: 24px;
-    background-color: rgba(20, 24, 27, 0.9);
+    min-width: 340px;
+    max-width: 440px;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
     border-width: 0;
     border-radius: 0;
 }
@@ -392,23 +483,21 @@
 }
 
 .lobby-side-title {
-    font-size: 26px;
-    letter-spacing: 2px;
-    color: var(--text-hi);
+    font-size: var(--type-title);
+    letter-spacing: 3px;
+    color: var(--paper-bright);
     white-space: normal;
 }
 
+/* Composes Theme's .kicker; only the gap to the title is local. */
 .lobby-side-kicker {
-    margin-top: 4px;
-    font-size: 13px;
-    color: var(--amber);
+    margin-bottom: var(--space-2);
 }
 
 .lobby-side-rule {
-    height: 1px;
-    margin-top: 16px;
-    margin-bottom: 8px;
-    background-color: var(--graphite-500);
+    width: 68%;
+    margin-top: var(--space-3);
+    margin-bottom: var(--space-3);
 }
 
 .lobby-player-list {
@@ -419,9 +508,9 @@
 
 .lobby-voice-hint {
     color: var(--graphite-300);
-    font-size: 12px;
+    font-size: var(--type-micro);
     letter-spacing: 0.5px;
-    -unity-text-align: middle-center;
+    -unity-text-align: middle-left;
 }
 
 .lobby-player-list .unity-scroll-view__horizontal-scroller,
@@ -454,20 +543,27 @@
     white-space: normal;
 }
 
+/*
+ * A roster entry is a ledger line, not a card: faint rule below, no fill.
+ * The local player is marked by an amber name instead of a highlighted box.
+ */
 .lobby-player-row {
-    min-height: 58px;
+    min-height: 50px;
+    position: relative;
     flex-direction: row;
     align-items: center;
-    padding: 8px 6px;
+    padding: 6px 0 10px 0;
     border-bottom-width: 1px;
-    border-bottom-color: var(--graphite-500);
-    background-color: rgba(43, 51, 58, 0.54);
+    border-bottom-color: rgba(76, 83, 89, 0.45);
+    background-color: rgba(0, 0, 0, 0);
 }
 
 .lobby-player-row--local {
-    border-left-width: 3px;
-    border-left-color: var(--amber);
-    background-color: rgba(70, 80, 89, 0.55);
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.lobby-player-row--local .lobby-player-name {
+    color: var(--amber);
 }
 
 .lobby-player-row--simulated {
@@ -532,23 +628,34 @@
     -unity-background-image-tint-color: var(--amber);
 }
 
+.lobby-player-voice-state {
+    position: absolute;
+    right: 0;
+    bottom: 2px;
+    color: var(--graphite-300);
+    font-size: 8px;
+    letter-spacing: 0.5px;
+    -unity-font-style: bold;
+}
+
 .lobby-start-hover-area {
     position: relative;
-    height: 54px;
-    margin-top: 12px;
+    height: auto;
+    margin-top: var(--space-2);
 }
 
 .lobby-start-hover-info {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 60px;
+    bottom: 100%;
+    margin-bottom: var(--space-2);
     padding: 10px 12px;
     color: var(--text-hi);
     background-color: rgba(20, 24, 27, 0.98);
-    font-size: 12px;
+    font-size: var(--type-micro);
     white-space: normal;
-    -unity-text-align: middle-center;
+    -unity-text-align: middle-left;
 }
 
 .character-selector--legacy {
@@ -584,15 +691,25 @@
     translate: 16px 0;
 }
 
+/*
+ * The selector floats on the art like the menu list does — the brass frame
+ * and dark fill of the base .character-selector read as another card here.
+ */
 .preview-character-selector {
     width: 480px;
     margin-top: 0;
-    margin-bottom: 8px;
-    background-color: rgba(20, 24, 27, 0.82);
+    margin-bottom: var(--space-2);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
 }
 
+/*
+ * Gotowy stays a filled button: it is a state you set, not a link you
+ * follow, and the green fill is the readiness signal the roster mirrors.
+ * Narrower than the selector so it reads as a control, not a slab.
+ */
 .lobby-ready-button {
-    width: 480px;
+    width: 320px;
     height: 48px;
     margin-top: 0;
     margin-bottom: 8px;
@@ -611,19 +728,6 @@
     margin-top: 0;
     color: var(--graphite-300);
     background-color: rgba(20, 24, 27, 0.68);
-}
-
-.lobby-settings-panel .lobby-title {
-    font-size: 30px;
-}
-
-.lobby-settings-panel .lobby-kicker {
-    margin-bottom: 8px;
-}
-
-.lobby-settings-panel .lobby-player-count {
-    font-size: 15px;
-    color: var(--graphite-300);
 }
 
 .paper-shadow {
@@ -907,11 +1011,17 @@
     margin-top: 8px;
 }
 
+/*
+ * The objective card is bottom-anchored and grows upward to fit the whole
+ * current step. No max-height: the full text must always be readable without
+ * scrolling or clipping; only the Detective registry keeps a fixed, scrolling
+ * area. The fixed width keeps the card on the left edge, so the screen centre
+ * stays clear.
+ */
 .private-card {
     left: 24px;
     bottom: 24px;
     width: 420px;
-    max-height: 420px;
 }
 
 .private-card--registry {
@@ -923,8 +1033,12 @@
     max-height: none;
 }
 
+/*
+ * Wide enough for a wrapped objective title plus the toggle button. 220px let
+ * the title's longest word push the button outside the card border.
+ */
 .private-card--collapsed {
-    width: 220px;
+    width: 300px;
     top: auto;
     bottom: 24px;
 }
@@ -937,12 +1051,17 @@
 .private-title {
     flex-grow: 1;
     white-space: normal;
+    /* Wrap within the available space instead of forcing the row wider than
+       the card (the default min-width is the longest word). */
+    min-width: 0;
 }
 
 .panel-toggle {
     width: 88px;
     height: 32px;
     margin-left: 12px;
+    /* Never squeezed nor pushed out by a long title. */
+    flex-shrink: 0;
     /* .btn pads for a full-size action; this one has to fit a card header. */
     padding: 0 8px;
     font-size: var(--type-micro);
@@ -951,10 +1070,7 @@
 
 .private-content {
     margin-top: 12px;
-    max-height: 330px;
 }
-
-.private-card--registry .private-content { max-height: none; }
 .private-motive,
 .private-text,
 .private-location,

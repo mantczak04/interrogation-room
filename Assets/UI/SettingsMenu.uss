@@ -19,6 +19,7 @@
 .settings-sheet {
     width: 620px;
     max-width: 92%;
+    max-height: 92%;
     padding: 40px 48px 36px 48px;
     border-left-width: 6px;
     border-left-color: var(--brass);
@@ -110,6 +111,15 @@
     margin-right: 0;
 }
 
+.settings-scroll {
+    flex-shrink: 1;
+    margin-bottom: var(--space-2);
+}
+
+.settings-scroll .unity-scroll-view__horizontal-scroller {
+    display: none;
+}
+
 .settings-action {
     margin-top: var(--space-2);
 }
@@ -119,4 +129,90 @@
     background-color: var(--paper-shadow);
     margin-top: var(--space-6);
     margin-bottom: var(--space-2);
+}
+
+.settings-section-rule {
+    height: 1px;
+    background-color: var(--paper-shadow);
+    margin-bottom: var(--space-4);
+}
+
+.settings-voice-state {
+    color: var(--green);
+    font-size: var(--type-micro);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    margin-bottom: var(--space-2);
+}
+
+.settings-voice-actions,
+.voice-participant-header,
+.voice-participant-controls {
+    flex-direction: row;
+    align-items: center;
+}
+
+.settings-voice-actions {
+    margin-bottom: var(--space-2);
+}
+
+.settings-voice-actions > .btn {
+    flex-grow: 1;
+    margin-right: var(--space-2);
+}
+
+#microphone-test-button {
+    margin-right: 0;
+}
+
+.settings-voice-hint {
+    margin-bottom: var(--space-4);
+}
+
+.voice-participant-list {
+    max-height: 230px;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.voice-participant-row {
+    padding: 10px 0;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--paper-shadow);
+}
+
+.voice-participant-header {
+    justify-content: space-between;
+}
+
+.voice-participant-name {
+    color: var(--ink);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+}
+
+.voice-participant-state {
+    color: var(--ink-faded);
+    font-size: var(--type-micro);
+    letter-spacing: 1px;
+}
+
+.voice-participant-controls {
+    margin-top: var(--space-2);
+}
+
+.voice-participant-slider {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+
+.voice-participant-value {
+    width: 50px;
+    color: var(--ink-faded);
+    -unity-text-align: middle-right;
+}
+
+.voice-participant-mute {
+    width: 118px;
+    margin-left: var(--space-2);
 }

@@ -19,7 +19,7 @@
     top: 0;
     bottom: 0;
     /* Shared with the lobby screen so both use one graded export of the art. */
-    background-image: url("project://database/Assets/UI/Sprites/MainMenuBackground.jpg");
+    background-image: url("project://database/Assets/Scenes/MainMenu/5d006397-6eb9-4f3f-ba4e-1b24d9f4b3ed.png");
     -unity-background-scale-mode: scale-and-crop;
 }
 

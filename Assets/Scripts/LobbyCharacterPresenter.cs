@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using InterrogationRoom.Gameplay.Characters;
 using InterrogationRoom.Networking;
+using InterrogationRoom.Settings;
 using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
@@ -38,6 +39,7 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
     private uint renderedLocalNetId;
     private readonly Dictionary<int, VisualElement> speakerIndicators = new();
     private readonly Dictionary<int, uint> speakerNetIds = new();
+    private readonly Dictionary<int, Label> microphoneStateLabels = new();
 
     public void Configure(NetworkRoundCoordinator roundCoordinator, SteamLobby lobby)
     {
@@ -96,6 +98,7 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         bound = false;
         speakerIndicators.Clear();
         speakerNetIds.Clear();
+        microphoneStateLabels.Clear();
         renderedRosterSignature = null;
         DestroyPreview();
     }
@@ -125,7 +128,7 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
             return;
 
         IReadOnlyList<LobbyPlayerInfo> players = coordinator.PublicLobbyPlayers;
-        string signature = BuildRosterSignature(players);
+        string signature = $"{GameSettingsService.Current.Language}|{BuildRosterSignature(players)}";
         uint localNetId = NetworkClient.localPlayer != null ? NetworkClient.localPlayer.netId : 0u;
         if (force || signature != renderedRosterSignature || localNetId != renderedLocalNetId)
         {
@@ -139,10 +142,27 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
 
         foreach (KeyValuePair<int, VisualElement> entry in speakerIndicators)
         {
-            bool speaking = speakerNetIds.TryGetValue(entry.Key, out uint netId) &&
+            bool hasNetworkPlayer = speakerNetIds.TryGetValue(entry.Key, out uint netId) && netId != 0u;
+            bool speaking = hasNetworkPlayer &&
                 voiceRuntime != null &&
                 voiceRuntime.IsNetworkPlayerSpeaking(netId);
             SetVisible(entry.Value, speaking);
+
+            if (!microphoneStateLabels.TryGetValue(entry.Key, out Label stateLabel))
+                continue;
+
+            bool locallyMuted = hasNetworkPlayer &&
+                voiceRuntime != null &&
+                voiceRuntime.IsParticipantLocallyMuted(netId);
+            bool microphoneMuted = hasNetworkPlayer &&
+                voiceRuntime != null &&
+                voiceRuntime.IsNetworkPlayerMicrophoneMuted(netId);
+            stateLabel.text = locallyMuted
+                ? UiText.Get("WYCISZONY LOKALNIE")
+                : microphoneMuted
+                    ? UiText.Get("MIKROFON WYCISZONY")
+                    : string.Empty;
+            SetVisible(stateLabel, !string.IsNullOrEmpty(stateLabel.text));
         }
     }
 
@@ -151,8 +171,16 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         playerList.Clear();
         speakerIndicators.Clear();
         speakerNetIds.Clear();
+        microphoneStateLabels.Clear();
         SetVisible(playerListEmptyLabel, players == null || players.Count == 0);
-        rosterCountLabel.text = $"{UiText.Get("Gracze w lobby")}: {players?.Count ?? 0}/8";
+        // The roster header is the single player counter in the lobby (the
+        // settings panel used to repeat it). Developer fake players show the
+        // preview variant so the real count stays readable.
+        int presentedCount = players?.Count ?? 0;
+        int realCount = coordinator.PublicLobbyPlayerCount;
+        rosterCountLabel.text = presentedCount == realCount
+            ? $"{UiText.Get("Gracze w lobby")}: {realCount}/8"
+            : $"{UiText.Get("Podgląd listy")}: {presentedCount}/8 • {UiText.Get("prawdziwi")}: {realCount}";
         if (players == null)
             return;
 
@@ -186,9 +214,15 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
 
             VisualElement speaker = CreateSpeakerIndicator();
             row.Add(speaker);
+
+            var microphoneState = new Label();
+            microphoneState.AddToClassList("lobby-player-voice-state");
+            row.Add(microphoneState);
             speakerIndicators[player.PlayerId] = speaker;
             speakerNetIds[player.PlayerId] = player.NetworkIdentityNetId;
+            microphoneStateLabels[player.PlayerId] = microphoneState;
             SetVisible(speaker, false);
+            SetVisible(microphoneState, false);
             playerList.Add(row);
         }
     }
@@ -281,7 +315,10 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
             return;
 
         previewRoot = new GameObject("Lobby Character Preview Rig");
-        previewRoot.transform.position = new Vector3(10000f, 10000f, 10000f);
+        // Keep the isolated rig below the scene without sacrificing float
+        // precision. At 10,000 units, small idle-animation motion visibly
+        // quantized in the close-up preview.
+        previewRoot.transform.position = new Vector3(0f, -100f, 0f);
         previewRoot.hideFlags = HideFlags.DontSave;
 
         GameObject cameraObject = new GameObject("Preview Camera");

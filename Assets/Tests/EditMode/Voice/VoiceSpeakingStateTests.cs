@@ -38,5 +38,19 @@ namespace InterrogationRoom.Voice.Tests
             Assert.That(state.IsSpeaking(2u), Is.False);
             Assert.That(state.IsSpeaking(3u), Is.False);
         }
+
+        [Test]
+        public void Apply_TracksPublicMicrophoneMuteStateSeparatelyFromSpeaking()
+        {
+            var state = new VoiceSpeakingState();
+
+            Assert.That(state.Apply(17u, false, true), Is.True);
+            Assert.That(state.IsMuted(17u), Is.True);
+            Assert.That(state.IsSpeaking(17u), Is.False);
+
+            Assert.That(state.Apply(17u, true, false), Is.True);
+            Assert.That(state.IsMuted(17u), Is.False);
+            Assert.That(state.IsSpeaking(17u), Is.True);
+        }
     }
 }

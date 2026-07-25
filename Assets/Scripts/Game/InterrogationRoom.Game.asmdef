@@ -3,7 +3,8 @@
     "rootNamespace": "InterrogationRoom",
     "references": [
         "InterrogationRoom.Domain",
-        "Mirror"
+        "Mirror",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

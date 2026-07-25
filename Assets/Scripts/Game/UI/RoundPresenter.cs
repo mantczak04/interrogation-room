@@ -7,6 +7,9 @@ using InterrogationRoom.Settings;
 using Mirror;
 using UnityEngine;
 using UnityEngine.UIElements;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace InterrogationRoom.UI
 {
@@ -165,7 +168,7 @@ namespace InterrogationRoom.UI
         private VisualElement _startButtonHoverArea;
         private Label _startButtonHoverInfo;
         private Button _lobbyReadyButton;
-        private Label _playerCountLabel;
+        private Label _lobbyHelpLabel;
         private Button _roundLimit5Button;
         private Button _roundLimit10Button;
         private Button _roundLimit15Button;
@@ -231,7 +234,6 @@ namespace InterrogationRoom.UI
             _secretObjectiveToggle.RegisterValueChangedCallback(OnSecretObjectiveChanged);
             _readyButton.clicked += OnReadyClicked;
             _privateToggleButton.clicked += TogglePrivatePanel;
-            _root.RegisterCallback<KeyDownEvent>(OnRootKeyDown);
             _returnToLobbyButton.clicked += OnReturnToLobbyClicked;
             _lobbyBackButton.clicked += OnLobbyBackClicked;
 
@@ -273,8 +275,6 @@ namespace InterrogationRoom.UI
                 _readyButton.clicked -= OnReadyClicked;
             if (_privateToggleButton != null)
                 _privateToggleButton.clicked -= TogglePrivatePanel;
-            if (_root != null)
-                _root.UnregisterCallback<KeyDownEvent>(OnRootKeyDown);
             if (_returnToLobbyButton != null)
                 _returnToLobbyButton.clicked -= OnReturnToLobbyClicked;
             if (_lobbyBackButton != null)
@@ -300,6 +300,12 @@ namespace InterrogationRoom.UI
 
             if (_view.Phase == RoundPhase.Round)
             {
+                // Polled here instead of a UI Toolkit KeyDownEvent: the root
+                // loses keyboard focus whenever the player clicks the game
+                // world, which made the [I] toggle silently stop working.
+                if (!_developerMenuOpen && WasTogglePrivatePanelPressed())
+                    TogglePrivatePanel();
+
                 if (_unlimitedRound)
                 {
                     _timerLabel.text = "∞";
@@ -519,15 +525,12 @@ namespace InterrogationRoom.UI
             _resultLabel.text = state.ResultText ?? string.Empty;
             SetVisible(_returnToLobbyButton, state.ReturnToLobbyVisible);
             SetCursorFor(state.Phase, requiresPointer: false);
-            if (state.Phase == RoundPhase.Round)
-                _root.Focus();
         }
 
         private void RenderLobby()
         {
             bool connected = NetworkClient.isConnected || NetworkServer.active;
             int playerCount = coordinator.PublicLobbyPlayerCount;
-            int presentedPlayerCount = coordinator.PublicLobbyPlayers.Count;
             SetVisible(_lobbyPanel, _lobbyMenuVisible || connected);
             SetVisible(_preparationPanel, false);
             SetVisible(_hudPanel, false);
@@ -543,15 +546,22 @@ namespace InterrogationRoom.UI
             SetVisible(_secretObjectiveSummary, true);
             _startButton.SetEnabled(canStart);
             _startButtonCanStart = canStart;
+            // The dominant blocker first: readiness is irrelevant while the
+            // lobby is short of players, and "everyone must be ready" on a
+            // solo host read as a bug.
             _startButtonBlockedMessage = canStart
                 ? string.Empty
-                : UiText.Get("Wszyscy gracze muszą być gotowi.");
+                : playerCount < RoundEngine.MinPlayers
+                    ? UiText.Format("Potrzeba co najmniej {0} graczy.", RoundEngine.MinPlayers)
+                    : UiText.Get("Wszyscy gracze muszą być gotowi.");
             _startButton.tooltip = string.Empty;
             RefreshStartButtonHoverInfo();
             _startButton.text = UiText.Get("Start Rundy");
-            _playerCountLabel.text = presentedPlayerCount == playerCount
-                ? $"{UiText.Get("Gracze w lobby")}: {playerCount}/{RoundEngine.MaxPlayers}"
-                : $"{UiText.Get("Podgląd listy")}: {presentedPlayerCount}/{RoundEngine.MaxPlayers} • {UiText.Get("prawdziwi")}: {playerCount}";
+            // The blocker is visible without hovering; the static 3-8 range
+            // only remains when nothing blocks the start.
+            _lobbyHelpLabel.text = coordinator.IsLocalHost && !canStart
+                ? _startButtonBlockedMessage
+                : UiText.Get("Rundę można rozpocząć dla 3–8 graczy.");
             _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
             RefreshRoundLimitButtons();
             SetVisible(_lobbyReadyButton, connected);
@@ -574,7 +584,6 @@ namespace InterrogationRoom.UI
         {
             var root = uiDocument.rootVisualElement;
             _root = root;
-            _root.focusable = true;
             _lobbyPanel = Required<VisualElement>(root, "lobby-panel");
             _preparationPanel = Required<VisualElement>(root, "preparation-panel");
             _hudPanel = Required<VisualElement>(root, "round-hud");
@@ -607,7 +616,7 @@ namespace InterrogationRoom.UI
             _startButtonHoverArea = Required<VisualElement>(root, "start-button-hover-area");
             _startButtonHoverInfo = Required<Label>(root, "start-button-hover-info");
             _lobbyReadyButton = Required<Button>(root, "lobby-ready-button");
-            _playerCountLabel = Required<Label>(root, "player-count-label");
+            _lobbyHelpLabel = Required<Label>(root, "lobby-help-label");
             _roundLimit5Button = Required<Button>(root, "round-limit-5-button");
             _roundLimit10Button = Required<Button>(root, "round-limit-10-button");
             _roundLimit15Button = Required<Button>(root, "round-limit-15-button");
@@ -737,13 +746,13 @@ namespace InterrogationRoom.UI
             ApplyPrivatePanelExpansion();
         }
 
-        private void OnRootKeyDown(KeyDownEvent keyEvent)
+        private static bool WasTogglePrivatePanelPressed()
         {
-            if (keyEvent.keyCode != KeyCode.I)
-                return;
-
-            TogglePrivatePanel();
-            keyEvent.StopPropagation();
+#if ENABLE_INPUT_SYSTEM
+            return Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame;
+#else
+            return Input.GetKeyDown(KeyCode.I);
+#endif
         }
 
         private void ApplyPrivatePanelExpansion()

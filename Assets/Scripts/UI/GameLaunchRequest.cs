@@ -5,7 +5,13 @@ public enum GameLaunchMode
 {
     None,
     Host,
-    Join
+    Join,
+
+    /// <summary>
+    /// Editor/development-build shortcut: host locally and drop straight into
+    /// a playable developer Runda without waiting for other players.
+    /// </summary>
+    DeveloperTest
 }
 
 public static class GameLaunchRequest

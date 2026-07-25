@@ -63,6 +63,9 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     bool elementsBound;
     bool sandboxPinned;
     bool hadLocalPlayer;
+    bool developerAutoStartPending;
+    float developerAutoStartDeadline;
+    float nextDeveloperAutoStartAttempt;
 #if UNITY_EDITOR
     bool cursorWasLockedLastFrame;
 #endif
@@ -123,7 +126,88 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             case GameLaunchMode.Join:
                 SetMenuVisible(true, MenuPage.Network);
                 break;
+            case GameLaunchMode.DeveloperTest:
+                BeginDeveloperTestLaunch();
+                break;
         }
+    }
+
+    /// <summary>
+    /// "Test deweloperski" from the main menu: host locally and, once the
+    /// local player has spawned, start a developer Runda solo. Missing seats
+    /// are filled with technical domain players, so no other humans are
+    /// needed. Falls back to the mode menu in release builds.
+    /// </summary>
+    void BeginDeveloperTestLaunch()
+    {
+        if (!NetworkRoundCoordinator.DeveloperToolsAvailable)
+        {
+            SetMenuVisible(true, MenuPage.Home);
+            return;
+        }
+
+        if (roundPresenter != null)
+            roundPresenter.SetLobbyMenuVisible(true);
+        PlayerController.SetCursorReleased(true);
+
+        if (!NetworkClient.active && !NetworkServer.active)
+        {
+            if (SteamMode)
+                steamLobby.HostLobby();
+            else
+                manager.StartHost();
+        }
+
+        developerAutoStartPending = true;
+        developerAutoStartDeadline = Time.unscaledTime + 20f;
+    }
+
+    void TickDeveloperAutoStart()
+    {
+        if (roundCoordinator == null || !NetworkRoundCoordinator.DeveloperToolsAvailable)
+        {
+            developerAutoStartPending = false;
+            return;
+        }
+
+        // Someone (or a previous attempt) already got a Runda going.
+        if (roundCoordinator.ActiveDeveloperPlan != null
+            || roundCoordinator.CurrentView?.Phase is RoundPhase.Preparation or RoundPhase.Round)
+        {
+            developerAutoStartPending = false;
+            return;
+        }
+
+        if (Time.unscaledTime > developerAutoStartDeadline)
+        {
+            developerAutoStartPending = false;
+            Debug.LogWarning(
+                "[CenteredNetworkManagerHUD] Developer test auto-start timed out. Press F8 and start a scenario manually.",
+                this);
+            return;
+        }
+
+        if (Time.unscaledTime < nextDeveloperAutoStartAttempt)
+            return;
+        nextDeveloperAutoStartAttempt = Time.unscaledTime + 0.5f;
+
+        // Wait for the host and the local player's physical Runda components.
+        if (!NetworkServer.activeHost)
+            return;
+        var players = roundCoordinator.ConnectedPlayers;
+        if (players.Count == 0)
+            return;
+
+        if (roundCoordinator.TryStartDeveloperScenario(
+                RoundDeveloperScenario.PersonalMatter,
+                RoundEngine.MinPlayers,
+                players[0],
+                out _))
+        {
+            developerAutoStartPending = false;
+        }
+        // Rejections are retried until the deadline: the usual cause is the
+        // physical roster not having spawned yet.
     }
 
     void OnDisable()
@@ -207,6 +291,9 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         bool hasLocalPlayer = NetworkClient.localPlayer != null;
         bool localPlayerArrived = hasLocalPlayer && !hadLocalPlayer;
         hadLocalPlayer = hasLocalPlayer;
+
+        if (developerAutoStartPending)
+            TickDeveloperAutoStart();
 
         if (isVisible && currentPage == MenuPage.Network && localPlayerArrived)
         {

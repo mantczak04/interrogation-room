@@ -45,6 +45,19 @@ namespace InterrogationRoom.Gameplay.Tests
                 "A participant from another voice session must never bind to a local Mirror identity.");
         }
 
+        [Test]
+        public void LobbyAndRoundUseSeparateSharedModesInsideTheSameSession()
+        {
+            const string session = "kcp-shared-session";
+
+            string lobby = BuildModeChannelName(session, spatial: false);
+            string round = BuildModeChannelName(session, spatial: true);
+
+            Assert.That(lobby, Does.EndWith("-lobby"));
+            Assert.That(round, Does.EndWith("-round"));
+            Assert.That(lobby, Is.Not.EqualTo(round));
+        }
+
         private static string BuildChannelName(string sessionId) =>
             (string)GetRuntimeMethod("BuildChannelName").Invoke(
                 null,
@@ -52,6 +65,11 @@ namespace InterrogationRoom.Gameplay.Tests
 
         private static string BuildPlayerId(string sessionId, uint netId) =>
             (string)GetRuntimeMethod("BuildPlayerId").Invoke(null, new object[] { sessionId, netId });
+
+        private static string BuildModeChannelName(string sessionId, bool spatial) =>
+            (string)GetRuntimeMethod("BuildModeChannelName").Invoke(
+                null,
+                new object[] { "interrogation-room", sessionId, spatial });
 
         private static bool TryParsePlayerId(string sessionId, string playerId, out uint netId)
         {

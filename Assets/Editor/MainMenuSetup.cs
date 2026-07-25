@@ -45,7 +45,7 @@ public class MainMenuSetup
         MainMenuManager manager = canvasObj.AddComponent<MainMenuManager>();
 
         // Background Image Setup (Fix Texture Type to Sprite)
-        string texPath = "Assets/UI/Sprites/MainMenuBackground.jpg";
+        string texPath = "Assets/Scenes/MainMenu/5d006397-6eb9-4f3f-ba4e-1b24d9f4b3ed.png";
         TextureImporter importer = AssetImporter.GetAtPath(texPath) as TextureImporter;
         if (importer != null && importer.textureType != TextureImporterType.Sprite)
         {

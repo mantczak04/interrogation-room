@@ -138,7 +138,7 @@ public class MainMenuPresenter : MonoBehaviour
     private void OpenDeveloperTest()
     {
         loadingGameScene = true;
-        GameLaunchRequest.Set(GameLaunchMode.None);
+        GameLaunchRequest.Set(GameLaunchMode.DeveloperTest);
         SceneManager.LoadScene(gameSceneName);
     }
 

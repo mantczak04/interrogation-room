@@ -3,25 +3,25 @@
     <ui:VisualElement name="round-ui-root" class="round-ui">
         <ui:VisualElement name="lobby-panel" class="lobby-screen">
             <ui:VisualElement class="screen-shade" />
+            <ui:VisualElement class="lobby-wash lobby-wash--left" />
+            <ui:VisualElement class="lobby-wash lobby-wash--right" />
             <ui:Button name="lobby-back-button" class="lobby-back" focusable="false">
-                <ui:Label text="‹" class="lobby-back-glyph" picking-mode="Ignore" />
+                <ui:VisualElement class="lobby-back-glyph" picking-mode="Ignore" />
                 <ui:Label text="Wyjdź z lobby" class="lobby-back-text" picking-mode="Ignore" />
             </ui:Button>
             <ui:VisualElement class="lobby-layout">
                 <ui:VisualElement class="lobby-roster-panel">
+                    <ui:Label name="lobby-roster-count" text="Lista graczy" class="kicker stamp-font lobby-side-kicker" />
                     <ui:Label text="OBECNI NA POSTERUNKU" class="lobby-side-title stamp-font" />
-                    <ui:Label name="lobby-roster-count" text="Lista graczy" class="lobby-side-kicker" />
-                    <ui:VisualElement class="lobby-side-rule" />
+                    <ui:VisualElement class="rule lobby-side-rule" />
                     <ui:Label name="lobby-player-list-empty" text="Oczekiwanie na graczy…" class="lobby-player-list-empty" />
                     <ui:ScrollView name="lobby-player-list" class="lobby-player-list" mode="Vertical" horizontal-scroller-visibility="Hidden" />
                     <ui:Label text="V — wycisz / włącz mikrofon" class="lobby-voice-hint" />
                 </ui:VisualElement>
-                <ui:VisualElement class="lobby-controls lobby-settings-panel">
-                    <ui:Label text="USTAWIENIA" class="lobby-title stamp-font" />
-                    <ui:Label text="LOBBY" class="lobby-kicker stamp-font" />
-                    <ui:Label name="player-count-label" text="Gracze w lobby: 0/8" class="lobby-player-count" />
-                    <ui:VisualElement class="document-rule" />
-                    <ui:Label text="Ustawienia Rundy" class="section-title stamp-font" />
+                <ui:VisualElement class="lobby-settings-panel stamp-font">
+                    <ui:Label text="GOSPODARZ GRY" class="kicker stamp-font lobby-side-kicker" />
+                    <ui:Label text="USTAWIENIA" class="lobby-side-title stamp-font" />
+                    <ui:VisualElement class="rule lobby-side-rule" />
                     <ui:Label text="LIMIT RUNDY" class="lobby-round-limit-title stamp-font" />
                     <ui:VisualElement class="lobby-round-limit-options">
                         <ui:Button name="round-limit-5-button" text="5 MIN" class="btn btn--quiet lobby-round-limit-button" />
@@ -36,12 +36,13 @@
                     </ui:VisualElement>
                     <ui:Toggle name="secret-objective-toggle" label="Włącz Sekretny Cel" value="true" class="lobby-toggle" />
                     <ui:Label name="secret-objective-summary" text="Sekretny Cel jest dostępny od 5 graczy." class="lobby-toggle-summary" />
-                    <ui:Button name="invite-button" text="Zaproś znajomych" class="btn btn--quiet lobby-action" />
+                    <ui:VisualElement class="rule rule--faint lobby-actions-rule" />
+                    <ui:Button name="invite-button" text="Zaproś znajomych" class="btn stamp-font lobby-action" />
                     <ui:VisualElement name="start-button-hover-area" class="lobby-start-hover-area">
                         <ui:Button name="start-button" text="Start Rundy" class="btn lobby-start" />
                         <ui:Label name="start-button-hover-info" text="Wszyscy gracze muszą być gotowi." class="lobby-start-hover-info" picking-mode="Ignore" />
                     </ui:VisualElement>
-                    <ui:Label text="Rundę można rozpocząć dla 3–8 graczy." class="lobby-help" />
+                    <ui:Label name="lobby-help-label" text="Rundę można rozpocząć dla 3–8 graczy." class="lobby-help" />
                 </ui:VisualElement>
                 <ui:VisualElement class="preview-column">
                     <ui:Label text="TWOJA POSTAĆ" class="preview-kicker stamp-font" />
