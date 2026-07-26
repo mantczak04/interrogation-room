@@ -87,8 +87,8 @@ namespace InterrogationRoom.Gameplay
 
         public void SetDanceIndex(int selectedDance)
         {
-            if (HasParameter(DanceIndexParameter, AnimatorControllerParameterType.Float))
-                animator.SetFloat(DanceIndexParameter, selectedDance);
+            if (HasParameter(DanceIndexParameter, AnimatorControllerParameterType.Int))
+                animator.SetInteger(DanceIndexParameter, selectedDance);
         }
 
         public void PlayPunch(int variant)

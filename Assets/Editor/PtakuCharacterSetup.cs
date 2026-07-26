@@ -51,7 +51,6 @@ public static class PtakuCharacterSetup
             AnimationClip punchA = ConfigureAnimation("Ptaku_Uppercut_A.fbx", avatar, false);
             AnimationClip punchB = ConfigureAnimation("Ptaku_Uppercut_B.fbx", avatar, false);
             AnimationClip death = ConfigureAnimation("Ptaku_Death.fbx", avatar, false);
-            AnimationClip dance = ConfigureAnimation("Ptaku_Dance.fbx", avatar, true);
 
             AnimatorController controller = CreateAnimatorController(
                 idle,
@@ -59,8 +58,11 @@ public static class PtakuCharacterSetup
                 sitting,
                 punchA,
                 punchB,
-                death,
-                dance);
+                death);
+
+            // This builder recreates the controller from scratch, so the shared dance graph has to
+            // be reapplied here. Ptaku uses the same four dances as every other character.
+            DanceAnimationSetup.ConfigureSharedDanceGraph(ControllerPath);
 
             ConfigurePlayerPrefab(avatar, controller);
             AssetDatabase.SaveAssets();
@@ -235,8 +237,7 @@ public static class PtakuCharacterSetup
         AnimationClip sitting,
         AnimationClip punchA,
         AnimationClip punchB,
-        AnimationClip death,
-        AnimationClip dance)
+        AnimationClip death)
     {
         AssetDatabase.DeleteAsset(ControllerPath);
         AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
@@ -246,7 +247,6 @@ public static class PtakuCharacterSetup
         controller.AddParameter("Punch", AnimatorControllerParameterType.Trigger);
         controller.AddParameter("PunchVariant", AnimatorControllerParameterType.Int);
         controller.AddParameter("IsDead", AnimatorControllerParameterType.Bool);
-        controller.AddParameter("Dance", AnimatorControllerParameterType.Bool);
 
         AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
         BlendTree locomotionBlend = new()
@@ -267,12 +267,9 @@ public static class PtakuCharacterSetup
         AnimatorState punchAState = AddState(stateMachine, "Uppercut A", punchA);
         AnimatorState punchBState = AddState(stateMachine, "Uppercut B", punchB);
         AnimatorState deathState = AddState(stateMachine, "Death", death);
-        AnimatorState danceState = AddState(stateMachine, "Dance", dance);
 
         AddBoolTransition(locomotion, sittingState, "IsSeated", true, 0.15f);
         AddBoolTransition(sittingState, locomotion, "IsSeated", false, 0.15f);
-        AddBoolTransition(locomotion, danceState, "Dance", true, 0.15f);
-        AddBoolTransition(danceState, locomotion, "Dance", false, 0.15f);
 
         AddPunchTransition(stateMachine, punchAState, 0);
         AddPunchTransition(stateMachine, punchBState, 1);

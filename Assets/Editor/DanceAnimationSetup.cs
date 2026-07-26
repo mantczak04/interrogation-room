@@ -8,6 +8,8 @@ using UnityEngine;
 
 public static class DanceAnimationSetup
 {
+    public const string MenuPath = "Tools/Interrogation Room/Configure Dance Radial Menu";
+
     private const string PlayerPrefabPath = "Assets/Prefabs/Player.prefab";
     private const string DanceParameter = "Dance";
     private const string DanceIndexParameter = "DanceIndex";
@@ -29,7 +31,7 @@ public static class DanceAnimationSetup
         "Assets/Characters/Ptaku/PtakuCharacter.controller"
     };
 
-    [MenuItem("Tools/Interrogation Room/Configure Dance Radial Menu")]
+    [MenuItem(MenuPath)]
     public static void Configure()
     {
         AnimationClip[] danceClips = DancePaths
@@ -45,6 +47,21 @@ public static class DanceAnimationSetup
         Debug.Log(
             $"Dance setup completed: {danceClips.Length} clips, " +
             $"{ControllerPaths.Length} character controllers.");
+    }
+
+    /// <summary>
+    /// Rebuilds the shared dance graph on a single controller from the dance clips as they are
+    /// already imported. Character builders that recreate their controller from scratch must call
+    /// this afterwards, otherwise the rebuilt controller loses the radial menu.
+    /// </summary>
+    public static void ConfigureSharedDanceGraph(string controllerPath)
+    {
+        AnimationClip[] danceClips = DancePaths
+            .Select(LoadDanceClip)
+            .ToArray();
+
+        ConfigureController(controllerPath, danceClips);
+        AssetDatabase.SaveAssets();
     }
 
     private static AnimationClip ConfigureDanceClip(string path)
@@ -89,12 +106,16 @@ public static class DanceAnimationSetup
         if (avatar == null || !avatar.isValid || !avatar.isHuman)
             throw new InvalidOperationException($"Dance FBX at '{path}' has no valid Humanoid avatar.");
 
-        return AssetDatabase.LoadAllAssetsAtPath(path)
+        return LoadDanceClip(path);
+    }
+
+    private static AnimationClip LoadDanceClip(string path) =>
+        AssetDatabase.LoadAllAssetsAtPath(path)
             .OfType<AnimationClip>()
             .FirstOrDefault(candidate =>
                 !candidate.name.StartsWith("__preview__", StringComparison.Ordinal))
-            ?? throw new InvalidOperationException($"Dance clip not found in '{path}'.");
-    }
+        ?? throw new InvalidOperationException(
+            $"Dance clip not found in '{path}'. Run '{MenuPath}' once to import it.");
 
     private static void ConfigureController(
         string path,
@@ -105,7 +126,7 @@ public static class DanceAnimationSetup
             throw new InvalidOperationException($"Animator Controller not found at '{path}'.");
 
         EnsureParameter(controller, DanceParameter, AnimatorControllerParameterType.Bool);
-        EnsureParameter(controller, DanceIndexParameter, AnimatorControllerParameterType.Float);
+        EnsureParameter(controller, DanceIndexParameter, AnimatorControllerParameterType.Int);
 
         AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
         AnimatorState locomotion = stateMachine.states
@@ -116,30 +137,30 @@ public static class DanceAnimationSetup
 
         RemoveExistingDanceGraph(stateMachine);
 
-        var danceBlend = new BlendTree
-        {
-            name = "Dance Blend",
-            blendType = BlendTreeType.Simple1D,
-            blendParameter = DanceIndexParameter,
-            useAutomaticThresholds = false
-        };
-        AssetDatabase.AddObjectToAsset(danceBlend, controller);
+        // One state per dance rather than a 1D blend tree. The dances are discrete choices, not a
+        // continuum: a blend tree only lands on a clean pose because DanceIndex happens to be set
+        // to exact integers, and any damping added later would cross-fade twerk into samba.
         for (int index = 0; index < danceClips.Count; index++)
-            danceBlend.AddChild(danceClips[index], index);
+        {
+            AnimatorState danceState = stateMachine.AddState(
+                $"Dance - {danceClips[index].name}",
+                new Vector3(650f, 120f + index * 70f));
+            danceState.motion = danceClips[index];
+            danceState.iKOnFeet = true;
 
-        AnimatorState danceState = stateMachine.AddState("Dance", new Vector3(650f, 180f));
-        danceState.motion = danceBlend;
-        danceState.iKOnFeet = true;
+            // Entering from Any State also covers switching dance while already dancing, because
+            // canTransitionToSelf is off and only one DanceIndex condition can match at a time.
+            AnimatorStateTransition enter = stateMachine.AddAnyStateTransition(danceState);
+            ConfigureImmediateTransition(enter, 0.12f);
+            enter.AddCondition(AnimatorConditionMode.If, 0f, DanceParameter);
+            enter.AddCondition(AnimatorConditionMode.Equals, index, DanceIndexParameter);
+            enter.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsSeated");
+            enter.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsDead");
 
-        AnimatorStateTransition enter = stateMachine.AddAnyStateTransition(danceState);
-        ConfigureImmediateTransition(enter, 0.12f);
-        enter.AddCondition(AnimatorConditionMode.If, 0f, DanceParameter);
-        enter.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsSeated");
-        enter.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsDead");
-
-        AnimatorStateTransition exit = danceState.AddTransition(locomotion);
-        ConfigureImmediateTransition(exit, 0.12f);
-        exit.AddCondition(AnimatorConditionMode.IfNot, 0f, DanceParameter);
+            AnimatorStateTransition exit = danceState.AddTransition(locomotion);
+            ConfigureImmediateTransition(exit, 0.12f);
+            exit.AddCondition(AnimatorConditionMode.IfNot, 0f, DanceParameter);
+        }
 
         EditorUtility.SetDirty(stateMachine);
         EditorUtility.SetDirty(controller);
