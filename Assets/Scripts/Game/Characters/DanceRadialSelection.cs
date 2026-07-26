@@ -7,12 +7,17 @@ namespace InterrogationRoom.Gameplay.Characters
         public const int DanceCount = 4;
         public const int NoSelection = -1;
 
+        /// <summary>
+        /// Player-facing labels, in the same order as the Dance blend tree thresholds. These are
+        /// display names, not asset names: index 0 is "Dancing Twerk.fbx", 1 "Silly Dancing.fbx",
+        /// 2 "Samba Dancing.fbx", 3 "Hokey Pokey.fbx".
+        /// </summary>
         public static readonly string[] Names =
         {
-            "Dancing Twerk",
-            "Silly Dancing",
-            "Samba Dancing",
-            "Hokey Pokey"
+            "TWERK",
+            "WYGŁUPY",
+            "SAMBA",
+            "HOKEY POKEY"
         };
 
         public static int FromPointerOffset(Vector2 offset, float deadZoneRadius)

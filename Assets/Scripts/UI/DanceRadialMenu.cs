@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using InterrogationRoom.Gameplay.Characters;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -23,6 +24,9 @@ namespace InterrogationRoom.UI
             new(28f, 254f)
         };
 
+        private static readonly Color AccentColor = new(0.88f, 0.71f, 0.41f, 1f);
+        private static readonly Color TextColor = new(0.91f, 0.89f, 0.84f, 1f);
+
         private UIDocument document;
         private VisualElement overlay;
         private DanceRadialWheelElement wheel;
@@ -30,7 +34,10 @@ namespace InterrogationRoom.UI
         private Label centerLabel;
         private readonly VisualElement[] options =
             new VisualElement[DanceRadialSelection.DanceCount];
+        private readonly Label[] optionNumbers =
+            new Label[DanceRadialSelection.DanceCount];
         private bool cursorWasReleased;
+        private bool openedWhileDancing;
 
         public bool IsOpen { get; private set; }
         public int SelectedDance { get; private set; } = DanceRadialSelection.NoSelection;
@@ -60,12 +67,17 @@ namespace InterrogationRoom.UI
 
             cursorWasReleased = PlayerInputGate.CursorReleased;
             IsOpen = true;
+            openedWhileDancing = currentlyDancing;
             SelectedDance = DanceRadialSelection.NoSelection;
-            centerLabel.text = currentlyDancing ? "PUŚĆ, ABY ZATRZYMAĆ" : "ANULUJ";
             overlay.style.display = DisplayStyle.Flex;
             PlayerInputGate.SetPlayerCursorReleased(true);
             WarpPointerToScreenCenter();
-            RefreshSelection();
+
+            // The warp only lands on the next input update, so reading the pointer now would
+            // still return the pre-open position and pre-select a sector. Paint the neutral
+            // state instead and let the per-frame RefreshSelection take over.
+            RefreshHighlight();
+            PlayOpenTransition();
         }
 
         public int Close()
@@ -101,7 +113,7 @@ namespace InterrogationRoom.UI
                 new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
             int nextSelection = DanceRadialSelection.FromPointerOffset(
                 offset,
-                DeadZoneRadius);
+                DeadZoneRadius * ResolvePanelScale());
             if (nextSelection == SelectedDance)
                 return;
 
@@ -141,6 +153,7 @@ namespace InterrogationRoom.UI
             overlay.style.alignItems = Align.Center;
             overlay.style.justifyContent = Justify.Center;
             overlay.style.backgroundColor = new Color(0f, 0f, 0f, 0.38f);
+            SetTransition(overlay, 0.1f, "opacity");
 
             wheel = new DanceRadialWheelElement
             {
@@ -156,6 +169,10 @@ namespace InterrogationRoom.UI
             wheel.style.borderBottomRightRadius = WheelSize * 0.5f;
             wheel.style.backgroundColor = new Color(0.078f, 0.094f, 0.106f, 0.98f);
             wheel.style.overflow = Overflow.Hidden;
+            wheel.style.transformOrigin = new TransformOrigin(
+                Length.Percent(50f),
+                Length.Percent(50f));
+            SetTransition(wheel, 0.12f, "scale");
             SetBorder(wheel, new Color(0.5f, 0.41f, 0.28f, 1f), 4f);
             overlay.Add(wheel);
 
@@ -189,7 +206,7 @@ namespace InterrogationRoom.UI
             centerLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             centerLabel.style.fontSize = 16f;
             centerLabel.style.letterSpacing = 1.5f;
-            centerLabel.style.color = new Color(0.91f, 0.89f, 0.84f, 1f);
+            centerLabel.style.color = TextColor;
             center.Add(centerLabel);
             wheel.Add(center);
 
@@ -207,14 +224,16 @@ namespace InterrogationRoom.UI
             option.style.height = 92f;
             option.style.alignItems = Align.Center;
             option.style.justifyContent = Justify.Center;
+            SetTransition(option, 0.09f, "scale", "opacity");
 
             var number = new Label($"0{index + 1}") { pickingMode = PickingMode.Ignore };
             number.style.fontSize = 12f;
             number.style.unityFontStyleAndWeight = FontStyle.Bold;
             number.style.letterSpacing = 2f;
-            number.style.color = new Color(0.88f, 0.71f, 0.41f, 1f);
+            number.style.color = AccentColor;
             number.style.marginBottom = 4f;
             option.Add(number);
+            optionNumbers[index] = number;
 
             var name = new Label(DanceRadialSelection.Names[index])
             {
@@ -225,7 +244,7 @@ namespace InterrogationRoom.UI
             name.style.unityFontStyleAndWeight = FontStyle.Bold;
             name.style.unityTextAlign = TextAnchor.MiddleCenter;
             name.style.letterSpacing = 1f;
-            name.style.color = new Color(0.91f, 0.89f, 0.84f, 1f);
+            name.style.color = TextColor;
             option.Add(name);
             return option;
         }
@@ -238,7 +257,8 @@ namespace InterrogationRoom.UI
                 options[index].style.scale = selected
                     ? new Scale(new Vector3(1.06f, 1.06f, 1f))
                     : new Scale(Vector3.one);
-                options[index].style.opacity = selected ? 1f : 0.86f;
+                options[index].style.opacity = selected ? 1f : 0.72f;
+                optionNumbers[index].style.opacity = selected ? 1f : 0.5f;
             }
 
             wheel.SelectedDance = SelectedDance;
@@ -246,6 +266,70 @@ namespace InterrogationRoom.UI
             center.style.backgroundColor = centerSelected
                 ? new Color(0.2f, 0.23f, 0.25f, 1f)
                 : new Color(0.078f, 0.094f, 0.106f, 1f);
+            RefreshCenterLabel(centerSelected);
+        }
+
+        private void RefreshCenterLabel(bool nothingSelected)
+        {
+            if (nothingSelected)
+            {
+                centerLabel.text = openedWhileDancing ? "PUŚĆ, ABY ZATRZYMAĆ" : "ANULUJ";
+                centerLabel.style.color = TextColor;
+                centerLabel.style.fontSize = 16f;
+                return;
+            }
+
+            centerLabel.text = DanceRadialSelection.Names[SelectedDance];
+            centerLabel.style.color = AccentColor;
+            centerLabel.style.fontSize = 18f;
+        }
+
+        private void PlayOpenTransition()
+        {
+            wheel.style.scale = new Scale(new Vector3(0.94f, 0.94f, 1f));
+            overlay.style.opacity = 0f;
+            overlay.schedule.Execute(() =>
+            {
+                wheel.style.scale = new Scale(Vector3.one);
+                overlay.style.opacity = 1f;
+            }).ExecuteLater(0);
+        }
+
+        /// <summary>
+        /// Screen pixels per panel unit. The panel scales with screen size, so a dead zone
+        /// expressed in panel units has to be converted before it is compared against a raw
+        /// pointer offset; otherwise the hit test only matches the artwork at the reference width.
+        /// </summary>
+        private float ResolvePanelScale()
+        {
+            if (overlay == null)
+                return 1f;
+
+            float panelWidth = overlay.resolvedStyle.width;
+            if (float.IsNaN(panelWidth) || panelWidth < 1f)
+                return 1f;
+
+            return Screen.width / panelWidth;
+        }
+
+        private static void SetTransition(
+            VisualElement element,
+            float seconds,
+            params string[] properties)
+        {
+            var names = new List<StylePropertyName>(properties.Length);
+            var durations = new List<TimeValue>(properties.Length);
+            var easings = new List<EasingFunction>(properties.Length);
+            foreach (string property in properties)
+            {
+                names.Add(new StylePropertyName(property));
+                durations.Add(new TimeValue(seconds, TimeUnit.Second));
+                easings.Add(new EasingFunction(EasingMode.EaseOutCubic));
+            }
+
+            element.style.transitionProperty = new StyleList<StylePropertyName>(names);
+            element.style.transitionDuration = new StyleList<TimeValue>(durations);
+            element.style.transitionTimingFunction = new StyleList<EasingFunction>(easings);
         }
 
         private static void SetBorder(VisualElement element, Color color, float width)

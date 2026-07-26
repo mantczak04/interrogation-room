@@ -13,6 +13,10 @@ namespace InterrogationRoom.Gameplay
         private const float MaxLookDownDegrees = 50f;
         private const float MaxLookUpDegrees = 60f;
 
+        // Matches the Any->Dance / Dance->Locomotion transition duration in the character
+        // controllers, so the head IK fades out exactly as the dance pose fades in.
+        private const float LookAtBlendSeconds = 0.12f;
+
         private static readonly int SpeedParameter = Animator.StringToHash("Speed");
         private static readonly int LookPitchParameter = Animator.StringToHash("LookPitch");
         private static readonly int IsSeatedParameter = Animator.StringToHash("IsSeated");
@@ -25,6 +29,7 @@ namespace InterrogationRoom.Gameplay
         private Animator animator;
         private Vector3 smoothedLookTarget;
         private bool hasSmoothedLookTarget;
+        private float lookAtWeight;
 
         public void Configure(Animator target)
         {
@@ -101,6 +106,7 @@ namespace InterrogationRoom.Gameplay
             bool isDead,
             bool isLocalPlayer,
             bool isThirdPerson,
+            bool isDancing,
             float bodyRelativePitch,
             bool hasVisualRootScale,
             Vector3 visualRootScale)
@@ -108,6 +114,19 @@ namespace InterrogationRoom.Gameplay
             if (animator == null || !animator.isHuman || isDead ||
                 (isLocalPlayer && isThirdPerson))
             {
+                ResetLookAtIkState();
+                return;
+            }
+
+            // Dance clips author their own head motion. Holding the look-at target would pin the
+            // head forward and flatten the animation, so fade the IK out for the duration.
+            lookAtWeight = Mathf.MoveTowards(
+                lookAtWeight,
+                isDancing ? 0f : 1f,
+                Time.deltaTime / LookAtBlendSeconds);
+            if (lookAtWeight <= 0.001f)
+            {
+                animator.SetLookAtWeight(0f);
                 ResetLookAtIkState();
                 return;
             }
@@ -148,7 +167,7 @@ namespace InterrogationRoom.Gameplay
                     Vector3.Lerp(smoothedLookTarget, desiredLookTarget, smoothFactor);
             }
 
-            animator.SetLookAtWeight(1f, 0.2f, 0.85f, 0.35f, 0.5f);
+            animator.SetLookAtWeight(lookAtWeight, 0.2f, 0.85f, 0.35f, 0.5f);
             animator.SetLookAtPosition(smoothedLookTarget);
         }
 

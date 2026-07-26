@@ -813,6 +813,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
             isDead,
             isLocalPlayer,
             IsThirdPerson,
+            isDancing,
             bodyRelativePitch,
             hasVisualRootScale,
             visualRootScale);
