@@ -1,3 +1,4 @@
+using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
@@ -17,7 +18,7 @@ namespace InterrogationRoom.Gameplay.Debugging
     public sealed class AnimationTestCamera : NetworkBehaviour
     {
         [Header("References")]
-        [SerializeField] private PlayerController player;
+        [SerializeField] private PlayerGameplayController player;
 
         [Header("Camera")]
         [SerializeField, Min(0.5f)] private float flySpeed = 3f;
@@ -31,7 +32,7 @@ namespace InterrogationRoom.Gameplay.Debugging
         {
             if (player == null)
             {
-                player = GetComponent<PlayerController>();
+                player = GetComponent<PlayerGameplayController>();
             }
         }
 
@@ -54,7 +55,7 @@ namespace InterrogationRoom.Gameplay.Debugging
                 }
             }
 
-            if (IsActive && !PlayerController.CursorReleased)
+            if (IsActive && !PlayerInputGate.CursorReleased)
             {
                 MoveCamera();
             }
@@ -92,7 +93,7 @@ namespace InterrogationRoom.Gameplay.Debugging
 
         private void Activate()
         {
-            Camera sourceCamera = player.playerCamera;
+            Camera sourceCamera = player.PlayerCamera;
             if (sourceCamera == null)
             {
                 return;
@@ -123,9 +124,9 @@ namespace InterrogationRoom.Gameplay.Debugging
 
             if (player != null)
             {
-                if (player.playerCamera != null)
+                if (player.PlayerCamera != null)
                 {
-                    player.playerCamera.enabled = true;
+                    player.PlayerCamera.enabled = true;
                 }
 
                 player.SetLocalModelVisible(false);

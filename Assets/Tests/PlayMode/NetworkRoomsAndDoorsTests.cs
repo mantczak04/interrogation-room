@@ -179,7 +179,8 @@ namespace InterrogationRoom.Gameplay.Tests
         public void VoicePathDistinguishesSameRoomOpenDoorClosedDoorAndWall()
         {
             Type doorType = FindAssemblyCSharpType("InterrogationRoom.Gameplay.Interaction.NetworkDoor");
-            Type occlusionType = FindAssemblyCSharpType("VivoxVoiceOcclusion");
+            Type occlusionType = FindAssemblyCSharpType(
+                "InterrogationRoom.Voice.VivoxVoiceOcclusion");
             Component door = CreateDoor("Acoustic portal", doorType);
             SetField(door, "roomAId", "interview");
             SetField(door, "roomBId", "corridor");
@@ -205,7 +206,8 @@ namespace InterrogationRoom.Gameplay.Tests
         public void FullWallMutesParticipantTapImmediately()
         {
             Type roomType = FindAssemblyCSharpType("InterrogationRoom.Gameplay.Interaction.RoomVolume");
-            Type occlusionType = FindAssemblyCSharpType("VivoxVoiceOcclusion");
+            Type occlusionType = FindAssemblyCSharpType(
+                "InterrogationRoom.Voice.VivoxVoiceOcclusion");
             CreateRoom("Listener room", roomType, "listener-room", new Vector3(-2f, 1f, 0f));
             CreateRoom("Speaker room", roomType, "speaker-room", new Vector3(2f, 1f, 0f));
 

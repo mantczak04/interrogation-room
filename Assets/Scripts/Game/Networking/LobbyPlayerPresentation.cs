@@ -30,6 +30,44 @@ namespace InterrogationRoom.Networking
         }
     }
 
+    public readonly struct VoiceRosterEntry
+    {
+        public uint NetworkIdentityNetId { get; }
+        public string DisplayName { get; }
+
+        public VoiceRosterEntry(uint networkIdentityNetId, string displayName)
+        {
+            NetworkIdentityNetId = networkIdentityNetId;
+            DisplayName = displayName ?? string.Empty;
+        }
+    }
+
+    public static class VoiceRosterView
+    {
+        public static IReadOnlyList<VoiceRosterEntry> Build(
+            IReadOnlyList<LobbyPlayerInfo> players,
+            Func<uint, bool> isConnected)
+        {
+            if (players == null || isConnected == null)
+                return Array.Empty<VoiceRosterEntry>();
+
+            var entries = new List<VoiceRosterEntry>(players.Count);
+            foreach (LobbyPlayerInfo player in players)
+            {
+                if (!player.IsSimulated &&
+                    player.NetworkIdentityNetId != 0u &&
+                    isConnected(player.NetworkIdentityNetId))
+                {
+                    entries.Add(new VoiceRosterEntry(
+                        player.NetworkIdentityNetId,
+                        player.DisplayName));
+                }
+            }
+
+            return entries;
+        }
+    }
+
     public static class LobbyPlayerPresentation
     {
         public const int MaxDisplayNameLength = 16;

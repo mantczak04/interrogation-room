@@ -1,4 +1,5 @@
 using System;
+using InterrogationRoom.Gameplay;
 using InterrogationRoom.Gameplay.Characters;
 using InterrogationRoom.UI;
 using Mirror;
@@ -68,7 +69,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         public bool CanInteract(NetworkIdentity interactor)
         {
             return interactor != null &&
-                   interactor.TryGetComponent(out PlayerController playerController) &&
+                   interactor.TryGetComponent(out PlayerGameplayController playerController) &&
                    !playerController.IsDead &&
                    !playerController.IsSeated &&
                    playerController.CharacterId != displayedCharacter &&
@@ -80,7 +81,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         {
             if (!NetworkServer.active ||
                 !CanInteract(interactor) ||
-                !interactor.TryGetComponent(out PlayerController playerController) ||
+                !interactor.TryGetComponent(out PlayerGameplayController playerController) ||
                 !playerController.TrySwapCharacterServer(displayedCharacter, out CharacterId previousCharacter))
             {
                 return false;

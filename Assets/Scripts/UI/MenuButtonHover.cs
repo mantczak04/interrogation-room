@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using TMPro;
 
+namespace InterrogationRoom.UI
+{
 public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("UI References")]
@@ -88,4 +90,5 @@ public class MenuButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
             indicatorText.enabled = false;
         }
     }
+}
 }

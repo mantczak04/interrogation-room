@@ -16,7 +16,7 @@ Canvas z ikoną stanu mikrofonu jest domyślnie ukryty, a komponenty `VivoxTest`
 
 ### `RoundEngine`
 
-Czysty moduł C# zawierający wszystkie reguły Rundy. Nie zna Unity, Mirror, Steamworks, scen, UI ani Dissonance.
+Czysty moduł C# zawierający wszystkie reguły Rundy. Nie zna Unity, Mirror, Steamworks, scen, UI ani Vivox.
 
 Jego mały interfejs:
 
@@ -52,7 +52,7 @@ Nie tworzymy teraz osobnego interfejsu katalogu spraw. Testy przekazują zwykły
 
 Lokalny moduł UI renderujący otrzymany `PlayerRoundView`: rolę, jawne Przestępstwo, odpowiednią wersję Alibi w Przygotowaniu, Limit Rundy i wynik. Może wysyłać intencje gracza do adaptera Mirror, ale nie interpretuje reguł ani nie przechowuje sekretów innych graczy.
 
-### `VoiceRuntime`
+### `VivoxVoiceRuntime`
 
 Osobny moduł integracyjny dla Vivox i akustyki drzwi. Positional channel Vivox otrzymuje pozycję lokalnego gracza, a per-participant Audio Tap jest przypinany do pozycji już synchronizowanej przez Mirror. Moduł nie zależy od `RoundEngine`; steruje per mówca głośnością i filtrem dolnoprzepustowym na podstawie dystansu, pomieszczeń i jawnego stanu portali.
 
@@ -70,10 +70,12 @@ flowchart LR
     Coordinator -->|prywatny PlayerRoundView| HostUI
     Coordinator -->|celowana wiadomość Mirror| RemoteUI
     CaseAsset["CaseAsset"] -->|CaseDefinition| Coordinator
-    Voice["VoiceRuntime / Vivox"] -. "osobny moduł" .- Coordinator
+    Voice["VivoxVoiceRuntime"] -. "osobny moduł" .- Coordinator
 ```
 
 ## Układ plików
+
+Kod runtime jest podzielony przez asmdef na `InterrogationRoom.Domain`, `InterrogationRoom.Game`, `InterrogationRoom.Gameplay`, `InterrogationRoom.UI.Runtime`, `InterrogationRoom.Voice.Runtime` i `InterrogationRoom.Steam`. Runtime projektu nie opiera już tych modułów na domyślnym `Assembly-CSharp`.
 
 ```text
 Assets/Scripts/Game/
@@ -91,10 +93,23 @@ Assets/Scripts/Game/
   UI/
     RoundPresenter.cs
   Voice/
-    VoiceOcclusion.cs
+    VoiceAudibilityModel.cs
+    VoiceSpeakingState.cs
+    MicrophoneMonitorBuffer.cs
+    MicrophoneTestPlayback.cs
+Assets/Scripts/Gameplay/
+  PlayerController.cs
+Assets/Scripts/Voice/
+  VivoxVoiceRuntime.cs
+  VivoxVoiceOcclusion.cs
+Assets/Scripts/Steam/
+  SteamLobby.cs
+  SteamManager.cs
+Assets/Scripts/UI/
+  SettingsMenu.cs
 ```
 
-`Domain` powinno dostać własny assembly definition bez zależności od Unity i Mirror. Runtime może mieć drugi assembly definition zależny od `Domain`, Mirror i Unity. Edit Mode tests testują `RoundEngine` przez jego interfejs; nie testują jego pól ani wewnętrznych klas.
+`Domain` ma własny assembly definition bez zależności od Unity i Mirror. Pozostałe moduły mają jawne asmdef-y i zależności zgodne z ich rolą. Edit Mode tests testują `RoundEngine` przez jego interfejs; nie testują jego pól ani wewnętrznych klas.
 
 ## Minimalne testy modułu Rundy
 

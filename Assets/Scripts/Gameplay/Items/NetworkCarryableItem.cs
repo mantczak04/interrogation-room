@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using InterrogationRoom.Gameplay;
 using InterrogationRoom.Gameplay.Interaction;
 using InterrogationRoom.Items;
 using Mirror;
@@ -304,7 +305,7 @@ namespace InterrogationRoom.Gameplay.Items
             if (carrier.netId != 0 && !NetworkServer.spawned.ContainsKey(carrier.netId))
                 return false;
 
-            PlayerController controller = carrier.GetComponent<PlayerController>();
+            PlayerGameplayController controller = carrier.GetComponent<PlayerGameplayController>();
             return controller == null || !controller.IsDead;
         }
 
@@ -313,7 +314,7 @@ namespace InterrogationRoom.Gameplay.Items
             if (actor == null || !actor.isActiveAndEnabled)
                 return false;
 
-            PlayerController controller = actor.GetComponent<PlayerController>();
+            PlayerGameplayController controller = actor.GetComponent<PlayerGameplayController>();
             return controller == null || (!controller.IsDead && !controller.IsSeated);
         }
 

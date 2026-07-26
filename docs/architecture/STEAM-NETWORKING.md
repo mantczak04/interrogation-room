@@ -11,8 +11,8 @@ Ten dokument opisuje zaimplementowaną integrację multiplayer przez Steam. Decy
 
 ## Komponenty w scenie `Room.unity`
 
-- **`SteamManager`** (osobny GameObject, `Assets/Scripts/SteamManager.cs`) — inicjalizuje i zamyka SteamAPI, pompuje callbacki. Ma `[DefaultExecutionOrder(-2000)]`, żeby SteamAPI było gotowe przed wyborem transportu.
-- **`SteamLobby`** (na obiekcie `NetworkManager`, `Assets/Scripts/SteamLobby.cs`) — całe klejenie lobby i wybór transportu. Ma `[DefaultExecutionOrder(-1000)]`: w `Awake` ustawia `NetworkManager.transport` na `steamTransport` (FizzySteamworks), gdy klient Steam działa i pole `useSteamWhenAvailable` jest włączone; w przeciwnym razie na `localTransport` (KCP). Wybór musi zapaść przed `Awake` NetworkManagera (kolejność 0), bo Mirror zapamiętuje tam `Transport.active`.
+- **`SteamManager`** (osobny GameObject, `Assets/Scripts/Steam/SteamManager.cs`) — inicjalizuje i zamyka SteamAPI, pompuje callbacki. Ma `[DefaultExecutionOrder(-2000)]`, żeby SteamAPI było gotowe przed wyborem transportu.
+- **`SteamLobby`** (na obiekcie `NetworkManager`, `Assets/Scripts/Steam/SteamLobby.cs`) — całe klejenie lobby i wybór transportu. Ma `[DefaultExecutionOrder(-1000)]`: w `Awake` ustawia `NetworkManager.transport` na `steamTransport` (FizzySteamworks), gdy klient Steam działa i pole `useSteamWhenAvailable` jest włączone; w przeciwnym razie na `localTransport` (KCP). Wybór musi zapaść przed `Awake` NetworkManagera (kolejność 0), bo Mirror zapamiętuje tam `Transport.active`.
 - **`FizzySteamworks`** (na obiekcie `NetworkManager`) — pracuje w trybie SteamSockets (`UseNextGenSteamNetworking`), zawsze przez relay Valve, więc gracze nie widzą swoich adresów IP i nie potrzebują przekierowania portów.
 - **`CenteredNetworkManagerHUD`** — w trybie Steam pokazuje „Host Steam Lobby (Friends)” oraz „Invite Friends” (nakładka Steam); bez Steam pokazuje dotychczasowe UI adresu IP i portu dla KCP.
 

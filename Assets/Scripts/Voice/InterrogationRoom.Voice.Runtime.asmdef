@@ -1,0 +1,23 @@
+{
+    "name": "InterrogationRoom.Voice.Runtime",
+    "rootNamespace": "InterrogationRoom.Voice",
+    "references": [
+        "InterrogationRoom.Game",
+        "InterrogationRoom.Gameplay",
+        "InterrogationRoom.Steam",
+        "Mirror",
+        "Unity.InputSystem",
+        "Unity.Services.Authentication",
+        "Unity.Services.Core",
+        "Unity.Services.Vivox"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

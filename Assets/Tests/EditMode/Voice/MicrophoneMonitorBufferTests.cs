@@ -36,6 +36,16 @@ namespace InterrogationRoom.Voice.Tests
                 Is.EqualTo(expected));
         }
 
+        [TestCase(0)]
+        [TestCase(-1)]
+        [TestCase(int.MinValue)]
+        public void ReadPosition_DegenerateCapacityReturnsZero(int capacity)
+        {
+            Assert.That(
+                MicrophoneMonitorBuffer.CalculateReadPosition(100, 20, capacity),
+                Is.Zero);
+        }
+
         [TestCase(6000, 5900, 44100, 2646, true)]
         [TestCase(6000, 708, 44100, 2646, false)]
         [TestCase(6000, 7000, 44100, 2646, true)]
@@ -54,6 +64,16 @@ namespace InterrogationRoom.Voice.Tests
                     capacity,
                     minimumGap),
                 Is.EqualTo(expected));
+        }
+
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(-1)]
+        public void Resync_DegenerateCapacityAlwaysRequestsRecovery(int capacity)
+        {
+            Assert.That(
+                MicrophoneMonitorBuffer.RequiresResync(10, 5, capacity, 2),
+                Is.True);
         }
     }
 }

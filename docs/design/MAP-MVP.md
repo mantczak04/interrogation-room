@@ -45,7 +45,7 @@ Status: **propozycja do dyskusji**, nie ADR. Wynika z [ADR-0005](../adr/0005-con
 
 ## Zależności i otwarte kwestie
 
-- Krzywe zasięgu głosu i presety drzwi (otwarte/uchylone/zamknięte) wyjdą dopiero ze spike'a Dissonance — wymiary pokoi trzeba będzie iterować po pierwszym teście dwuosobowym.
+- Krzywe zasięgu głosu i presety drzwi (otwarte/uchylone/zamknięte) wyjdą dopiero z testów Vivox — wymiary pokoi trzeba będzie iterować po pierwszym teście dwuosobowym.
 - Czy cienkie ściany przepuszczają ton głosu, czy tylko drzwi są portalem — nierozstrzygnięte (research §otwarte pytania); graybox zakłada wariant „tylko drzwi”.
 - Temat/setting (posterunek vs inne wnętrze) — do decyzji zespołu; układ pomieszczeń jest od niego niezależny.
 - Miejsce Egzekucji nie wymaga dedykowanej przestrzeni w MVP (Egzekucja to decyzja w UI) — nie dodajemy celi ani pokoju egzekucji bez decyzji.

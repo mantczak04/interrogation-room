@@ -81,7 +81,9 @@ namespace InterrogationRoom.Gameplay.Tests
 
         private static MethodInfo GetRuntimeMethod(string methodName) =>
             AppDomain.CurrentDomain.GetAssemblies()
-                .Select(assembly => assembly.GetType("VivoxVoiceRuntime", false))
+                .Select(assembly => assembly.GetType(
+                    "InterrogationRoom.Voice.VivoxVoiceRuntime",
+                    false))
                 .First(type => type != null)
                 .GetMethod(methodName, StaticNonPublic);
     }

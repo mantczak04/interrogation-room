@@ -1,0 +1,192 @@
+// The SteamManager is designed to work with Steamworks.NET
+// This file is released into the public domain.
+// Where that dedication is not recognized you are granted a perpetual,
+// irrevocable license to copy and modify this file as you see fit.
+//
+// Version: 1.0.12
+
+#if !(UNITY_STANDALONE_WIN || UNITY_STANDALONE_LINUX || UNITY_STANDALONE_OSX || UNITY_EDITOR_WIN || UNITY_EDITOR_LINUX || UNITY_EDITOR_OSX || STEAMWORKS_WIN || STEAMWORKS_LIN_OSX)
+#define DISABLESTEAMWORKS
+#endif
+
+using UnityEngine;
+#if !DISABLESTEAMWORKS
+using Steamworks;
+#endif
+
+namespace InterrogationRoom.Steam
+{
+//
+// The SteamManager provides a base implementation of Steamworks.NET on which you can build upon.
+// It handles the basics of starting up and shutting down the SteamAPI for use.
+//
+[DisallowMultipleComponent]
+[DefaultExecutionOrder(-2000)] // SteamAPI must be initialized before SteamLobby picks a transport.
+public class SteamManager : MonoBehaviour
+{
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void EnsurePersistentInstance()
+    {
+#if !DISABLESTEAMWORKS
+        _ = Instance;
+#endif
+    }
+
+#if !DISABLESTEAMWORKS
+    protected static bool s_EverInitialized = false;
+
+    protected static SteamManager s_instance;
+    protected static SteamManager Instance
+    {
+        get
+        {
+            if (s_instance == null)
+            {
+                return new GameObject("SteamManager").AddComponent<SteamManager>();
+            }
+
+            return s_instance;
+        }
+    }
+
+    protected bool m_bInitialized = false;
+    public static bool Initialized => Instance.m_bInitialized;
+
+    protected SteamAPIWarningMessageHook_t m_SteamAPIWarningMessageHook;
+    private Callback<GameLobbyJoinRequested_t> m_GameLobbyJoinRequested;
+
+    [AOT.MonoPInvokeCallback(typeof(SteamAPIWarningMessageHook_t))]
+    protected static void SteamAPIDebugTextHook(int nSeverity, System.Text.StringBuilder pchDebugText)
+    {
+        Debug.LogWarning(pchDebugText);
+    }
+
+#if UNITY_2019_3_OR_NEWER
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void InitOnPlayMode()
+    {
+        s_EverInitialized = false;
+        s_instance = null;
+    }
+#endif
+
+    protected virtual void Awake()
+    {
+        if (s_instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        s_instance = this;
+
+        if (s_EverInitialized)
+        {
+            throw new System.Exception("Tried to Initialize the SteamAPI twice in one session!");
+        }
+
+        DontDestroyOnLoad(gameObject);
+
+        if (!Packsize.Test())
+        {
+            Debug.LogError("[Steamworks.NET] Packsize Test returned false, the wrong version of Steamworks.NET is being run in this platform.", this);
+        }
+
+        if (!DllCheck.Test())
+        {
+            Debug.LogError("[Steamworks.NET] DllCheck Test returned false, One or more of the Steamworks binaries seems to be the wrong version.", this);
+        }
+
+        try
+        {
+            if (SteamAPI.RestartAppIfNecessary(AppId_t.Invalid))
+            {
+                Application.Quit();
+                return;
+            }
+        }
+        catch (System.DllNotFoundException e)
+        {
+            Debug.LogError("[Steamworks.NET] Could not load [lib]steam_api.dll/so/dylib. It's likely not in the correct location. Refer to the README for more details.\n" + e, this);
+            Application.Quit();
+            return;
+        }
+
+        m_bInitialized = SteamAPI.Init();
+        if (!m_bInitialized)
+        {
+            Debug.Log("[Steamworks.NET] SteamAPI_Init() unavailable; continuing with the configured local transport.", this);
+            return;
+        }
+
+        s_EverInitialized = true;
+
+        Debug.Log("Steam initialized");
+        Debug.Log($"Username: {SteamFriends.GetPersonaName()}");
+        Debug.Log($"SteamID: {SteamUser.GetSteamID()}");
+    }
+
+    protected virtual void OnEnable()
+    {
+        if (s_instance == null)
+        {
+            s_instance = this;
+        }
+
+        if (!m_bInitialized)
+        {
+            return;
+        }
+
+        if (m_SteamAPIWarningMessageHook == null)
+        {
+            m_SteamAPIWarningMessageHook = new SteamAPIWarningMessageHook_t(SteamAPIDebugTextHook);
+            SteamClient.SetWarningMessageHook(m_SteamAPIWarningMessageHook);
+        }
+
+        if (m_GameLobbyJoinRequested == null)
+        {
+            m_GameLobbyJoinRequested =
+                Callback<GameLobbyJoinRequested_t>.Create(OnGameLobbyJoinRequested);
+        }
+    }
+
+    private static void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
+    {
+        GameLaunchRequest.SetSteamLobbyJoin(callback.m_steamIDLobby.m_SteamID);
+    }
+
+    protected virtual void OnDestroy()
+    {
+        if (s_instance != this)
+        {
+            return;
+        }
+
+        s_instance = null;
+
+        m_GameLobbyJoinRequested?.Dispose();
+        m_GameLobbyJoinRequested = null;
+
+        if (!m_bInitialized)
+        {
+            return;
+        }
+
+        SteamAPI.Shutdown();
+    }
+
+    protected virtual void Update()
+    {
+        if (!m_bInitialized)
+        {
+            return;
+        }
+
+        SteamAPI.RunCallbacks();
+    }
+#else
+    public static bool Initialized => false;
+#endif
+}
+}

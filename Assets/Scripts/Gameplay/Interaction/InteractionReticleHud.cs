@@ -1,3 +1,4 @@
+using InterrogationRoom.Gameplay;
 using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
@@ -35,7 +36,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         private static readonly Color CancelledColor = new Color(0.85f, 0.31f, 0.27f, 1f);
 
         private PlayerInteractor interactor;
-        private PlayerController playerController;
+        private PlayerGameplayController playerController;
         private Canvas hudCanvas;
         private Image dotImage;
         private RectTransform dotRect;
@@ -67,7 +68,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         private void Awake()
         {
             interactor = GetComponent<PlayerInteractor>();
-            playerController = GetComponent<PlayerController>();
+            playerController = GetComponent<PlayerGameplayController>();
         }
 
         public override void OnStartLocalPlayer()
@@ -91,7 +92,7 @@ namespace InterrogationRoom.Gameplay.Interaction
             if (!isLocalPlayer || hudCanvas == null)
                 return;
 
-            bool visible = !PlayerController.CursorReleased &&
+            bool visible = !PlayerInputGate.CursorReleased &&
                            (playerController == null || !playerController.IsDead);
             if (hudCanvas.enabled != visible)
                 hudCanvas.enabled = visible;

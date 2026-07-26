@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Mirror;
 using UnityEngine;
 
@@ -17,6 +16,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField] private LayerMask lineOfSightMask = ~0;
 
         private readonly HashSet<string> emittedDiscoveries = new HashSet<string>();
+        private readonly RaycastHit[] lineOfSightHitBuffer = new RaycastHit[32];
         private double nextScanAt;
 
         public event Action<QuietIncidentDiscoveryCandidate> DiscoveryCandidateServer;
@@ -84,24 +84,36 @@ namespace InterrogationRoom.Gameplay.Interaction
             if (delta.sqrMagnitude < 0.0001f)
                 return true;
 
-            RaycastHit[] hits = Physics.RaycastAll(
+            int hitCount = Physics.RaycastNonAlloc(
                 origin,
                 delta.normalized,
+                lineOfSightHitBuffer,
                 delta.magnitude + 0.05f,
                 lineOfSightMask,
                 QueryTriggerInteraction.Ignore);
 
-            foreach (RaycastHit hit in hits.OrderBy(value => value.distance))
+            Transform closestTransform = null;
+            float closestDistance = float.PositiveInfinity;
+            for (int index = 0; index < hitCount; index++)
             {
+                RaycastHit hit = lineOfSightHitBuffer[index];
                 Transform hitTransform = hit.collider.transform;
-                if (hitTransform == viewer.transform || hitTransform.IsChildOf(viewer.transform))
+                if (hit.distance >= closestDistance ||
+                    hitTransform == viewer.transform ||
+                    hitTransform.IsChildOf(viewer.transform))
+                {
                     continue;
+                }
 
-                Transform sourceTransform = incidentSource.transform;
-                return hitTransform == sourceTransform || hitTransform.IsChildOf(sourceTransform);
+                closestTransform = hitTransform;
+                closestDistance = hit.distance;
             }
 
-            return true;
+            if (closestTransform == null)
+                return true;
+
+            Transform sourceTransform = incidentSource.transform;
+            return closestTransform == sourceTransform || closestTransform.IsChildOf(sourceTransform);
         }
 
         private static int GetViewerKey(NetworkIdentity viewer) =>

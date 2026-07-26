@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 #endif
 
+namespace InterrogationRoom.UI
+{
 public class MainMenuManager : MonoBehaviour
 {
     [Header("Scenes")]
@@ -110,4 +112,5 @@ public class MainMenuManager : MonoBehaviour
         Application.Quit();
 #endif
     }
+}
 }

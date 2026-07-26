@@ -1,7 +1,9 @@
 using System;
+using InterrogationRoom.Gameplay;
 using InterrogationRoom.Gameplay.Items;
 using InterrogationRoom.Gameplay.Minigames;
 using InterrogationRoom.Networking;
+using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
@@ -43,7 +45,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField] private string interactionAnimatorBool = "IsInteracting";
         [SerializeField, Min(0.5f)] private float feedbackDuration = 4f;
 
-        private PlayerController playerController;
+        private PlayerGameplayController playerController;
         private Animator animator;
         private Component hoveredTarget;
         private NetworkIdentity hoveredIdentity;
@@ -61,6 +63,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         private string localInteractionFeedback;
         private double localInteractionFeedbackEndsAt;
         private InteractionFeedbackKind localInteractionFeedbackKind;
+        private readonly RaycastHit[] lineOfSightHitBuffer = new RaycastHit[32];
 
         [SyncVar(hook = nameof(OnInteractionMovementLockedChanged))]
         private bool interactionMovementLocked;
@@ -96,7 +99,7 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         private void Awake()
         {
-            playerController = GetComponent<PlayerController>();
+            playerController = GetComponent<PlayerGameplayController>();
             animator = GetComponent<Animator>();
         }
 
@@ -136,7 +139,7 @@ namespace InterrogationRoom.Gameplay.Interaction
                 CmdCompleteMinigame();
             }
 
-            if (!PlayerController.CursorReleased &&
+            if (!PlayerInputGate.CursorReleased &&
                 !localTimedInteractionActive &&
                 WasDropPressed() &&
                 (playerController == null || (!playerController.IsDead && !playerController.IsSeated)))
@@ -144,7 +147,7 @@ namespace InterrogationRoom.Gameplay.Interaction
                 CmdDropCarriedItem();
             }
 
-            if (PlayerController.CursorReleased)
+            if (PlayerInputGate.CursorReleased)
             {
                 if (localTimedInteractionActive && !localMinigameInteractionActive)
                 {
@@ -762,9 +765,10 @@ namespace InterrogationRoom.Gameplay.Interaction
             float maxDistance,
             out RaycastHit closestHit)
         {
-            RaycastHit[] hits = Physics.RaycastAll(
+            int hitCount = Physics.RaycastNonAlloc(
                 origin,
                 direction,
+                lineOfSightHitBuffer,
                 maxDistance,
                 interactionMask,
                 QueryTriggerInteraction.Collide);
@@ -773,8 +777,9 @@ namespace InterrogationRoom.Gameplay.Interaction
             float closestDistance = float.PositiveInfinity;
             bool foundHit = false;
 
-            foreach (RaycastHit hit in hits)
+            for (int index = 0; index < hitCount; index++)
             {
+                RaycastHit hit = lineOfSightHitBuffer[index];
                 Transform hitTransform = hit.collider.transform;
                 if (hitTransform == transform || hitTransform.IsChildOf(transform) ||
                     hit.distance >= closestDistance)

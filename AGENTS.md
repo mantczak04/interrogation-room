@@ -83,15 +83,19 @@ Temp/
 Obj/
 Build/
 Builds/
+Releases/
 Logs/
 UserSettings/
 MemoryCaptures/
 .git/
 .idea/
 .vscode/
+models/
+Assets/SourceFiles/
+docs/map-polish/screenshots/
 ```
 
-These contain generated Unity data, builds, logs, caches, or tool state. If diagnostics absolutely require a log, use a precise filter and a small output limit. Never load an entire `Editor.log`, `Player.log`, or file under `Logs/`.
+These contain generated Unity data, builds, logs, caches, tool state, or raw source media (`models/` and `Assets/SourceFiles/` hold large FBX/texture source files; `docs/map-polish/screenshots/` is image-only). If diagnostics absolutely require a log, use a precise filter and a small output limit. Never load an entire `Editor.log`, `Player.log`, or file under `Logs/`.
 
 Do not read binary or media files as text (`*.png`, `*.jpg`, `*.fbx`, `*.wav`, `*.mp3`, `*.webm`, `*.dll`). Inspect a specific asset only when the task requires it.
 
@@ -180,6 +184,17 @@ After the change:
 4. report the actions taken and any remaining problems.
 ```
 
+## Code-Authored Editor Tooling
+
+Scene and asset construction is scripted through `[MenuItem]` editor tools. When one of these covers the change, re-run it through Unity MCP `execute_menu_item` instead of editing the scene by hand:
+
+- `Assets/Editor/MainMenuSetup.cs` — `Tools/Setup Main Menu Scene` rebuilds the whole MainMenu scene.
+- `Assets/Editor/PtakuCharacterSetup.cs` — character prefab/rig setup menu items.
+- `Assets/Scripts/Editor/ChairSeatBaker.cs` — bakes chair seat alignment data.
+- `Assets/Scripts/Editor/Content/CaseAssetSync.cs`, `PersonalMatterAssetSync.cs` — sync authored case content into assets.
+
+After running a builder, check the Console for errors and save the affected scene or asset.
+
 ## MVP Architecture Constraints
 
 - Round rules belong to the pure `RoundEngine` module; it must not depend on Unity, Mirror, Steamworks, or UI.
@@ -188,12 +203,13 @@ After the change:
 - Never synchronize secrets through global `SyncVar` fields. A client receives only its own `PlayerRoundView` through a targeted message.
 - `CaseAsset` is for authoring; immutable `CaseDefinition` data enters the domain.
 - UI renders a received view and sends intentions; it does not resolve rules.
-- Voice is independent of `RoundEngine`. The recommended first spike is Dissonance over Mirror/FizzySteamworks with custom door attenuation.
+- Voice is independent of `RoundEngine`. The implemented stack is Unity Vivox: `Assets/Scripts/Voice/VivoxVoiceRuntime.cs` and `Assets/Scripts/Voice/VivoxVoiceOcclusion.cs`, with pure voice logic in `Assets/Scripts/Game/Voice/`. Voice is global in Lobby, spatial from `Przygotowanie` through `Finished`, and global again after returning to Lobby. The decision of record (2026-07-14) is in `docs/design/mechanics/glos-przestrzenny.md`; the Dissonance recommendation in `docs/research/proximity-voice-tools.md` is historical research only.
 - Use the current KCP transport and ParrelSync for local development. Test FizzySteamworks with two machines/accounts.
 
 ## Verification
 
 - Cover `RoundEngine` logic with Edit Mode tests through its public interface.
+- Run tests through Unity MCP: `run_tests` with `EditMode`, then poll `get_test_job` for results. When only one area changed, filter by its test assembly (for example `InterrogationRoom.Domain.EditModeTests`, `...Game.Networking.EditModeTests`, `...Game.UI.EditModeTests`, `...Game.Voice.EditModeTests`). PlayMode tests need a running Editor; run them only when Edit Mode coverage is insufficient.
 - After C# changes, verify Unity compilation and Console errors.
 - After networking changes, run a local host + client test; test Steam only after KCP succeeds.
 - After scene changes, verify the hierarchy and save the active scene through Unity MCP.

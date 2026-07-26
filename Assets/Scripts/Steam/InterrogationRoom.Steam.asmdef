@@ -1,0 +1,19 @@
+{
+    "name": "InterrogationRoom.Steam",
+    "rootNamespace": "InterrogationRoom.Steam",
+    "references": [
+        "InterrogationRoom.Game",
+        "Mirror",
+        "FizzySteamworks",
+        "com.rlabrecque.steamworks.net"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

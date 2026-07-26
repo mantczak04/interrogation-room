@@ -1,4 +1,5 @@
 using System;
+using InterrogationRoom.Settings;
 using UnityEngine;
 
 namespace InterrogationRoom.Voice
@@ -6,22 +7,16 @@ namespace InterrogationRoom.Voice
     [DisallowMultipleComponent]
     public sealed class MicrophoneTestPlayback : MonoBehaviour
     {
-        public enum TestState
-        {
-            Idle,
-            Starting,
-            Monitoring,
-            NoInputDevice,
-            Failed
-        }
-
         private const int SampleRate = 44100;
         private const int BufferSeconds = 2;
         private const float StartupTimeoutSeconds = 2f;
+        private const float WritePositionStallTimeoutSeconds = 1f;
 
         private AudioSource playbackSource;
         private AudioClip microphoneClip;
         private float startupStartedAt;
+        private float lastWritePositionProgressAt;
+        private int lastWritePosition = -1;
         private int targetLatencySamples;
         private int minimumSafeGapSamples;
         private volatile float monitorGain = 1f;
@@ -29,7 +24,7 @@ namespace InterrogationRoom.Voice
 
         public event Action StateChanged;
 
-        public TestState State { get; private set; }
+        public MicrophoneTestState State { get; private set; }
 
         private void Awake()
         {
@@ -41,40 +36,44 @@ namespace InterrogationRoom.Voice
 
         private void Update()
         {
-            if (State != TestState.Starting && State != TestState.Monitoring)
+            if (State != MicrophoneTestState.Starting &&
+                State != MicrophoneTestState.Monitoring)
                 return;
 
             int writePosition = Microphone.GetPosition(null);
-            if (writePosition < 0)
+            if (writePosition != lastWritePosition)
             {
-                StopMonitoring(TestState.Failed);
-                return;
+                lastWritePosition = writePosition;
+                lastWritePositionProgressAt = Time.unscaledTime;
             }
 
-            if (State == TestState.Starting)
+            MicrophoneTestTransition transition = MicrophoneTestPlaybackRules.Update(
+                State,
+                Microphone.IsRecording(null),
+                writePosition,
+                targetLatencySamples,
+                Time.unscaledTime - startupStartedAt,
+                StartupTimeoutSeconds,
+                microphoneClip != null && playbackSource.isPlaying,
+                Time.unscaledTime - lastWritePositionProgressAt,
+                WritePositionStallTimeoutSeconds,
+                playbackSource.timeSamples,
+                microphoneClip != null ? microphoneClip.samples : 0,
+                minimumSafeGapSamples);
+            switch (transition.Action)
             {
-                if (writePosition >= targetLatencySamples)
+                case MicrophoneTestAction.BeginPlayback:
                     BeginPlayback(writePosition);
-                else if (
-                Time.unscaledTime - startupStartedAt >= StartupTimeoutSeconds)
-                {
-                    StopMonitoring(TestState.Failed);
-                }
-                return;
-            }
-
-            if (microphoneClip != null &&
-                playbackSource.isPlaying &&
-                MicrophoneMonitorBuffer.RequiresResync(
-                    writePosition,
-                    playbackSource.timeSamples,
-                    microphoneClip.samples,
-                    minimumSafeGapSamples))
-            {
-                playbackSource.timeSamples = MicrophoneMonitorBuffer.CalculateReadPosition(
-                    writePosition,
-                    targetLatencySamples,
-                    microphoneClip.samples);
+                    break;
+                case MicrophoneTestAction.ResyncPlayback:
+                    playbackSource.timeSamples = MicrophoneMonitorBuffer.CalculateReadPosition(
+                        writePosition,
+                        targetLatencySamples,
+                        microphoneClip.samples);
+                    break;
+                case MicrophoneTestAction.StopCapture:
+                    StopMonitoring(transition.State);
+                    break;
             }
         }
 
@@ -95,35 +94,43 @@ namespace InterrogationRoom.Voice
 
         public void StartOrStop()
         {
-            if (State == TestState.Starting || State == TestState.Monitoring)
+            if (State == MicrophoneTestState.Starting ||
+                State == MicrophoneTestState.Monitoring)
             {
-                StopMonitoring(TestState.Idle);
+                StopMonitoring(MicrophoneTestState.Idle);
                 return;
             }
 
             StartMonitoring();
         }
 
-        public void Cancel() => StopMonitoring(TestState.Idle);
+        public void Cancel() => StopMonitoring(MicrophoneTestState.Idle);
 
         public void SetLevelPercent(float percent)
         {
-            monitorGain = Mathf.Clamp(percent, 0f, 200f) / 100f;
+            monitorGain = GameSettings.ClampVoicePercent(percent) / 100f;
         }
 
         private void StartMonitoring()
         {
-            if (Microphone.devices == null || Microphone.devices.Length == 0)
+            bool hasInputDevice = Microphone.devices != null &&
+                Microphone.devices.Length > 0;
+            if (!hasInputDevice)
             {
-                SetState(TestState.NoInputDevice);
+                SetState(MicrophoneTestPlaybackRules.Start(
+                    hasInputDevice: false,
+                    captureStarted: false).State);
                 return;
             }
 
             ReleaseMicrophoneClip();
             microphoneClip = Microphone.Start(null, true, BufferSeconds, SampleRate);
-            if (microphoneClip == null)
+            MicrophoneTestTransition start = MicrophoneTestPlaybackRules.Start(
+                hasInputDevice: true,
+                captureStarted: microphoneClip != null);
+            if (start.State != MicrophoneTestState.Starting)
             {
-                SetState(TestState.Failed);
+                SetState(start.State);
                 return;
             }
 
@@ -137,8 +144,10 @@ namespace InterrogationRoom.Voice
                 Mathf.Max(1, microphoneClip.samples / 2));
             minimumSafeGapSamples = Mathf.Max(1, targetLatencySamples / 2);
             startupStartedAt = Time.unscaledTime;
+            lastWritePositionProgressAt = startupStartedAt;
+            lastWritePosition = -1;
             monitorAudio = false;
-            SetState(TestState.Starting);
+            SetState(start.State);
         }
 
         private void BeginPlayback(int writePosition)
@@ -150,10 +159,10 @@ namespace InterrogationRoom.Voice
                 microphoneClip.samples);
             monitorAudio = true;
             playbackSource.Play();
-            SetState(TestState.Monitoring);
+            SetState(MicrophoneTestState.Monitoring);
         }
 
-        private void StopMonitoring(TestState finalState)
+        private void StopMonitoring(MicrophoneTestState finalState)
         {
             monitorAudio = false;
             if (playbackSource != null)
@@ -173,7 +182,7 @@ namespace InterrogationRoom.Voice
                 playbackSource.clip = null;
         }
 
-        private void SetState(TestState state)
+        private void SetState(MicrophoneTestState state)
         {
             if (State == state)
                 return;

@@ -8,6 +8,15 @@ namespace InterrogationRoom.Networking.Tests
 {
     public sealed class NetworkRoundCoordinatorTests
     {
+        [TestCase(RoundPhase.Lobby, false)]
+        [TestCase(RoundPhase.Preparation, true)]
+        [TestCase(RoundPhase.Round, true)]
+        [TestCase(RoundPhase.Finished, true)]
+        public void VoiceIsGlobalOnlyInLobby(RoundPhase phase, bool expectedSpatial)
+        {
+            Assert.That(VoiceModeRules.UsesSpatialAudio(phase), Is.EqualTo(expectedSpatial));
+        }
+
         [TestCase(RoundPhase.Round, false, 10d, 10d, true)]
         [TestCase(RoundPhase.Round, false, 9d, 10d, false)]
         [TestCase(RoundPhase.Round, true, 1000d, 10d, false)]

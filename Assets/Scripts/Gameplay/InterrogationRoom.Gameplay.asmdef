@@ -1,0 +1,20 @@
+{
+    "name": "InterrogationRoom.Gameplay",
+    "rootNamespace": "InterrogationRoom.Gameplay",
+    "references": [
+        "InterrogationRoom.Domain",
+        "InterrogationRoom.Game",
+        "Mirror",
+        "Mirror.Components",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -4,7 +4,8 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "InterrogationRoom.Game"
+        "InterrogationRoom.Game",
+        "InterrogationRoom.Gameplay"
     ],
     "includePlatforms": [
         "Editor"

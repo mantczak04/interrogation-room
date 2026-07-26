@@ -1,3 +1,4 @@
+using InterrogationRoom.Gameplay;
 using Mirror;
 using UnityEngine;
 
@@ -125,7 +126,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         {
             return occupantNetId == 0 &&
                    interactor != null &&
-                   interactor.TryGetComponent(out PlayerController playerController) &&
+                   interactor.TryGetComponent(out PlayerGameplayController playerController) &&
                    !playerController.IsDead &&
                    !playerController.IsSeated;
         }
@@ -134,7 +135,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         {
             return NetworkServer.active &&
                    CanInteract(interactor) &&
-                   interactor.TryGetComponent(out PlayerController playerController) &&
+                   interactor.TryGetComponent(out PlayerGameplayController playerController) &&
                    playerController.TrySitServer(this);
         }
 

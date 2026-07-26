@@ -1,4 +1,5 @@
 using System.Collections;
+using InterrogationRoom.Gameplay;
 using Mirror;
 using UnityEngine;
 
@@ -97,7 +98,7 @@ namespace InterrogationRoom.Gameplay.Interaction
             if (interactor == null)
                 return false;
 
-            return !interactor.TryGetComponent(out PlayerController playerController) ||
+            return !interactor.TryGetComponent(out PlayerGameplayController playerController) ||
                    !playerController.IsDead && !playerController.IsSeated;
         }
 

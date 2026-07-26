@@ -40,9 +40,7 @@ namespace InterrogationRoom.Networking
         private readonly HashSet<int> _rejectedLateJoiners = new HashSet<int>();
         private readonly Dictionary<int, IRoundHitSource> _hitSourcesByPlayerId =
             new Dictionary<int, IRoundHitSource>();
-        private readonly Dictionary<int, string> _lobbyDisplayNamesByPlayerId =
-            new Dictionary<int, string>();
-        private readonly HashSet<int> _lobbyReadyPlayerIds = new HashSet<int>();
+        private readonly LobbyRosterTracker _lobbyRoster = new LobbyRosterTracker();
 
         private RoundEngine _engine = new RoundEngine();
         private RoundPhase _phase = RoundPhase.Lobby;
@@ -72,6 +70,11 @@ namespace InterrogationRoom.Networking
             ? ConnectedPlayerCount
             : _publicLobbyPlayerCount;
         public IReadOnlyList<LobbyPlayerInfo> PublicLobbyPlayers => _publicLobbyPlayers;
+        public IReadOnlyList<VoiceRosterEntry> VoiceRoster => NetworkServer.active
+            ? _lobbyRoster.BuildVoiceRoster()
+            : VoiceRosterView.Build(
+                _publicLobbyPlayers,
+                netId => NetworkClient.spawned.ContainsKey(netId));
         public bool IsLocalLobbyReady
         {
             get
@@ -97,6 +100,10 @@ namespace InterrogationRoom.Networking
         }
         public int DeveloperLobbyFakePlayerCount =>
             DeveloperToolsAvailable ? _developerLobbyFakePlayerCount : 0;
+        public bool UsesSpatialVoice => VoiceModeRules.UsesSpatialAudio(
+            NetworkServer.active
+                ? _phase
+                : CurrentView?.Phase ?? RoundPhase.Lobby);
         public bool AllowsPhysicalRoundActions => NetworkServer.active
             ? _phase == RoundPhase.Round
             : CurrentView?.Phase == RoundPhase.Round;
@@ -659,13 +666,31 @@ namespace InterrogationRoom.Networking
                 var playerId = ConnectionToPlayerId(connection);
                 connectedIds.Add(playerId.Value);
                 BindHitSource(playerId, connection);
-                if (_connectionsByPlayerId.ContainsKey(playerId.Value)
-                    || _rejectedLateJoiners.Contains(playerId.Value))
+                uint netId = connection.identity != null ? connection.identity.netId : 0u;
+
+                if (_connectionsByPlayerId.TryGetValue(
+                        playerId.Value,
+                        out NetworkConnectionToClient knownConnection))
+                {
+                    if (_lobbyRoster.BindNetworkIdentity(playerId.Value, netId))
+                        _lobbyStateDirty = true;
+                    if (!ReferenceEquals(knownConnection, connection))
+                    {
+                        _connectionsByPlayerId[playerId.Value] = connection;
+                        _lobbyStateDirty = true;
+                        if (_phase != RoundPhase.Lobby)
+                            DeliverView(playerId, connection);
+                    }
+                    continue;
+                }
+
+                if (_rejectedLateJoiners.Contains(playerId.Value))
                     continue;
 
                 if (_phase == RoundPhase.Lobby)
                 {
                     _connectionsByPlayerId.Add(playerId.Value, connection);
+                    _lobbyRoster.BindNetworkIdentity(playerId.Value, netId);
                     _lobbyStateDirty = true;
                     continue;
                 }
@@ -676,6 +701,8 @@ namespace InterrogationRoom.Networking
                 if (_engine.ViewFor(playerId) != null)
                 {
                     _connectionsByPlayerId.Add(playerId.Value, connection);
+                    _lobbyRoster.BindNetworkIdentity(playerId.Value, netId);
+                    _lobbyStateDirty = true;
                     DeliverView(playerId, connection);
                 }
                 else
@@ -690,8 +717,9 @@ namespace InterrogationRoom.Networking
             {
                 UnbindHitSource(disconnectedId);
                 _connectionsByPlayerId.Remove(disconnectedId);
-                _lobbyDisplayNamesByPlayerId.Remove(disconnectedId);
-                _lobbyReadyPlayerIds.Remove(disconnectedId);
+                _lobbyRoster.Disconnect(
+                    disconnectedId,
+                    preserveDisplayName: _phase != RoundPhase.Lobby);
                 _lobbyStateDirty = true;
             }
             _rejectedLateJoiners.RemoveWhere(id => !connectedIds.Contains(id));
@@ -703,8 +731,7 @@ namespace InterrogationRoom.Networking
                 _lobbyStateDirty = true;
             }
 
-            if (_phase == RoundPhase.Lobby)
-                BroadcastLobbyState();
+            BroadcastLobbyState();
         }
 
         private void OnServerLobbyProfile(
@@ -717,13 +744,9 @@ namespace InterrogationRoom.Networking
             PlayerId playerId = ConnectionToPlayerId(sender);
             string fallback = $"Gracz {playerId.Value + 1}";
             string normalized = LobbyPlayerPresentation.NormalizeDisplayName(message.DisplayName, fallback);
-            if (_lobbyDisplayNamesByPlayerId.TryGetValue(playerId.Value, out string current) &&
-                string.Equals(current, normalized, StringComparison.Ordinal))
-            {
+            if (!_lobbyRoster.SetDisplayName(playerId.Value, normalized))
                 return;
-            }
 
-            _lobbyDisplayNamesByPlayerId[playerId.Value] = normalized;
             _lobbyStateDirty = true;
             BroadcastLobbyState(force: true);
         }
@@ -752,9 +775,7 @@ namespace InterrogationRoom.Networking
             if (!_connectionsByPlayerId.ContainsKey(playerId.Value))
                 _connectionsByPlayerId[playerId.Value] = sender;
 
-            bool changed = message.IsReady
-                ? _lobbyReadyPlayerIds.Add(playerId.Value)
-                : _lobbyReadyPlayerIds.Remove(playerId.Value);
+            bool changed = _lobbyRoster.SetReady(playerId.Value, message.IsReady);
             if (!changed)
                 return;
 
@@ -827,8 +848,7 @@ namespace InterrogationRoom.Networking
 
         private void StartRound(NetworkConnectionToClient sender)
         {
-            if (_connectionsByPlayerId.Count == 0 ||
-                !_connectionsByPlayerId.Keys.All(_lobbyReadyPlayerIds.Contains))
+            if (!_lobbyRoster.AreAllReady(_connectionsByPlayerId.Keys))
             {
                 Reject(sender, "All players must be ready before the Runda starts.");
                 return;
@@ -912,7 +932,7 @@ namespace InterrogationRoom.Networking
             _developerPlan = null;
             _activeDeveloperTask = null;
             _hostAllowsSecretObjective = true;
-            _lobbyReadyPlayerIds.Clear();
+            _lobbyRoster.ClearReady();
             _roundDeadline = 0d;
             _roundStartedAtNetworkTime = 0d;
             _preparationDeadline = 0d;
@@ -1369,7 +1389,11 @@ namespace InterrogationRoom.Networking
             if (!force && !_lobbyStateDirty && playerCount == _lastBroadcastLobbyPlayerCount)
                 return;
 
-            RoundLobbyPlayerMessage[] players = BuildLobbyPlayerMessages();
+            RoundLobbyPlayerMessage[] players = _lobbyRoster.BuildMessages(
+                _connectionsByPlayerId,
+                _developerLobbyFakePlayerCount,
+                NetworkServer.activeHost,
+                NetworkServer.localConnection);
             var message = new RoundLobbyStateMessage
             {
                 PlayerCount = playerCount,
@@ -1392,46 +1416,6 @@ namespace InterrogationRoom.Networking
             _lastBroadcastLobbyPlayerCount = playerCount;
             _lobbyStateDirty = false;
             LobbyStateChanged?.Invoke();
-        }
-
-        private RoundLobbyPlayerMessage[] BuildLobbyPlayerMessages()
-        {
-            var players = new List<RoundLobbyPlayerMessage>(RoundEngine.MaxPlayers);
-            foreach (KeyValuePair<int, NetworkConnectionToClient> entry in
-                     _connectionsByPlayerId.OrderBy(entry => entry.Key))
-            {
-                NetworkConnectionToClient connection = entry.Value;
-                string fallback = $"Gracz {entry.Key + 1}";
-                string displayName = _lobbyDisplayNamesByPlayerId.TryGetValue(entry.Key, out string knownName)
-                    ? knownName
-                    : fallback;
-                players.Add(new RoundLobbyPlayerMessage
-                {
-                    PlayerId = entry.Key,
-                    NetworkIdentityNetId = connection?.identity != null ? connection.identity.netId : 0u,
-                    DisplayName = LobbyPlayerPresentation.NormalizeDisplayName(displayName, fallback),
-                    IsHost = NetworkServer.activeHost && ReferenceEquals(connection, NetworkServer.localConnection),
-                    IsSimulated = false,
-                    IsReady = _lobbyReadyPlayerIds.Contains(entry.Key)
-                });
-            }
-
-            IReadOnlyList<LobbyPlayerInfo> simulatedPlayers =
-                LobbyPlayerPresentation.CreateSimulatedPlayers(_developerLobbyFakePlayerCount);
-            foreach (LobbyPlayerInfo simulated in simulatedPlayers)
-            {
-                players.Add(new RoundLobbyPlayerMessage
-                {
-                    PlayerId = simulated.PlayerId,
-                    NetworkIdentityNetId = 0u,
-                    DisplayName = simulated.DisplayName,
-                    IsHost = false,
-                    IsSimulated = true,
-                    IsReady = true
-                });
-            }
-
-            return players.Take(RoundEngine.MaxPlayers).ToArray();
         }
 
         private static LobbyPlayerInfo[] ToLobbyPlayerInfo(RoundLobbyPlayerMessage[] players)
@@ -1516,8 +1500,7 @@ namespace InterrogationRoom.Networking
 
             _serverHandlerRegistered = false;
             _connectionsByPlayerId.Clear();
-            _lobbyDisplayNamesByPlayerId.Clear();
-            _lobbyReadyPlayerIds.Clear();
+            _lobbyRoster.Clear();
             _rejectedLateJoiners.Clear();
             _engine = new RoundEngine();
             _phase = RoundPhase.Lobby;

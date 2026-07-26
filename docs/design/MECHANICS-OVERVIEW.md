@@ -19,7 +19,7 @@ Aktualna mapa mechanik „Przesłuchania”: wdrożony fundament, prace potrzebn
 | 11 | Limit Rundy | ✅ Reguła domenowa istnieje | Spiąć zegar runtime i UI | [limit-rundy.md](./mechanics/limit-rundy.md) |
 | 12 | Egzekucja | 🔶 Reguła i fundament broni istnieją | Spiąć rolę, trafienie i koniec Rundy | [egzekucja.md](./mechanics/egzekucja.md) |
 | 13 | UI Rundy (`RoundPresenter`) | 🔶 Kod i assety istnieją | Dokończyć wiring sceny i przepływ Rundy | [ui-rundy.md](./mechanics/ui-rundy.md) |
-| 14 | Głos Przestrzenny | 🔶 Istnieje wcześniejszy spike Vivox; docelowy kierunek wymaga spike'a | Dissonance + akustyka drzwi | [glos-przestrzenny.md](./mechanics/glos-przestrzenny.md) |
+| 14 | Głos Przestrzenny | 🔶 Vivox działa (kanał pozycyjny, okluzja, sterowanie mikrofonem) | Dostroić akustykę drzwi i pomieszczeń | [glos-przestrzenny.md](./mechanics/glos-przestrzenny.md) |
 | 15 | Drzwi i pomieszczenia | ❌ Brak docelowej implementacji | Zbudować podstawę przestrzennej prywatności | [drzwi-i-pomieszczenia.md](./mechanics/drzwi-i-pomieszczenia.md) |
 | 16 | Prywatne Przesłuchanie | ◇ Mechanika emergentna | Wynika z przestrzeni, drzwi i Głosu | opis niżej |
 | 17 | Prywatne Cele, Incydenty i Ucieczka | ✅ Koncepcja zatwierdzona, kodu brak | Implementować po spięciu bazowego slice | [prywatne-cele-incydenty-i-ucieczka.md](./mechanics/prywatne-cele-incydenty-i-ucieczka.md) |

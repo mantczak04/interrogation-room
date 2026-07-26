@@ -5,7 +5,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "InterrogationRoom.Domain",
-        "InterrogationRoom.Game"
+        "InterrogationRoom.Game",
+        "InterrogationRoom.UI.Runtime"
     ],
     "includePlatforms": [
         "Editor"

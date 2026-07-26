@@ -135,6 +135,8 @@ namespace InterrogationRoom.UI
         private PlayerRoundView _view;
         private double _roundEndsAtNetworkTime;
         private double _preparationEndsAtNetworkTime;
+        private int _lastPreparationTimerSeconds = int.MinValue;
+        private int _lastRoundTimerSeconds = int.MinValue;
         private VisualElement _lobbyPanel;
         private VisualElement _root;
         private VisualElement _preparationPanel;
@@ -291,10 +293,13 @@ namespace InterrogationRoom.UI
 
             if (_view.Phase == RoundPhase.Preparation)
             {
-                _preparationTimerLabel.text = FormatTimer(CalculatePreparationRemainingSeconds(
-                    _preparationEndsAtNetworkTime,
-                    NetworkTime.time,
-                    _view.Phase));
+                SetTimerText(
+                    _preparationTimerLabel,
+                    CalculatePreparationRemainingSeconds(
+                        _preparationEndsAtNetworkTime,
+                        NetworkTime.time,
+                        _view.Phase),
+                    ref _lastPreparationTimerSeconds);
                 return;
             }
 
@@ -310,6 +315,7 @@ namespace InterrogationRoom.UI
                 {
                     _timerLabel.text = "∞";
                     _timerLabel.EnableInClassList("timer--critical", false);
+                    _lastRoundTimerSeconds = int.MinValue;
                     return;
                 }
 
@@ -317,7 +323,7 @@ namespace InterrogationRoom.UI
                     _roundEndsAtNetworkTime,
                     NetworkTime.time,
                     _view.Phase);
-                _timerLabel.text = FormatTimer(remaining);
+                SetTimerText(_timerLabel, remaining, ref _lastRoundTimerSeconds);
                 _timerLabel.EnableInClassList("timer--critical", IsCriticalRoundTime(remaining));
             }
         }
@@ -499,6 +505,8 @@ namespace InterrogationRoom.UI
             _preparationTimerLabel.text = FormatTimer(state.PreparationRemainingSeconds);
             SetVisible(_preparationTimerLabel, state.PreparationTimerVisible);
             _timerLabel.text = state.UnlimitedTime ? "∞" : FormatTimer(state.RemainingSeconds);
+            _lastPreparationTimerSeconds = int.MinValue;
+            _lastRoundTimerSeconds = int.MinValue;
             _timerLabel.EnableInClassList(
                 "timer--critical",
                 !state.UnlimitedTime && IsCriticalRoundTime(state.RemainingSeconds));
@@ -1107,6 +1115,16 @@ namespace InterrogationRoom.UI
                 case RoundRole.Guilty: return UiText.Get("Winny", language);
                 default: return UiText.Get("Niewinny", language);
             }
+        }
+
+        private static void SetTimerText(Label label, float seconds, ref int lastWholeSeconds)
+        {
+            int wholeSeconds = Mathf.CeilToInt(Mathf.Max(0f, seconds));
+            if (wholeSeconds == lastWholeSeconds)
+                return;
+
+            lastWholeSeconds = wholeSeconds;
+            label.text = FormatTimer(seconds);
         }
 
         private static string FormatTimer(float seconds)

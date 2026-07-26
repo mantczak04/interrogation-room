@@ -2,7 +2,7 @@
 
 **Status:** 🔶 Implementacja B6 w toku (zatwierdzony provider: Vivox)
 **Priorytet:** Must-have — bez głosu gra praktycznie nie istnieje (cała rozgrywka to rozmowa)
-**Docelowy kod:** `Assets/Scripts/Game/Voice/` (`VoiceRuntime`, `VoiceOcclusion.cs`)
+**Kod:** `Assets/Scripts/Voice/VivoxVoiceRuntime.cs`, `Assets/Scripts/Voice/VivoxVoiceOcclusion.cs` oraz czysta logika w `Assets/Scripts/Game/Voice/` (`VoiceAudibilityModel`, `VoiceSpeakingState`, `MicrophoneMonitorBuffer`, `MicrophoneTestPlayback`)
 **Research:** [proximity-voice-tools.md](../../research/proximity-voice-tools.md). Pierwotna rekomendacja Dissonance została zastąpiona decyzją właściciela projektu z 2026-07-14: Vivox jest już obecny w repo i pozostaje bezpłatny do 5000 PCU.
 
 ## Cel
@@ -14,7 +14,7 @@ Jedyny kanał rozmowy podczas Rundy: słyszalność zależy wyłącznie od odleg
 ### Stack (zatwierdzona decyzja B6)
 
 - **Vivox Unity SDK 16.11.0** przez Unity Gaming Services, niezależnie od transportu gameplayowego Mirror.
-- Wyłącznie **positional channel** z VAD; bez kanału globalnego i bez kanałów prywatnych.
+- **Globalny kanał** z VAD w Lobby; **positional channel** od `Przygotowania` przez właściwą Rundę aż do `Finished`. Powrót do Lobby ponownie przełącza rozmowę na kanał globalny. Nie ma kanałów prywatnych.
 - Pozycja lokalnego gracza jest raportowana do Vivox 2–4 razy na sekundę, a zdalny głos trafia do per-participant Audio Tap przypiętego do zreplikowanego obiektu `Player`.
 
 ### Własna warstwa akustyczna (per słuchacz-mówca)
@@ -29,7 +29,7 @@ Vivox daje kanał 3D i tłumienie dystansem; ściany/drzwi obsługuje własny ma
 
 ### Zasady
 
-- Voice jest niezależny od `RoundEngine` — działa też w Lobby i po zakończeniu Rundy (rozmowa przy wynikach), chyba że użytkownik zdecyduje inaczej.
+- Voice jest niezależny od reguł `RoundEngine`, ale adapter sieciowy wystawia publiczną fazę do wyboru trybu kanału: globalny w Lobby, przestrzenny od `Przygotowania` do `Finished`, ponownie globalny po powrocie do Lobby.
 - Martwi gracze: w MVP nieistotne (Egzekucja kończy Rundę natychmiast).
 - Mikrofon: VAD domyślnie; push-to-talk jako opcja ustawień (nice-to-have).
 

@@ -102,8 +102,8 @@ namespace InterrogationRoom.Gameplay.Minigames
             succeeded = succeededCallback;
             failed = failedCallback;
             cancelled = cancelledCallback;
-            cursorWasReleased = PlayerController.CursorReleased;
-            PlayerController.SetCursorReleased(true);
+            cursorWasReleased = PlayerInputGate.CursorReleased;
+            PlayerInputGate.SetPlayerCursorReleased(true);
             EnsureEventSystem();
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             BuildFrame(UiText.Get(Title), UiText.Get(spec.IntroText));
@@ -385,7 +385,7 @@ namespace InterrogationRoom.Gameplay.Minigames
         private void RestoreCursor()
         {
             if (!cursorWasReleased)
-                PlayerController.SetCursorReleased(false);
+                PlayerInputGate.SetPlayerCursorReleased(false);
             cursorWasReleased = true;
         }
 

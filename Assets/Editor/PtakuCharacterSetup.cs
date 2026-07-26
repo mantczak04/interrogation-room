@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using InterrogationRoom.Gameplay;
 using InterrogationRoom.Gameplay.Characters;
 using UnityEditor;
 using UnityEditor.Animations;

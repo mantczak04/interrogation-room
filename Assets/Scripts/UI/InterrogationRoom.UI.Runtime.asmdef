@@ -1,0 +1,23 @@
+{
+    "name": "InterrogationRoom.UI.Runtime",
+    "rootNamespace": "InterrogationRoom.UI",
+    "references": [
+        "InterrogationRoom.Domain",
+        "InterrogationRoom.Game",
+        "InterrogationRoom.Gameplay",
+        "InterrogationRoom.Steam",
+        "InterrogationRoom.Voice.Runtime",
+        "Mirror",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

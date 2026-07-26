@@ -7,6 +7,8 @@ using UnityEngine.UIElements;
 using UnityEngine.InputSystem;
 #endif
 
+namespace InterrogationRoom.UI
+{
 /// <summary>
 /// Drives the UI Toolkit main menu. Replaces the uGUI canvas menu so that the
 /// first screen a player sees is built from the same stylesheet as the rest of
@@ -155,4 +157,5 @@ public class MainMenuPresenter : MonoBehaviour
         Application.Quit();
 #endif
     }
+}
 }

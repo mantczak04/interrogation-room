@@ -2,7 +2,7 @@
 
 **Status:** ✅ Zaimplementowana (z lukami do domknięcia)
 **Priorytet:** Must-have (MVP)
-**Kod:** `Assets/Scripts/PlayerController.cs`, prefab `Assets/Prefabs/Player.prefab` (Mirror `NetworkTransform`)
+**Kod:** `Assets/Scripts/Gameplay/PlayerController.cs` wraz z wyspecjalizowanymi komponentami w tym katalogu, prefab `Assets/Prefabs/Player.prefab` (Mirror `NetworkTransform`)
 
 ## Cel
 
@@ -24,7 +24,7 @@ Obecnie klient jest autorytetem swojej pozycji. Dla tej gry (towarzyska, znajomi
 
 - Wejście dla `PlayerInteractor` (kamera to źródło raycastu interakcji).
 - Wejście dla `PlayerWeaponController` (kierunek strzału z kamery).
-- Fundament Głosu Przestrzennego — pozycja synchronizowana przez Mirror będzie źródłem pozycji mówcy dla Dissonance.
+- Fundament Głosu Przestrzennego — pozycja synchronizowana przez Mirror jest źródłem pozycji mówcy dla Vivox.
 
 ## Luki do domknięcia
 
