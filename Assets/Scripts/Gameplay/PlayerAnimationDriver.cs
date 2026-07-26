@@ -20,6 +20,7 @@ namespace InterrogationRoom.Gameplay
         private static readonly int PunchVariantParameter = Animator.StringToHash("PunchVariant");
         private static readonly int IsDeadParameter = Animator.StringToHash("IsDead");
         private static readonly int DanceParameter = Animator.StringToHash("Dance");
+        private static readonly int DanceIndexParameter = Animator.StringToHash("DanceIndex");
 
         private Animator animator;
         private Vector3 smoothedLookTarget;
@@ -77,6 +78,12 @@ namespace InterrogationRoom.Gameplay
         {
             if (HasParameter(DanceParameter, AnimatorControllerParameterType.Bool))
                 animator.SetBool(DanceParameter, dancing);
+        }
+
+        public void SetDanceIndex(int selectedDance)
+        {
+            if (HasParameter(DanceIndexParameter, AnimatorControllerParameterType.Float))
+                animator.SetFloat(DanceIndexParameter, selectedDance);
         }
 
         public void PlayPunch(int variant)

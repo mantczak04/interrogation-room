@@ -1,4 +1,5 @@
 using InterrogationRoom.Gameplay;
+using InterrogationRoom.Gameplay.Characters;
 using InterrogationRoom.Networking;
 using Mirror;
 using TMPro;
@@ -25,6 +26,9 @@ public sealed class PlayerWorldNameplate : MonoBehaviour
     private Renderer[] playerRenderers;
     private bool hasDisplayName;
     private float nextCoordinatorLookup;
+    private CharacterId anchoredCharacter;
+    private bool hasFixedAnchor;
+    private float fixedAnchorHeight = DefaultHeadHeight + HeadClearance;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void RegisterClientStartHook()
@@ -49,6 +53,7 @@ public sealed class PlayerWorldNameplate : MonoBehaviour
     {
         owner = player;
         playerRenderers = owner.GetComponentsInChildren<Renderer>(true);
+        hasFixedAnchor = false;
         EnsureVisuals();
         ResolveCoordinator(force: true);
         RefreshDisplayName();
@@ -63,6 +68,7 @@ public sealed class PlayerWorldNameplate : MonoBehaviour
         ResolveCoordinator(force: false);
         RefreshViewingCamera();
         RefreshVisibility();
+        RefreshFixedAnchorHeight();
         if (canvas == null || !canvas.enabled || viewingCamera == null)
             return;
 
@@ -188,7 +194,20 @@ public sealed class PlayerWorldNameplate : MonoBehaviour
 
     private Vector3 ResolveWorldAnchor()
     {
-        float top = owner.transform.position.y + DefaultHeadHeight;
+        Vector3 position = owner.transform.position;
+        position.y += fixedAnchorHeight;
+        return position;
+    }
+
+    private void RefreshFixedAnchorHeight()
+    {
+        CharacterId currentCharacter = owner.CharacterId;
+        if (hasFixedAnchor && currentCharacter == anchoredCharacter)
+            return;
+
+        float ownerY = owner.transform.position.y;
+        float top = ownerY + DefaultHeadHeight;
+        bool foundActiveRenderer = false;
         for (int index = 0; index < playerRenderers.Length; index++)
         {
             Renderer playerRenderer = playerRenderers[index];
@@ -202,13 +221,19 @@ public sealed class PlayerWorldNameplate : MonoBehaviour
             }
 
             float rendererTop = playerRenderer.bounds.max.y;
-            if (rendererTop <= owner.transform.position.y + MaximumModelHeight)
+            if (rendererTop <= ownerY + MaximumModelHeight)
+            {
                 top = Mathf.Max(top, rendererTop);
+                foundActiveRenderer = true;
+            }
         }
 
-        Vector3 position = owner.transform.position;
-        position.y = top + HeadClearance;
-        return position;
+        if (!foundActiveRenderer)
+            return;
+
+        anchoredCharacter = currentCharacter;
+        fixedAnchorHeight = top - ownerY + HeadClearance;
+        hasFixedAnchor = true;
     }
 }
 }
