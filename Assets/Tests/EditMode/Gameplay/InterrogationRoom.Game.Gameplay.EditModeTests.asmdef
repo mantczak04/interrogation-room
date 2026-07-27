@@ -5,7 +5,9 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "InterrogationRoom.Game",
-        "InterrogationRoom.Gameplay"
+        "InterrogationRoom.Gameplay",
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework"
     ],
     "includePlatforms": [
         "Editor"

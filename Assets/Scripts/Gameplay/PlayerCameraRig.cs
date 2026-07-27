@@ -86,10 +86,12 @@ namespace InterrogationRoom.Gameplay
             float mouseX = mouseDelta.x * mouseSensitivity;
             float mouseY = mouseDelta.y * mouseSensitivity;
 
-            if (IsThirdPerson)
-                yaw += mouseX;
-            else if (isSeated)
-                yaw = Mathf.Clamp(yaw + mouseX, -70f, 70f);
+            if (isSeated)
+            {
+                yaw = IsThirdPerson
+                    ? yaw + mouseX
+                    : Mathf.Clamp(yaw + mouseX, -70f, 70f);
+            }
             else
             {
                 yaw = 0f;
