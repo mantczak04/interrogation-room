@@ -15,9 +15,9 @@ RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
   m_Fog: 1
-  m_FogColor: {r: 0.195, g: 0.17, b: 0.14, a: 1}
+  m_FogColor: {r: 0.115, g: 0.101, b: 0.083, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.065
+  m_FogDensity: 0.026
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.15, g: 0.134, b: 0.112, a: 1}
@@ -680,9 +680,9 @@ Light:
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Bias: 0.04
+    m_NormalBias: 0.25
+    m_NearPlane: 0.15
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -709,7 +709,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.1
@@ -966,6 +966,7 @@ GameObject:
   - component: {fileID: 34324116}
   - component: {fileID: 34324118}
   - component: {fileID: 34324117}
+  - component: {fileID: 34324119}
   m_Layer: 0
   m_Name: Lamperia_PoludnieS
   m_TagString: Untagged
@@ -1045,6 +1046,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 34324115}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &34324119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 34324115}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &38211896
 GameObject:
   m_ObjectHideFlags: 0
@@ -1868,6 +1882,7 @@ GameObject:
   - component: {fileID: 90848705}
   - component: {fileID: 90848707}
   - component: {fileID: 90848706}
+  - component: {fileID: 90848708}
   m_Layer: 0
   m_Name: Lamperia_ScianaW
   m_TagString: Untagged
@@ -1947,6 +1962,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 90848704}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &90848708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 90848704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &97280742
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4016,6 +4044,7 @@ GameObject:
   - component: {fileID: 155610762}
   - component: {fileID: 155610764}
   - component: {fileID: 155610763}
+  - component: {fileID: 155610765}
   m_Layer: 0
   m_Name: InnerHead
   m_TagString: Untagged
@@ -4095,6 +4124,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 155610761}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &155610765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 155610761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &155758924
 GameObject:
   m_ObjectHideFlags: 0
@@ -5597,6 +5639,7 @@ GameObject:
   - component: {fileID: 293484762}
   - component: {fileID: 293484764}
   - component: {fileID: 293484763}
+  - component: {fileID: 293484765}
   m_Layer: 0
   m_Name: Lamperia_PrzesluchaniaE
   m_TagString: Untagged
@@ -5676,6 +5719,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 293484761}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &293484765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 293484761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &295370608
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5950,6 +6006,7 @@ GameObject:
   - component: {fileID: 304605932}
   - component: {fileID: 304605934}
   - component: {fileID: 304605933}
+  - component: {fileID: 304605935}
   m_Layer: 0
   m_Name: Lamperia_KorytarzN_Seg2
   m_TagString: Untagged
@@ -6029,6 +6086,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 304605931}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &304605935
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 304605931}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &305872196
 GameObject:
   m_ObjectHideFlags: 0
@@ -6082,10 +6152,10 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.9
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Strength: 1
+    m_Bias: 0.04
+    m_NormalBias: 0.25
+    m_NearPlane: 0.15
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -6112,7 +6182,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.1
@@ -6462,10 +6532,10 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.9
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Strength: 1
+    m_Bias: 0.04
+    m_NormalBias: 0.25
+    m_NearPlane: 0.15
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -6492,7 +6562,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.1
@@ -6750,8 +6820,8 @@ Transform:
   m_GameObject: {fileID: 328940136}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -4, y: 1.053, z: -2.6}
-  m_LocalScale: {x: 0.05, y: 2.1, z: 1.5}
+  m_LocalPosition: {x: -4, y: 1.0685, z: -2.6}
+  m_LocalScale: {x: 0.05, y: 2.033, z: 1.488}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 121257290}
@@ -7353,6 +7423,7 @@ GameObject:
   - component: {fileID: 365845889}
   - component: {fileID: 365845891}
   - component: {fileID: 365845890}
+  - component: {fileID: 365845892}
   m_Layer: 0
   m_Name: Lamperia_PrzesluchaniaN_SideB
   m_TagString: Untagged
@@ -7432,6 +7503,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 365845888}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &365845892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 365845888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &366328450
 GameObject:
   m_ObjectHideFlags: 0
@@ -7730,6 +7814,10 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: a3d5f25099adb67bfa96344c03329d30, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: a3d5f25099adb67bfa96344c03329d30, type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: a3d5f25099adb67bfa96344c03329d30, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -8280,8 +8368,8 @@ Transform:
   m_GameObject: {fileID: 408220569}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -4, y: 2.534, z: -5.1}
-  m_LocalScale: {x: 0.22, y: 0.012, z: 0.22}
+  m_LocalPosition: {x: -4, y: 2.5299995, z: -5.1000004}
+  m_LocalScale: {x: 0.35, y: 0.006, z: 0.35}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 268501000}
@@ -8294,7 +8382,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 408220569}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -8342,7 +8430,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 408220569}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1001 &409948523
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9853,6 +9941,7 @@ GameObject:
   - component: {fileID: 475713934}
   - component: {fileID: 475713936}
   - component: {fileID: 475713935}
+  - component: {fileID: 475713937}
   m_Layer: 0
   m_Name: Pilaster_Swiatlo_KorytarzW
   m_TagString: Untagged
@@ -9932,6 +10021,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 475713933}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &475713937
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 475713933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!134 &476928806
 PhysicsMaterial:
   m_ObjectHideFlags: 0
@@ -10019,6 +10121,7 @@ GameObject:
   - component: {fileID: 490567567}
   - component: {fileID: 490567566}
   - component: {fileID: 490567565}
+  - component: {fileID: 490567568}
   m_Layer: 0
   m_Name: KorytarzN_Seg2
   m_TagString: Untagged
@@ -10119,6 +10222,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 490567563}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &490567568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 490567563}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &490824490
 GameObject:
   m_ObjectHideFlags: 0
@@ -10652,6 +10768,7 @@ GameObject:
   - component: {fileID: 504189302}
   - component: {fileID: 504189301}
   - component: {fileID: 504189300}
+  - component: {fileID: 504189303}
   m_Layer: 0
   m_Name: PrzesluchaniaE
   m_TagString: Untagged
@@ -10752,6 +10869,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 504189298}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &504189303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 504189298}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &505717271
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11733,10 +11863,10 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.85
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Strength: 1
+    m_Bias: 0.04
+    m_NormalBias: 0.25
+    m_NearPlane: 0.15
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -11763,7 +11893,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1.8, y: 0.35}
   m_BounceIntensity: 1
@@ -12120,6 +12250,7 @@ GameObject:
   - component: {fileID: 567462037}
   - component: {fileID: 567462039}
   - component: {fileID: 567462038}
+  - component: {fileID: 567462040}
   m_Layer: 0
   m_Name: Lamperia_SocjalnyArchiwumDzial
   m_TagString: Untagged
@@ -12199,6 +12330,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 567462036}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &567462040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 567462036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &568366455
 GameObject:
   m_ObjectHideFlags: 0
@@ -12401,6 +12545,7 @@ GameObject:
   - component: {fileID: 569453588}
   - component: {fileID: 569453587}
   - component: {fileID: 569453586}
+  - component: {fileID: 569453589}
   m_Layer: 0
   m_Name: KorytarzS_NadprozeArchiwum
   m_TagString: Untagged
@@ -12501,6 +12646,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 569453584}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &569453589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 569453584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &573813716
 GameObject:
   m_ObjectHideFlags: 0
@@ -12768,6 +12926,7 @@ GameObject:
   - component: {fileID: 583759237}
   - component: {fileID: 583759239}
   - component: {fileID: 583759238}
+  - component: {fileID: 583759240}
   m_Layer: 0
   m_Name: Lamperia_SalaE_SideB
   m_TagString: Untagged
@@ -12847,6 +13006,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 583759236}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &583759240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 583759236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &583904873
 GameObject:
   m_ObjectHideFlags: 0
@@ -13722,6 +13894,7 @@ GameObject:
   - component: {fileID: 619699358}
   - component: {fileID: 619699360}
   - component: {fileID: 619699359}
+  - component: {fileID: 619699361}
   m_Layer: 0
   m_Name: Lamperia_PoludnieS_SideB
   m_TagString: Untagged
@@ -13801,6 +13974,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 619699357}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &619699361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 619699357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &625134389
 GameObject:
   m_ObjectHideFlags: 0
@@ -14066,6 +14252,7 @@ GameObject:
   - component: {fileID: 638817412}
   - component: {fileID: 638817411}
   - component: {fileID: 638817410}
+  - component: {fileID: 638817413}
   m_Layer: 0
   m_Name: SalaN
   m_TagString: Untagged
@@ -14166,6 +14353,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 638817408}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &638817413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 638817408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &642359097
 GameObject:
   m_ObjectHideFlags: 0
@@ -14471,6 +14671,7 @@ GameObject:
   - component: {fileID: 662417004}
   - component: {fileID: 662417006}
   - component: {fileID: 662417005}
+  - component: {fileID: 662417007}
   m_Layer: 0
   m_Name: Kaseton_0_0
   m_TagString: Untagged
@@ -14550,6 +14751,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 662417003}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &662417007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662417003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &663280404
 GameObject:
   m_ObjectHideFlags: 0
@@ -14979,6 +15193,7 @@ GameObject:
   - component: {fileID: 680916561}
   - component: {fileID: 680916563}
   - component: {fileID: 680916562}
+  - component: {fileID: 680916564}
   m_Layer: 0
   m_Name: Lamperia_KorytarzS_Seg3_SideB
   m_TagString: Untagged
@@ -15058,6 +15273,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 680916560}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &680916564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 680916560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &686656279
 GameObject:
   m_ObjectHideFlags: 0
@@ -15102,7 +15330,7 @@ Light:
   serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 0.84, b: 0.66, a: 1}
-  m_Intensity: 15
+  m_Intensity: 12
   m_Range: 9
   m_SpotAngle: 150
   m_InnerSpotAngle: 26
@@ -15111,10 +15339,10 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.9
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Strength: 1
+    m_Bias: 0.04
+    m_NormalBias: 0.25
+    m_NearPlane: 0.15
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -15141,7 +15369,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.1
@@ -15313,6 +15541,10 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 9dbd4ea7968e485488546cec33e9cb44, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 9dbd4ea7968e485488546cec33e9cb44, type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 9dbd4ea7968e485488546cec33e9cb44, type: 3}
       propertyPath: m_Name
@@ -15684,8 +15916,8 @@ Transform:
   m_GameObject: {fileID: 720313221}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.2, y: 2.534, z: -5.1}
-  m_LocalScale: {x: 0.22, y: 0.012, z: 0.22}
+  m_LocalPosition: {x: 0.19999993, y: 2.5299995, z: -5.1000004}
+  m_LocalScale: {x: 0.35, y: 0.006, z: 0.35}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 268501000}
@@ -15698,7 +15930,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 720313221}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -15715,7 +15947,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f174a324fc010fb4893e76f5d390c8ff, type: 2}
+  - {fileID: 2100000, guid: 09f88cfd7a82aa848a3605d2543a3f78, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -15746,7 +15978,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 720313221}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &720323615
 GameObject:
   m_ObjectHideFlags: 0
@@ -16182,6 +16414,7 @@ GameObject:
   - component: {fileID: 741966465}
   - component: {fileID: 741966464}
   - component: {fileID: 741966463}
+  - component: {fileID: 741966466}
   m_Layer: 0
   m_Name: KorytarzS_NadprozeSocjalny
   m_TagString: Untagged
@@ -16282,6 +16515,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 741966461}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &741966466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 741966461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &742766764
 GameObject:
   m_ObjectHideFlags: 0
@@ -16827,6 +17073,7 @@ GameObject:
   - component: {fileID: 752258768}
   - component: {fileID: 752258770}
   - component: {fileID: 752258769}
+  - component: {fileID: 752258771}
   m_Layer: 0
   m_Name: Kaseton_5_2
   m_TagString: Untagged
@@ -16906,6 +17153,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 752258767}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &752258771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 752258767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &755224203
 GameObject:
   m_ObjectHideFlags: 0
@@ -16917,6 +17177,7 @@ GameObject:
   - component: {fileID: 755224204}
   - component: {fileID: 755224206}
   - component: {fileID: 755224205}
+  - component: {fileID: 755224207}
   m_Layer: 0
   m_Name: Lamperia_KorytarzN_Seg2_SideB
   m_TagString: Untagged
@@ -16996,6 +17257,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 755224203}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &755224207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 755224203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &757031873
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -17989,8 +18263,8 @@ Transform:
   m_GameObject: {fileID: 813735451}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 8.5, y: 1.053, z: 0.1}
-  m_LocalScale: {x: 0.05, y: 2.1, z: 1.5}
+  m_LocalPosition: {x: 8.5, y: 1.0685, z: 0.1}
+  m_LocalScale: {x: 0.05, y: 2.033, z: 1.488}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 121257290}
@@ -18303,6 +18577,7 @@ GameObject:
   - component: {fileID: 837773607}
   - component: {fileID: 837773609}
   - component: {fileID: 837773608}
+  - component: {fileID: 837773610}
   m_Layer: 0
   m_Name: Lamperia_ArchiwumE
   m_TagString: Untagged
@@ -18382,6 +18657,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 837773606}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &837773610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 837773606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &840010646
 GameObject:
   m_ObjectHideFlags: 0
@@ -19386,6 +19674,7 @@ GameObject:
   - component: {fileID: 878700992}
   - component: {fileID: 878700991}
   - component: {fileID: 878700990}
+  - component: {fileID: 878700993}
   m_Layer: 0
   m_Name: KorytarzS_Seg3
   m_TagString: Untagged
@@ -19486,6 +19775,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 878700988}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &878700993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 878700988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &878860956
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19545,6 +19847,10 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 0ecad46a18cf8ae429d6e73a45b127be, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 0ecad46a18cf8ae429d6e73a45b127be, type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0ecad46a18cf8ae429d6e73a45b127be, type: 3}
       propertyPath: m_Name
@@ -20580,6 +20886,7 @@ GameObject:
   - component: {fileID: 925817170}
   - component: {fileID: 925817169}
   - component: {fileID: 925817168}
+  - component: {fileID: 925817171}
   m_Layer: 0
   m_Name: KorytarzN_NadprozePrzesluchania
   m_TagString: Untagged
@@ -20680,6 +20987,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 925817166}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &925817171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 925817166}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &926992599
 GameObject:
   m_ObjectHideFlags: 0
@@ -20871,6 +21191,7 @@ GameObject:
   - component: {fileID: 941598518}
   - component: {fileID: 941598520}
   - component: {fileID: 941598519}
+  - component: {fileID: 941598521}
   m_Layer: 0
   m_Name: Lamperia_KorytarzN_Seg1_SideB
   m_TagString: Untagged
@@ -20950,6 +21271,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 941598517}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &941598521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941598517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &945869244
 GameObject:
   m_ObjectHideFlags: 0
@@ -21550,6 +21884,7 @@ GameObject:
   - component: {fileID: 998906375}
   - component: {fileID: 998906377}
   - component: {fileID: 998906376}
+  - component: {fileID: 998906378}
   m_Layer: 0
   m_Name: Lamperia_PrzesluchaniaN
   m_TagString: Untagged
@@ -21629,6 +21964,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 998906374}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &998906378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 998906374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1004057681
 GameObject:
   m_ObjectHideFlags: 0
@@ -21641,6 +21989,7 @@ GameObject:
   - component: {fileID: 1004057685}
   - component: {fileID: 1004057684}
   - component: {fileID: 1004057683}
+  - component: {fileID: 1004057686}
   m_Layer: 0
   m_Name: SalaE
   m_TagString: Untagged
@@ -21741,6 +22090,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1004057681}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1004057686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1004057681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1005939875
 GameObject:
   m_ObjectHideFlags: 0
@@ -22101,6 +22463,7 @@ GameObject:
   - component: {fileID: 1011774921}
   - component: {fileID: 1011774923}
   - component: {fileID: 1011774922}
+  - component: {fileID: 1011774924}
   m_Layer: 0
   m_Name: Lamperia_KorytarzS_Seg3
   m_TagString: Untagged
@@ -22180,6 +22543,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1011774920}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1011774924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1011774920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &1012407079
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22463,6 +22839,7 @@ GameObject:
   - component: {fileID: 1021659511}
   - component: {fileID: 1021659513}
   - component: {fileID: 1021659512}
+  - component: {fileID: 1021659514}
   m_Layer: 0
   m_Name: InnerHead
   m_TagString: Untagged
@@ -22542,6 +22919,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1021659510}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1021659514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1021659510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1021870844
 GameObject:
   m_ObjectHideFlags: 0
@@ -23301,6 +23691,7 @@ GameObject:
   - component: {fileID: 1043260431}
   - component: {fileID: 1043260433}
   - component: {fileID: 1043260432}
+  - component: {fileID: 1043260434}
   m_Layer: 0
   m_Name: InnerHead
   m_TagString: Untagged
@@ -23380,6 +23771,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1043260430}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1043260434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1043260430}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1045150468
 GameObject:
   m_ObjectHideFlags: 0
@@ -23391,6 +23795,7 @@ GameObject:
   - component: {fileID: 1045150469}
   - component: {fileID: 1045150471}
   - component: {fileID: 1045150470}
+  - component: {fileID: 1045150472}
   m_Layer: 0
   m_Name: InnerHead
   m_TagString: Untagged
@@ -23470,6 +23875,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1045150468}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1045150472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1045150468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &1047634285
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23770,6 +24188,7 @@ GameObject:
   - component: {fileID: 1063850682}
   - component: {fileID: 1063850684}
   - component: {fileID: 1063850683}
+  - component: {fileID: 1063850685}
   m_Layer: 0
   m_Name: InnerHead
   m_TagString: Untagged
@@ -23849,6 +24268,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1063850681}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1063850685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1063850681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1064850859
 GameObject:
   m_ObjectHideFlags: 0
@@ -25055,8 +25487,8 @@ Transform:
   m_GameObject: {fileID: 1120409178}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 8.85, y: 2.534, z: 2.95}
-  m_LocalScale: {x: 0.121, y: 0.0066000004, z: 0.121}
+  m_LocalPosition: {x: 8.85, y: 2.5299995, z: 2.9499998}
+  m_LocalScale: {x: 0.35, y: 0.006, z: 0.35}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 268501000}
@@ -25069,7 +25501,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1120409178}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -25117,7 +25549,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1120409178}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &1121133454
 GameObject:
   m_ObjectHideFlags: 0
@@ -25310,6 +25742,7 @@ GameObject:
   - component: {fileID: 1125752188}
   - component: {fileID: 1125752190}
   - component: {fileID: 1125752189}
+  - component: {fileID: 1125752191}
   m_Layer: 0
   m_Name: Lamperia_KorytarzN_Seg3_SideB
   m_TagString: Untagged
@@ -25389,6 +25822,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1125752187}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1125752191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1125752187}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &1128048061
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25765,6 +26211,7 @@ GameObject:
   - component: {fileID: 1151122625}
   - component: {fileID: 1151122627}
   - component: {fileID: 1151122626}
+  - component: {fileID: 1151122628}
   m_Layer: 0
   m_Name: Kaseton_7_0
   m_TagString: Untagged
@@ -25844,6 +26291,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1151122624}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1151122628
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1151122624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1151282167
 GameObject:
   m_ObjectHideFlags: 0
@@ -26379,10 +26839,10 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.85
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Strength: 1
+    m_Bias: 0.04
+    m_NormalBias: 0.25
+    m_NearPlane: 0.15
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -26409,7 +26869,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1.8, y: 0.35}
   m_BounceIntensity: 1
@@ -26763,6 +27223,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 0ecad46a18cf8ae429d6e73a45b127be, type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0ecad46a18cf8ae429d6e73a45b127be, type: 3}
       propertyPath: m_Name
       value: Visual_Bench_ThreeSeat
@@ -26985,6 +27449,7 @@ GameObject:
   - component: {fileID: 1191582979}
   - component: {fileID: 1191582981}
   - component: {fileID: 1191582980}
+  - component: {fileID: 1191582982}
   m_Layer: 0
   m_Name: Kaseton_13_1
   m_TagString: Untagged
@@ -27064,6 +27529,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1191582978}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1191582982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1191582978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1194229690
 GameObject:
   m_ObjectHideFlags: 0
@@ -27254,6 +27732,7 @@ GameObject:
   - component: {fileID: 1206970779}
   - component: {fileID: 1206970781}
   - component: {fileID: 1206970780}
+  - component: {fileID: 1206970782}
   m_Layer: 0
   m_Name: Kaseton_11_3
   m_TagString: Untagged
@@ -27333,6 +27812,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1206970778}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1206970782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1206970778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1213030380
 GameObject:
   m_ObjectHideFlags: 0
@@ -27360,8 +27852,8 @@ Transform:
   m_GameObject: {fileID: 1213030380}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.5, y: 2.534, z: 3.4}
-  m_LocalScale: {x: 0.22, y: 0.012, z: 0.22}
+  m_LocalPosition: {x: 2.5, y: 2.5299995, z: 3.4}
+  m_LocalScale: {x: 0.35, y: 0.006, z: 0.35}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 268501000}
@@ -27374,7 +27866,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1213030380}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -27422,7 +27914,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1213030380}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &1226452503
 GameObject:
   m_ObjectHideFlags: 0
@@ -28048,8 +28540,8 @@ Transform:
   m_GameObject: {fileID: 1243998969}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 2.534, z: 4.7}
-  m_LocalScale: {x: 0.22, y: 0.012, z: 0.22}
+  m_LocalPosition: {x: 0.000000022351742, y: 2.5299995, z: 4.7}
+  m_LocalScale: {x: 0.35, y: 0.006, z: 0.35}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 268501000}
@@ -28062,7 +28554,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1243998969}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -28110,7 +28602,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1243998969}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &1245249274
 GameObject:
   m_ObjectHideFlags: 0
@@ -28383,9 +28875,9 @@ Light:
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Bias: 0.04
+    m_NormalBias: 0.25
+    m_NearPlane: 0.15
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -28412,7 +28904,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.1
@@ -28735,6 +29227,7 @@ GameObject:
   - component: {fileID: 1295519680}
   - component: {fileID: 1295519679}
   - component: {fileID: 1295519678}
+  - component: {fileID: 1295519681}
   m_Layer: 0
   m_Name: ArchiwumE
   m_TagString: Untagged
@@ -28835,6 +29328,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1295519676}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1295519681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1295519676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1301437091
 GameObject:
   m_ObjectHideFlags: 0
@@ -29027,6 +29533,7 @@ GameObject:
   - component: {fileID: 1303319364}
   - component: {fileID: 1303319363}
   - component: {fileID: 1303319362}
+  - component: {fileID: 1303319365}
   m_Layer: 0
   m_Name: PrzesluchaniaN
   m_TagString: Untagged
@@ -29127,6 +29634,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1303319360}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1303319365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1303319360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1307417302
 GameObject:
   m_ObjectHideFlags: 0
@@ -29447,7 +29967,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6254950023960090154, guid: eb919b4480cf04c488ac27dc6ad1a8e3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.56
+      value: -5.475
       objectReference: {fileID: 0}
     - target: {fileID: 6254950023960090154, guid: eb919b4480cf04c488ac27dc6ad1a8e3, type: 3}
       propertyPath: m_LocalPosition.y
@@ -29455,11 +29975,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6254950023960090154, guid: eb919b4480cf04c488ac27dc6ad1a8e3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.9700003
+      value: -2.068
       objectReference: {fileID: 0}
     - target: {fileID: 6254950023960090154, guid: eb919b4480cf04c488ac27dc6ad1a8e3, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 6254950023960090154, guid: eb919b4480cf04c488ac27dc6ad1a8e3, type: 3}
       propertyPath: m_LocalRotation.x
@@ -29467,7 +29987,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6254950023960090154, guid: eb919b4480cf04c488ac27dc6ad1a8e3, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 6254950023960090154, guid: eb919b4480cf04c488ac27dc6ad1a8e3, type: 3}
       propertyPath: m_LocalRotation.z
@@ -30835,6 +31355,7 @@ GameObject:
   - component: {fileID: 1382143989}
   - component: {fileID: 1382143988}
   - component: {fileID: 1382143987}
+  - component: {fileID: 1382143990}
   m_Layer: 0
   m_Name: ScianaW
   m_TagString: Untagged
@@ -30935,6 +31456,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1382143985}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1382143990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382143985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &1385424951
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31393,6 +31927,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 0ecad46a18cf8ae429d6e73a45b127be, type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0ecad46a18cf8ae429d6e73a45b127be, type: 3}
       propertyPath: m_Name
       value: Visual_Bench_ThreeSeat
@@ -31512,6 +32050,7 @@ GameObject:
   - component: {fileID: 1417504719}
   - component: {fileID: 1417504721}
   - component: {fileID: 1417504720}
+  - component: {fileID: 1417504722}
   m_Layer: 0
   m_Name: Lamperia_KorytarzN_Seg3
   m_TagString: Untagged
@@ -31591,6 +32130,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1417504718}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1417504722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1417504718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1426015911
 GameObject:
   m_ObjectHideFlags: 0
@@ -31984,6 +32536,7 @@ GameObject:
   - component: {fileID: 1436943946}
   - component: {fileID: 1436943948}
   - component: {fileID: 1436943947}
+  - component: {fileID: 1436943949}
   m_Layer: 0
   m_Name: Kaseton_4_3
   m_TagString: Untagged
@@ -32063,6 +32616,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1436943945}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1436943949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1436943945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1437465532
 GameObject:
   m_ObjectHideFlags: 0
@@ -32317,6 +32883,7 @@ GameObject:
   - component: {fileID: 1466209209}
   - component: {fileID: 1466209208}
   - component: {fileID: 1466209207}
+  - component: {fileID: 1466209210}
   m_Layer: 0
   m_Name: KorytarzS_Seg1
   m_TagString: Untagged
@@ -32417,6 +32984,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1466209205}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1466209210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1466209205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1468866258
 GameObject:
   m_ObjectHideFlags: 0
@@ -32518,6 +33098,7 @@ GameObject:
   - component: {fileID: 1470018741}
   - component: {fileID: 1470018743}
   - component: {fileID: 1470018742}
+  - component: {fileID: 1470018744}
   m_Layer: 0
   m_Name: Pilaster_Swiatlo_KorytarzM
   m_TagString: Untagged
@@ -32597,6 +33178,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1470018740}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1470018744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1470018740}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1473035297
 GameObject:
   m_ObjectHideFlags: 0
@@ -32608,6 +33202,7 @@ GameObject:
   - component: {fileID: 1473035298}
   - component: {fileID: 1473035300}
   - component: {fileID: 1473035299}
+  - component: {fileID: 1473035301}
   m_Layer: 0
   m_Name: Lamperia_ArchiwumE_SideB
   m_TagString: Untagged
@@ -32687,6 +33282,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1473035297}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1473035301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1473035297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1478361582
 GameObject:
   m_ObjectHideFlags: 0
@@ -32881,7 +33489,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3501210574299442434, guid: 43e5d483f1816984b988422760ca285d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.55
+      value: -5.4750004
       objectReference: {fileID: 0}
     - target: {fileID: 3501210574299442434, guid: 43e5d483f1816984b988422760ca285d, type: 3}
       propertyPath: m_LocalPosition.y
@@ -32889,11 +33497,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3501210574299442434, guid: 43e5d483f1816984b988422760ca285d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -6.97
+      value: -7.068
       objectReference: {fileID: 0}
     - target: {fileID: 3501210574299442434, guid: 43e5d483f1816984b988422760ca285d, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 3501210574299442434, guid: 43e5d483f1816984b988422760ca285d, type: 3}
       propertyPath: m_LocalRotation.x
@@ -32901,7 +33509,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3501210574299442434, guid: 43e5d483f1816984b988422760ca285d, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 3501210574299442434, guid: 43e5d483f1816984b988422760ca285d, type: 3}
       propertyPath: m_LocalRotation.z
@@ -34157,6 +34765,7 @@ GameObject:
   - component: {fileID: 1543926733}
   - component: {fileID: 1543926735}
   - component: {fileID: 1543926734}
+  - component: {fileID: 1543926736}
   m_Layer: 0
   m_Name: Lamperia_KorytarzS_Seg2_SideB
   m_TagString: Untagged
@@ -34236,6 +34845,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1543926732}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1543926736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1543926732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1544100140
 GameObject:
   m_ObjectHideFlags: 0
@@ -34608,6 +35230,7 @@ GameObject:
   - component: {fileID: 1553480143}
   - component: {fileID: 1553480142}
   - component: {fileID: 1553480141}
+  - component: {fileID: 1553480144}
   m_Layer: 0
   m_Name: KorytarzN_Seg1
   m_TagString: Untagged
@@ -34708,6 +35331,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1553480139}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1553480144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1553480139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1561998362
 GameObject:
   m_ObjectHideFlags: 0
@@ -35542,6 +36178,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 9dbd4ea7968e485488546cec33e9cb44, type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 9dbd4ea7968e485488546cec33e9cb44, type: 3}
       propertyPath: m_Name
       value: Visual_Carpet_Brown
@@ -35781,10 +36421,10 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.85
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Strength: 1
+    m_Bias: 0.04
+    m_NormalBias: 0.25
+    m_NearPlane: 0.15
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -35811,7 +36451,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1.8, y: 0.35}
   m_BounceIntensity: 1
@@ -36105,10 +36745,10 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.9
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Strength: 1
+    m_Bias: 0.04
+    m_NormalBias: 0.25
+    m_NearPlane: 0.15
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -36135,7 +36775,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.1
@@ -36832,8 +37472,8 @@ Transform:
   m_GameObject: {fileID: 1686012704}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.5, y: 2.534, z: 6.8}
-  m_LocalScale: {x: 0.22, y: 0.012, z: 0.22}
+  m_LocalPosition: {x: 2.5, y: 2.5299995, z: 6.8}
+  m_LocalScale: {x: 0.35, y: 0.006, z: 0.35}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 268501000}
@@ -36846,7 +37486,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1686012704}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -36894,7 +37534,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1686012704}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1001 &1687228993
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -37327,6 +37967,7 @@ GameObject:
   - component: {fileID: 1700025122}
   - component: {fileID: 1700025124}
   - component: {fileID: 1700025123}
+  - component: {fileID: 1700025125}
   m_Layer: 0
   m_Name: Kaseton_6_1
   m_TagString: Untagged
@@ -37406,6 +38047,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1700025121}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1700025125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1700025121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1700066041
 GameObject:
   m_ObjectHideFlags: 0
@@ -37759,8 +38413,8 @@ Transform:
   m_GameObject: {fileID: 1718422806}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -1, y: 1.053, z: 0.1}
-  m_LocalScale: {x: 0.05, y: 2.1, z: 1.5}
+  m_LocalPosition: {x: -1, y: 1.0685, z: 0.1}
+  m_LocalScale: {x: 0.05, y: 2.033, z: 1.488}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 121257290}
@@ -38303,6 +38957,7 @@ GameObject:
   - component: {fileID: 1726659376}
   - component: {fileID: 1726659378}
   - component: {fileID: 1726659377}
+  - component: {fileID: 1726659379}
   m_Layer: 0
   m_Name: Lamperia_KorytarzS_Seg1_SideB
   m_TagString: Untagged
@@ -38382,6 +39037,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1726659375}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1726659379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1726659375}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1730617031
 GameObject:
   m_ObjectHideFlags: 0
@@ -38486,6 +39154,7 @@ GameObject:
   - component: {fileID: 1735041552}
   - component: {fileID: 1735041554}
   - component: {fileID: 1735041553}
+  - component: {fileID: 1735041555}
   m_Layer: 0
   m_Name: Lamperia_SocjalnyArchiwumDzial_SideB
   m_TagString: Untagged
@@ -38565,6 +39234,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1735041551}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1735041555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1735041551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1737523271
 GameObject:
   m_ObjectHideFlags: 0
@@ -38852,6 +39534,7 @@ GameObject:
   - component: {fileID: 1744073248}
   - component: {fileID: 1744073250}
   - component: {fileID: 1744073249}
+  - component: {fileID: 1744073251}
   m_Layer: 0
   m_Name: Pilaster_Swiatlo_KorytarzE
   m_TagString: Untagged
@@ -38931,6 +39614,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1744073247}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1744073251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1744073247}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1744252050
 GameObject:
   m_ObjectHideFlags: 0
@@ -39302,6 +39998,7 @@ GameObject:
   - component: {fileID: 1748924867}
   - component: {fileID: 1748924869}
   - component: {fileID: 1748924868}
+  - component: {fileID: 1748924870}
   m_Layer: 0
   m_Name: Lamperia_KorytarzN_Seg1
   m_TagString: Untagged
@@ -39381,6 +40078,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1748924866}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1748924870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1748924866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1761180442
 GameObject:
   m_ObjectHideFlags: 0
@@ -39698,6 +40408,7 @@ GameObject:
   - component: {fileID: 1774304777}
   - component: {fileID: 1774304779}
   - component: {fileID: 1774304778}
+  - component: {fileID: 1774304780}
   m_Layer: 0
   m_Name: InnerHead
   m_TagString: Untagged
@@ -39777,6 +40488,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1774304776}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1774304780
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1774304776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1775209325
 GameObject:
   m_ObjectHideFlags: 0
@@ -40696,6 +41420,7 @@ GameObject:
   - component: {fileID: 1814989127}
   - component: {fileID: 1814989129}
   - component: {fileID: 1814989128}
+  - component: {fileID: 1814989130}
   m_Layer: 0
   m_Name: InnerHead
   m_TagString: Untagged
@@ -40775,6 +41500,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1814989126}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1814989130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1814989126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1817424103
 GameObject:
   m_ObjectHideFlags: 0
@@ -41108,6 +41846,7 @@ GameObject:
   - component: {fileID: 1835365678}
   - component: {fileID: 1835365680}
   - component: {fileID: 1835365679}
+  - component: {fileID: 1835365681}
   m_Layer: 0
   m_Name: Lamperia_KorytarzS_Seg2
   m_TagString: Untagged
@@ -41187,6 +41926,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1835365677}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1835365681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1835365677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &1838124198
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41327,8 +42079,8 @@ Transform:
   m_GameObject: {fileID: 1844684334}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.5, y: 2.534, z: 2.6}
-  m_LocalScale: {x: 0.22, y: 0.012, z: 0.22}
+  m_LocalPosition: {x: -2.5, y: 2.5299995, z: 2.6}
+  m_LocalScale: {x: 0.35, y: 0.006, z: 0.35}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 268501000}
@@ -41341,7 +42093,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1844684334}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -41389,7 +42141,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1844684334}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!134 &1854859292
 PhysicsMaterial:
   m_ObjectHideFlags: 0
@@ -41415,6 +42167,7 @@ GameObject:
   - component: {fileID: 1857534167}
   - component: {fileID: 1857534166}
   - component: {fileID: 1857534165}
+  - component: {fileID: 1857534168}
   m_Layer: 0
   m_Name: KorytarzN_Seg3
   m_TagString: Untagged
@@ -41515,6 +42268,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1857534163}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1857534168
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1857534163}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1864596218
 GameObject:
   m_ObjectHideFlags: 0
@@ -44183,6 +44949,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 88512f56700276d8badce41aec229e11, type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 88512f56700276d8badce41aec229e11, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 0f4bf3cb77df25cc4a4748929c920542, type: 2}
@@ -44458,6 +45228,7 @@ GameObject:
   - component: {fileID: 1979613270}
   - component: {fileID: 1979613272}
   - component: {fileID: 1979613271}
+  - component: {fileID: 1979613273}
   m_Layer: 0
   m_Name: Lamperia_SalaN
   m_TagString: Untagged
@@ -44537,6 +45308,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1979613269}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1979613273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1979613269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &1982948165
 GameObject:
   m_ObjectHideFlags: 0
@@ -44651,6 +45435,7 @@ GameObject:
   - component: {fileID: 1999138187}
   - component: {fileID: 1999138189}
   - component: {fileID: 1999138188}
+  - component: {fileID: 1999138190}
   m_Layer: 0
   m_Name: InnerHead
   m_TagString: Untagged
@@ -44730,6 +45515,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1999138186}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1999138190
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1999138186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &2001924516
 GameObject:
   m_ObjectHideFlags: 0
@@ -44851,8 +45649,8 @@ Transform:
   m_GameObject: {fileID: 2002963096}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 1, y: 1.053, z: -2.6}
-  m_LocalScale: {x: 0.05, y: 2.1, z: 1.5}
+  m_LocalPosition: {x: 1, y: 1.0685, z: -2.6}
+  m_LocalScale: {x: 0.05, y: 2.033, z: 1.488}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 121257290}
@@ -45326,6 +46124,7 @@ GameObject:
   - component: {fileID: 2012714966}
   - component: {fileID: 2012714965}
   - component: {fileID: 2012714964}
+  - component: {fileID: 2012714967}
   m_Layer: 0
   m_Name: PoludnieS
   m_TagString: Untagged
@@ -45426,6 +46225,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2012714962}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2012714967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2012714962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &2014242043
 GameObject:
   m_ObjectHideFlags: 0
@@ -45940,6 +46752,7 @@ GameObject:
   - component: {fileID: 2035839612}
   - component: {fileID: 2035839614}
   - component: {fileID: 2035839613}
+  - component: {fileID: 2035839615}
   m_Layer: 0
   m_Name: Lamperia_KorytarzS_Seg1
   m_TagString: Untagged
@@ -46019,6 +46832,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2035839611}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2035839615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2035839611}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &2036204040
 GameObject:
   m_ObjectHideFlags: 0
@@ -46096,6 +46922,7 @@ GameObject:
   - component: {fileID: 2046570570}
   - component: {fileID: 2046570569}
   - component: {fileID: 2046570568}
+  - component: {fileID: 2046570571}
   m_Layer: 0
   m_Name: SocjalnyArchiwumDzial
   m_TagString: Untagged
@@ -46196,6 +47023,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2046570566}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2046570571
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2046570566}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &2050150583
 GameObject:
   m_ObjectHideFlags: 0
@@ -46362,6 +47202,7 @@ GameObject:
   - component: {fileID: 2071562868}
   - component: {fileID: 2071562870}
   - component: {fileID: 2071562869}
+  - component: {fileID: 2071562871}
   m_Layer: 0
   m_Name: Lamperia_SalaE
   m_TagString: Untagged
@@ -46441,6 +47282,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2071562867}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2071562871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2071562867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &2074807282
 GameObject:
   m_ObjectHideFlags: 0
@@ -46452,6 +47306,7 @@ GameObject:
   - component: {fileID: 2074807283}
   - component: {fileID: 2074807285}
   - component: {fileID: 2074807284}
+  - component: {fileID: 2074807286}
   m_Layer: 0
   m_Name: Lamperia_ScianaW_SideB
   m_TagString: Untagged
@@ -46531,6 +47386,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2074807282}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2074807286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2074807282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &2079380343
 GameObject:
   m_ObjectHideFlags: 0
@@ -46542,6 +47410,7 @@ GameObject:
   - component: {fileID: 2079380344}
   - component: {fileID: 2079380346}
   - component: {fileID: 2079380345}
+  - component: {fileID: 2079380347}
   m_Layer: 0
   m_Name: Lamperia_SalaN_SideB
   m_TagString: Untagged
@@ -46621,6 +47490,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2079380343}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2079380347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2079380343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &2088223774
 GameObject:
   m_ObjectHideFlags: 0
@@ -46633,6 +47515,7 @@ GameObject:
   - component: {fileID: 2088223778}
   - component: {fileID: 2088223777}
   - component: {fileID: 2088223776}
+  - component: {fileID: 2088223779}
   m_Layer: 0
   m_Name: KorytarzN_NadprozeSala
   m_TagString: Untagged
@@ -46733,6 +47616,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2088223774}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2088223779
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2088223774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &2088372786
 GameObject:
   m_ObjectHideFlags: 0
@@ -46937,6 +47833,7 @@ GameObject:
   - component: {fileID: 2099084375}
   - component: {fileID: 2099084377}
   - component: {fileID: 2099084376}
+  - component: {fileID: 2099084378}
   m_Layer: 0
   m_Name: Kaseton_12_2
   m_TagString: Untagged
@@ -47016,6 +47913,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2099084374}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2099084378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2099084374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1001 &2100265559
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -47588,6 +48498,7 @@ GameObject:
   - component: {fileID: 2131818570}
   - component: {fileID: 2131818572}
   - component: {fileID: 2131818571}
+  - component: {fileID: 2131818573}
   m_Layer: 0
   m_Name: Lamperia_PrzesluchaniaE_SideB
   m_TagString: Untagged
@@ -47667,6 +48578,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2131818569}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2131818573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2131818569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &2132170888
 GameObject:
   m_ObjectHideFlags: 0
@@ -48131,6 +49055,7 @@ GameObject:
   - component: {fileID: 2136846822}
   - component: {fileID: 2136846821}
   - component: {fileID: 2136846820}
+  - component: {fileID: 2136846823}
   m_Layer: 0
   m_Name: KorytarzS_Seg2
   m_TagString: Untagged
@@ -48231,6 +49156,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2136846818}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2136846823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2136846818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0f76567fa50d84bbf567bffc405f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InterrogationRoom.Graphics.WallTextureDensity
+  metresPerTile: 1.2
 --- !u!1 &2137654420
 GameObject:
   m_ObjectHideFlags: 0

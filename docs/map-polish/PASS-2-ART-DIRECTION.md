@@ -218,6 +218,196 @@ tworzą okrąg `r = 2,4` wokół `(-0,20, 5,20)`, metr od lampy, każdy zwrócon
 Promień i środek wybrane wyszukiwaniem po siatce z `Physics.OverlapCapsule` (r = 0,42),
 więc żaden punkt nie koliduje z meblami.
 
+### Czwarta korekta: klosze, artefakty lightmapy, szafki i migotanie drzwi (2026-07-27)
+
+**Biały kwadrat w każdej lampie.** `Panel_Oprawa_*` to były emisyjne *sześciany* 22 × 1,2 × 22 cm
+zawieszone pod wylotem klosza. Klosz `Lamp_Pendant` jest pełną kopułą o promieniu 0,195
+z najniższą krawędzią na `y = 2,520`, więc kwadrat wystawał spod niej rogami i czytał się
+jak kartka papieru wetknięta w lampę. Zamienione na **dysk** (wbudowany `Cylinder`,
+`scale = (0,35, 0,006, 0,35)`, `r = 0,175` — 2 cm zapasu do krawędzi klosza) osadzony
+na `y = rimMinY + 0,010`, z `shadowCastingMode = Off`. Emisja materiałów paneli ścięta
+do ok. 0,5 — przy `postExposure = 1,45` (czyli ×2,73) wartości 0,9–1,25 wchodziły w twarde
+przepalenie i dawały płaską biel bez żadnej tonacji.
+
+**Pułapka współdzielonego materiału.** `Mat_Lamp_Cool` używały *zarówno* `Panel_Oprawa_Archiwum`,
+jak i trzy świetlówki korytarza (`Oprawa_Korytarz*/Mesh`). Nie wolno go było ściemnić pod panel,
+więc panel Archiwum przepięty na `Mat_Lamp_Warm`, a sam `Mat_Lamp_Cool` tylko ocieplony
+(2,15/2,35/2,55 → 1,30/1,15/0,92), bo lodowaty błękit kłócił się z ciepłymi reflektorami.
+
+**„Dziwne wypukłości" na kanapie i fotelu to nie była geometria.** Render izolowany
+(pusta scena, `rotation = identity`, cztery kierunki) pokazał idealnie gładkie poduszki —
+czyli winne musiało być oświetlenie. Przyczyna: **14 modeli FBX miało
+`generateSecondaryUV = False`, a mimo to renderery były `ContributeGI`**. Bez UV2 lightmapper
+wypieka na UV0, a UV0 siatek z Tripo to ciasny atlas bez marginesów między wyspami —
+sąsiednie wyspy przeciekają na siebie i dają dokładnie te kanciaste, wielokątne
+jasne/ciemne kliny. Naprawa: `generateSecondaryUV = true`, `secondaryUVPackMargin = 16`
+(domyślne 4 przy 20 tekselach/jednostkę zostawia wyspy w odległości ~1 teksela)
+oraz `scaleInLightmap = 2` na miękkich, dużych meblach (kanapa, fotel, ławki, dywany).
+
+> Reguła: model **AI-generowany bez UV2 nie może być `ContributeGI`**. Sprawdzaj
+> `mesh.uv2.Length > 0` dla każdego renderera z flagą `ContributeGI` — cichy fallback
+> na UV0 nie zgłasza żadnego ostrzeżenia.
+
+**Szafki kartotekowe.** Front `Cabinet_Filing` to lokalne **−X** siatki (ustalone renderem
+izolowanym), więc kierunek w świecie liczy się jako `visual.rotation * Vector3.left` —
+nigdy z `rotY` korzenia, bo `Visual_*` ma własną rotację konwersji `(270, 270, 0)`.
+Wszystkie trzy egzemplarze celowały na północ. `B4 Records Cabinet` w Archiwum jest tak
+poprawnie (front w pokój), ale:
+
+- `B4 Personal Locker` (socjalny) frontem **wchodził w zabudowę kuchenną** — jego `z max = -6,500`
+  nachodziło na `Socjalny_Szafka2` (`z min = -6,530`),
+- `B5 Maintenance Cabinet` (korytarz) stał tyłem do zachodniej ściany i frontem na północ,
+  co geometrycznie było poprawne, ale gracz idzie korytarzem od wschodu i widzi wyłącznie
+  ślepy bok.
+
+Obie obrócone o **+90° yaw** (front `+Z` → `+X`) przez `RotateAround` wokół środka bounds
+*wizualnej* siatki, potem dosunięte analitycznie. **Licem ściany bywa listwa przyścienna
+(`ChairRail`), nie cokół** — `ChairRail_ScianaW` wystaje do `x = -5,953`, czyli 7 mm dalej
+niż `Listwa_ScianaW` (`-5,960`). Szafki mają 1,42 m wysokości, więc kolidowałyby właśnie
+z listwą. Ustawione na 8 mm luzu od najbardziej wystającego elementu.
+
+**Migotanie przy drzwiach.** Skrzydła miały `scale = (0,05, 2,100, 1,500)`, a otwory
+w ścianach dokładnie tę samą szerokość — boczne ścianki skrzydła były **idealnie
+współpłaszczyznowe** z czołami segmentów ściany (0,0 mm, 0,11 m² na stronę), plus góra
+tkwiła 3 mm w nadprożu. To klasyczny z-fighting: przy ruchu kamery obie powierzchnie
+walczą o piksele i całe obramowanie drzwi „wibruje". Skrzydła przeskalowane do
+`(0,05, 2,033, 1,488)` i przesunięte na `y = 1,069`, co daje **6 mm luzu na bok,
+15 mm pod nadprożem i 2 mm nad progiem** (skrzydło przestało też przecinać próg podczas
+otwierania). `NetworkDoor.hingeLocalOffset` jest zerowy na wszystkich czworgu, więc zawias
+wylicza się z kolidera i sam podąża za nową szerokością — nic nie trzeba było przestawiać.
+
+> Detektor, który to znalazł, warto zachować: dla każdej pary rendererów licz przecięcie
+> bounds i zgłaszaj te, w których **najcieńsza oś ma < 4 mm, a pole pozostałych dwóch > 0,05 m²**.
+> To odsiewa zwykłe stykanie się brył i zostawia realne ryzyko z-fightingu.
+
+### Piąta korekta: mgła zjadała kontrast, dwie lampy w Sali (2026-07-27)
+
+Po naprawie UV lightmapy scena zrobiła się **płaska i za jasna** — użytkownik zgłosił „nie ma
+cieni". Pomiar tego samego kadru przed i po pokazał, że **średnia jasność się nie zmieniła
+(0,085 → 0,095), ale odsetek pikseli bliskich czerni spadł z 38 % do 1 %**. Taka sygnatura —
+średnia bez zmian, czernie podniesione — to zawsze **addytywne podbicie**, a nie więcej światła.
+
+Test kontrolowany (każdy element wyłączany osobno, mediana z 5 klatek) wskazał winnego:
+
+| wariant | czerń |
+|---|---|
+| mgła 0,065 (stan po korekcie) | 0,8 % |
+| mgła wyłączona | 19,3 % |
+| mgła 0,030 | 6,2 % |
+| bloom wyłączony | 0,8 % (bez zmian) |
+| panele lamp wyłączone | 0,8 % (bez zmian) |
+
+Złożyły się dwie rzeczy naraz:
+
+1. **Mgła `ExponentialSquared` o gęstości 0,065 i jasnym kolorze** `(0,195, 0,170, 0,140)`
+   mieszała każdy odległy piksel w stronę średniej szarości — żaden piksel nie mógł już być
+   czarny. Przy poprzednim wypieku to nie rzucało się w oczy, bo…
+2. …**meble z popsutymi lightmapami były niemal czarne** i to one wnosiły większość ciemnych
+   pikseli w pobliżu kamery, gdzie mgła jest słaba. Naprawa UV usunęła tę *przypadkową* czerń.
+
+> Reguła: przypadkowa czerń z artefaktów potrafi udawać art direction. Po każdej naprawie
+> oświetlenia porównuj **odsetek czerni**, nie samą średnią jasność — inaczej naprawa
+> techniczna wygląda jak regresja artystyczna.
+
+Kontrast odbudowany świadomie: mgła `0,065 → 0,026` i kolor `→ (0,115, 0,101, 0,083)`,
+`postExposure 1,45 → 1,60`, `contrast 5 → 20`. Wynik: v0 `0,053 / 33 % czerni`,
+v1 `0,071 / 25 %`, przesłuchania `0,054 / 66 %`, zero przepalonych pikseli.
+
+**Sala Wspólna wróciła do dwóch lamp.** Wyłączone `Swiatlo_Sala4`, `Oprawa_Sala4`
+i `Panel_Oprawa_Sala4` (róg południowo-zachodni, nad kanapą i TV). Zostały `Swiatlo_Sala`
+(centralna, `I = 88`) i `Swiatlo_Sala3` (północny wschód, nad stolikiem, `I = 32`).
+Alternatywny układ do rozważenia, gdyby ten nie siadł: przekątna `Sala4 + Sala3` bez lampy
+centralnej — daje równiejsze rozłożenie, ale traci mocną plamę w środku pokoju.
+**Wyłączenie światła w trybie `Mixed` wymaga ponownego wypieku**, inaczej jego odbicie
+pośrednie zostaje w lightmapie.
+
+Podniesienie ekspozycji rozjaśniło przy okazji zabudowę socjalnego, więc `Mat_KitchenCabinet_Body`
+`0,52 → 0,42`, `Mat_KitchenFridge` `0,60 → 0,50` i `Swiatlo_Socjalny` `15 → 12`.
+
+### Szósta korekta: przyczyna źródłowa braku cieni — `Mixed` w URP nie świeci (2026-07-27)
+
+Po trzech rundach strojenia użytkownik dalej zgłaszał brak cieni. Powód okazał się
+fundamentalny i **unieważnia diagnozę z trzeciej korekty** (twierdzenie, że przerobienie
+lamp na `Mixed` dało im cienie rzucane w czasie rzeczywistym — nie dało).
+
+Pomiar rozstrzygający, ten sam kadr:
+
+| test | jasność |
+|---|---|
+| stan wyjściowy | 0,1816 |
+| `Swiatlo_Sala3` podkręcone do **`I = 900`** | 0,1816 |
+| wyłączone **wszystkie 21** świateł dodatkowych | 0,1816 |
+| **nowy** reflektor `Realtime`, `I = 60` | **0,2403** |
+
+> **W URP światła dodatkowe (Spot/Point) w trybie `Mixed` nie renderują się w czasie
+> rzeczywistym w ogóle — są wypiekane w całości.** Realtime dostaje tylko główne światło
+> kierunkowe. Wynikają z tego trzy rzeczy, każda kosztowała tu osobną rundę:
+>
+> 1. Lampy `Mixed` **nie rzucają cieni w czasie rzeczywistym**. To, co wygląda na cień,
+>    to shadowmask, którego ostrość ogranicza rozdzielczość lightmapy (20 teksli/jednostkę
+>    dało ~30 teksli na metr podłogi — rozmyte plamy czytane jako „brak cieni").
+> 2. Obiekty dynamiczne, w tym **gracz, nie rzucają żadnego cienia**.
+> 3. **Strojenie natężenia i kąta jest bezskuteczne** — każdy sweep „zbiega" do wartości
+>    startowej, bo nic się nie renderuje. Nie wolno stroić `Mixed` światła dodatkowego
+>    i ufać wynikowi.
+
+**Test, którym to się wykrywa w jednym pomiarze:** wyrenderuj klatkę, ustaw `shadows = None`
+na wszystkich światłach, wyrenderuj ponownie i policz piksele różniące się o więcej niż 0,02.
+Przy oświetleniu wyłącznie wypieczonym wychodziło **11,7 % powierzchni, max 0,38** (i to był
+sam shadowmask). Po konwersji: **33,5 % powierzchni, max 2,31**.
+
+**Zastosowane rozwiązanie (hybryda):**
+
+- 9 reflektorów kluczowych `Mixed → Realtime`, `shadowStrength = 1,0`,
+  `shadowBias = 0,04`, `shadowNormalBias = 0,25`.
+- 8 świateł `Wash_*` zostaje `Baked` — dają odbicie pośrednie i muśnięcie ścian,
+  bo światła `Realtime` nie odbijają się bez GI w czasie rzeczywistym.
+- `m_AdditionalLightsPerObjectLimit` `4 → 8`, bo w Sali i korytarzu potrafi się nałożyć
+  więcej niż cztery światła na jeden obiekt.
+- SSAO wzmocnione: promień `0,30 → 0,70`, intensywność `0,80 → 1,10`,
+  `DirectLightingStrength` `0,25 → 0,50` — przedmioty przestały lewitować.
+
+Wynik: reflektory dają **92 % obrazu** (wcześniej 0 %), Sala `0,082 / 52 % czerni`,
+przesłuchania `0,050 / 80 %`, korytarz `0,170 / 21 %`. Gracz rzuca ostry cień.
+Atlas cieni 4096 mieści 8 reflektorów, a naraz widoczne są 2–3, więc koszt jest nieistotny.
+
+### Siódma korekta: gęstość tekstury ścian i powrót trzeciej lampy (2026-07-27)
+
+**Plamy na ścianach to była rozciągnięta tekstura, nie SSAO.** Ściany grayboxa to skalowane
+sześciany, więc każda ściana ma to samo UV `0..1` niezależnie od swojej realnej wielkości.
+Pojedyncza wartość `tiling = (4, 4)` na współdzielonym materiale dawała więc zupełnie inną
+gęstość na każdym segmencie:
+
+| element | rozmiar | kafel | gęstość |
+|---|---|---|---|
+| `ScianaW` | 16,90 × 3,20 m | 4,23 × 0,80 m | 242 px/m |
+| `KorytarzS_Seg3` | 9,15 × 3,20 m | 2,29 × 0,80 m | 448 px/m |
+| `Lamperia_KorytarzS_Seg3` | 9,11 × 1,18 m | 2,28 × 0,30 m | 450 px/m |
+| `Lamperia_KorytarzS_Seg1` | 1,41 × 1,18 m | 0,35 × 0,30 m | 2905 px/m |
+
+Rozrzut **12-krotny**, a do tego kafel był anizotropowy — rozciągnięty 2,9× na ścianie
+korytarza i **7,6× na lamperii**. Przy świetle padającym pod ostrym kątem czyta się to jako
+rozmazane, wielkoskalowe plamy.
+
+Dwie naprawy, obie potrzebne:
+
+1. **Jednolita, izotropowa gęstość** — 1 kafel = 1,2 m, liczone z rozmiaru renderera.
+2. **Mapa normalnych ściszona**: `P2_PlasterCream` `0,26 → 0,05`, `P2_BottleGreen` `0,30 → 0,06`.
+   Sweep czterech wariantów pokazał, że dopiero przy 0,05 znika efekt „skórki pomarańczowej"
+   i tynk czyta się jak malowana ściana. Ten sam sweep z wyłączonym SSAO dał obraz
+   praktycznie identyczny — **SSAO nie miało z tym nic wspólnego** i zostaje włączone.
+
+> Pułapka warta zapamiętania: `Renderer.SetPropertyBlock` **nie zapisuje się do sceny**.
+> Ustawienie tilingu skryptem wygląda poprawnie w Edit Mode i znika po przeładowaniu.
+> Dlatego powstał `Assets/Scripts/Graphics/WallTextureDensity.cs` — `[ExecuteAlways]`,
+> liczy tiling z `renderer.bounds` w `OnEnable`/`OnValidate`. Dzięki temu materiał
+> współdzielony zostaje nietknięty, a zmiana rozmiaru ściany od razu dopasowuje teksturę.
+> Komponent siedzi na 65 rendererach; kosztem jest wypadnięcie ich z SRP Batchera.
+
+**Trzecia lampa wróciła.** `Swiatlo_Sala4`, `Oprawa_Sala4` i `Panel_Oprawa_Sala4` włączone
+z powrotem — po przejściu na `Realtime` róg z kanapą i telewizorem robił się zbyt ciemny,
+bo lampy Realtime nie dają odbicia pośredniego, które wcześniej dopalało ten kąt z wypieku.
+
 **Znany, wcześniejszy bug (nie z tej zmiany):** przy drzwiach Sali Wspólnej w korytarzu
 renderuje się biały prostokąt zamiast tabliczki/tekstu. `Znak_*` i `Mat_SignPlate` są
 ciemne i poprawne; podejrzany jest obiekt `Tekst_SalaWspolna`, który ma zerowe bounds.
