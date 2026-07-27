@@ -155,6 +155,69 @@ podglądu — statyczna geometria i tak czyta stary lightmap, więc cztery waria
 wyszły identyczne. Żeby stroić bez bake'u, światło musi być `Mixed` **i** trzeba raz
 zbake'ować; dopiero potem zmiany direct/kąta/mocy widać natychmiast.
 
+### Trzecia korekta: cienie w pozostałych pokojach, ocieplenie i ustawienie propsów (2026-07-27)
+
+Po drugiej korekcie Sala Wspólna czytała się dobrze, ale reszta mapy nie: cienie były
+tylko w Sali, światło było zimne, a większość mebli stała bokiem albo w ścianie.
+
+- **Cienie poza Salą.** `Swiatlo_Socjalny` i `Swiatlo_Archiwum` były lampami Point w
+  trybie `Baked` — Baked nie rzuca cieni w czasie rzeczywistym, a Point tuż pod sufitem
+  robi tę samą aurę co wcześniej w Sali. Oba przerobione na Spot w dół (`y = 2,45`,
+  `150°/26°`, `range 9`) w trybie `Mixed`.
+- **Korytarz.** Trzy świetlówki sufitowe były lampami typu `Rectangle`, a te w URP są
+  **wyłącznie do wypieku** — nie da się z nich dostać cieni realtime. Zamienione na
+  szerokie Spoty (`145°/34°`, `Mixed`). Kinkiety `Oprawa_Korytarz*` zostają `Baked`
+  jako wypełnienie.
+- **Pułapka nazw:** świetlówki sufitowe i kinkiety nazywają się identycznie
+  (`Swiatlo_KorytarzW`, `Swiatlo_KorytarzE`). Skrypt szukający po `Light.name` trafia
+  w oba i cicho nadpisuje jedno drugim — trzeba rozróżniać po ścieżce w hierarchii.
+- **Ocieplenie.** Zimne źródła (`0,68–0,78` w kanale niebieskim) i niebieski
+  `Wash_Archiwum` (`0,38 / 0,55 / 1,00`) zamienione na ciepłe. To była też najbardziej
+  prawdopodobna przyczyna wrażenia „światło przechodzi zza ściany": niebieski grazing
+  wash na ścianie Archiwum nie ma widocznego źródła i czyta się jak przeciek.
+- **Dwie dodatkowe lampy w Sali.** `Oprawa_Sala3` i `Oprawa_Sala4` (z panelami
+  i światłami) włączone jako przyciemnione Spoty `Mixed`, żeby pokój miał trzy
+  oddzielne plamy zamiast jednej i wypełnienia.
+- **Mgiełka.** `RenderSettings.fog` był włączony, ale kolor mgły (`0,098`) był
+  ciemniejszy niż większość sceny, więc fog tylko przygaszał dal zamiast tworzyć
+  zawiesinę. Podniesiony do `0,195 / 0,170 / 0,140` przy gęstości `0,065`.
+- **Materiały wypalające się na biało.** `RoundTable_Material` i szafki kuchenne
+  Kenneya miały jasne albedo tintowane czystą bielą. Stoły przyciemnione do
+  `0,56 / 0,52 / 0,46`; szafki dostały własne instancje
+  `Mat_KitchenCabinet_Body/Door`, bo materiały wbudowane w FBX są tylko do odczytu.
+
+**Orientacja propsów — jak to ustalić, zamiast zgadywać.** Prefaby `Visual_*` mają
+różne `localEulerAngles` (`270/270/0`, `270/269/0`, `270/0/0`), więc z samego `rotY`
+rodzica nic nie wynika. Dwie metody, które działają:
+
+1. **Render w pustej scenie.** `NewScene(EmptyScene, Additive)`, `Instantiate` kopii
+   z `rotation = identity`, własna warstwa + `cullingMask`, zdjęcia z `-Z / +X / +Z / -X`.
+   Od razu widać, która ściana prefabu jest przodem. Tak wyszło, że szafki kartotekowe
+   (`Visual_Cabinet_Filing`) mają front na lokalnym `-Z`, a meble kuchenne Kenneya na `+Z`.
+2. **Pomiar liczbowy dla krzeseł.** Oparcie jest wysoko, więc różnica środka masy
+   wierzchołków powyżej 72% wysokości i tych w pasie 30–55% wskazuje tył krzesła.
+   Kierunek patrzenia to wektor przeciwny. Wynik zgadzał się co do znaku z `SeatPoint`
+   każdego krzesła, więc mapowanie siedzenia nigdy nie było zepsute — obrócone było
+   całe krzesło.
+
+Znalezione i poprawione: wszystkie 5 krzeseł w Sali i oba w Pokoju Przesłuchań były
+odwrócone dokładnie o 180°, krzesło w Archiwum patrzyło w bok zamiast na biurko,
+szafki socjalnego (z ekspresem i radiem) stały bokiem do pokoju, a trzy szafki
+kartotekowe frontem do ściany. Ławki trzyosobowe wchodziły w ścianę o 14–19 cm —
+**licem ściany jest listwa przypodłogowa, która wystaje 4 cm przed tynk**, więc
+odsunięcie liczy się od niej, nie od ściany.
+
+**Drzwi Archiwum a szafka.** `NetworkDoor.ResolveHingeLocalOffset()` sam wylicza zawias
+na krawędzi skrzydła, więc drzwi Archiwum obracają się wokół `x = 1,75` i po otwarciu
+leżą wzdłuż `z` od `-2,60` do `-4,10`. Dokładnie tam stała `B4 Archive Alarm`.
+Przeniesiona pod ścianę południową, w wolną wnękę między szafką akt a biurkiem.
+Pozostałe troje drzwi sprawdzone — ich łuki są czyste.
+
+**Spawny.** Sześć `SpawnPoint_*` stało w przypadkowych miejscach z `yaw = 80`. Teraz
+tworzą okrąg `r = 2,4` wokół `(-0,20, 5,20)`, metr od lampy, każdy zwrócony do środka.
+Promień i środek wybrane wyszukiwaniem po siatce z `Physics.OverlapCapsule` (r = 0,42),
+więc żaden punkt nie koliduje z meblami.
+
 **Znany, wcześniejszy bug (nie z tej zmiany):** przy drzwiach Sali Wspólnej w korytarzu
 renderuje się biały prostokąt zamiast tabliczki/tekstu. `Znak_*` i `Mat_SignPlate` są
 ciemne i poprawne; podejrzany jest obiekt `Tekst_SalaWspolna`, który ma zerowe bounds.

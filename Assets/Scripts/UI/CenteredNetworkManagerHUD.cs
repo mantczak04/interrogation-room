@@ -49,6 +49,9 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     [SerializeField] RoundPresenter roundPresenter;
     [SerializeField] string mainMenuSceneName = "MainMenu";
 
+    [Tooltip("Pressing Play straight on the Round scene starts a solo developer Runda instead of opening this menu. ParrelSync clones opt out so the second Editor can still join the first one.")]
+    [SerializeField] bool autoStartDeveloperTestOnPlay = true;
+
     UIDocument document;
     VisualElement scrim;
     VisualElement sheetBody;
@@ -114,7 +117,10 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         switch (launchMode)
         {
             case GameLaunchMode.None:
-                SetMenuVisible(true, MenuPage.Home);
+                if (ShouldAutoStartDeveloperTest())
+                    BeginDeveloperTestLaunch();
+                else
+                    SetMenuVisible(true, MenuPage.Home);
                 break;
             case GameLaunchMode.Host:
                 if (roundPresenter != null)
@@ -132,6 +138,26 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
                 BeginDeveloperTestLaunch();
                 break;
         }
+    }
+
+    /// <summary>
+    /// Entering Play Mode straight on the Round scene carries no launch request,
+    /// which used to drop us into the mode menu before every single test run. In
+    /// the Editor that run is always a test, so host and start the developer
+    /// Runda immediately instead. ParrelSync clones opt out: the second Editor
+    /// has to stay free to join the first one as a client.
+    /// </summary>
+    bool ShouldAutoStartDeveloperTest()
+    {
+        if (!autoStartDeveloperTestOnPlay || !Application.isEditor)
+            return false;
+
+        if (!NetworkRoundCoordinator.DeveloperToolsAvailable)
+            return false;
+
+        // ParrelSync names the clone project folder "<project>_clone_N"; there is
+        // no runtime API for this, the package is editor-only.
+        return !Application.dataPath.Contains("_clone_");
     }
 
     /// <summary>

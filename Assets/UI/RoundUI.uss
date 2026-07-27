@@ -1038,7 +1038,7 @@
  * the title's longest word push the button outside the card border.
  */
 .private-card--collapsed {
-    width: 300px;
+    width: 324px;
     top: auto;
     bottom: 24px;
 }
@@ -1057,15 +1057,20 @@
 }
 
 .panel-toggle {
-    width: 88px;
+    /* Sized by its own label, not fixed: 88px clipped "Rejestr [I]" and
+       "Objective [I]" mid-bracket, and the label changes with state and
+       language. min-width keeps the three states the same size in practice. */
+    width: auto;
+    min-width: 88px;
     height: 32px;
     margin-left: 12px;
     /* Never squeezed nor pushed out by a long title. */
     flex-shrink: 0;
     /* .btn pads for a full-size action; this one has to fit a card header. */
-    padding: 0 8px;
+    padding: 0 10px;
     font-size: var(--type-micro);
     letter-spacing: 1px;
+    white-space: nowrap;
 }
 
 .private-content {
