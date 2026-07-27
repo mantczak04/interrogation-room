@@ -56,15 +56,15 @@ Material:
     - _ContactFade: 0.35
     - _EdgeBoost: 0.78
     - _EdgePower: 3
-    - _Falloff: 0.68
-    - _FalloffPower: 1.3
-    - _Intensity: 0.16
+    - _Falloff: 0.85
+    - _FalloffPower: 1.05
+    - _Intensity: 0.085
     - _NearFade: 0.6
     - _QueueControl: 0
     - _QueueOffset: 0
     - _SoftEdge: 1
     - _SoftEdgePower: 6.5
-    - _TopFade: 0.06
+    - _TopFade: 0.02
     m_Colors:
     - _Color: {r: 1, g: 0.8, b: 0.55, a: 1}
   m_BuildTextureStacks: []
