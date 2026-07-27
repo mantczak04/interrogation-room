@@ -6,9 +6,13 @@ Shader "InterrogationRoom/LightConeAdditive"
         _Intensity ("Intensity", Range(0, 8)) = 1.4
         _SoftEdge ("Soft Edge", Range(0, 1)) = 0.85
         _SoftEdgePower ("Soft Edge Power", Range(0.5, 8)) = 1.8
-        _TopFade ("Top Fade", Range(0, 1)) = 0.12
-        _BottomFade ("Bottom Fade", Range(0, 1)) = 0.55
-        _BottomFadePower ("Bottom Fade Power", Range(0.5, 6)) = 2.0
+        _TopFade ("Top Fade", Range(0, 1)) = 0.08
+        _BottomFade ("End Fade", Range(0, 1)) = 0.12
+        _BottomFadePower ("End Fade Power", Range(0.5, 6)) = 1.5
+        _Falloff ("Distance Falloff", Range(0, 1)) = 0.6
+        _FalloffPower ("Distance Falloff Power", Range(0.5, 4)) = 1.4
+        _ContactFade ("Surface Contact Fade", Range(0, 2)) = 0.35
+        _NearFade ("Camera Proximity Fade", Range(0, 2)) = 0.6
     }
 
     SubShader
@@ -36,6 +40,7 @@ Shader "InterrogationRoom/LightConeAdditive"
             #pragma fragment frag
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 
             struct Attributes
             {
@@ -51,6 +56,8 @@ Shader "InterrogationRoom/LightConeAdditive"
                 float2 uv         : TEXCOORD0;
                 float3 positionOS : TEXCOORD1;
                 float3 viewDirWS  : TEXCOORD2;
+                float  eyeDepth   : TEXCOORD3;
+                float  coneSlope  : TEXCOORD4;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -62,6 +69,10 @@ Shader "InterrogationRoom/LightConeAdditive"
                 half _TopFade;
                 half _BottomFade;
                 half _BottomFadePower;
+                half _Falloff;
+                half _FalloffPower;
+                half _ContactFade;
+                half _NearFade;
             CBUFFER_END
 
             Varyings vert(Attributes input)
@@ -75,32 +86,35 @@ Shader "InterrogationRoom/LightConeAdditive"
                 output.positionCS = positions.positionCS;
                 output.uv = input.uv;
                 output.positionOS = input.positionOS.xyz;
+                // Every mesh normal shares the same slope, so recovering it from the y component
+                // gives the fragment an exact value to rebuild the analytic normal with.
+                float slopeY = input.normalOS.y;
+                output.coneSlope = slopeY * rsqrt(max(1.0 - slopeY * slopeY, 1e-6));
                 output.viewDirWS = GetWorldSpaceViewDir(positions.positionWS);
+                output.eyeDepth = -positions.positionVS.z;
                 return output;
             }
 
             half4 frag(Varyings input) : SV_Target
             {
-                // uv.y runs 0 at the apex (the bulb) to 1 at the open base.
+                // uv.y runs 0 at the fitting aperture to 1 at the open base.
                 half alongBeam = saturate(input.uv.y);
 
-                // Fade in just under the fitting so the mesh never shows a hard apex,
-                // and dissolve before the base so the beam ends in air, not on a disc.
+                // Fade in right under the fitting and hide the base ring, so neither open end
+                // of the mesh reads as a hard edge.
                 half topFade = smoothstep(0.0h, max(_TopFade, 1e-3h), alongBeam);
-                half bottomFade = 1.0h - saturate((alongBeam - (1.0h - _BottomFade)) / max(_BottomFade, 1e-3h));
-                bottomFade = pow(bottomFade, _BottomFadePower);
+                half endFade = 1.0h - saturate((alongBeam - (1.0h - _BottomFade)) / max(_BottomFade, 1e-3h));
+                endFade = pow(endFade, _BottomFadePower);
 
-                // Rebuild the cone normal per pixel from the object-space position. The mesh is a
-                // triangle fan with a duplicated apex, so every apex vertex carries a slightly
-                // different normal and interpolating them creates a crease along each triangle
-                // edge — visible as hard wedges radiating down the beam.
-                // The apex is at the origin and the base sits at -y, so the surface slope
-                // radius/height is just |p.xz| / -p.y, constant over the whole cone.
+                // Airborne haze scatters less the further it sits from the bulb.
+                half distanceFade = lerp(1.0h, saturate(1.0h - _Falloff), pow(alongBeam, _FalloffPower));
+
+                // Interpolating the ring normals follows the chords rather than the circle, which
+                // reads as faint spokes running down the beam, so rebuild the normal per pixel:
+                // the slope is constant over the frustum and the radial direction is exact.
                 float2 radialOS = input.positionOS.xz;
-                float radiusOS = max(length(radialOS), 1e-4);
-                float2 aroundOS = radialOS / radiusOS;
-                float slope = radiusOS / max(-input.positionOS.y, 1e-4);
-                float3 normalOS = normalize(float3(aroundOS.x, slope, aroundOS.y));
+                float2 aroundOS = radialOS * rsqrt(max(dot(radialOS, radialOS), 1e-8));
+                float3 normalOS = normalize(float3(aroundOS.x, input.coneSlope, aroundOS.y));
 
                 half3 normalWS = normalize(TransformObjectToWorldNormal(normalOS));
                 half3 viewDirWS = normalize(input.viewDirWS);
@@ -108,7 +122,20 @@ Shader "InterrogationRoom/LightConeAdditive"
                 half core = pow(facing, _SoftEdgePower);
                 half radial = lerp(1.0h, core, _SoftEdge);
 
-                half amount = topFade * bottomFade * radial * _Intensity;
+                // Dissolve where the shell meets solid geometry, otherwise the intersection with
+                // the table and floor cuts a hard bright ellipse through the beam.
+                half contact = 1.0h;
+                if (unity_OrthoParams.w < 0.5h)
+                {
+                    float2 screenUV = GetNormalizedScreenSpaceUV(input.positionCS);
+                    float sceneEyeDepth = LinearEyeDepth(SampleSceneDepth(screenUV), _ZBufferParams);
+                    contact = saturate((sceneEyeDepth - input.eyeDepth) / max(_ContactFade, 1e-3h));
+                }
+
+                // Walking through the beam should not wash the whole screen out.
+                half nearFade = saturate(input.eyeDepth / max(_NearFade, 1e-3h));
+
+                half amount = topFade * endFade * distanceFade * radial * contact * nearFade * _Intensity;
                 return half4(_Color.rgb * _Color.a * amount, 0.0h);
             }
             ENDHLSL

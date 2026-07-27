@@ -8,6 +8,9 @@ namespace InterrogationRoom.Graphics
     public sealed class ProceduralLightCone : MonoBehaviour
     {
         [SerializeField, Min(3)] private int segments = 64;
+        // A real shaft leaves the shade at the width of its mouth, not from a point, so the
+        // mesh is a frustum: topRadius matches the fitting aperture, radius the lit pool below.
+        [SerializeField, Min(0f)] private float topRadius = 0.185f;
         [SerializeField, Min(0.01f)] private float radius = 1.6f;
         [SerializeField, Min(0.01f)] private float height = 1.5f;
 
@@ -23,6 +26,7 @@ namespace InterrogationRoom.Graphics
             segments = Mathf.Max(3, segments);
             radius = Mathf.Max(0.01f, radius);
             height = Mathf.Max(0.01f, height);
+            topRadius = Mathf.Clamp(topRadius, 0f, radius);
             RebuildMesh();
         }
 
@@ -39,37 +43,50 @@ namespace InterrogationRoom.Graphics
                 return;
             }
 
-            var vertices = new Vector3[segments * 2];
-            var normals = new Vector3[segments * 2];
-            var uv = new Vector2[segments * 2];
-            var triangles = new int[segments * 3];
+            // One extra column duplicates the seam so the UV wrap does not fold back on itself.
+            int columns = segments + 1;
+            var vertices = new Vector3[columns * 2];
+            var normals = new Vector3[columns * 2];
+            var uv = new Vector2[columns * 2];
+            var triangles = new int[segments * 6];
 
             // The beam shader shades by normal, so the normals have to be the analytic
-            // cone normals. RecalculateNormals gives every fan apex its own facet normal,
+            // frustum normals. RecalculateNormals gives every triangle its own facet normal,
             // which shows up as hard radial wedges running down the beam.
             float step = Mathf.PI * 2f / segments;
+            float slope = (radius - topRadius) / height;
 
-            for (int index = 0; index < segments; index++)
+            for (int index = 0; index < columns; index++)
             {
                 float angle = index * step;
-                int apexIndex = index * 2;
-                int baseIndex = apexIndex + 1;
+                float cos = Mathf.Cos(angle);
+                float sin = Mathf.Sin(angle);
+                int topIndex = index * 2;
+                int baseIndex = topIndex + 1;
 
-                vertices[apexIndex] = Vector3.zero;
-                vertices[baseIndex] = new Vector3(Mathf.Cos(angle) * radius, -height, Mathf.Sin(angle) * radius);
-                uv[apexIndex] = new Vector2(index / (float)segments, 0f);
+                vertices[topIndex] = new Vector3(cos * topRadius, 0f, sin * topRadius);
+                vertices[baseIndex] = new Vector3(cos * radius, -height, sin * radius);
+                uv[topIndex] = new Vector2(index / (float)segments, 0f);
                 uv[baseIndex] = new Vector2(index / (float)segments, 1f);
 
-                normals[baseIndex] = ConeNormal(angle);
-                // The apex vertex belongs to one triangle only, so aim it down the middle
-                // of that triangle's arc instead of at its own edge.
-                normals[apexIndex] = ConeNormal(angle + step * 0.5f);
+                Vector3 normal = new Vector3(cos, slope, sin).normalized;
+                normals[topIndex] = normal;
+                normals[baseIndex] = normal;
 
-                int nextBaseIndex = ((index + 1) % segments) * 2 + 1;
-                int triangleIndex = index * 3;
-                triangles[triangleIndex] = apexIndex;
+                if (index == segments)
+                {
+                    continue;
+                }
+
+                int nextTopIndex = topIndex + 2;
+                int nextBaseIndex = nextTopIndex + 1;
+                int triangleIndex = index * 6;
+                triangles[triangleIndex] = topIndex;
                 triangles[triangleIndex + 1] = nextBaseIndex;
                 triangles[triangleIndex + 2] = baseIndex;
+                triangles[triangleIndex + 3] = topIndex;
+                triangles[triangleIndex + 4] = nextTopIndex;
+                triangles[triangleIndex + 5] = nextBaseIndex;
             }
 
             if (generatedMesh == null)
@@ -91,11 +108,6 @@ namespace InterrogationRoom.Graphics
             generatedMesh.normals = normals;
             generatedMesh.RecalculateBounds();
             meshFilter.sharedMesh = generatedMesh;
-        }
-
-        private Vector3 ConeNormal(float angle)
-        {
-            return new Vector3(Mathf.Cos(angle) * height, radius, Mathf.Sin(angle) * height).normalized;
         }
 
         private void ReleaseMesh()
