@@ -76,6 +76,90 @@ Kinkiety co nieregularne odstępy (już częściowo jest), wall-washery robiące
 
 Meble Kenney zostają w swoich kolorach — paleta ścian ma je „osadzić", nie konkurować.
 
+## Korekta palety i światła (decyzja użytkownika z 2026-07-27)
+
+Referencją nastroju jest **grafika z ekranu MainMenu**: ciemny, brudny beton, jedna
+ciepła żarówka, głębokie czernie, minimalna saturacja. Poprzednia paleta czytała się
+jako „marna szkoła", ponieważ ściany były jasną, płaską, *nieteksturowaną* farbą.
+Ta korekta ma pierwszeństwo przed tabelą powyżej tam, gdzie się z nią rozjeżdża;
+sam podział lamperia/ściana i układ pomieszczeń pozostają bez zmian.
+
+- **Ściany muszą mieć albedo, nie sam kolor.** `P2_PlasterCream`, `P2_BottleGreen`
+  i `P2_Ceiling` używają CC0 `PaintedPlasterWall_Diffuse_1K` (tiling 4–5).
+  Płaski `_BaseColor` bez mapy albedo jest regresją — nie wracać do niego.
+- **Nowe wartości:** ściana górna `≈#8A7D6B` × plaster, lamperia `≈#4D5C4F` × plaster
+  (zieleń schodzi do szeptu, dominantą jest brud), sufit `≈#544F4A` × plaster.
+- **Podłogi tracą kolorowe tinty per-pokój** (niebieski w Sali, różowy w Przesłuchaniach,
+  zielony w Socjalnym). Wszystkie są ciepłym, matowym betonem; `_Smoothness ≈ 0,45–0,50`,
+  bo `1,0` dawało plastikowy połysk i zimne odbicie.
+- **Ambient, fog i grading są ciepłe, nie chłodne.** `WhiteBalance.temperature` jest
+  dodatnia; `LiftGammaGain.lift` podbija czerwień, nie błękit. Poprzednie ustawienia
+  (temp −5, lift w stronę cyjanu) dawały „niebieski telewizor".
+- **Sala Wspólna ma jedną lampę na środku** `(0, 2.42, 4.70)`, ciepłą. Pozostałe trzy
+  oprawy i światła są wyłączone, nie usunięte — wracają jednym `SetActive(true)`,
+  gdyby playtest pokazał, że pokój jest za ciemny.
+- **Stożek światła w Pokoju Przesłuchań** ma odpowiadać geometrii spota. Mesh i kąt
+  reflektora trzymamy zgodne (`spotAngle 56°` ↔ pół-kąt 28° stożka); rozjazd 92° ↔ 48°
+  był powodem, dla którego stożek czytał się jak płaski trójkąt.
+
+### Trzy pułapki wykryte przy tej korekcie (nie powtarzać)
+
+1. **`RenderSettings.defaultReflectionMode` był ustawiony na `Skybox`**, czyli domyślne
+   proceduralne *niebieskie niebo* Unity. Bezokienny posterunek odbijał błękit nieba na
+   wszystkich gładszych powierzchniach — podłogi czytały się jako zimne, szare płyty
+   mimo ciepłego albedo. Wnętrze bez okien ma mieć `Custom` + brak tekstury; za odbicia
+   odpowiadają wyłącznie Reflection Probes pokoi. Do tego podłogi mają `_Smoothness ≈ 0,20`,
+   bo przy `0,50` Fresnel pod kątem i tak dominował nad diffuse.
+2. **Ciepło łatwo nałożyć cztery razy.** Żarówka + ambient + `WhiteBalance` + `LiftGammaGain`
+   to cztery niezależne mnożniki. Ciepłe ma być *światło*, nie grading — `temperature`
+   trzymamy w okolicy `+3`, a `lift`/`gain` blisko neutralnych. Przy `temperature +12`
+   i mocno ciepłym `gain` cała Sala robiła się pomarańczowa.
+3. **Emisyjne kwadraty opraw.** `Panel_Oprawa_*` to płaskie quady; przy `_EmissionColor`
+   powyżej ~1,5 wypalają się na czysto biały prostokąt zamiast świecić. Jasność ma
+   pochodzić z Bloomu, nie z wartości emisji.
+
+### Druga korekta: opadanie światła i cienie w Sali Wspólnej (2026-07-27)
+
+Użytkownik zgłosił, że po pierwszej korekcie „aura z sufitu" w pokoju startowym jest
+za duża, poziom światła jest wszędzie taki sam mimo jednej lampy, i że nie ma cieni.
+
+- **Przyczyna aury: `Swiatlo_Sala` było lampą Point tuż pod sufitem.** Sufit ma spód na
+  `y = 3,00`, żarówka wisiała na `y = 2,42`, więc górna półsfera świeciła prosto w sufit
+  pod bardzo płaskim kątem i rozmywała się na kilka metrów. Klosz tego nie zatrzymywał,
+  bo wszystkie `Oprawa_*` miały `shadowCastingMode = Off`.
+- **Podnoszenie żarówki w klosz nie działa.** Mesh `Visual_Lamp_Pendant` jest zamknięty
+  od góry: promień maleje z `0,196` przy krawędzi (`y ≈ 2,52`) do `0,061` przy trzonku
+  (`y ≈ 2,77`). Żarówka na `2,78` siedzi *nad* kloszem, który wtedy zasłania światło
+  **w dół** — pokój dostawał wyłącznie odbite światło, czyli był płaski i bez cieni.
+- **Rozwiązanie: `Swiatlo_Sala` to teraz Spot skierowany w dół** (`rotation 90°`,
+  `y = 2,45`, tuż pod krawędzią klosza), `spotAngle 155 / inner 25`, `range 12`,
+  `intensity 105`, kolor `(1,00, 0,87, 0,72)`. Spot z definicji nie oświetla sufitu,
+  więc aura znika niezależnie od geometrii klosza, a pozostaje zdefiniowana plama
+  z miękkim opadaniem ku narożnikom.
+- **Tryb `Mixed` zamiast `Baked`.** Direct + cienie liczą się w czasie rzeczywistym
+  (Shadowmask), więc meble w końcu rzucają widoczne cienie, a strojenie kąta i mocy
+  nie wymaga bake'u. To jedyny sposób na szybką iterację — patrz uwaga niżej.
+- Wypełnienie: `Wash_SalaE` / `Wash_SalaN_W` `1,15 → 0,85`, ambient
+  `(0,150, 0,134, 0,112)` — ciemność ma być *ciepła*, nie niebieska.
+- `Bloom` `intensity 0,65 → 0,50`, `scatter 0,72 → 0,55`, `Mat_Lamp_ColdBlue`
+  emisja `→ (0,90, 0,72, 0,50)` — halo wokół oprawy ma być małe.
+- Stożek w Pokoju Przesłuchań: `_Intensity 0,62 → 0,34`, `_Color → (1,00, 0,80, 0,55)`,
+  `_SoftEdgePower 6,5`, `_BottomFade 0,80`; `Swiatlo_Przesluchania` `4,2 → 3,4`, bo
+  blat wypalał się na czysto biały i przez to stożek czytał się jako biały słup.
+- `Carpet_Brown_Material` miał `_BaseColor` czysto biały i `_Smoothness 0,5`, przez co
+  dywany świeciły jak plamy światła. Teraz `(0,46, 0,36, 0,27)` i `_Smoothness 0,10`.
+- Korytarz: punktowe `Swiatlo_Korytarz*` `4,0 → 5,6` (`range 6,5`), listwy `6,5 → 7,4`.
+
+**Pułapka iteracyjna:** przełączenie światła na `Realtime` w Edit Mode **nie** daje
+podglądu — statyczna geometria i tak czyta stary lightmap, więc cztery warianty
+wyszły identyczne. Żeby stroić bez bake'u, światło musi być `Mixed` **i** trzeba raz
+zbake'ować; dopiero potem zmiany direct/kąta/mocy widać natychmiast.
+
+**Znany, wcześniejszy bug (nie z tej zmiany):** przy drzwiach Sali Wspólnej w korytarzu
+renderuje się biały prostokąt zamiast tabliczki/tekstu. `Znak_*` i `Mat_SignPlate` są
+ciemne i poprawne; podejrzany jest obiekt `Tekst_SalaWspolna`, który ma zerowe bounds.
+Widać go już na screenach sprzed tej korekty.
+
 ## Źródła CC0 (tylko te, z licencją commitowaną do repo)
 
 - Tekstury PBR i decale: **ambientCG.com** (CC0) — Paint*, PaintedPlaster*, Linoleum/Tiles, Decal*, Dirt*.
