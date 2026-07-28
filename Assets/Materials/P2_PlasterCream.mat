@@ -45,7 +45,7 @@ Material:
         m_Scale: {x: 4, y: 4}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: 0bdd1d6bc68b00547aeafa372bc6cb4d, type: 3}
+        m_Texture: {fileID: 2800000, guid: b45a411d2c4d6aa4783abb7f945be01f, type: 3}
         m_Scale: {x: 14, y: 14}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -103,7 +103,7 @@ Material:
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
-    - _BumpScale: 0.05
+    - _BumpScale: 0.18
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
     - _Cull: 2
