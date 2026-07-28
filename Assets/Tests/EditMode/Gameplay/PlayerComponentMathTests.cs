@@ -52,6 +52,104 @@ namespace InterrogationRoom.Gameplay.Tests
                     Vector3.one * visualScale),
                 Is.EqualTo(expected));
         }
+
+        [Test]
+        public void CeilingContactCancelsUpwardJumpVelocity()
+        {
+            Assert.That(
+                PlayerJumpMotion.ClampVerticalVelocityAtCeiling(5.4f, touchingCeiling: true),
+                Is.Zero);
+        }
+
+        [Test]
+        public void CeilingContactKeepsFallingVelocity()
+        {
+            Assert.That(
+                PlayerJumpMotion.ClampVerticalVelocityAtCeiling(-3f, touchingCeiling: true),
+                Is.EqualTo(-3f));
+            Assert.That(
+                PlayerJumpMotion.ClampVerticalVelocityAtCeiling(5.4f, touchingCeiling: false),
+                Is.EqualTo(5.4f));
+        }
+
+        [Test]
+        public void SprintDrainsTheBudgetOverTheConfiguredDuration()
+        {
+            float charge = 1f;
+            float delay = 0f;
+            bool sprinting = true;
+
+            // 3 s of held sprint at 60 fps must exactly empty a 3 s budget.
+            for (int frame = 0; frame < 180; frame++)
+            {
+                sprinting = Advance(true, sprinting, ref charge, ref delay);
+            }
+
+            Assert.That(charge, Is.Zero.Within(0.0001f));
+            Assert.That(
+                Advance(true, sprinting, ref charge, ref delay),
+                Is.False,
+                "An empty budget must refuse to sprint.");
+        }
+
+        [Test]
+        public void SprintWaitsForTheRecoveryDelayBeforeRefilling()
+        {
+            float charge = 0.5f;
+            float delay = 0f;
+            bool sprinting = Advance(true, false, ref charge, ref delay);
+
+            Assert.That(sprinting, Is.True);
+            Assert.That(delay, Is.EqualTo(0.6f).Within(0.0001f));
+
+            float chargeAfterSprint = charge;
+            Advance(false, sprinting, ref charge, ref delay);
+
+            Assert.That(charge, Is.EqualTo(chargeAfterSprint), "Recovery must not start during the delay.");
+
+            for (int frame = 0; frame < 60; frame++)
+            {
+                Advance(false, false, ref charge, ref delay);
+            }
+
+            Assert.That(charge, Is.GreaterThan(chargeAfterSprint));
+        }
+
+        [Test]
+        public void DrainedSprintCannotRestartUntilTheMinimumChargeIsBack()
+        {
+            float charge = 0.1f;
+            float delay = 0f;
+
+            Assert.That(
+                Advance(true, wasSprinting: false, ref charge, ref delay),
+                Is.False,
+                "0.1 is below the 0.25 restart threshold.");
+
+            charge = 0.1f;
+            Assert.That(
+                Advance(true, wasSprinting: true, ref charge, ref delay),
+                Is.True,
+                "An ongoing sprint may run the budget down to zero.");
+        }
+
+        private static bool Advance(
+            bool wantsSprint,
+            bool wasSprinting,
+            ref float charge,
+            ref float delay)
+        {
+            return PlayerSprintStamina.Advance(
+                wantsSprint,
+                wasSprinting,
+                deltaTime: 1f / 60f,
+                sprintDurationSeconds: 3f,
+                recoverySeconds: 6f,
+                recoveryDelaySeconds: 0.6f,
+                minimumChargeToStart: 0.25f,
+                charge01: ref charge,
+                recoveryDelayRemaining: ref delay);
+        }
     }
 
 #if ENABLE_INPUT_SYSTEM

@@ -31,9 +31,34 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     [Header("Movement")]
     public float speed = 5f;
     public float mouseSensitivity = 1f;
-    public float jumpHeight = 1.5f;
-    public float gravity = -9.81f;
+
+    // The station has 1.18 m of headroom above a standing player, so a jump that
+    // clears more than that ends with the capsule pinned against the ceiling.
+    // The stronger gravity keeps the arc short instead of floaty.
+    public float jumpHeight = 0.75f;
+    public float gravity = -20f;
     public Camera playerCamera;
+
+    [Header("Sprint")]
+    [SerializeField, Min(1f)]
+    [Tooltip("Multiplies the walking speed while sprinting.")]
+    private float sprintSpeedMultiplier = 1.55f;
+
+    [SerializeField, Min(0.5f)]
+    [Tooltip("Seconds of continuous sprinting available from a full budget.")]
+    private float sprintDurationSeconds = 3f;
+
+    [SerializeField, Min(0.5f)]
+    [Tooltip("Seconds needed to refill an empty budget once recovery starts.")]
+    private float sprintRecoverySeconds = 6f;
+
+    [SerializeField, Min(0f)]
+    [Tooltip("Pause between releasing sprint and the budget starting to refill.")]
+    private float sprintRecoveryDelaySeconds = 0.6f;
+
+    [SerializeField, Range(0f, 1f)]
+    [Tooltip("Budget required to start a new sprint, so a drained player cannot stutter-tap it.")]
+    private float sprintMinimumChargeToStart = 0.25f;
 
     [Header("Characters")]
     [SerializeField] private CharacterVisualDefinition[] characterVisuals = Array.Empty<CharacterVisualDefinition>();
@@ -57,6 +82,9 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     private PlayerAnimationDriver animationDriver;
     private int allocationKey;
     private float verticalVelocity;
+    private float sprintCharge01 = 1f;
+    private float sprintRecoveryDelayRemaining;
+    private bool isSprinting;
     private NetworkChairSeat activeSeat;
     private bool forceShowLocalModel;
     private GameObject activeModelRoot;
@@ -92,6 +120,11 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     public override CharacterId CharacterId => characterId;
     public override Camera PlayerCamera => playerCamera;
     public override bool IsThirdPerson => cameraRig != null && cameraRig.IsThirdPerson;
+
+    /// <summary>Remaining sprint budget, 0..1, for a HUD to render.</summary>
+    public float SprintCharge01 => sprintCharge01;
+
+    public bool IsSprinting => isSprinting;
 
     public GameObject CreateCharacterPreview(CharacterId selectedCharacter, Transform parent)
     {
@@ -319,6 +352,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         activeSeat = seat;
         isDancing = false;
         isSeated = true;
+        ResetSprint();
         seatedSeatSurfaceHeight = seat.SeatSurfaceHeight;
         seatedBackrestOffset = seat.BackrestOffset;
         verticalVelocity = 0f;
@@ -646,6 +680,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         isDancing = false;
         isDead = true;
         verticalVelocity = 0f;
+        ResetSprint();
         return true;
     }
 
@@ -679,6 +714,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         isSeated = false;
         isDancing = false;
         verticalVelocity = 0f;
+        ResetSprint();
         SetSeatedLocally(false);
 
         NetworkTransformBase networkTransform = GetComponent<NetworkTransformBase>();
@@ -698,6 +734,13 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
             verticalVelocity = -2f;
         }
 
+        // A rising capsule that meets the ceiling keeps its upward velocity, so it
+        // stays pinned there until gravity cancels it out. Dropping the velocity on
+        // contact makes the player fall away immediately instead.
+        verticalVelocity = PlayerJumpMotion.ClampVerticalVelocityAtCeiling(
+            verticalVelocity,
+            (characterController.collisionFlags & CollisionFlags.Above) != 0);
+
         Vector2 moveInput = GetMoveInput();
 
         if (isDancing && moveInput.sqrMagnitude > 0.01f)
@@ -709,6 +752,21 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         move = Vector3.ClampMagnitude(move, 1f);
 
+        // Sprinting is a forward burst; it does not turn strafing into a getaway.
+        bool wantsSprint = IsSprintHeld() && moveInput.y > 0.1f && !isDancing;
+        isSprinting = PlayerSprintStamina.Advance(
+            wantsSprint,
+            isSprinting,
+            Time.deltaTime,
+            sprintDurationSeconds,
+            sprintRecoverySeconds,
+            sprintRecoveryDelaySeconds,
+            sprintMinimumChargeToStart,
+            ref sprintCharge01,
+            ref sprintRecoveryDelayRemaining);
+
+        // The locomotion blend tree only spans idle..walk, so the animator keeps
+        // receiving a normalised speed while the body travels faster.
         animationDriver.SetMovementSpeed(move.magnitude, true);
 
         if (characterController.isGrounded && WasJumpPressed())
@@ -724,10 +782,17 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
         verticalVelocity += gravity * Time.deltaTime;
 
-        Vector3 velocity = move * speed;
+        Vector3 velocity = move * (speed * (isSprinting ? sprintSpeedMultiplier : 1f));
         velocity.y = verticalVelocity;
 
         characterController.Move(velocity * Time.deltaTime);
+    }
+
+    private void ResetSprint()
+    {
+        isSprinting = false;
+        sprintCharge01 = 1f;
+        sprintRecoveryDelayRemaining = 0f;
     }
 
     private void SetMovementAnimationIdle()
@@ -884,6 +949,16 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         return Vector2.ClampMagnitude(input, 1f);
 #else
         return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+#endif
+    }
+
+    private bool IsSprintHeld()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null &&
+               (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed);
+#else
+        return Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 #endif
     }
 
