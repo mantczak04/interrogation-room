@@ -408,10 +408,221 @@ Dwie naprawy, obie potrzebne:
 z powrotem — po przejściu na `Realtime` róg z kanapą i telewizorem robił się zbyt ciemny,
 bo lampy Realtime nie dają odbicia pośredniego, które wcześniej dopalało ten kąt z wypieku.
 
+### Ósma korekta: plamy na ścianach to była podmieniona mapa normalnych (2026-07-27)
+
+Po siódmej korekcie ściany **nadal** miały chmurzaste plamy. Poprzednie dwie diagnozy
+(gęstość tekstury, SSAO) tłumaczyły tylko część objawu, więc tym razem najpierw
+odrzucałem hipotezy pomiarem, a dopiero potem zmieniałem cokolwiek.
+
+**Co zostało wykluczone, i czym:**
+
+| Hipoteza | Pomiar | Wynik |
+| --- | --- | --- |
+| Z-fighting | przecięcia bounds par rendererów ścian | 8 par styka się dokładnie, ale to przeciwstawne ścianki końcowe nadproży — back-face culling je usuwa |
+| SRP Batcher kontra `MaterialPropertyBlock` | 5 kolejnych `cam.Render()` z nieruchomej kamery | różnica **0,00 %**, max delta 0,000 |
+| GPU Resident Drawer (Unity 6, nie wspiera MPB) | `m_GPUResidentDrawerMode` | **0 = wyłączony** |
+| Film Grain / migotanie czasowe | dwie klatki w Play Mode, 15 s odstępu | różnica 0,36 % px, średnia 0,003 |
+| SSAO | render z SSAO on/off | wyłączenie SSAO **zwiększyło** szum wysokoczęstotliwościowy (0,0245 → 0,0265) |
+| Treść tekstury albedo | statystyka `PaintedPlasterWall_Diffuse_1K` | płaska: odchylenie 0,027, zmienność niskoczęstotliwościowa 6,3 % średniej |
+
+**Przyczyna źródłowa.** Rozbicie obrazu na warstwy (albedo bez światła / światło z białym
+albedo / złożenie) pokazało, że każda warstwa z osobna jest gładka, a plamy powstają
+dopiero w złożeniu — czyli winne jest cieniowanie, nie tekstura. Winowajcą okazała się
+mapa normalnych: `P2_PlasterCream`, `P2_BottleGreen` i `P2_Ceiling` używały
+`Assets/Materials/P2_PlasterNormal.png` — **placeholdera 128 × 128 z `anisoLevel = 1`**.
+Rozciągnięty na ścianę i oglądany pod ostrym kątem daje dokładnie takie miękkie,
+niskoczęstotliwościowe chmury.
+
+W projekcie leżała przez cały czas prawidłowa mapa z tego samego zestawu PolyHaven:
+`PaintedPlasterWall_NormalGL_1K.png` — 1024 × 1024, typ importu `NormalMap`, aniso 8.
+
+| Materiał | Przed | Po |
+| --- | --- | --- |
+| `P2_PlasterCream` | `P2_PlasterNormal` @ 0,05 | `PaintedPlasterWall_NormalGL_1K` @ 0,35 |
+| `P2_BottleGreen` | `P2_PlasterNormal` @ 0,06 | `PaintedPlasterWall_NormalGL_1K` @ 0,35 |
+| `P2_Ceiling` | `P2_PlasterNormal` @ 0,22 | `PaintedPlasterWall_NormalGL_1K` @ 0,25 |
+
+To wyjaśnia, dlaczego korekta trzecia (`_BumpScale` 0,26 → 0,05) tylko **osłabiła** objaw
+zamiast go usunąć — źródło artefaktu zostawało na miejscu, ściszony był tylko jego udział.
+Sweep czterech sił mapy (placeholder 0,05 kontra prawdziwa 0,15 / 0,35 / 0,60) potwierdził,
+że przy prawdziwej mapie ściana jest czysta w całym zakresie, więc `0,35` daje widoczne
+ziarno tynku bez „skórki pomarańczowej", której użytkownik nie chciał.
+
+> Lekcja metodologiczna: statyczny render Edit Mode **nie może** wykluczyć artefaktu
+> czasowego (Film Grain nie animuje się, gdy `Time` nie płynie), a metryka liczona na ROI
+> obejmującym gradient światła mierzy ten gradient, nie plamy. Obie te pomyłki zdarzyły się
+> w tej rundzie; rozstrzygnęło dopiero rozbicie obrazu na warstwy albedo / światło / złożenie.
+
+Uzupełnienie do siódmej korekty: kafelkowanie `WallTextureDensity` na wąskich listwach
+(np. `InnerHead`, 1,57 × 0,08 m → `ST = 1,31 × 0,07`) wygląda w liczbach niepokojąco, ale
+jest **poprawne** — 8 cm paska to faktycznie 6,7 % kafla przy 1,2 m/kafel. Gęstość zostaje
+izotropowa i nie wymaga poprawki.
+
+### Dziewiąta korekta: migotanie w ruchu — pięć niezależnych przyczyn (2026-07-27)
+
+Zgłoszenie brzmiało „wszystko migota, gdy obracam kamerą albo idę". Pięć screenów wskazało
+pięć **różnych** usterek, które nakładały się na siebie:
+
+1. **Z-fighting na skalę mapy.** Detektor koplanarnych ścianek tego samego zwrotu
+   (nie przeciwstawnych, jak wcześniej) znalazł **42 pary** — końcówki segmentów ścian
+   zlicowane z licami ścian prostopadłych w każdym narożniku poziomu (po 0,32–0,64 m²!),
+   czoła listew przypodłogowych przy otworach drzwi, drzwiczki szafek kuchennych zlicowane
+   z korpusami (0,42 m²), przenikające się deski futryn (`Head`/`InnerHead`/`Jamb`
+   z koplanarnymi frontami). Naprawa generycznym fixerem: skróć obiekt o 3 mm na zlicowanym
+   końcu, tak żeby czoło schowało się w grubości ściany prostopadłej; futryny rozsunięte
+   w głębi o 1–2 mm; drzwiczki szafek wysunięte 3 mm przed korpus. Iterowane do zbieżności
+   (27+11+4+0), po zapisie **0 pozostałych par**.
+2. **Bilinear na wszystkich teksturach PolyHaven** — widoczne, wędrujące pasy mip przy
+   chodzeniu. 17 tekstur przestawione na Trilinear + aniso 16.
+3. **`Mat_Doors_Oak` i `Mat_Thresholds_Oak` miały `_Smoothness = 1.00`** — pełne lustro.
+   Lakierowane smugi ślizgające się po skrzydłach przy każdym ruchu kamery, a krawędź
+   skrzydła (5 cm z 0,75 kafla tekstury → ~15 000 px/m) aliasowała jak szalona. Teraz 0,26.
+4. **`Korytarz_Wycieraczka`** używała graybox-owego materiału `wood` (albedo 0,95, bez
+   tekstury) — pod lampą wschodniego korytarza renderowała się jako świecący biały prostokąt.
+   Nowy `Mat_Wycieraczka` (RubberTiles, ciemna guma).
+5. **Szum temporalny post-processingu**: FilmGrain 0,20 → 0,08, aberracja chromatyczna
+   0,05 → 0,015 (fringing na napisach przy krawędzi ekranu).
+
+Do tego kamera gracza przeszła z SMAA na **TAA** (jakość High) — pomiar wolnej panoramy
+w Play Mode: średnia delta między klatkami 0,0496 → 0,0380 (−23 %, a składnik migotania
+spada mocniej, bo baza ruchu jest wspólna). Normalne ścian zeszły z 0,35 do 0,18 (krem) /
+0,15 (lamperia) / 0,18 (sufit) — fale kielni z bliska były za mocne.
+
+> Metodologia: bounds **nie przeliczają się** po zmianie transformu w tym samym wywołaniu
+> Edit Mode, więc fixer prowadzi własną kopię bounds i mutuje ją równolegle z transformami;
+> świeże wywołanie po zapisie potwierdza zero. Druga lekcja: detektor z pierwszej rundy
+> sprawdzał tylko pary „twarzą w twarz" (nieszkodliwe, back-face culling) — z-fighting robią
+> pary **tego samego zwrotu**, i to ich trzeba szukać.
+
+### Dziesiąta korekta: czwarta lampa w Sali i blat w Socjalnym (2026-07-27)
+
+**Czwarta lampa w pokoju startowym.** Komplet `Swiatlo_Sala2` + `Oprawa_SalaE` + `Panel_Oprawa_SalaE`
+(pozycja `2.50, 3.40`) był wyłączony i został przywrócony — to domyka serię z korekt piątej
+i siódmej. Samo światło było jeszcze w starym stanie: `Point`, `Baked`, `I = 1.8`, zimny błękit
+`0.70/0.83/1.00`. Po przejściu całej mapy na `Realtime` (korekta szósta) nie dawało nic, więc
+zostało skopiowane 1:1 z `Swiatlo_Sala3`: `Spot`, `Realtime`, `I = 32`, `R = 9`, kąt 150/26,
+barwa `1.00/0.86/0.70`, cienie `Soft`. **Reszta oświetlenia nietknięta** — to była wyraźna
+prośba użytkownika, żeby nie cofać rundy oświetleniowej, tylko dostawić lampę.
+
+**Propsy lewitowały 6 cm nad blatem — bounds kłamały.** `Socjalny_Ekspres` i `Socjalny_Radio`
+stały na `y = 0.920` i `Renderer.bounds.min.y` wynosiło dokładnie `0.920`, czyli „stoją
+na blacie". Analiza samego mesha `kitchenCabinet` pokazała co innego:
+
+| poziom | pole powierzchni skierowanej w górę | zasięg |
+|---|---|---|
+| `y = 0.860` | **0,7224 m²** | x `[-5.940, -5.100]` — to jest blat |
+| `y = 0.920` | 0,0516 m² | x `[-5.100, -5.040]` — 6-centymetrowy rant przedniej krawędzi |
+
+Propsy wstawiono na wysokość **rantu**, nie blatu. Obie „potwierdzające" liczby były fałszywe:
+`Renderer.bounds` to lokalny AABB przepuszczony przez transform, a te propsy mają obrót
+`(270, 180, 0)`, więc pudełko się napompowało i jego dno spadło poniżej realnych wierzchołków.
+
+> Pułapka warta zapamiętania: przy obróconym obiekcie `Renderer.bounds.min.y` **nie jest**
+> najniższym wierzchołkiem. Do sprawdzania kontaktu z podłożem trzeba przejść wierzchołki
+> mesha przez `localToWorldMatrix`, a wysokość podparcia próbkować z trójkątów skierowanych
+> w górę — nie z `bounds.max.y`, bo ten łapie rant, listwę albo backsplash.
+
+**Ustawienie ciągu przy zachodniej ścianie.** Dwie szafki złączone w jeden blat (zakładka 2 mm
+zamiast 14 cm szczeliny; stykają się ścianami przeciwnego zwrotu, więc back-face culling
+załatwia z-fighting), a cały ciąg — szafka kartotekowa `B4 Personal Locker` i obie szafki
+kuchenne — przesunięty o **+0,30 m w `+z`**. Wcześniej kartoteka stała 3,5 cm od południowej
+ściany, a przy lodówce zostawało 0,63 m luzu; teraz jest po ~0,33 m z obu stron.
+
+**Zabudowa stała tyłem do pokoju.** Przy okazji pomiarów wyszło, że `Socjalny_Szafka1`,
+`Socjalny_Szafka2` i `Socjalny_Lodowka` były obrócone o 180° — drzwiczki z uchwytami celowały
+w ścianę, a do pokoju świeciła gładka plecka. Potwierdzały to dwie niezależne cechy mesha:
+panel `door` siedział przy `x = -5.94` (czyli przy ścianie), a rant `y = 0.920` — w istocie
+**zaplecek blatu** — był po stronie pokoju zamiast przy ścianie.
+
+Obrót o 180° wokół Y wykonany tak, żeby obrys został na miejscu: dla obrotu o 180° wokół
+pivota mapowanie punktów sprowadza się do odbicia względem środka bryły, więc
+`newPosition = 2·C − P` (w XZ). Po obrocie obrys i collidery zgadzają się co do milimetra,
+zaplecek wylądował przy ścianie, blat `y = 0.860` rozciąga się na `x [-5.905, -5.065]`,
+a oba propsy nadal na nim stoją. Cały ciąg dosunięty do lamperii (lico `x = -5.963`)
+z 2 mm zakładki, żeby nie została szczelina za blatem.
+
+> Pułapka warta zapamiętania: w Edit Mode `Physics.autoSyncTransforms` jest **wyłączone**,
+> więc `Collider.bounds` po zmianie transformu zwraca **stare** wartości — i to nie tylko
+> w tym samym wywołaniu, ale też w następnym. Na podstawie takiego odczytu „naprawiłem"
+> collider lodówki, który był poprawny; wystarczyło `Physics.SyncTransforms()` przed
+> pomiarem, żeby zobaczyć prawdę i cofnąć zmianę. Detektor par koplanarnych po całej
+> operacji: **0 par**.
+
 **Znany, wcześniejszy bug (nie z tej zmiany):** przy drzwiach Sali Wspólnej w korytarzu
 renderuje się biały prostokąt zamiast tabliczki/tekstu. `Znak_*` i `Mat_SignPlate` są
 ciemne i poprawne; podejrzany jest obiekt `Tekst_SalaWspolna`, który ma zerowe bounds.
 Widać go już na screenach sprzed tej korekty.
+
+### Jedenasta korekta: piąta lampa zamiast przestawiania rastra i szafka odsunięta od ściany (2026-07-28)
+
+**Wynik końcowy: układ czterech lamp bez zmian, dołożona piąta nad zachodnim stołem.**
+`Swiatlo_Sala5` + `Oprawa_Sala5` + `Panel_Oprawa_Sala5` na `(-3.69, 5.70)`, czyli nad
+`Sala_StolW` — komplet skopiowany 1:1 z `Sala4` (`Spot`, `Realtime`, `I = 32`, `R = 9`,
+kąt `150/26`, barwa `1.00/0.86/0.70`, cienie `Soft`). W ROI odpowiadającym temu narożnikowi
+czerń spada `49,9 % → 34,3 %`, a cały kadr rośnie tylko `0.1024 → 0.1259`, bo światło
+idzie wyłącznie tam, gdzie było ciemno. Lampa nad stołem ma oczywiste uzasadnienie, więc
+nie łamie zasady „każdy element ma powód".
+
+**Domknięcie: cała piątka ściemniona o 4 %** — `Swiatlo_Sala` `88 → 84.5`, pozostałe cztery
+`32 → 30.7`. Proporcje między lampami zachowane, więc rozkład światła się nie zmienia,
+schodzi tylko ogólny poziom. To korekta na wyczucie, nie z pomiaru — 4 % leży poniżej progu,
+który sensownie widać w średniej luminancji kadru.
+
+Poniżej ścieżka, która do tego doprowadziła — warta zapisania, bo **cała wersja pośrednia
+została odrzucona** i nie ma jej w scenie.
+
+**Odrzucone: cztery lampy na środkach ćwiartek.** Układ narastał korekta po korekcie
+(`Sala` na środku, potem `Sala3`, `Sala4`, `Sala2`) i wyglądał na rozrzucony losowo, bez
+lampy w ćwiartce północno-zachodniej. Sala ma wnętrze `x [-6.0, 6.0]`, `z [0.2, 9.2]`, więc
+komplety przeniesiono na `(±3.00, 2.45)` i `(±3.00, 6.95)` z wyrównanymi intensywnościami.
+Werdykt użytkownika: **„zabija całą aurę"** — równomierny raster robi z pokoju biuro,
+a nie posterunek. Wycofane w całości do stanu wyjściowego.
+
+> Lekcja: „lampy są rozrzucone losowo" nie znaczy „chcę siatkę". Nierówny rozstaw *jest*
+> nastrojem; problemem był jeden konkretny ciemny róg, nie rozkład. Zanim przestawisz raster,
+> zapytaj, który fragment kadru przeszkadza — poprawka lokalna kosztuje jedną lampę,
+> a przestawienie rastra kosztuje charakter pomieszczenia.
+
+**Zachowanie sumy strumienia przy rozsuwaniu lamp też było błędem.** Pierwsze podejście
+trzymało `4 × I = 46` (`184` jak przed zmianą) i to jest liczbowo *jaśniejsze* od poprzedniego
+układu — pomiar z trzech ujęć: drzwi `0.0686 → 0.0808`, czerń `43,2 % → 40,1 %`. Mimo to
+odbiór był „ciemniej", bo zniknął jasny akcent na środku i obraz stracił kontrast, a rozkład
+odwrotny do kwadratu zabiera ~70 % jasności na dystansie 3 m od lampy do ściany. Dociągnięcie
+do `I = 76`, `R = 14` dawało drzwi `0.1212`, ogólny `0.1382` — i to była już wersja „za jasno".
+Wniosek liczbowy do zapamiętania: **rozsunięcie lamp wymaga więcej mocy, nie tej samej.**
+
+> Pułapka warta zapamiętania: punkt światła siedzi **pod kloszem**. `Visual_Lamp_Pendant`
+> zaczyna się na `y = 2.520` i ma `shadowCastingMode = On`, więc podniesienie światła powyżej
+> `2.52` wsadza je do środka klosza i klosz utnie stożek. `2.50` to sufit tej regulacji —
+> „podnieś lampę" nie jest tu dostępnym pokrętłem.
+
+**Dwie ślepe uliczki zmierzone przy okazji** (obie wyglądają sensownie, obie nie działają):
+
+- **`RenderSettings.ambient*` jest no-opem.** Podniesienie `ambientIntensity` `0.30 → 0.45`
+  wraz z barwami `× 1.5` dało wynik **co do bajta identyczny** z wariantem bazowym na wszystkich
+  trzech ujęciach. Ambient w tej scenie należy do APV (`ProbeVolume` + `ProbeVolumePerSceneData`),
+  ustawienia z `Lighting > Environment` nie mają wpływu.
+- **Doświetlenie sufitu punktowo daje aurę, nie wypełnienie.** Cztery dodatkowe Spoty w górę
+  (`y = 2.88`, `130°`, `R = 3.5`, `I = 5`) zmieniły średnią o `0.0003` i zrobiły ostrą jasną
+  plamę nad każdą lampą — dokładnie ten sam artefakt, przez który w korekcie czwartej
+  `Swiatlo_Sala` przestało być Pointem. Sufit zostaje czarny świadomie.
+
+**Do rozważenia, nie wdrożone:** grazing wash nad drzwiami Sali (Spot `y = 2.60`, `z = 0.42`,
+`62°`, `R = 6`, `I = 16`) podnosi ujęcie drzwi `0.1212 → 0.1363` i robi ładny akcent na dębowym
+skrzydle. Wymagałby własnego `Fixture` jak pozostałe `Wash_*`, żeby nie było światła bez źródła.
+
+> Pułapka proceduralna, nie artystyczna: **Unity potrafi być w Play Mode**, a wtedy
+> `EditorSceneManager.MarkSceneDirty` rzuca `InvalidOperationException` już *po* wykonaniu
+> mutacji, które i tak przepadną przy wyjściu z trybu gry. Każdy skrypt zmieniający scenę
+> powinien zaczynać się od `if (Application.isPlaying) return;`, a nie kończyć na
+> `MarkSceneDirty`. Kosztowało to jedno pełne, niepotrzebne powtórzenie operacji.
+
+**`B5 Maintenance Cabinet` wyglądała jak wrośnięta w ścianę.** Stała w narożniku korytarza
+przed Socjalnym z luzem **5,5 cm** od południowej ściany (`z = -2.500`) i tyle samo od
+zachodniej (`x = -6.000`), do której jest tyłem. Przesunięta o `+0.30 m` w `+z`
+(`z: -2.068 → -1.768`), więc od ściany bocznej zostaje ~0,36 m, a plecy dalej trzymają się
+zachodniej ściany. Jak przy ciągu w Socjalnym (korekta dziesiąta) — prawdziwe wymiary czytane
+z wierzchołków mesha, nie z `Renderer.bounds`, bo `Visual_*` niesie obrót konwersyjny.
 
 ## Źródła CC0 (tylko te, z licencją commitowaną do repo)
 

@@ -1106,6 +1106,7 @@ namespace InterrogationRoom.Networking
             }
 
             _phase = transition.State.Phase;
+            bool startRoundAfterReady = false;
             if (command is RoundCommand.StartRound)
             {
                 _preparationDeadline = IsDeveloperRoundUnlimited
@@ -1114,13 +1115,21 @@ namespace InterrogationRoom.Networking
                 RelocatePlayersToStartRoom();
                 ConfigureRoundWeapons();
             }
-            else if (command is RoundCommand.MarkPlayerReady
-                     && transition.State.ReadyPlayerCount == transition.State.Players.Count)
+            else if (command is RoundCommand.MarkPlayerReady)
             {
-                _preparationDeadline = ShortenedPreparationDeadline(
-                    _preparationDeadline,
-                    NetworkTime.time,
-                    AllReadyPreparationSeconds);
+                startRoundAfterReady = ShouldEndDeveloperPreparation(
+                    _phase,
+                    IsDeveloperRoundUnlimited,
+                    _connectionsByPlayerId.Count,
+                    ConnectedReadyPlayerCount());
+                if (!startRoundAfterReady
+                    && transition.State.ReadyPlayerCount == transition.State.Players.Count)
+                {
+                    _preparationDeadline = ShortenedPreparationDeadline(
+                        _preparationDeadline,
+                        NetworkTime.time,
+                        AllReadyPreparationSeconds);
+                }
             }
             else if (command is RoundCommand.EndPreparation)
             {
@@ -1137,8 +1146,27 @@ namespace InterrogationRoom.Networking
                 ServerGameplayRoundEnded?.Invoke();
             }
 
+            if (startRoundAfterReady && Submit(null, new RoundCommand.EndPreparation()))
+                return true;
+
             DeliverAllViews();
             return true;
+        }
+
+        /// <summary>
+        /// Gotowość of every connected player in the developer sandbox; technical
+        /// domain slots have no connection and never declare it.
+        /// </summary>
+        private int ConnectedReadyPlayerCount()
+        {
+            int ready = 0;
+            foreach (var playerId in _connectionsByPlayerId.Keys)
+            {
+                if (_engine.ViewFor(new PlayerId(playerId))?.IsReady == true)
+                    ready++;
+            }
+
+            return ready;
         }
 
         private IncidentTimestamp CurrentRoundTimestamp()
@@ -1350,6 +1378,21 @@ namespace InterrogationRoom.Networking
             !developerRoundUnlimited &&
             deadline > 0d &&
             now >= deadline;
+
+        /// <summary>
+        /// The developer sandbox runs without a Przygotowanie deadline, and its
+        /// technical slots never declare Gotowość, so "Gotowy" from every
+        /// connected player is what starts the Runda there.
+        /// </summary>
+        public static bool ShouldEndDeveloperPreparation(
+            RoundPhase phase,
+            bool developerRoundUnlimited,
+            int connectedPlayerCount,
+            int connectedReadyPlayerCount) =>
+            phase == RoundPhase.Preparation &&
+            developerRoundUnlimited &&
+            connectedPlayerCount > 0 &&
+            connectedReadyPlayerCount >= connectedPlayerCount;
 
         /// <summary>All-ready only shortens the deadline; it is never extended.</summary>
         public static double ShortenedPreparationDeadline(

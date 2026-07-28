@@ -79,6 +79,29 @@ namespace InterrogationRoom.Networking.Tests
                 Is.EqualTo(expected));
         }
 
+        [TestCase(RoundPhase.Preparation, true, 1, 1, true)]
+        [TestCase(RoundPhase.Preparation, true, 2, 2, true)]
+        [TestCase(RoundPhase.Preparation, true, 2, 1, false)]
+        [TestCase(RoundPhase.Preparation, true, 0, 0, false)]
+        [TestCase(RoundPhase.Preparation, false, 1, 1, false)]
+        [TestCase(RoundPhase.Round, true, 1, 1, false)]
+        [TestCase(RoundPhase.Lobby, true, 1, 1, false)]
+        public void ShouldEndDeveloperPreparation_StartsRundaWhenEveryConnectedPlayerIsReady(
+            RoundPhase phase,
+            bool developerRoundUnlimited,
+            int connectedPlayerCount,
+            int connectedReadyPlayerCount,
+            bool expected)
+        {
+            Assert.That(
+                NetworkRoundCoordinator.ShouldEndDeveloperPreparation(
+                    phase,
+                    developerRoundUnlimited,
+                    connectedPlayerCount,
+                    connectedReadyPlayerCount),
+                Is.EqualTo(expected));
+        }
+
         [Test]
         public void ShortenedPreparationDeadline_CutsToThreeSecondsWhenAllReady()
         {
