@@ -54,6 +54,7 @@ public class SteamManager : MonoBehaviour
 
     protected SteamAPIWarningMessageHook_t m_SteamAPIWarningMessageHook;
     private Callback<GameLobbyJoinRequested_t> m_GameLobbyJoinRequested;
+    private Callback<LobbyInvite_t> m_LobbyInvite;
 
     [AOT.MonoPInvokeCallback(typeof(SteamAPIWarningMessageHook_t))]
     protected static void SteamAPIDebugTextHook(int nSeverity, System.Text.StringBuilder pchDebugText)
@@ -149,11 +150,24 @@ public class SteamManager : MonoBehaviour
             m_GameLobbyJoinRequested =
                 Callback<GameLobbyJoinRequested_t>.Create(OnGameLobbyJoinRequested);
         }
+
+        if (m_LobbyInvite == null)
+            m_LobbyInvite = Callback<LobbyInvite_t>.Create(OnLobbyInvite);
     }
 
     private static void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
     {
         GameLaunchRequest.SetSteamLobbyJoin(callback.m_steamIDLobby.m_SteamID);
+    }
+
+    private static void OnLobbyInvite(LobbyInvite_t callback)
+    {
+        var inviterId = new CSteamID(callback.m_ulSteamIDUser);
+        string inviterName = inviterId.IsValid()
+            ? SteamFriends.GetFriendPersonaName(inviterId)
+            : string.Empty;
+        GameLaunchRequest.SetSteamLobbyInvite(callback.m_ulSteamIDLobby, inviterName);
+        Debug.Log($"[SteamManager] Lobby invite received from {inviterName}.");
     }
 
     protected virtual void OnDestroy()
@@ -167,6 +181,8 @@ public class SteamManager : MonoBehaviour
 
         m_GameLobbyJoinRequested?.Dispose();
         m_GameLobbyJoinRequested = null;
+        m_LobbyInvite?.Dispose();
+        m_LobbyInvite = null;
 
         if (!m_bInitialized)
         {

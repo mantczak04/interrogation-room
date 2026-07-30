@@ -19,6 +19,14 @@
                 <ui:Button name="quit-button" class="menu-entry" text="WYJDŹ" />
             </ui:VisualElement>
 
+            <ui:VisualElement name="pending-invite-panel" class="pending-invite-panel" style="display: none;">
+                <ui:Label name="pending-invite-label" class="pending-invite-label document-font" />
+                <ui:VisualElement class="pending-invite-actions">
+                    <ui:Button name="accept-invite-button" class="btn btn--paper pending-invite-action" text="DOŁĄCZ" />
+                    <ui:Button name="dismiss-invite-button" class="btn btn--quiet pending-invite-action" text="ODRZUĆ" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
             <ui:Label name="menu-note" class="menu-note document-font" text="" />
         </ui:VisualElement>
 

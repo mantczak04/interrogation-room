@@ -18,14 +18,20 @@ public static class GameLaunchRequest
 {
     private static GameLaunchMode pendingMode;
     private static ulong pendingSteamLobbyId;
+    private static ulong pendingSteamLobbyInviteId;
+    private static string pendingSteamLobbyInviterName;
 
     public static bool HasPendingSteamLobbyJoin => pendingSteamLobbyId != 0;
+    public static bool HasPendingSteamLobbyInvite => pendingSteamLobbyInviteId != 0;
+    public static string PendingSteamLobbyInviterName => pendingSteamLobbyInviterName ?? string.Empty;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetRuntimeState()
     {
         pendingMode = GameLaunchMode.None;
         pendingSteamLobbyId = 0;
+        pendingSteamLobbyInviteId = 0;
+        pendingSteamLobbyInviterName = string.Empty;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -49,7 +55,34 @@ public static class GameLaunchRequest
             return;
 
         pendingSteamLobbyId = lobbyId;
+        pendingSteamLobbyInviteId = 0;
+        pendingSteamLobbyInviterName = string.Empty;
         pendingMode = GameLaunchMode.Join;
+    }
+
+    public static void SetSteamLobbyInvite(ulong lobbyId, string inviterName)
+    {
+        if (lobbyId == 0)
+            return;
+
+        pendingSteamLobbyInviteId = lobbyId;
+        pendingSteamLobbyInviterName = inviterName ?? string.Empty;
+    }
+
+    public static bool AcceptPendingSteamLobbyInvite()
+    {
+        if (pendingSteamLobbyInviteId == 0)
+            return false;
+
+        ulong lobbyId = pendingSteamLobbyInviteId;
+        SetSteamLobbyJoin(lobbyId);
+        return true;
+    }
+
+    public static void DismissPendingSteamLobbyInvite()
+    {
+        pendingSteamLobbyInviteId = 0;
+        pendingSteamLobbyInviterName = string.Empty;
     }
 
     public static bool TryConsumeSteamLobbyJoin(out ulong lobbyId)

@@ -232,6 +232,66 @@
     color: var(--amber-dim);
 }
 
+.lobby-invite-panel {
+    max-height: 210px;
+    margin: var(--space-2) 0 var(--space-2) 0;
+    padding: var(--space-2) var(--space-3);
+    background-color: rgba(13, 16, 19, 0.88);
+    border-left-width: 2px;
+    border-left-color: var(--amber);
+}
+
+.lobby-invite-heading {
+    margin-bottom: var(--space-1);
+    color: var(--amber);
+    font-size: 13px;
+    letter-spacing: 2px;
+}
+
+.lobby-invite-list {
+    max-height: 126px;
+}
+
+.lobby-invite-friend {
+    height: 30px;
+    min-height: 30px;
+    margin: 0;
+    padding: 0 var(--space-2);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(163, 132, 72, 0.28);
+    color: var(--paper-bright);
+    font-size: 14px;
+    -unity-text-align: middle-left;
+}
+
+.lobby-invite-friend:hover {
+    background-color: rgba(193, 143, 47, 0.14);
+    color: var(--amber);
+}
+
+.lobby-invite-friend:active {
+    background-color: rgba(193, 143, 47, 0.24);
+    color: var(--amber-dim);
+}
+
+.lobby-invite-empty,
+.lobby-invite-status {
+    margin-top: var(--space-1);
+    color: var(--graphite-300);
+    font-size: 12px;
+    white-space: normal;
+}
+
+.lobby-invite-status {
+    color: var(--amber);
+}
+
+.lobby-invite-status--error {
+    color: var(--red);
+}
+
 /*
  * Start is the loudest line on the sheet, not the biggest box: subtitle size
  * where the other entries are lead. Disabled it fades to graphite — an

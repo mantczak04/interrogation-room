@@ -421,6 +421,19 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             sb.Append(steamLobby.InLobby ? '1' : '0');
             sb.Append(steamLobby.LobbyPending ? '1' : '0');
 
+            if (isVisible &&
+                currentPage == MenuPage.Network &&
+                steamLobby.SteamAvailable &&
+                !steamLobby.InLobby)
+            {
+                sb.Append(GameLaunchRequest.HasPendingSteamLobbyInvite ? '1' : '0');
+                sb.Append(GameLaunchRequest.PendingSteamLobbyInviterName);
+                int friendLobbyCount = steamLobby.FriendLobbyCount;
+                sb.Append('|').Append(friendLobbyCount);
+                for (int index = 0; index < friendLobbyCount; index++)
+                    sb.Append('|').Append(steamLobby.GetFriendLobbyId(index));
+            }
+
             // Only inside a lobby, because these reach into Steamworks and
             // throw outright when it is not initialised — which is every run
             // that starts from the KCP path.
@@ -601,7 +614,48 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         }
 
         AddAction(sheetBody, UiText.Get("Utwórz lobby dla znajomych"), "btn--ink", () => steamLobby.HostLobby());
-        AddStatus(UiText.Get("Znajomi dołączają przez nakładkę Steam: Znajomi → Dołącz do gry"));
+
+        if (GameLaunchRequest.HasPendingSteamLobbyInvite)
+        {
+            string inviterName = GameLaunchRequest.PendingSteamLobbyInviterName;
+            AddStatus(string.IsNullOrWhiteSpace(inviterName)
+                ? UiText.Get("Otrzymano zaproszenie do lobby Steam.")
+                : UiText.Format("{0} zaprasza Cię do lobby.", inviterName));
+            AddAction(sheetBody, UiText.Get("Dołącz"), "btn--paper", () =>
+            {
+                GameLaunchRequest.AcceptPendingSteamLobbyInvite();
+                renderedSignature = null;
+            });
+            AddAction(sheetBody, UiText.Get("Odrzuć"), "btn--quiet", () =>
+            {
+                GameLaunchRequest.DismissPendingSteamLobbyInvite();
+                renderedSignature = null;
+            });
+        }
+
+        int friendLobbyCount = steamLobby.FriendLobbyCount;
+        if (friendLobbyCount > 0)
+        {
+            AddStatus(UiText.Get("Lobby znajomych:"));
+            for (int index = 0; index < friendLobbyCount; index++)
+            {
+                int friendLobbyIndex = index;
+                string lobbyName = steamLobby.GetFriendLobbyName(friendLobbyIndex);
+                AddAction(
+                    sheetBody,
+                    lobbyName,
+                    "btn--paper",
+                    () =>
+                    {
+                        steamLobby.JoinFriendLobby(friendLobbyIndex);
+                        renderedSignature = null;
+                    });
+            }
+        }
+        else
+        {
+            AddStatus(UiText.Get("Brak aktywnych lobby znajomych."));
+        }
     }
 
     void RenderStatus()

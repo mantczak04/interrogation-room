@@ -24,6 +24,10 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
     private Button previousCharacterButton;
     private Button nextCharacterButton;
     private Button inviteButton;
+    private VisualElement inviteFriendPanel;
+    private ScrollView inviteFriendList;
+    private Label inviteFriendEmptyLabel;
+    private Label inviteFriendStatusLabel;
     private Image characterPreviewImage;
     private ScrollView playerList;
     private Label playerListEmptyLabel;
@@ -38,8 +42,11 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
     private Camera previewCamera;
     private RenderTexture previewTexture;
     private bool bound;
+    private bool inviteFriendPanelOpen;
     private float nextRosterRefresh;
+    private float nextInviteFriendRefresh;
     private string renderedRosterSignature;
+    private string renderedInviteFriendSignature;
     private uint renderedLocalNetId;
     private readonly Dictionary<int, VisualElement> speakerIndicators = new();
     private readonly Dictionary<int, uint> speakerNetIds = new();
@@ -76,7 +83,17 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         SetVisible(nextCharacterButton, canSelectCharacter);
         SetVisible(characterNameLabel, canSelectCharacter);
         SetVisible(characterPreviewImage, canSelectCharacter);
-        SetVisible(inviteButton, coordinator != null && coordinator.IsLocalHost && steamLobby != null && steamLobby.InLobby);
+        bool canInviteFriends = coordinator != null &&
+            coordinator.IsLocalHost &&
+            steamLobby != null &&
+            steamLobby.InLobby;
+        SetVisible(inviteButton, canInviteFriends);
+        SetVisible(
+            inviteFriendPanel,
+            canInviteFriends && inviteFriendPanelOpen && !steamLobby.OverlayEnabled);
+
+        if (!canInviteFriends || steamLobby.OverlayEnabled)
+            inviteFriendPanelOpen = false;
 
         if (canSelectCharacter)
             RefreshCharacterPreview(localPlayer);
@@ -87,6 +104,12 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         {
             RefreshPlayerRoster();
             nextRosterRefresh = Time.unscaledTime + 0.1f;
+        }
+
+        if (inviteFriendPanelOpen && Time.unscaledTime >= nextInviteFriendRefresh)
+        {
+            RefreshInviteFriends();
+            nextInviteFriendRefresh = Time.unscaledTime + 1f;
         }
     }
 
@@ -104,6 +127,8 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         speakerNetIds.Clear();
         microphoneStateLabels.Clear();
         renderedRosterSignature = null;
+        renderedInviteFriendSignature = null;
+        inviteFriendPanelOpen = false;
         DestroyPreview();
     }
 
@@ -115,6 +140,10 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
         previousCharacterButton = Required<Button>(root, "previous-character-button");
         nextCharacterButton = Required<Button>(root, "next-character-button");
         inviteButton = Required<Button>(root, "invite-button");
+        inviteFriendPanel = Required<VisualElement>(root, "invite-friend-panel");
+        inviteFriendList = Required<ScrollView>(root, "invite-friend-list");
+        inviteFriendEmptyLabel = Required<Label>(root, "invite-friend-empty");
+        inviteFriendStatusLabel = Required<Label>(root, "invite-friend-status");
         characterPreviewImage = Required<Image>(root, "character-preview");
         playerList = Required<ScrollView>(root, "lobby-player-list");
         playerListEmptyLabel = Required<Label>(root, "lobby-player-list-empty");
@@ -260,7 +289,68 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
 
     private void OnNextCharacterClicked() => SelectCharacter(1);
 
-    private void OnInviteClicked() => steamLobby?.OpenInviteDialog();
+    private void OnInviteClicked()
+    {
+        if (steamLobby == null || !steamLobby.InLobby)
+            return;
+
+        if (steamLobby.OverlayEnabled)
+        {
+            inviteFriendPanelOpen = false;
+            SetVisible(inviteFriendPanel, false);
+            steamLobby.OpenInviteDialog();
+            return;
+        }
+
+        inviteFriendPanelOpen = !inviteFriendPanelOpen;
+        inviteFriendStatusLabel.text = string.Empty;
+        SetVisible(inviteFriendStatusLabel, false);
+        SetVisible(inviteFriendPanel, inviteFriendPanelOpen);
+        if (inviteFriendPanelOpen)
+            RefreshInviteFriends(force: true);
+    }
+
+    private void RefreshInviteFriends(bool force = false)
+    {
+        if (steamLobby == null || !steamLobby.InLobby)
+            return;
+
+        int friendCount = steamLobby.DirectInviteFriendCount;
+        var signature = new StringBuilder(friendCount * 24 + 16);
+        signature.Append(GameSettingsService.Current.Language).Append('|').Append(friendCount);
+        for (int index = 0; index < friendCount; index++)
+            signature.Append('|').Append(steamLobby.GetDirectInviteFriendName(index));
+
+        string currentSignature = signature.ToString();
+        if (!force && currentSignature == renderedInviteFriendSignature)
+            return;
+
+        renderedInviteFriendSignature = currentSignature;
+        inviteFriendList.Clear();
+        SetVisible(inviteFriendEmptyLabel, friendCount == 0);
+
+        for (int index = 0; index < friendCount; index++)
+        {
+            int friendIndex = index;
+            string friendName = steamLobby.GetDirectInviteFriendName(friendIndex);
+            var friendButton = new Button(() => InviteDirectFriend(friendIndex, friendName))
+            {
+                text = friendName
+            };
+            friendButton.AddToClassList("lobby-invite-friend");
+            inviteFriendList.Add(friendButton);
+        }
+    }
+
+    private void InviteDirectFriend(int friendIndex, string friendName)
+    {
+        bool sent = steamLobby != null && steamLobby.InviteDirectFriend(friendIndex);
+        inviteFriendStatusLabel.text = sent
+            ? UiText.Format("Zaproszenie wysłane do: {0}.", friendName)
+            : UiText.Get("Nie udało się wysłać zaproszenia.");
+        inviteFriendStatusLabel.EnableInClassList("lobby-invite-status--error", !sent);
+        SetVisible(inviteFriendStatusLabel, true);
+    }
 
     private void SelectCharacter(int offset)
     {

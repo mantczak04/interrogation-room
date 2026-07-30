@@ -95,6 +95,7 @@ public class SteamLobby : MonoBehaviour
     public string VoiceSessionId => InLobby ? currentLobbyId.ToString() : "local";
     public bool OverlayEnabled => SteamManager.Initialized && SteamUtils.IsOverlayEnabled();
     public int DirectInviteFriendCount => CountDirectInviteFriends();
+    public int FriendLobbyCount => CountFriendLobbies();
 
     void Start()
     {
@@ -207,6 +208,74 @@ public class SteamLobby : MonoBehaviour
         return CSteamID.Nil;
     }
 
+    public string GetFriendLobbyName(int visibleIndex)
+    {
+        return TryGetFriendLobby(visibleIndex, out _, out string friendName)
+            ? $"{friendName}'s lobby"
+            : "Unknown lobby";
+    }
+
+    public ulong GetFriendLobbyId(int visibleIndex)
+    {
+        return TryGetFriendLobby(visibleIndex, out CSteamID lobbyId, out _)
+            ? lobbyId.m_SteamID
+            : 0UL;
+    }
+
+    public bool JoinFriendLobby(int visibleIndex)
+    {
+        ulong lobbyId = GetFriendLobbyId(visibleIndex);
+        if (lobbyId == 0)
+            return false;
+
+        GameLaunchRequest.SetSteamLobbyJoin(lobbyId);
+        return true;
+    }
+
+    int CountFriendLobbies()
+    {
+        int count = 0;
+        while (TryGetFriendLobby(count, out _, out _))
+            count++;
+        return count;
+    }
+
+    bool TryGetFriendLobby(int visibleIndex, out CSteamID lobbyId, out string friendName)
+    {
+        lobbyId = CSteamID.Nil;
+        friendName = string.Empty;
+        if (!SteamManager.Initialized || visibleIndex < 0)
+            return false;
+
+        AppId_t currentAppId = SteamUtils.GetAppID();
+        int visibleCount = 0;
+        int friendCount = SteamFriends.GetFriendCount(EFriendFlags.k_EFriendFlagImmediate);
+        var seenLobbyIds = new System.Collections.Generic.HashSet<ulong>();
+        for (int index = 0; index < friendCount; index++)
+        {
+            CSteamID friendId = SteamFriends.GetFriendByIndex(index, EFriendFlags.k_EFriendFlagImmediate);
+            if (!friendId.IsValid() ||
+                !SteamFriends.GetFriendGamePlayed(friendId, out FriendGameInfo_t gameInfo) ||
+                !gameInfo.m_steamIDLobby.IsValid() ||
+                gameInfo.m_gameID.AppID() != currentAppId ||
+                !seenLobbyIds.Add(gameInfo.m_steamIDLobby.m_SteamID))
+            {
+                continue;
+            }
+
+            if (visibleCount == visibleIndex)
+            {
+                lobbyId = gameInfo.m_steamIDLobby;
+                friendName = SteamFriends.GetFriendPersonaName(friendId);
+                return true;
+            }
+
+            visibleCount++;
+        }
+
+        return false;
+    }
+
     void OnGameOverlayActivated(GameOverlayActivated_t callback)
     {
         bool overlayActive = callback.m_bActive != 0;
@@ -302,11 +371,15 @@ public class SteamLobby : MonoBehaviour
     public string VoiceSessionId => "local";
     public bool OverlayEnabled => false;
     public int DirectInviteFriendCount => 0;
+    public int FriendLobbyCount => 0;
 
     public void HostLobby() { }
     public void OpenInviteDialog() { }
     public string GetDirectInviteFriendName(int visibleIndex) => "Unknown friend";
     public bool InviteDirectFriend(int visibleIndex) => false;
+    public string GetFriendLobbyName(int visibleIndex) => "Unknown lobby";
+    public ulong GetFriendLobbyId(int visibleIndex) => 0;
+    public bool JoinFriendLobby(int visibleIndex) => false;
     public void LeaveLobby() { }
 #endif
 }

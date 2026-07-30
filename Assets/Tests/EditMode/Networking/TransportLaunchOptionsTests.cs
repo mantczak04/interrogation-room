@@ -34,6 +34,7 @@ namespace InterrogationRoom.Networking.Tests
         {
             Invoke("Consume");
             Invoke("TryConsumeSteamLobbyJoin", 0UL);
+            Invoke("DismissPendingSteamLobbyInvite");
         }
 
         [Test]
@@ -77,6 +78,35 @@ namespace InterrogationRoom.Networking.Tests
             Assert.That((bool)Invoke("TryConsumeSteamLobbyJoin", consumeArguments), Is.True);
             Assert.That((ulong)consumeArguments[0], Is.EqualTo(987654321UL));
             Assert.That((bool)Invoke("TryConsumeSteamLobbyJoin", 0UL), Is.False);
+        }
+
+        [Test]
+        public void PendingSteamLobbyInvite_CanBeAcceptedExactlyOnce()
+        {
+            Invoke("SetSteamLobbyInvite", 24680UL, "krx");
+
+            Assert.That(ReadProperty("HasPendingSteamLobbyInvite"), Is.EqualTo(true));
+            Assert.That(ReadProperty("PendingSteamLobbyInviterName"), Is.EqualTo("krx"));
+            Assert.That((bool)Invoke("AcceptPendingSteamLobbyInvite"), Is.True);
+            Assert.That(ReadProperty("HasPendingSteamLobbyInvite"), Is.EqualTo(false));
+            Assert.That(Invoke("Consume").ToString(), Is.EqualTo("Join"));
+
+            object[] consumeArguments = { 0UL };
+            Assert.That((bool)Invoke("TryConsumeSteamLobbyJoin", consumeArguments), Is.True);
+            Assert.That((ulong)consumeArguments[0], Is.EqualTo(24680UL));
+            Assert.That((bool)Invoke("AcceptPendingSteamLobbyInvite"), Is.False);
+        }
+
+        [Test]
+        public void PendingSteamLobbyInvite_CanBeDismissedWithoutJoining()
+        {
+            Invoke("SetSteamLobbyInvite", 13579UL, "krx");
+
+            Invoke("DismissPendingSteamLobbyInvite");
+
+            Assert.That(ReadProperty("HasPendingSteamLobbyInvite"), Is.EqualTo(false));
+            Assert.That(ReadProperty("PendingSteamLobbyInviterName"), Is.EqualTo(string.Empty));
+            Assert.That(ReadProperty("HasPendingSteamLobbyJoin"), Is.EqualTo(false));
         }
 
         private static object Invoke(string methodName, params object[] arguments)

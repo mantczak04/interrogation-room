@@ -68,6 +68,33 @@
     margin-bottom: var(--space-3);
 }
 
+.pending-invite-panel {
+    max-width: 360px;
+    margin-bottom: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background-color: rgba(13, 16, 19, 0.88);
+    border-left-width: 3px;
+    border-left-color: var(--amber);
+}
+
+.pending-invite-label {
+    margin-bottom: var(--space-2);
+    color: var(--paper-bright);
+    font-size: var(--type-body);
+    white-space: normal;
+}
+
+.pending-invite-actions {
+    flex-direction: row;
+}
+
+.pending-invite-action {
+    width: 132px;
+    height: 36px;
+    margin-right: var(--space-2);
+    font-size: var(--type-micro);
+}
+
 .menu-note {
     font-size: var(--type-micro);
     color: var(--graphite-300);

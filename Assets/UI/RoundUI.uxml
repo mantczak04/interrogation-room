@@ -38,6 +38,12 @@
                     <ui:Label name="secret-objective-summary" text="Sekretny Cel jest dostępny od 5 graczy." class="lobby-toggle-summary" />
                     <ui:VisualElement class="rule rule--faint lobby-actions-rule" />
                     <ui:Button name="invite-button" text="Zaproś znajomych" class="btn stamp-font lobby-action" />
+                    <ui:VisualElement name="invite-friend-panel" class="lobby-invite-panel" style="display: none;">
+                        <ui:Label text="ZNAJOMI STEAM ONLINE" class="lobby-invite-heading stamp-font" />
+                        <ui:ScrollView name="invite-friend-list" class="lobby-invite-list" mode="Vertical" horizontal-scroller-visibility="Hidden" />
+                        <ui:Label name="invite-friend-empty" text="Brak znajomych Steam online." class="lobby-invite-empty" />
+                        <ui:Label name="invite-friend-status" class="lobby-invite-status" style="display: none;" />
+                    </ui:VisualElement>
                     <ui:VisualElement name="start-button-hover-area" class="lobby-start-hover-area">
                         <ui:Button name="start-button" text="Start Rundy" class="btn lobby-start" />
                         <ui:Label name="start-button-hover-info" text="Wszyscy gracze muszą być gotowi." class="lobby-start-hover-info" picking-mode="Ignore" />
