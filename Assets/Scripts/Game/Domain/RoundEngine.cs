@@ -13,7 +13,8 @@ namespace InterrogationRoom.Domain
     /// </summary>
     public sealed class RoundEngine
     {
-        public const int MinPlayers = 3;
+        public const bool EnableTwoPlayerRoundsForTesting = true;
+        public const int MinPlayers = EnableTwoPlayerRoundsForTesting ? 2 : 3;
         public const int MaxPlayers = 8;
         public const int MinPlayersForSecretObjective = 5;
 

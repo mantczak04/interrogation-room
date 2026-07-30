@@ -104,6 +104,24 @@ namespace InterrogationRoom.Domain.Tests
         }
 
         [Test]
+        public void StartRound_TwoPlayers_FollowsTestingSwitch()
+        {
+            var players = Enumerable.Range(1, 2).Select(value => new PlayerId(value)).ToArray();
+            var engine = new RoundEngine();
+
+            var transition = engine.Handle(new RoundCommand.StartRound(TestCase(), players, seed: 1));
+
+            Assert.That(transition.Accepted, Is.EqualTo(RoundEngine.EnableTwoPlayerRoundsForTesting));
+            if (!transition.Accepted)
+                return;
+
+            var roles = players.Select(player => engine.ViewFor(player).Role).ToList();
+            Assert.That(roles.Count(role => role == RoundRole.Detective), Is.EqualTo(1));
+            Assert.That(roles.Count(role => role == RoundRole.Guilty), Is.EqualTo(1));
+            Assert.That(roles.Count(role => role == RoundRole.Innocent), Is.Zero);
+        }
+
+        [Test]
         public void StartRound_SameSeed_IsDeterministic()
         {
             var first = StartedEngine(seed: 42);
@@ -141,7 +159,7 @@ namespace InterrogationRoom.Domain.Tests
         public void StartRound_InvalidComposition_IsRejected()
         {
             var tooFew = new RoundEngine().Handle(new RoundCommand.StartRound(
-                TestCase(), FivePlayers.Take(2), seed: 1));
+                TestCase(), FivePlayers.Take(RoundEngine.MinPlayers - 1), seed: 1));
             var tooMany = new RoundEngine().Handle(new RoundCommand.StartRound(
                 TestCase(),
                 Enumerable.Range(1, RoundEngine.MaxPlayers + 1).Select(i => new PlayerId(i)),
