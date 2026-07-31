@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -46,6 +47,35 @@ namespace InterrogationRoom.Gameplay.Tests
         }
 
         [Test]
+        public void UnityAuthenticationPlayerIdentityUsesServerMapping()
+        {
+            const string currentSession = "kcp-current-session";
+            const string authenticationPlayerId = "oCRFzsIz3clc4HOSsQciXUCc4iIZ";
+            var networkIdentitiesByVivoxPlayerId = new Dictionary<string, uint>
+            {
+                [authenticationPlayerId] = 42u
+            };
+
+            Assert.That(
+                TryResolveNetworkIdentityNetId(
+                    currentSession,
+                    authenticationPlayerId,
+                    networkIdentitiesByVivoxPlayerId,
+                    out uint netId),
+                Is.True,
+                "Unity Authentication owns the Vivox participant id, so Mirror must distribute its netId mapping.");
+            Assert.That(netId, Is.EqualTo(42u));
+            Assert.That(
+                TryResolveNetworkIdentityNetId(
+                    currentSession,
+                    "unregistered-authentication-player",
+                    networkIdentitiesByVivoxPlayerId,
+                    out _),
+                Is.False,
+                "An unregistered Vivox identity must never bind to an arbitrary Mirror player.");
+        }
+
+        [Test]
         public void LobbyAndRoundUseSeparateSharedModesInsideTheSameSession()
         {
             const string session = "kcp-shared-session";
@@ -77,6 +107,25 @@ namespace InterrogationRoom.Gameplay.Tests
             bool parsed = (bool)GetRuntimeMethod("TryParsePlayerId").Invoke(null, arguments);
             netId = (uint)arguments[2];
             return parsed;
+        }
+
+        private static bool TryResolveNetworkIdentityNetId(
+            string sessionId,
+            string playerId,
+            IReadOnlyDictionary<string, uint> networkIdentitiesByVivoxPlayerId,
+            out uint netId)
+        {
+            object[] arguments =
+            {
+                sessionId,
+                playerId,
+                networkIdentitiesByVivoxPlayerId,
+                0u
+            };
+            bool resolved = (bool)GetRuntimeMethod("TryResolveNetworkIdentityNetId")
+                .Invoke(null, arguments);
+            netId = (uint)arguments[3];
+            return resolved;
         }
 
         private static MethodInfo GetRuntimeMethod(string methodName) =>
