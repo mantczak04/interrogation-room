@@ -11,11 +11,24 @@ namespace InterrogationRoom.UI.Tests
         private sealed class InMemorySettingsStore : ISettingsStore
         {
             public readonly Dictionary<string, float> Values = new Dictionary<string, float>();
+            public readonly Dictionary<string, string> StringValues =
+                new Dictionary<string, string>();
             public int SaveCount;
 
             public bool TryGetFloat(string key, out float value) => Values.TryGetValue(key, out value);
 
             public void SetFloat(string key, float value) => Values[key] = value;
+
+            public bool TryGetString(string key, out string value) =>
+                StringValues.TryGetValue(key, out value);
+
+            public void SetString(string key, string value) => StringValues[key] = value;
+
+            public void DeleteKey(string key)
+            {
+                Values.Remove(key);
+                StringValues.Remove(key);
+            }
 
             public void Save() => SaveCount++;
         }
@@ -41,6 +54,36 @@ namespace InterrogationRoom.UI.Tests
         {
             Assert.That(settings.MicrophoneLevelPercent, Is.EqualTo(100f));
             Assert.That(settings.MicrophoneMuted, Is.False);
+            Assert.That(settings.PreferredVoiceInputDeviceId, Is.Null);
+        }
+
+        [Test]
+        public void PreferredVoiceInputDevice_PersistsStableVivoxId()
+        {
+            int raised = 0;
+            settings.Changed += () => raised++;
+
+            settings.SetPreferredVoiceInputDevice("capture-id");
+
+            Assert.That(settings.PreferredVoiceInputDeviceId, Is.EqualTo("capture-id"));
+            Assert.That(
+                store.StringValues[GameSettings.VoiceInputDeviceKey],
+                Is.EqualTo("capture-id"));
+            Assert.That(store.SaveCount, Is.EqualTo(1));
+            Assert.That(raised, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void PreferredVoiceDevice_BlankSelectionClearsPreference()
+        {
+            settings.SetPreferredVoiceInputDevice("capture-id");
+
+            settings.SetPreferredVoiceInputDevice(" ");
+
+            Assert.That(settings.PreferredVoiceInputDeviceId, Is.Null);
+            Assert.That(
+                store.StringValues.ContainsKey(GameSettings.VoiceInputDeviceKey),
+                Is.False);
         }
 
         [TestCase(-10f, 0f)]
@@ -230,6 +273,30 @@ namespace InterrogationRoom.UI.Tests
 
             Assert.That(raised, Is.Zero);
             Assert.That(store.SaveCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void InputBindingOverride_PersistsAndCanBeReset()
+        {
+            settings.SetInputBindingOverride(
+                GameInputAction.Interact,
+                "<Keyboard>/f");
+
+            Assert.That(
+                settings.GetInputBindingOverride(GameInputAction.Interact),
+                Is.EqualTo("<Keyboard>/f"));
+            Assert.That(
+                store.StringValues[GameSettings.GetInputBindingKey(GameInputAction.Interact)],
+                Is.EqualTo("<Keyboard>/f"));
+
+            settings.ResetInputBindingOverride(GameInputAction.Interact);
+
+            Assert.That(settings.GetInputBindingOverride(GameInputAction.Interact), Is.Null);
+            Assert.That(
+                store.StringValues.ContainsKey(
+                    GameSettings.GetInputBindingKey(GameInputAction.Interact)),
+                Is.False);
+            Assert.That(store.SaveCount, Is.EqualTo(2));
         }
 
         [Test]

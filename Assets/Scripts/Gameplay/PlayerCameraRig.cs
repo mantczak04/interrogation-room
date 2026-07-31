@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using InterrogationRoom.Settings;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -186,11 +187,7 @@ namespace InterrogationRoom.Gameplay
 
         private static bool WasCameraTogglePressed()
         {
-#if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame;
-#else
-            return Input.GetKeyDown(KeyCode.C);
-#endif
+            return GameInputBindings.WasPressedThisFrame(GameInputAction.View);
         }
 
         private static float GetScrollInput()

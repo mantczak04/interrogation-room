@@ -4,6 +4,22 @@ namespace InterrogationRoom.Voice.Tests
 {
     public sealed class MicrophoneTestPlaybackRulesTests
     {
+        [TestCase(true, false, true)]
+        [TestCase(true, true, false)]
+        [TestCase(false, false, false)]
+        [TestCase(false, true, false)]
+        public void CaptureRemainsOpenForLocalMonitorWithoutChangingUserMute(
+            bool userMuted,
+            bool microphoneTestActive,
+            bool expectedMute)
+        {
+            Assert.That(
+                MicrophoneTestPlaybackRules.ShouldMuteCapture(
+                    userMuted,
+                    microphoneTestActive),
+                Is.EqualTo(expectedMute));
+        }
+
         [TestCase(false, false, MicrophoneTestState.NoInputDevice)]
         [TestCase(true, false, MicrophoneTestState.Failed)]
         [TestCase(true, true, MicrophoneTestState.Starting)]

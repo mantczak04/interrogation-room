@@ -3,9 +3,6 @@ using InterrogationRoom.Settings;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace InterrogationRoom.UI
 {
@@ -25,11 +22,17 @@ public class MainMenuManager : MonoBehaviour
 
     private void OnEnable()
     {
+        EscapeInputRouter.EnsureInstance().Register(
+            this,
+            EscapeHandlerPriority.Context,
+            () => isActiveAndEnabled && !loadingGameScene,
+            OpenSettings);
         GameSettingsService.Current.Changed += RefreshLocalizedText;
     }
 
     private void OnDisable()
     {
+        EscapeInputRouter.UnregisterOwner(this);
         GameSettingsService.Current.Changed -= RefreshLocalizedText;
     }
 
@@ -59,20 +62,6 @@ public class MainMenuManager : MonoBehaviour
     private void Update()
     {
         TryOpenPendingSteamLobby();
-
-        if (WasEscapePressed() && !SettingsMenu.IsOpen && !SettingsMenu.EscapeConsumedThisFrame)
-        {
-            OpenSettings();
-        }
-    }
-
-    private static bool WasEscapePressed()
-    {
-#if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
-#else
-        return Input.GetKeyDown(KeyCode.Escape);
-#endif
     }
 
     private void TryOpenPendingSteamLobby()

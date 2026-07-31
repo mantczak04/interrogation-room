@@ -36,7 +36,6 @@ namespace InterrogationRoom.UI
             new VisualElement[DanceRadialSelection.DanceCount];
         private readonly Label[] optionNumbers =
             new Label[DanceRadialSelection.DanceCount];
-        private bool cursorWasReleased;
         private bool openedWhileDancing;
 
         public bool IsOpen { get; private set; }
@@ -52,12 +51,17 @@ namespace InterrogationRoom.UI
         private void Awake()
         {
             BuildUi();
+            EscapeInputRouter.EnsureInstance().Register(
+                this,
+                EscapeHandlerPriority.Modal,
+                () => IsOpen,
+                Cancel);
         }
 
         private void OnDestroy()
         {
-            if (IsOpen)
-                PlayerInputGate.SetPlayerCursorReleased(cursorWasReleased);
+            EscapeInputRouter.UnregisterOwner(this);
+            PlayerInputGate.SetModalInputBlocked(this, false);
         }
 
         public void Open(bool currentlyDancing)
@@ -65,12 +69,11 @@ namespace InterrogationRoom.UI
             if (IsOpen || overlay == null)
                 return;
 
-            cursorWasReleased = PlayerInputGate.CursorReleased;
             IsOpen = true;
             openedWhileDancing = currentlyDancing;
             SelectedDance = DanceRadialSelection.NoSelection;
             overlay.style.display = DisplayStyle.Flex;
-            PlayerInputGate.SetPlayerCursorReleased(true);
+            PlayerInputGate.SetModalInputBlocked(this, true);
             WarpPointerToScreenCenter();
 
             // The warp only lands on the next input update, so reading the pointer now would
@@ -89,7 +92,7 @@ namespace InterrogationRoom.UI
             IsOpen = false;
             SelectedDance = DanceRadialSelection.NoSelection;
             overlay.style.display = DisplayStyle.None;
-            PlayerInputGate.SetPlayerCursorReleased(cursorWasReleased);
+            PlayerInputGate.SetModalInputBlocked(this, false);
             return selection;
         }
 
@@ -101,7 +104,7 @@ namespace InterrogationRoom.UI
             IsOpen = false;
             SelectedDance = DanceRadialSelection.NoSelection;
             overlay.style.display = DisplayStyle.None;
-            PlayerInputGate.SetPlayerCursorReleased(cursorWasReleased);
+            PlayerInputGate.SetModalInputBlocked(this, false);
         }
 
         public void RefreshSelection()
@@ -210,6 +213,7 @@ namespace InterrogationRoom.UI
             center.Add(centerLabel);
             wheel.Add(center);
 
+            UiControlStates.Normalize(overlay);
             overlay.style.display = DisplayStyle.None;
             RefreshHighlight();
         }

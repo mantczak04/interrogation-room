@@ -55,6 +55,7 @@ namespace InterrogationRoom.Networking
         private bool _lobbyProfileSent;
         private string _localLobbyDisplayName;
         private int _developerLobbyFakePlayerCount;
+        private bool _allowSoloDeveloperLobbyStart;
         private double _roundDeadline;
         private double _roundStartedAtNetworkTime;
         private double _preparationDeadline;
@@ -100,6 +101,8 @@ namespace InterrogationRoom.Networking
         }
         public int DeveloperLobbyFakePlayerCount =>
             DeveloperToolsAvailable ? _developerLobbyFakePlayerCount : 0;
+        public bool AllowsSoloDeveloperLobbyStart =>
+            DeveloperToolsAvailable && _allowSoloDeveloperLobbyStart;
         public bool UsesSpatialVoice => VoiceModeRules.UsesSpatialAudio(
             NetworkServer.active
                 ? _phase
@@ -256,6 +259,15 @@ namespace InterrogationRoom.Networking
             _developerLobbyFakePlayerCount = boundedCount;
             _lobbyStateDirty = true;
             BroadcastLobbyState(force: true);
+            return true;
+        }
+
+        public bool TryEnableSoloDeveloperLobbyStart()
+        {
+            if (!DeveloperToolsAvailable || _phase != RoundPhase.Lobby)
+                return false;
+
+            _allowSoloDeveloperLobbyStart = true;
             return true;
         }
 
@@ -848,9 +860,37 @@ namespace InterrogationRoom.Networking
 
         private void StartRound(NetworkConnectionToClient sender)
         {
-            if (!_lobbyRoster.AreAllReady(_connectionsByPlayerId.Keys))
+            bool allPlayersReady = _lobbyRoster.AreAllReady(_connectionsByPlayerId.Keys);
+            if (!RoundLobbyRules.CanStartRound(
+                    IsHost(sender),
+                    _phase,
+                    ConnectedPlayerCount,
+                    allPlayersReady,
+                    AllowsSoloDeveloperLobbyStart))
             {
-                Reject(sender, "All players must be ready before the Runda starts.");
+                Reject(
+                    sender,
+                    !allPlayersReady
+                        ? "All players must be ready before the Runda starts."
+                        : $"A Runda requires {RoundEngine.MinPlayers}-{RoundEngine.MaxPlayers} players.");
+                return;
+            }
+
+            if (AllowsSoloDeveloperLobbyStart && ConnectedPlayerCount < RoundEngine.MinPlayers)
+            {
+                PlayerId controlledPlayer = ConnectionToPlayerId(sender);
+                // The default developer scenario controls a Niewinny, so its
+                // technical roster needs Detektyw, Winny and at least one
+                // Niewinny even when testing-only domain settings allow two.
+                int targetPlayerCount = Math.Max(3, RoundEngine.MinPlayers);
+                if (!TryStartDeveloperScenario(
+                        RoundDeveloperScenario.PersonalMatter,
+                        targetPlayerCount,
+                        controlledPlayer,
+                        out string rejectionReason))
+                {
+                    Reject(sender, rejectionReason);
+                }
                 return;
             }
 
@@ -1549,6 +1589,7 @@ namespace InterrogationRoom.Networking
             _phase = RoundPhase.Lobby;
             _developerPlan = null;
             _activeDeveloperTask = null;
+            _allowSoloDeveloperLobbyStart = false;
             _hostAllowsSecretObjective = true;
             _roundLimitMinutes = RoundLobbyRules.DefaultRoundLimitMinutes;
             _publicLobbyPlayerCount = 0;

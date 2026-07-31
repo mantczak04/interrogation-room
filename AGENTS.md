@@ -208,6 +208,15 @@ After running a builder, check the Console for errors and save the affected scen
 
 ## Verification
 
+### Performance and visual-regression evidence
+
+- Treat performance work as a controlled A/B experiment. Before and after each sample, record and compare the active scene, Play Mode state, transport, host/client connection count, Round phase, local-player presence, active camera, and relevant UI state. Discard a run if any precondition changes.
+- Warm both variants equivalently. Frame-time claims require at least 60 unique frames per variant and must report sample count, median, p95, and noise or outliers. Prefer an attributed Profiler marker over a global counter; never compare isolated frames or counters captured from different gameplay states.
+- Source edits cause compilation and domain reloads, and MCP/Editor activity can contaminate global GC and frame counters. Re-establish the full scenario after every reload and do not claim an allocation or frame-time improvement when the measured counter is inconsistent or below noise.
+- For UI performance changes, preserve one-time binding, initialization, and first-render paths. Verify a cold Play Mode start plus every affected transition (at minimum hidden, visible, open, and close) before accepting steady-state gains.
+- Screenshot capture is asynchronous. Wait for a completed rendered frame, confirm the output file is non-empty, and inspect it. Discard black, transitional, stale, or wrong-state captures. If random or animated content differs, pin it to the same state or state explicitly that a pixel comparison is invalid.
+- Capture Console errors before the baseline and compare them with the final run so pre-existing errors are not attributed to the change. Do not claim that the application is smooth on weak hardware from Editor profiling alone; that claim requires a standalone Player build tested on representative minimum-spec hardware with the same scenario and quality settings.
+
 - Cover `RoundEngine` logic with Edit Mode tests through its public interface.
 - Run tests through Unity MCP: `run_tests` with `EditMode`, then poll `get_test_job` for results. When only one area changed, filter by its test assembly (for example `InterrogationRoom.Domain.EditModeTests`, `...Game.Networking.EditModeTests`, `...Game.UI.EditModeTests`, `...Game.Voice.EditModeTests`). PlayMode tests need a running Editor; run them only when Edit Mode coverage is insufficient.
 - After C# changes, verify Unity compilation and Console errors.

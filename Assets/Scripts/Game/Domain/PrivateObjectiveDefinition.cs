@@ -202,7 +202,7 @@ namespace InterrogationRoom.Domain
                     "Chcesz skierować podejrzenia na Cel, pozostawiając przy nim rzecz z policyjnego depozytu.",
                     "Zabierz paczkę papierosów albo zapalniczkę z depozytu.",
                     "magazyn dowodów — depozyt drobnych przedmiotów",
-                    "Podłóż przedmiot w rzeczach osobistych Celu.",
+                    "Podłóż zabraną paczkę papierosów albo zapalniczkę w skrytce rzeczy osobistych Celu.",
                     "szafki osobiste — skrytka przypisana do Celu",
                     "papierosy-depozytowe"),
                 Create(
@@ -229,7 +229,7 @@ namespace InterrogationRoom.Domain
                     "Cudza rzecz pozostawiona przy depozycie Celu ma wywołać pytania o to, kto ją przeniósł.",
                     "Zabierz telefon albo kartę wiadomości z depozytu.",
                     "magazyn dowodów — elektronika i wiadomości",
-                    "Zostaw rzecz przy depozycie Celu.",
+                    "Zostaw zabrany telefon albo kartę wiadomości przy depozycie Celu.",
                     "szafki depozytowe — numer Celu",
                     "telefon-lub-karta-wiadomosci")
             });

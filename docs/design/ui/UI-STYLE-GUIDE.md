@@ -110,6 +110,13 @@ USS nie ma właściwości `line-height` — interlinię kontrolują metryki Font
 
 Wspólne dla interaktywnych: `transition-property: background-color, border-color, color; transition-duration: 0.1s; transition-timing-function: ease-out;`. Stan `:focus`: obrys 2 px `--col-amber` (nawigacja klawiaturą w menu i ustawieniach).
 
+Kontrakt stanów runtime:
+
+- wybrana opcja używa wspólnej klasy `.is-selected`, a trwający stan kontrolki `.is-active`; kod nadaje je wyłącznie przez `UiControlStates`;
+- statyczne `Label` mają `PickingMode.Ignore` przez `UiControlStates.Normalize(root)`, aby tekst nie udawał kontrolki i nie przejmował hover/click;
+- końcowe reguły `:disabled`, `:disabled:hover`, `:disabled:active` i `:disabled:focus` muszą wygrywać z modyfikatorami przycisku; wyjątek komponentowy (np. transparentny `Start Rundy` lub wybrany limit) deklaruje wszystkie te kombinacje z większą specyficznością;
+- kontrolka disabled nie odtwarza hover/click sound, nie przesuwa się i nie pokazuje tooltipu zależnego od hover; przyczyna blokady jest stałym tekstem obok kontrolki.
+
 ### Przycisk
 
 ```uss

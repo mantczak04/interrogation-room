@@ -24,9 +24,10 @@ MonoBehaviour:
     anchorActionId: osobista-sprawa-przygotuj
     createsIncident: 0
   - stableStepId: OS-12-moneta
-    description: "Otw\xF3rz odpowiadaj\u0105c\u0105 numerowi kopert\u0119 i zabierz
-      monet\u0119."
-    locationHint: "magazyn dowod\xF3w \u2014 koperty drobnych przedmiot\xF3w"
+    description: "Otw\xF3rz kopert\u0119 o sprawdzonym numerze, zabierz szcz\u0119\u015Bliw\u0105
+      monet\u0119 i zanie\u015B j\u0105 do wolnej skrytki osobistej lub archiwalnej."
+    locationHint: "magazyn dowod\xF3w \u2014 koperty drobnych przedmiot\xF3w; potem
+      szafki osobiste lub archiwum \u2014 wolna skrytka"
     anchorActionId: osobista-sprawa-zakoncz
     createsIncident: 1
   reservedItemIds:

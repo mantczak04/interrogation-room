@@ -3,9 +3,6 @@ using InterrogationRoom.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace InterrogationRoom.UI
 {
@@ -26,13 +23,12 @@ public class MainMenuPresenter : MonoBehaviour
     private Button developerTestButton;
     private Button settingsButton;
     private Button quitButton;
-    private Label kicker;
-    private Label note;
     private Label build;
     private VisualElement pendingInvitePanel;
     private Label pendingInviteLabel;
     private Button acceptInviteButton;
     private Button dismissInviteButton;
+    private readonly object pendingInviteEscapeOwner = new();
 
     private bool loadingGameScene;
 
@@ -50,8 +46,6 @@ public class MainMenuPresenter : MonoBehaviour
         developerTestButton = root.Q<Button>("developer-test-button");
         settingsButton = root.Q<Button>("settings-button");
         quitButton = root.Q<Button>("quit-button");
-        kicker = root.Q<Label>("menu-kicker");
-        note = root.Q<Label>("menu-note");
         build = root.Q<Label>("menu-build");
         pendingInvitePanel = root.Q<VisualElement>("pending-invite-panel");
         pendingInviteLabel = root.Q<Label>("pending-invite-label");
@@ -68,6 +62,17 @@ public class MainMenuPresenter : MonoBehaviour
 
         UiSounds.Bind(root);
 
+        EscapeInputRouter router = EscapeInputRouter.EnsureInstance();
+        router.Register(
+            this,
+            EscapeHandlerPriority.Context,
+            () => isActiveAndEnabled && !loadingGameScene,
+            OpenSettings);
+        router.Register(
+            pendingInviteEscapeOwner,
+            EscapeHandlerPriority.Modal,
+            () => isActiveAndEnabled && GameLaunchRequest.HasPendingSteamLobbyInvite,
+            DismissPendingInvite);
         GameSettingsService.Current.Changed += RefreshLocalizedText;
         RefreshLocalizedText();
     }
@@ -75,6 +80,8 @@ public class MainMenuPresenter : MonoBehaviour
     private void OnDisable()
     {
         GameSettingsService.Current.Changed -= RefreshLocalizedText;
+        EscapeInputRouter.UnregisterOwner(pendingInviteEscapeOwner);
+        EscapeInputRouter.UnregisterOwner(this);
 
         if (hostButton != null)
             hostButton.clicked -= HostGame;
@@ -102,9 +109,6 @@ public class MainMenuPresenter : MonoBehaviour
     {
         TryOpenPendingSteamLobby();
         RefreshPendingInvite();
-
-        if (WasEscapePressed() && !SettingsMenu.IsOpen && !SettingsMenu.EscapeConsumedThisFrame)
-            OpenSettings();
     }
 
     private void RefreshLocalizedText()
@@ -115,21 +119,10 @@ public class MainMenuPresenter : MonoBehaviour
         settingsButton.text = UiText.Get("Ustawienia").ToUpperInvariant();
         quitButton.text = UiText.Get("Wyjdź").ToUpperInvariant();
 
-        kicker.text = UiText.Get("AKTA SPRAWY");
-        note.text = UiText.Get("Gra sieciowa dla 3–8 graczy.");
         build.text = $"v{Application.version}";
         acceptInviteButton.text = UiText.Get("Dołącz").ToUpperInvariant();
         dismissInviteButton.text = UiText.Get("Odrzuć").ToUpperInvariant();
         RefreshPendingInvite();
-    }
-
-    private static bool WasEscapePressed()
-    {
-#if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
-#else
-        return Input.GetKeyDown(KeyCode.Escape);
-#endif
     }
 
     private void TryOpenPendingSteamLobby()

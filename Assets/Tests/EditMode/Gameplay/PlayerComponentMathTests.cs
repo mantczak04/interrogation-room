@@ -1,4 +1,7 @@
+using System.Reflection;
 using NUnit.Framework;
+using InterrogationRoom.Settings;
+using InterrogationRoom.UI;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -158,11 +161,21 @@ namespace InterrogationRoom.Gameplay.Tests
         [Test]
         public void ThirdPersonMouseLookTurnsPlayerBody()
         {
+            ResetGameInputBindings();
             GameObject playerObject = new GameObject("Third Person Player");
             GameObject cameraObject = new GameObject("Player Camera");
+            GameSettings settings = GameSettingsService.Current;
+            string previousViewBinding =
+                settings.GetInputBindingOverride(GameInputAction.View);
 
             try
             {
+                settings.ResetInputBindingOverride(GameInputAction.View);
+                PlayerInputGate.SetUiInputBlocked(false);
+                PlayerInputGate.SetPlayerCursorReleased(false);
+                _ = GameInputBindings.GetBindingDisplayString(
+                    GameInputAction.View);
+
                 cameraObject.transform.SetParent(playerObject.transform, false);
                 Camera camera = cameraObject.AddComponent<Camera>();
                 PlayerCameraRig rig = playerObject.AddComponent<PlayerCameraRig>();
@@ -186,8 +199,22 @@ namespace InterrogationRoom.Gameplay.Tests
             }
             finally
             {
+                settings.SetInputBindingOverride(
+                    GameInputAction.View,
+                    previousViewBinding);
+                ResetGameInputBindings();
+                PlayerInputGate.SetUiInputBlocked(true);
                 Object.DestroyImmediate(playerObject);
             }
+        }
+
+        private static void ResetGameInputBindings()
+        {
+            MethodInfo reset = typeof(GameInputBindings).GetMethod(
+                "ResetRuntimeState",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(reset, Is.Not.Null);
+            reset.Invoke(null, null);
         }
     }
 #endif

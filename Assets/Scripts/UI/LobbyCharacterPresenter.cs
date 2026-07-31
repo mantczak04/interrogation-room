@@ -135,6 +135,7 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
     private void BindVisualTree()
     {
         VisualElement root = GetComponent<UIDocument>().rootVisualElement;
+        UiControlStates.Normalize(root);
         lobbyPanel = Required<VisualElement>(root, "lobby-panel");
         characterNameLabel = Required<Label>(root, "character-name-label");
         previousCharacterButton = Required<Button>(root, "previous-character-button");
@@ -256,6 +257,7 @@ public sealed class LobbyCharacterPresenter : MonoBehaviour
             microphoneStateLabels[player.PlayerId] = microphoneState;
             SetVisible(speaker, false);
             SetVisible(microphoneState, false);
+            UiControlStates.Normalize(row);
             playerList.Add(row);
         }
     }

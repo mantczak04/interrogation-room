@@ -3,12 +3,10 @@ using InterrogationRoom.Gameplay;
 using InterrogationRoom.Gameplay.Items;
 using InterrogationRoom.Gameplay.Minigames;
 using InterrogationRoom.Networking;
+using InterrogationRoom.Settings;
 using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace InterrogationRoom.Gameplay.Interaction
 {
@@ -827,29 +825,17 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         private static bool WasDropPressed()
         {
-#if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.gKey.wasPressedThisFrame;
-#else
-            return Input.GetKeyDown(KeyCode.G);
-#endif
+            return GameInputBindings.WasPressedThisFrame(GameInputAction.Drop);
         }
 
         private static bool WasInteractPressed()
         {
-#if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
-#else
-            return Input.GetKeyDown(KeyCode.E);
-#endif
+            return GameInputBindings.WasPressedThisFrame(GameInputAction.Interact);
         }
 
         private static bool WasInteractReleased()
         {
-#if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.eKey.wasReleasedThisFrame;
-#else
-            return Input.GetKeyUp(KeyCode.E);
-#endif
+            return GameInputBindings.WasReleasedThisFrame(GameInputAction.Interact);
         }
     }
 }

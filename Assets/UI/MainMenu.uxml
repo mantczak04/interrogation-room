@@ -7,7 +7,6 @@
         <ui:VisualElement name="menu-wash" class="menu-wash" />
 
         <ui:VisualElement name="menu-content" class="menu-content">
-            <ui:Label name="menu-kicker" class="kicker document-font menu-kicker" text="AKTA SPRAWY" />
             <ui:Label name="menu-title" class="menu-title stamp-font" text="PRZESŁUCHANIE" />
             <ui:VisualElement class="rule menu-title-rule" />
 
@@ -26,8 +25,6 @@
                     <ui:Button name="dismiss-invite-button" class="btn btn--quiet pending-invite-action" text="ODRZUĆ" />
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <ui:Label name="menu-note" class="menu-note document-font" text="" />
         </ui:VisualElement>
 
         <ui:Label name="menu-build" class="menu-build document-font" text="" />

@@ -321,8 +321,8 @@ namespace InterrogationRoom.Editor.Content
                     false),
                 Step(
                     "OS-12-moneta",
-                    "Otwórz odpowiadającą numerowi kopertę i zabierz monetę.",
-                    "magazyn dowodów — koperty drobnych przedmiotów",
+                    "Otwórz kopertę o sprawdzonym numerze, zabierz szczęśliwą monetę i zanieś ją do wolnej skrytki osobistej lub archiwalnej.",
+                    "magazyn dowodów — koperty drobnych przedmiotów; potem szafki osobiste lub archiwum — wolna skrytka",
                     "osobista-sprawa-zakoncz",
                     true)
             },

@@ -117,5 +117,30 @@ namespace InterrogationRoom.Content.Tests
                 Assert.That(definition.ReservedItemIds, Is.Not.Empty, path);
             }
         }
+
+        [Test]
+        public void CoinPersonalMatter_SecondStepNamesItemActionAndPlace()
+        {
+            const string path = "Assets/Content/PersonalMatters/OS-12.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<PersonalMatterAsset>(path);
+
+            Assert.That(asset, Is.Not.Null,
+                "Run Interrogation Room/Content/Sync Personal Matter Assets before validating OS-12.");
+            PersonalMatterDefinition definition = asset.ToDefinition();
+
+            Assert.That(definition.Steps, Has.Count.EqualTo(2));
+            Assert.That(definition.Steps[0].Description, Does.Contain("numer"));
+            Assert.That(definition.Steps[0].Description, Does.Not.Contain("Otwórz"),
+                "The current step must not reveal the future action.");
+
+            PrivateObjectiveStepDefinition secondStep = definition.Steps[1];
+            Assert.That(secondStep.Description, Does.Contain("Otwórz"));
+            Assert.That(secondStep.Description, Does.Contain("zabierz"));
+            Assert.That(secondStep.Description, Does.Contain("szczęśliwą monetę"));
+            Assert.That(secondStep.Description, Does.Contain("zanieś"));
+            Assert.That(secondStep.Description, Does.Contain("skrytki"));
+            Assert.That(secondStep.LocationHint, Does.Contain("koperty drobnych przedmiotów"));
+            Assert.That(secondStep.LocationHint, Does.Contain("wolna skrytka"));
+        }
     }
 }

@@ -78,7 +78,6 @@ namespace InterrogationRoom.Gameplay.Minigames
         private Action succeeded;
         private Action failed;
         private Action cancelled;
-        private bool cursorWasReleased;
         private bool closing;
         private Font font;
         private Canvas canvas;
@@ -102,8 +101,12 @@ namespace InterrogationRoom.Gameplay.Minigames
             succeeded = succeededCallback;
             failed = failedCallback;
             cancelled = cancelledCallback;
-            cursorWasReleased = PlayerInputGate.CursorReleased;
-            PlayerInputGate.SetPlayerCursorReleased(true);
+            PlayerInputGate.SetModalInputBlocked(this, true);
+            EscapeInputRouter.EnsureInstance().Register(
+                this,
+                EscapeHandlerPriority.Modal,
+                () => !closing,
+                () => Close(notifyCancellation: true));
             EnsureEventSystem();
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             BuildFrame(UiText.Get(Title), UiText.Get(spec.IntroText));
@@ -314,12 +317,6 @@ namespace InterrogationRoom.Gameplay.Minigames
             return button;
         }
 
-        private void Update()
-        {
-            if (!closing && WasCancelPressed())
-                Close(notifyCancellation: true);
-        }
-
         private void OnDestroy()
         {
             RestoreCursor();
@@ -384,9 +381,8 @@ namespace InterrogationRoom.Gameplay.Minigames
 
         private void RestoreCursor()
         {
-            if (!cursorWasReleased)
-                PlayerInputGate.SetPlayerCursorReleased(false);
-            cursorWasReleased = true;
+            EscapeInputRouter.UnregisterOwner(this);
+            PlayerInputGate.SetModalInputBlocked(this, false);
         }
 
         private static Image CreateImage(
@@ -424,14 +420,6 @@ namespace InterrogationRoom.Gameplay.Minigames
 #endif
         }
 
-        private static bool WasCancelPressed()
-        {
-#if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
-#else
-            return Input.GetKeyDown(KeyCode.Escape);
-#endif
-        }
     }
 
     public sealed class FileSearchMinigamePanel : MinigamePanelBase

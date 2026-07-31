@@ -49,7 +49,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     [SerializeField] RoundPresenter roundPresenter;
     [SerializeField] string mainMenuSceneName = "MainMenu";
 
-    [Tooltip("Pressing Play straight on the Round scene starts a solo developer Runda instead of opening this menu. ParrelSync clones opt out so the second Editor can still join the first one.")]
+    [Tooltip("Pressing Play straight on the Round scene opens a developer lobby that can start with one ready player. ParrelSync clones opt out so the second Editor can still join the first one.")]
     [SerializeField] bool autoStartDeveloperTestOnPlay = true;
 
     UIDocument document;
@@ -68,13 +68,9 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     bool elementsBound;
     bool sandboxPinned;
     bool hadLocalPlayer;
-    bool developerAutoStartPending;
-    float developerAutoStartDeadline;
-    float nextDeveloperAutoStartAttempt;
-#if UNITY_EDITOR
-    bool cursorWasLockedLastFrame;
-#endif
+    bool? renderedHintVisible;
     MenuPage currentPage = MenuPage.Home;
+    string renderedHintText;
     string renderedSignature;
 
     public static bool HandlesEscape { get; private set; }
@@ -98,6 +94,11 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     void OnEnable()
     {
         HandlesEscape = true;
+        EscapeInputRouter.EnsureInstance().Register(
+            this,
+            EscapeHandlerPriority.Context,
+            () => isActiveAndEnabled,
+            HandleEscape);
         GameSettingsService.Current.Changed += OnLanguageChanged;
         ApplyPageVisibility();
     }
@@ -141,11 +142,9 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     }
 
     /// <summary>
-    /// Entering Play Mode straight on the Round scene carries no launch request,
-    /// which used to drop us into the mode menu before every single test run. In
-    /// the Editor that run is always a test, so host and start the developer
-    /// Runda immediately instead. ParrelSync clones opt out: the second Editor
-    /// has to stay free to join the first one as a client.
+    /// Entering Play Mode straight on the Round scene carries no launch request.
+    /// In the primary Editor that opens a developer lobby automatically.
+    /// ParrelSync clones opt out so the second Editor can still join as a client.
     /// </summary>
     bool ShouldAutoStartDeveloperTest()
     {
@@ -161,10 +160,9 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
     }
 
     /// <summary>
-    /// "Test deweloperski" from the main menu: host locally and, once the
-    /// local player has spawned, start a developer Runda solo. Missing seats
-    /// are filled with technical domain players, so no other humans are
-    /// needed. Falls back to the mode menu in release builds.
+    /// "Test deweloperski" from the main menu: open a normal-looking lobby
+    /// whose host may start with one ready player. Missing domain seats are
+    /// filled only when the host presses Start Rundy.
     /// </summary>
     void BeginDeveloperTestLaunch()
     {
@@ -177,6 +175,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         if (roundPresenter != null)
             roundPresenter.SetLobbyMenuVisible(true);
         PlayerInputGate.SetPlayerCursorReleased(true);
+        roundCoordinator?.TryEnableSoloDeveloperLobbyStart();
 
         if (!NetworkClient.active && !NetworkServer.active)
         {
@@ -186,61 +185,12 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
                 manager.StartHost();
         }
 
-        developerAutoStartPending = true;
-        developerAutoStartDeadline = Time.unscaledTime + 20f;
-    }
-
-    void TickDeveloperAutoStart()
-    {
-        if (roundCoordinator == null || !NetworkRoundCoordinator.DeveloperToolsAvailable)
-        {
-            developerAutoStartPending = false;
-            return;
-        }
-
-        // Someone (or a previous attempt) already got a Runda going.
-        if (roundCoordinator.ActiveDeveloperPlan != null
-            || roundCoordinator.CurrentView?.Phase is RoundPhase.Preparation or RoundPhase.Round)
-        {
-            developerAutoStartPending = false;
-            return;
-        }
-
-        if (Time.unscaledTime > developerAutoStartDeadline)
-        {
-            developerAutoStartPending = false;
-            Debug.LogWarning(
-                "[CenteredNetworkManagerHUD] Developer test auto-start timed out. Press F8 and start a scenario manually.",
-                this);
-            return;
-        }
-
-        if (Time.unscaledTime < nextDeveloperAutoStartAttempt)
-            return;
-        nextDeveloperAutoStartAttempt = Time.unscaledTime + 0.5f;
-
-        // Wait for the host and the local player's physical Runda components.
-        if (!NetworkServer.activeHost)
-            return;
-        var players = roundCoordinator.ConnectedPlayers;
-        if (players.Count == 0)
-            return;
-
-        if (roundCoordinator.TryStartDeveloperScenario(
-                RoundDeveloperScenario.PersonalMatter,
-                RoundEngine.MinPlayers,
-                players[0],
-                out _))
-        {
-            developerAutoStartPending = false;
-        }
-        // Rejections are retried until the deadline: the usual cause is the
-        // physical roster not having spawned yet.
     }
 
     void OnDisable()
     {
         HandlesEscape = false;
+        EscapeInputRouter.UnregisterOwner(this);
         sandboxPinned = false;
         GameSettingsService.Current.Changed -= OnLanguageChanged;
         if (roundPresenter != null)
@@ -306,6 +256,8 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         headerKickerLabel = root.Q<Label>("header-kicker");
         headerTitleLabel = root.Q<Label>("header-title");
         hintLabel = root.Q<Label>("network-hint");
+        renderedHintVisible = null;
+        renderedHintText = null;
 
         UiSounds.Bind(root);
         SetVisible(scrim, false);
@@ -319,9 +271,6 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         bool hasLocalPlayer = NetworkClient.localPlayer != null;
         bool localPlayerArrived = hasLocalPlayer && !hadLocalPlayer;
         hadLocalPlayer = hasLocalPlayer;
-
-        if (developerAutoStartPending)
-            TickDeveloperAutoStart();
 
         if (isVisible && currentPage == MenuPage.Network && localPlayerArrived)
         {
@@ -339,43 +288,13 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         }
 
 #if ENABLE_INPUT_SYSTEM
-        bool togglePressed = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
         bool sandboxPressed = Application.isEditor
                               && Keyboard.current != null
                               && Keyboard.current.f8Key.wasPressedThisFrame;
 #else
-        bool togglePressed = Input.GetKeyDown(KeyCode.Escape);
         bool sandboxPressed = Application.isEditor && Input.GetKeyDown(KeyCode.F8);
 #endif
-#if UNITY_EDITOR
-        // In the Editor, pressing Esc with a locked cursor is consumed by the
-        // Game view to release the cursor and the key never reaches the game.
-        // A Locked -> None transition that the input gate did not request is
-        // therefore that swallowed Esc press.
-        bool editorSwallowedEscape = cursorWasLockedLastFrame
-                                     && UnityEngine.Cursor.lockState == CursorLockMode.None
-                                     && !PlayerInputGate.CursorReleased;
-        cursorWasLockedLastFrame = UnityEngine.Cursor.lockState == CursorLockMode.Locked;
-        togglePressed |= editorSwallowedEscape;
-#endif
-        if (togglePressed && !SettingsMenu.IsOpen && !SettingsMenu.EscapeConsumedThisFrame)
-        {
-            if (isVisible)
-            {
-                SetMenuVisible(false, MenuPage.Home);
-            }
-            else if (ShouldOpenModeMenu())
-            {
-                SetMenuVisible(true, MenuPage.Home);
-            }
-            else if (settingsMenu != null)
-            {
-                settingsMenu.Open();
-            }
-            return;
-        }
-
-        if (sandboxPressed)
+        if (sandboxPressed && !GameInputBindings.RawInputSuppressed)
         {
             if (sandboxPinned || (isVisible && currentPage == MenuPage.Sandbox))
             {
@@ -390,13 +309,32 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         }
 
         RefreshHint();
-        RenderIfChanged();
+        if (!elementsBound || isVisible)
+            RenderIfChanged();
+    }
+
+    void HandleEscape()
+    {
+        if (isVisible)
+        {
+            SetMenuVisible(false, MenuPage.Home);
+        }
+        else if (ShouldOpenModeMenu())
+        {
+            SetMenuVisible(true, MenuPage.Home);
+        }
+        else
+        {
+            settingsMenu?.Open();
+        }
     }
 
     void OnLanguageChanged()
     {
+        renderedHintText = null;
         renderedSignature = null;
-        RenderIfChanged();
+        if (isVisible)
+            RenderIfChanged();
     }
 
     /// <summary>
@@ -740,9 +678,23 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         bool automaticLobbyVisible = (NetworkClient.isConnected || NetworkServer.active)
                                      && (roundCoordinator == null || roundCoordinator.CurrentView == null);
         bool show = Application.isEditor && !automaticLobbyVisible;
-        SetVisible(hintLabel, show);
-        if (show && hintLabel != null)
-            hintLabel.text = UiText.Get("Esc: menu     F8: sandbox Rundy     V: mikrofon");
+        if (hintLabel == null)
+            return;
+
+        if (renderedHintVisible != show)
+        {
+            renderedHintVisible = show;
+            SetVisible(hintLabel, show);
+        }
+
+        if (!show || renderedHintText != null)
+            return;
+
+        renderedHintText = UiText.Format(
+            "Esc: menu     F8: sandbox Rundy     {0}: mikrofon",
+            GameInputBindings.GetBindingDisplayString(
+                GameInputAction.VoiceMute));
+        hintLabel.text = renderedHintText;
     }
 
     static void AddAction(VisualElement parent, string text, string modifier, System.Action action)

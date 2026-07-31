@@ -1,8 +1,8 @@
 /*
  * Settings screen layout only. Colours, fonts and sizes come from Theme.uss.
  *
- * The screen is a single sheet of paper laid on the darkened game view, so it
- * reads as a form pulled from the case file rather than as an options dialog.
+ * The sheet is divided into small, explicit sections. Only one section is
+ * visible at a time, so the player never has to search one long form.
  */
 
 .settings-scrim {
@@ -17,39 +17,102 @@
 }
 
 .settings-sheet {
-    width: 620px;
-    max-width: 92%;
-    max-height: 92%;
-    padding: 40px 48px 36px 48px;
-    border-left-width: 6px;
+    width: 960px;
+    max-width: 96%;
+    max-height: 96%;
+    padding: 28px 32px 24px 32px;
+    border-left-width: 4px;
     border-left-color: var(--brass);
-}
-
-.settings-kicker {
-    font-size: var(--type-micro);
-    color: var(--ink-faded);
-    letter-spacing: 3px;
-    margin-bottom: var(--space-2);
 }
 
 .settings-title {
     font-size: var(--type-subtitle);
     color: var(--ink);
     letter-spacing: 4px;
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
 }
 
 .settings-rule {
     height: 1px;
     background-color: var(--paper-shadow);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
 }
 
 .settings-hint {
     font-size: var(--type-micro);
     color: var(--ink-faded);
     white-space: normal;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-2);
+}
+
+.settings-tabs {
+    height: 44px;
+    flex-direction: row;
+    margin-bottom: var(--space-3);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--paper-shadow);
+}
+
+.settings-tab {
+    flex-grow: 1;
+    margin: 0 var(--space-2) 0 0;
+    padding: 0 var(--space-3);
+    color: var(--ink-faded);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+    border-radius: var(--radius-small);
+    font-size: var(--type-body);
+    letter-spacing: 2px;
+}
+
+#sound-tab-button {
+    margin-right: 0;
+}
+
+.settings-tab:hover {
+    color: var(--ink);
+    background-color: var(--paper-bright);
+}
+
+.settings-tab:focus {
+    color: var(--ink);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.settings-tab.is-selected,
+.settings-tab.is-selected:hover,
+.settings-tab.is-selected:focus {
+    color: var(--ink);
+    background-color: var(--paper-bright);
+    border-bottom-color: var(--amber-dim);
+}
+
+.settings-sections {
+    min-height: 0;
+    flex-grow: 1;
+}
+
+.settings-section {
+    display: none;
+    min-height: 0;
+}
+
+.settings-section.is-selected {
+    display: flex;
+}
+
+.settings-group {
+    margin-bottom: var(--space-2);
+    padding: var(--space-3);
+    background-color: rgba(232, 220, 197, 0.56);
+    border-width: 1px;
+    border-color: rgba(116, 103, 78, 0.45);
+    border-radius: var(--radius-small);
 }
 
 .settings-caption {
@@ -62,7 +125,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-1);
 }
 
 .settings-value {
@@ -72,13 +135,13 @@
 
 /* Slider: strip the default UI Toolkit chrome and rebuild it on paper. */
 .settings-slider {
-    margin: 0 0 var(--space-6) 0;
+    margin: 0;
 }
 
 .settings-slider .unity-base-slider__tracker {
     background-color: var(--paper-shadow);
     border-width: 0;
-    border-radius: 0;
+    border-radius: var(--radius-small);
     height: 3px;
     margin-top: 6px;
 }
@@ -86,7 +149,7 @@
 .settings-slider .unity-base-slider__dragger {
     background-color: var(--green);
     border-width: 0;
-    border-radius: 0;
+    border-radius: var(--radius-small);
     width: 14px;
     height: 22px;
     margin-top: -4px;
@@ -96,10 +159,41 @@
     background-color: var(--green-hover);
 }
 
+.settings-slider:focus .unity-base-slider__dragger {
+    background-color: var(--amber);
+    border-width: 2px;
+    border-color: var(--ink);
+}
+
+.settings-rebind-blocker {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    background-color: rgba(10, 12, 11, 0.86);
+}
+
+.settings-rebind-blocker-label {
+    max-width: 520px;
+    padding: var(--space-4);
+    color: var(--paper);
+    background-color: var(--ink);
+    border-width: 2px;
+    border-color: var(--amber);
+    border-radius: var(--radius-small);
+    font-size: var(--type-body);
+    -unity-text-align: middle-center;
+}
+
 .settings-language-row {
     flex-direction: row;
     margin-top: var(--space-2);
-    margin-bottom: var(--space-6);
+    margin-bottom: 0;
 }
 
 .settings-language-row > .btn {
@@ -111,30 +205,75 @@
     margin-right: 0;
 }
 
-.settings-scroll {
-    flex-shrink: 1;
-    margin-bottom: var(--space-2);
-}
-
-.settings-scroll .unity-scroll-view__horizontal-scroller {
-    display: none;
-}
-
-.settings-action {
+.settings-footer {
+    flex-direction: row;
     margin-top: var(--space-2);
 }
 
-.settings-divider {
-    height: 1px;
-    background-color: var(--paper-shadow);
-    margin-top: var(--space-6);
-    margin-bottom: var(--space-2);
+.settings-action {
+    flex-grow: 1;
+    margin: 0;
 }
 
-.settings-section-rule {
-    height: 1px;
-    background-color: var(--paper-shadow);
-    margin-bottom: var(--space-4);
+#back-button {
+    margin-right: var(--space-2);
+}
+
+.settings-small-button {
+    padding: 8px 14px;
+}
+
+.settings-dropdown {
+    margin-bottom: var(--space-1);
+}
+
+.settings-device-status {
+    min-height: 0;
+    margin-bottom: 0;
+}
+
+.input-bindings-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: var(--space-1);
+}
+
+.input-binding-row {
+    width: 49%;
+    min-height: 40px;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-1);
+}
+
+.input-binding-action {
+    flex-grow: 1;
+    min-width: 0;
+    color: var(--ink);
+    font-size: 14px;
+    white-space: normal;
+}
+
+.input-binding-button {
+    width: 140px;
+    padding: 8px 10px;
+}
+
+.input-binding-reset {
+    width: 64px;
+    margin-left: var(--space-1);
+    padding: 8px 6px;
+}
+
+.input-binding-status {
+    min-height: 0;
+    margin: var(--space-1) 0 0 0;
+}
+
+.settings-compact-action {
+    align-self: flex-start;
+    margin-top: var(--space-2);
 }
 
 .settings-voice-state {
@@ -153,7 +292,7 @@
 }
 
 .settings-voice-actions {
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-1);
 }
 
 .settings-voice-actions > .btn {
@@ -166,17 +305,43 @@
 }
 
 .settings-voice-hint {
-    margin-bottom: var(--space-4);
+    min-height: 0;
+    margin-bottom: 0;
 }
 
 .voice-participant-list {
-    max-height: 230px;
+    min-height: 56px;
+    max-height: 190px;
     margin-top: var(--space-2);
-    margin-bottom: var(--space-4);
+    margin-bottom: 0;
+}
+
+.voice-participant-list .unity-scroll-view__horizontal-scroller,
+.voice-participant-list .unity-scroller__low-button,
+.voice-participant-list .unity-scroller__high-button {
+    display: none;
+}
+
+.voice-participant-list .unity-scroll-view__vertical-scroller {
+    width: 8px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.voice-participant-list .unity-base-slider__tracker {
+    width: 2px;
+    background-color: var(--paper-shadow);
+    border-radius: var(--radius-small);
+}
+
+.voice-participant-list .unity-base-slider__dragger {
+    width: 6px;
+    background-color: var(--green);
+    border-width: 0;
+    border-radius: var(--radius-small);
 }
 
 .voice-participant-row {
-    padding: 10px 0;
+    padding: var(--space-2) 0;
     border-bottom-width: 1px;
     border-bottom-color: var(--paper-shadow);
 }
@@ -198,7 +363,7 @@
 }
 
 .voice-participant-controls {
-    margin-top: var(--space-2);
+    margin-top: var(--space-1);
 }
 
 .voice-participant-slider {

@@ -15,8 +15,9 @@ namespace InterrogationRoom.Gameplay
         private float backrestOffset;
         private float buttToHipsHeight;
         private float torsoBackDepth;
-        private bool hasButtHeight;
-        private int seatedFrameCount;
+        private bool hasSeatedPoseCalibration;
+
+        private static readonly int SittingState = Animator.StringToHash("Base Layer.Sitting");
 
         public void Configure(
             CharacterController controller,
@@ -32,7 +33,7 @@ namespace InterrogationRoom.Gameplay
         {
             activeModelRoot = root;
             activeModelRootBaseLocalPosition = baseLocalPosition;
-            ResetMeasurement();
+            ResetCalibration();
         }
 
         public void SetSeatGeometry(float surfaceHeight, float seatBackrestOffset)
@@ -43,13 +44,54 @@ namespace InterrogationRoom.Gameplay
 
         public void SetLocalState(bool seated, bool enableCharacterController)
         {
-            if (seated)
-                ResetMeasurement();
-            else
+            if (!seated)
                 RestoreVisualRoot();
 
             if (characterController != null)
                 characterController.enabled = enableCharacterController;
+        }
+
+        /// <summary>
+        /// Samples the authored seated state synchronously before the character can render.
+        /// Runtime seating then consumes only these cached measurements and never depends on
+        /// which frame of the Animator transition happened to be observed.
+        /// </summary>
+        public bool CalibrateSeatedPose(
+            RuntimeAnimatorController controller,
+            Avatar avatar)
+        {
+            ResetCalibration();
+            if (animator == null ||
+                activeModelRoot == null ||
+                controller == null ||
+                avatar == null)
+            {
+                return false;
+            }
+
+            animator.runtimeAnimatorController = controller;
+            animator.avatar = avatar;
+            animator.Rebind();
+            animator.Update(0f);
+            if (!animator.isHuman || !animator.HasState(0, SittingState))
+            {
+                return false;
+            }
+
+            try
+            {
+                animator.Play(SittingState, 0, 0.5f);
+                animator.Update(0f);
+
+                Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+                return hips != null && MeasureSeatedBody(hips);
+            }
+            finally
+            {
+                animator.Rebind();
+                animator.Update(0f);
+                RestoreVisualRoot();
+            }
         }
 
         public void Tick(bool seated, bool dead)
@@ -60,7 +102,6 @@ namespace InterrogationRoom.Gameplay
             if (!seated || dead || animator == null || !animator.isHuman)
             {
                 RestoreVisualRoot();
-                ResetMeasurement();
                 return;
             }
 
@@ -68,20 +109,16 @@ namespace InterrogationRoom.Gameplay
             if (hips == null)
                 return;
 
-            seatedFrameCount++;
             float backOffset = ResolveBackOffset(
                 seatedHipsBackOffset,
                 backrestOffset,
                 torsoBackDepth,
-                hasButtHeight);
+                hasSeatedPoseCalibration);
             Vector3 desired = transform.position - transform.forward * backOffset;
             Vector3 delta = desired - hips.position;
             delta.y = 0f;
 
-            if (seatedFrameCount == 30 || seatedFrameCount == 90)
-                MeasureSeatedBody(hips);
-
-            if (hasButtHeight)
+            if (hasSeatedPoseCalibration)
             {
                 float seatTopY = transform.position.y +
                                  (seatSurfaceHeight > 0f ? seatSurfaceHeight : 0.46f);
@@ -105,12 +142,12 @@ namespace InterrogationRoom.Gameplay
             return Mathf.Max(Mathf.Min(configuredOffset, backrestLimit), -0.10f);
         }
 
-        private void MeasureSeatedBody(Transform hips)
+        private bool MeasureSeatedBody(Transform hips)
         {
             SkinnedMeshRenderer skinnedRenderer =
                 GetComponentInChildren<SkinnedMeshRenderer>(false);
             if (skinnedRenderer == null)
-                return;
+                return false;
 
             seatedPoseMesh ??= new Mesh();
             skinnedRenderer.BakeMesh(seatedPoseMesh, true);
@@ -149,8 +186,10 @@ namespace InterrogationRoom.Gameplay
             {
                 buttToHipsHeight = hipsPosition.y - lowestY;
                 torsoBackDepth = backDepth;
-                hasButtHeight = true;
+                hasSeatedPoseCalibration = true;
             }
+
+            return hasSeatedPoseCalibration;
         }
 
         private void RestoreVisualRoot()
@@ -159,10 +198,11 @@ namespace InterrogationRoom.Gameplay
                 activeModelRoot.transform.localPosition = activeModelRootBaseLocalPosition;
         }
 
-        private void ResetMeasurement()
+        private void ResetCalibration()
         {
-            seatedFrameCount = 0;
-            hasButtHeight = false;
+            hasSeatedPoseCalibration = false;
+            buttToHipsHeight = 0f;
+            torsoBackDepth = 0f;
         }
 
         private void OnDestroy()

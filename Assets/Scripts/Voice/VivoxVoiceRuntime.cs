@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using InterrogationRoom.Networking;
 using InterrogationRoom.Settings;
@@ -12,11 +13,9 @@ using Mirror;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Vivox;
+using Unity.Services.Vivox.AudioTaps;
 using UnityEngine;
 using UnityEngine.UI;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace InterrogationRoom.Voice
 {
@@ -40,6 +39,224 @@ internal struct VivoxSpeakingStateMessage : NetworkMessage
     public uint NetworkIdentityNetId;
     public bool IsSpeaking;
     public bool IsMuted;
+}
+
+/// <summary>
+/// Process-wide Vivox bootstrap and input-device owner. Settings can initialize
+/// and select capture hardware in MainMenu without logging in or joining a
+/// channel; the network voice runtime later reuses the same initialized service.
+/// </summary>
+public static class VivoxInputDeviceSettings
+{
+    private static readonly List<VoiceAudioDevice> AvailableDevices = new();
+    private static Task initializationTask;
+    private static bool applyingSelection;
+    private static int selectionRequestVersion;
+    private static bool subscribed;
+
+    public static event Action Changed;
+
+    public static IReadOnlyList<VoiceAudioDevice> AvailableInputDevices =>
+        AvailableDevices;
+    public static string ActiveInputDeviceId { get; private set; }
+    public static string ActiveInputDeviceName { get; private set; }
+    public static bool HasEffectiveInputDevice { get; private set; }
+    public static bool IsInitialized { get; private set; }
+    public static bool IsInitializing =>
+        initializationTask != null && !initializationTask.IsCompleted;
+    public static string LastError { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetRuntimeState()
+    {
+        AvailableDevices.Clear();
+        initializationTask = null;
+        applyingSelection = false;
+        selectionRequestVersion = 0;
+        subscribed = false;
+        ActiveInputDeviceId = null;
+        ActiveInputDeviceName = null;
+        HasEffectiveInputDevice = false;
+        IsInitialized = false;
+        LastError = null;
+        Changed = null;
+    }
+
+    public static Task EnsureInitializedAsync()
+    {
+        if (initializationTask == null ||
+            initializationTask.IsFaulted ||
+            initializationTask.IsCanceled)
+        {
+            initializationTask = InitializeCoreAsync();
+        }
+
+        return initializationTask;
+    }
+
+    public static async void SetPreferredInputDevice(string deviceId)
+    {
+        GameSettingsService.Current.SetPreferredVoiceInputDevice(deviceId);
+        await EnsureInitializedAsync();
+        await ApplyPreferredInputDeviceAsync();
+    }
+
+    public static async void Refresh()
+    {
+        await EnsureInitializedAsync();
+        RefreshSnapshot();
+        await ApplyPreferredInputDeviceAsync();
+    }
+
+    private static async Task InitializeCoreAsync()
+    {
+        LastError = null;
+        Changed?.Invoke();
+        try
+        {
+            string profileId = $"voice-device-{Guid.NewGuid():N}"[..29];
+            var options = new InitializationOptions().SetProfile(profileId);
+            await UnityServices.InitializeAsync(options);
+            if (VivoxService.Instance.InitializationState ==
+                VivoxInitializationState.Uninitialized)
+            {
+                await VivoxService.Instance.InitializeAsync();
+            }
+
+            Subscribe();
+            IsInitialized = true;
+            RefreshSnapshot();
+            await ApplyPreferredInputDeviceAsync();
+        }
+        catch (Exception exception)
+        {
+            LastError = exception.Message;
+            IsInitialized = false;
+            Changed?.Invoke();
+            throw;
+        }
+    }
+
+    private static void Subscribe()
+    {
+        if (subscribed)
+            return;
+
+        VivoxService.Instance.AvailableInputDevicesChanged -= OnDevicesChanged;
+        VivoxService.Instance.AvailableInputDevicesChanged += OnDevicesChanged;
+        VivoxService.Instance.EffectiveInputDeviceChanged -= OnDevicesChanged;
+        VivoxService.Instance.EffectiveInputDeviceChanged += OnDevicesChanged;
+        subscribed = true;
+    }
+
+    private static async void OnDevicesChanged()
+    {
+        RefreshSnapshot();
+        await ApplyPreferredInputDeviceAsync();
+    }
+
+    private static void RefreshSnapshot()
+    {
+        AvailableDevices.Clear();
+        if (!IsInitialized ||
+            VivoxService.Instance == null ||
+            VivoxService.Instance.InitializationState ==
+            VivoxInitializationState.Uninitialized)
+        {
+            ActiveInputDeviceId = null;
+            ActiveInputDeviceName = null;
+            HasEffectiveInputDevice = false;
+            Changed?.Invoke();
+            return;
+        }
+
+        foreach (VivoxInputDevice device in VivoxService.Instance.AvailableInputDevices)
+        {
+            if (IsNoInputDevice(device))
+                continue;
+
+            AvailableDevices.Add(
+                new VoiceAudioDevice(device.DeviceID, device.DeviceName));
+        }
+
+        VivoxInputDevice active = VivoxService.Instance.ActiveInputDevice;
+        ActiveInputDeviceId = active?.DeviceID;
+        ActiveInputDeviceName = active?.DeviceName;
+        HasEffectiveInputDevice =
+            !IsNoInputDevice(VivoxService.Instance.EffectiveInputDevice);
+        Changed?.Invoke();
+    }
+
+    private static bool IsNoInputDevice(VivoxInputDevice device) =>
+        device == null ||
+        !VoiceDeviceSelection.IsUsableInputDevice(
+            device.DeviceID,
+            device.DeviceName);
+
+    private static async Task ApplyPreferredInputDeviceAsync()
+    {
+        if (!IsInitialized)
+            return;
+
+        selectionRequestVersion++;
+        if (applyingSelection)
+            return;
+
+        applyingSelection = true;
+        try
+        {
+            while (true)
+            {
+                int applyingVersion = selectionRequestVersion;
+                try
+                {
+                    RefreshSnapshot();
+                    string targetId = VoiceDeviceSelection.ResolveDeviceId(
+                        GameSettingsService.Current.PreferredVoiceInputDeviceId,
+                        ActiveInputDeviceId,
+                        AvailableDevices);
+                    if (!string.IsNullOrEmpty(targetId))
+                    {
+                        VivoxInputDevice target =
+                            VivoxService.Instance.AvailableInputDevices
+                                .FirstOrDefault(device =>
+                                    string.Equals(
+                                        device.DeviceID,
+                                        targetId,
+                                        StringComparison.Ordinal));
+                        if (target != null &&
+                            !string.Equals(
+                                ActiveInputDeviceId,
+                                target.DeviceID,
+                                StringComparison.Ordinal))
+                        {
+                            await VivoxService.Instance.SetActiveInputDeviceAsync(target);
+                        }
+                    }
+
+                    LastError = null;
+                }
+                catch (Exception exception)
+                {
+                    if (applyingVersion != selectionRequestVersion)
+                        continue;
+
+                    LastError = exception.Message;
+                    Debug.LogWarning(
+                        $"[Vivox] Could not apply preferred input device: {exception.Message}");
+                    break;
+                }
+
+                if (applyingVersion == selectionRequestVersion)
+                    break;
+            }
+        }
+        finally
+        {
+            applyingSelection = false;
+            RefreshSnapshot();
+        }
+    }
 }
 
 [DisallowMultipleComponent]
@@ -85,7 +302,6 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private readonly LocalVoicePublicationState localSpeakingPublication = new();
     private readonly VoiceSpeakingState networkSpeakingState = new();
     private readonly Dictionary<uint, VivoxSpeakingStateMessage> serverSpeakingStates = new();
-
     private GameObject localPlayer;
     private NetworkRoundCoordinator roundCoordinator;
     private string activeSessionId;
@@ -100,6 +316,8 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private bool isSwitchingChannel;
     private VoiceChannelModeState channelMode;
     private bool microphoneTestActive;
+    private readonly SemaphoreSlim microphoneTestTransitionGate = new(1, 1);
+    private int microphoneTestRequestVersion;
     private bool isDisconnecting;
     private bool isShuttingDown;
     private TaskCompletionSource<string> pendingSessionId;
@@ -107,6 +325,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     public static VivoxVoiceRuntime Instance { get; private set; }
 
     public event Action VoiceStateChanged;
+    public event Action VoiceDevicesChanged;
 
     public VoiceConnectionState ConnectionState { get; private set; } = VoiceConnectionState.WaitingForNetwork;
     public bool IsReady => isReady;
@@ -114,6 +333,12 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     public bool IsLocalMicrophoneMuted =>
         GameSettingsService.Current.MicrophoneMuted || microphoneTestActive;
     public float MicrophoneLevelPercent => GameSettingsService.Current.MicrophoneLevelPercent;
+    public IReadOnlyList<VoiceAudioDevice> AvailableInputDevices =>
+        VivoxInputDeviceSettings.AvailableInputDevices;
+    public string ActiveInputDeviceId =>
+        VivoxInputDeviceSettings.ActiveInputDeviceId;
+    public string ActiveInputDeviceName =>
+        VivoxInputDeviceSettings.ActiveInputDeviceName;
 
     private float EffectiveAudibleDistance => Mathf.Min(audibleDistance, MaxAudibleDistance);
 
@@ -197,22 +422,15 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             string playerId = BuildPlayerId(activeSessionId, localNetId);
 
             SetConnectionState(VoiceConnectionState.InitializingServices);
-            var initializationOptions = new InitializationOptions()
-                .SetProfile(BuildServicesProfileId(activeSessionId, localNetId));
-            await UnityServices.InitializeAsync(initializationOptions);
+            await VivoxInputDeviceSettings.EnsureInitializedAsync();
 
             if (!AuthenticationService.Instance.IsSignedIn)
             {
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
             }
 
-            if (VivoxService.Instance.InitializationState == VivoxInitializationState.Uninitialized)
-            {
-                await VivoxService.Instance.InitializeAsync();
-            }
-
             SubscribeConnectionEvents();
-            if (VivoxService.Instance.AvailableInputDevices.Count == 0)
+            if (!VivoxInputDeviceSettings.HasEffectiveInputDevice)
             {
                 SetConnectionState(VoiceConnectionState.NoInputDevice);
                 Debug.LogWarning("[Vivox] No microphone input device is available. Receiving voice remains enabled.", this);
@@ -230,6 +448,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             };
 
             await VivoxService.Instance.LoginAsync(loginOptions);
+            VivoxInputDeviceSettings.Refresh();
             ApplyMuteState();
 
             VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
@@ -239,7 +458,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             await JoinVoiceChannelAsync(ResolveWantsSpatialVoice());
             PublishLocalSpeakingState(false, force: true);
             SetConnectionState(
-                VivoxService.Instance.AvailableInputDevices.Count == 0
+                !VivoxInputDeviceSettings.HasEffectiveInputDevice
                     ? VoiceConnectionState.NoInputDevice
                     : VoiceConnectionState.Ready);
             Debug.Log($"[Vivox] Joined {(channelMode.ActiveSpatial ? "spatial" : "global")} channel '{activeChannelName}'.");
@@ -469,14 +688,59 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     public void SetLocalMicrophoneLevelPercent(float percent) =>
         GameSettingsService.Current.SetMicrophoneLevelPercent(percent);
 
-    public void SetMicrophoneTestActive(bool active)
-    {
-        if (microphoneTestActive == active)
-            return;
+    public void SetPreferredInputDevice(string deviceId) =>
+        VivoxInputDeviceSettings.SetPreferredInputDevice(deviceId);
 
+    public void RefreshAudioDevices() => VivoxInputDeviceSettings.Refresh();
+
+    public async Task<bool> SetMicrophoneTestActiveAsync(bool active)
+    {
         microphoneTestActive = active;
-        ApplyMuteState();
-        VoiceStateChanged?.Invoke();
+        int requestVersion = ++microphoneTestRequestVersion;
+        await microphoneTestTransitionGate.WaitAsync();
+        try
+        {
+            if (requestVersion != microphoneTestRequestVersion)
+                return false;
+
+            // The test may have temporarily opened a user-muted capture device.
+            // Restore that mute before re-enabling channel transmission.
+            if (!active)
+                ApplyMuteState();
+
+            if (VivoxService.Instance.IsLoggedIn &&
+                !string.IsNullOrEmpty(activeChannelName))
+            {
+                await VivoxService.Instance.SetChannelTransmissionModeAsync(
+                    active ? TransmissionMode.None : TransmissionMode.Single,
+                    active ? null : activeChannelName);
+            }
+
+            if (requestVersion != microphoneTestRequestVersion)
+                return false;
+
+            ApplyMuteState();
+            VoiceStateChanged?.Invoke();
+            return microphoneTestActive == active;
+        }
+        catch (Exception exception)
+        {
+            if (requestVersion == microphoneTestRequestVersion)
+            {
+                microphoneTestActive = false;
+                ApplyMuteState();
+                VoiceStateChanged?.Invoke();
+            }
+
+            Debug.LogWarning(
+                $"[Vivox] Could not change microphone-test transmission: {exception.Message}",
+                this);
+            return false;
+        }
+        finally
+        {
+            microphoneTestTransitionGate.Release();
+        }
     }
 
     private void OnGameSettingsChanged()
@@ -505,7 +769,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             await JoinVoiceChannelAsync(spatial);
             PublishLocalSpeakingState(false, force: true);
             SetConnectionState(
-                VivoxService.Instance.AvailableInputDevices.Count == 0
+                !VivoxInputDeviceSettings.HasEffectiveInputDevice
                     ? VoiceConnectionState.NoInputDevice
                     : VoiceConnectionState.Ready);
         }
@@ -557,6 +821,12 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
                 await VivoxService.Instance.JoinGroupChannelAsync(
                     activeChannelName,
                     ChatCapability.AudioOnly);
+            }
+
+            if (microphoneTestActive)
+            {
+                await VivoxService.Instance.SetChannelTransmissionModeAsync(
+                    TransmissionMode.None);
             }
 
             channelMode = channelMode.CommitJoin();
@@ -621,12 +891,6 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             participant.UnmutePlayerLocally();
     }
 
-    private static string BuildServicesProfileId(string sessionId, uint netId)
-    {
-        string sessionKey = BuildSessionKey(sessionId);
-        return $"voice-{sessionKey[..12]}-{netId.ToString(CultureInfo.InvariantCulture)}";
-    }
-
     private static string BuildSessionKey(string sessionId)
     {
         if (string.IsNullOrWhiteSpace(sessionId))
@@ -647,11 +911,8 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private void HandleMuteInput()
     {
-#if ENABLE_INPUT_SYSTEM
-        bool togglePressed = Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame;
-#else
-        bool togglePressed = Input.GetKeyDown(KeyCode.V);
-#endif
+        bool togglePressed =
+            GameInputBindings.WasPressedThisFrame(GameInputAction.VoiceMute);
         if (!togglePressed || !VivoxService.Instance.IsLoggedIn)
         {
             return;
@@ -674,7 +935,10 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
             GameSettings.VoicePercentToVivoxVolume(
                 GameSettingsService.Current.MicrophoneLevelPercent));
 
-        if (IsLocalMicrophoneMuted)
+        bool shouldMuteCapture = MicrophoneTestPlaybackRules.ShouldMuteCapture(
+            GameSettingsService.Current.MicrophoneMuted,
+            microphoneTestActive);
+        if (shouldMuteCapture)
         {
             VivoxService.Instance.MuteInputDevice();
             PublishLocalSpeakingState(false);
@@ -683,7 +947,15 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         else
         {
             VivoxService.Instance.UnmuteInputDevice();
-            SetMicColor(micNormalColor);
+            if (microphoneTestActive)
+            {
+                PublishLocalSpeakingState(false);
+                SetMicColor(micMutedColor);
+            }
+            else
+            {
+                SetMicColor(micNormalColor);
+            }
         }
     }
 
@@ -795,6 +1067,8 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         }
         finally
         {
+            microphoneTestActive = false;
+            microphoneTestRequestVersion++;
             DestroyParticipantTaps();
             participantPreferences.Clear();
             pendingSessionId?.TrySetCanceled();
@@ -966,9 +1240,11 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         VivoxService.Instance.ConnectionRecovering -= OnConnectionRecovering;
         VivoxService.Instance.ConnectionRecovered -= OnConnectionRecovered;
         VivoxService.Instance.ConnectionFailedToRecover -= OnConnectionFailedToRecover;
+        VivoxInputDeviceSettings.Changed -= OnInputDeviceSettingsChanged;
         VivoxService.Instance.ConnectionRecovering += OnConnectionRecovering;
         VivoxService.Instance.ConnectionRecovered += OnConnectionRecovered;
         VivoxService.Instance.ConnectionFailedToRecover += OnConnectionFailedToRecover;
+        VivoxInputDeviceSettings.Changed += OnInputDeviceSettingsChanged;
     }
 
     private void UnsubscribeConnectionEvents()
@@ -976,6 +1252,7 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         VivoxService.Instance.ConnectionRecovering -= OnConnectionRecovering;
         VivoxService.Instance.ConnectionRecovered -= OnConnectionRecovered;
         VivoxService.Instance.ConnectionFailedToRecover -= OnConnectionFailedToRecover;
+        VivoxInputDeviceSettings.Changed -= OnInputDeviceSettingsChanged;
     }
 
     private void OnConnectionRecovering()
@@ -985,11 +1262,12 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
     private void OnConnectionRecovered()
     {
+        VivoxInputDeviceSettings.Refresh();
         if (VivoxService.Instance.IsLoggedIn)
             ApplyMuteState();
 
         SetConnectionState(
-            VivoxService.Instance.AvailableInputDevices.Count == 0
+            !VivoxInputDeviceSettings.HasEffectiveInputDevice
                 ? VoiceConnectionState.NoInputDevice
                 : VoiceConnectionState.Ready);
     }
@@ -999,6 +1277,22 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
         SetConnectionState(VoiceConnectionState.Faulted);
     }
 
+    private void OnInputDeviceSettingsChanged()
+    {
+        VoiceDevicesChanged?.Invoke();
+        if (!isReady)
+            return;
+
+        if (!VivoxInputDeviceSettings.HasEffectiveInputDevice)
+        {
+            SetConnectionState(VoiceConnectionState.NoInputDevice);
+        }
+        else if (ConnectionState == VoiceConnectionState.NoInputDevice)
+        {
+            SetConnectionState(VoiceConnectionState.Ready);
+        }
+    }
+
     private void SetConnectionState(VoiceConnectionState state)
     {
         if (ConnectionState == state)
@@ -1006,6 +1300,149 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
 
         ConnectionState = state;
         Debug.Log($"[Vivox] State: {state}; attenuated speakers: {ActiveAttenuatedSpeakerCount}.", this);
+    }
+}
+
+[DisallowMultipleComponent]
+[RequireComponent(typeof(AudioSource))]
+public sealed class VivoxMicrophoneTestPlayback : MonoBehaviour
+{
+    private const float StartupTimeoutSeconds = 2f;
+
+    private VivoxCaptureSourceTap captureTap;
+    private float startupStartedAt;
+    private volatile float monitorGain = 1f;
+    private volatile bool monitorAudio;
+    private int operationRevision;
+
+    public event Action StateChanged;
+
+    public MicrophoneTestState State { get; private set; }
+
+    private void Awake()
+    {
+        captureTap = gameObject.AddComponent<VivoxCaptureSourceTap>();
+        captureTap.enabled = false;
+    }
+
+    private void Update()
+    {
+        if (State == MicrophoneTestState.Starting)
+        {
+            if (captureTap != null && captureTap.IsRunning)
+            {
+                monitorAudio = true;
+                SetState(MicrophoneTestState.Monitoring);
+            }
+            else if (Time.unscaledTime - startupStartedAt >= StartupTimeoutSeconds)
+            {
+                StopMonitoring(MicrophoneTestState.Failed);
+            }
+        }
+        else if (State == MicrophoneTestState.Monitoring &&
+                 (captureTap == null || !captureTap.IsRunning))
+        {
+            StopMonitoring(MicrophoneTestState.Failed);
+        }
+    }
+
+    private void OnAudioFilterRead(float[] data, int channels)
+    {
+        if (!monitorAudio)
+        {
+            Array.Clear(data, 0, data.Length);
+            return;
+        }
+
+        float gain = monitorGain;
+        for (int index = 0; index < data.Length; index++)
+            data[index] = Mathf.Clamp(data[index] * gain, -1f, 1f);
+    }
+
+    private void OnDisable()
+    {
+        Cancel();
+    }
+
+    public async void StartOrStop()
+    {
+        if (State == MicrophoneTestState.Starting ||
+            State == MicrophoneTestState.Monitoring)
+        {
+            StopMonitoring(MicrophoneTestState.Idle);
+            return;
+        }
+
+        VivoxVoiceRuntime runtime = VivoxVoiceRuntime.Instance;
+        if (runtime == null ||
+            !runtime.IsReady ||
+            !VivoxInputDeviceSettings.HasEffectiveInputDevice)
+        {
+            SetState(MicrophoneTestState.NoInputDevice);
+            return;
+        }
+
+        int revision = ++operationRevision;
+        monitorAudio = false;
+        SetState(MicrophoneTestState.Starting);
+
+        bool transmissionPrepared =
+            await runtime.SetMicrophoneTestActiveAsync(true);
+        if (revision != operationRevision ||
+            State != MicrophoneTestState.Starting)
+        {
+            return;
+        }
+
+        if (!transmissionPrepared)
+        {
+            StopMonitoring(MicrophoneTestState.Failed);
+            return;
+        }
+
+        startupStartedAt = Time.unscaledTime;
+        captureTap.enabled = true;
+    }
+
+    public void Cancel() => StopMonitoring(MicrophoneTestState.Idle);
+
+    public void RefreshInputAvailability(bool hasInputDevice)
+    {
+        if (!hasInputDevice &&
+            (State == MicrophoneTestState.Starting ||
+             State == MicrophoneTestState.Monitoring))
+        {
+            StopMonitoring(MicrophoneTestState.NoInputDevice);
+        }
+        else if (hasInputDevice && State == MicrophoneTestState.NoInputDevice)
+        {
+            SetState(MicrophoneTestState.Idle);
+        }
+    }
+
+    public void SetLevelPercent(float percent)
+    {
+        monitorGain = GameSettings.ClampVoicePercent(percent) / 100f;
+    }
+
+    private void StopMonitoring(MicrophoneTestState finalState)
+    {
+        operationRevision++;
+        monitorAudio = false;
+        if (captureTap != null)
+            captureTap.enabled = false;
+        if (VivoxVoiceRuntime.Instance != null)
+            _ = VivoxVoiceRuntime.Instance.SetMicrophoneTestActiveAsync(false);
+        SetState(finalState);
+    }
+
+    private void SetState(MicrophoneTestState state)
+    {
+        if (State == state)
+            return;
+
+        State = state;
+        StateChanged?.Invoke();
     }
 }
 }

@@ -68,6 +68,7 @@ namespace InterrogationRoom.UI
             if (root == null)
                 return;
 
+            UiControlStates.Normalize(root);
             root.RegisterCallback<PointerEnterEvent>(OnPointerEnter, TrickleDown.TrickleDown);
             root.RegisterCallback<ClickEvent>(OnClick, TrickleDown.TrickleDown);
 

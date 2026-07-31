@@ -80,6 +80,8 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     private PlayerCameraRig cameraRig;
     private PlayerSeating seating;
     private PlayerAnimationDriver animationDriver;
+    private NetworkTransformBase networkTransform;
+    private SyncDirection defaultNetworkTransformSyncDirection;
     private int allocationKey;
     private float verticalVelocity;
     private float sprintCharge01 = 1f;
@@ -89,6 +91,12 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     private bool forceShowLocalModel;
     private GameObject activeModelRoot;
     private Vector3 activeModelRootBaseLocalPos;
+    private bool hasSeatingPresentation;
+    private bool presentedIsSeated;
+    private bool seatingTransitionInputBlocked;
+    private uint nextSeatingTransitionRevision;
+    private uint pendingStandTransitionRevision;
+    private uint lastAppliedSeatingTransitionRevision;
 
     [SyncVar]
     private float seatedSeatSurfaceHeight;
@@ -96,7 +104,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     [SyncVar]
     private float seatedBackrestOffset;
 
-    [SyncVar(hook = nameof(OnSeatedChanged))]
+    [SyncVar]
     private bool isSeated;
 
     [SyncVar(hook = nameof(OnCharacterChanged))]
@@ -114,7 +122,8 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     private int nextPunchVariant;
     private IDanceRadialMenu danceRadialMenu;
 
-    public override bool IsSeated => isSeated;
+    public override bool IsSeated =>
+        isClient && hasSeatingPresentation ? presentedIsSeated : isSeated;
     public override bool IsDead => isDead;
     public bool IsEliminated => isDead;
     public override CharacterId CharacterId => characterId;
@@ -164,6 +173,17 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         animator = GetComponent<Animator>();
         playerInteractor = GetComponent<PlayerInteractor>();
         playerWeaponController = GetComponent<PlayerWeaponController>();
+        networkTransform = GetComponent<NetworkTransformBase>();
+        if (networkTransform != null)
+        {
+            defaultNetworkTransformSyncDirection = networkTransform.syncDirection;
+        }
+        else
+        {
+            Debug.LogError(
+                $"[{nameof(PlayerController)}] Seating requires a {nameof(NetworkTransformBase)}.",
+                this);
+        }
         animationDriver = GetComponent<PlayerAnimationDriver>() ??
                           gameObject.AddComponent<PlayerAnimationDriver>();
         cameraRig = GetComponent<PlayerCameraRig>() ??
@@ -263,6 +283,12 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
             return;
         }
 
+        if (seatingTransitionInputBlocked)
+        {
+            SetMovementAnimationIdle();
+            return;
+        }
+
         if (danceRadialMenu != null && danceRadialMenu.IsOpen)
         {
             HandleDanceRadialMenu();
@@ -285,17 +311,12 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         bool interactionMovementLocked = playerInteractor != null && playerInteractor.IsMovementLocked;
 
         bool hasWeapon = playerWeaponController != null && playerWeaponController.HasWeapon;
-        if (isDancing && hasWeapon)
-        {
-            SetDancingLocally(false);
-            CmdStopDance();
-        }
 
         if (!interactionMovementLocked &&
             WasDancePressed() &&
             (isDancing || CharacterActionRules.CanDance(
                 isDead,
-                isSeated,
+                IsSeated,
                 hasWeapon,
                 SupportsDance(characterId))))
         {
@@ -306,13 +327,13 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
         if (!interactionMovementLocked && WasPunchPressed() && CharacterActionRules.CanPunch(
                 isDead,
-                isSeated,
+                IsSeated,
                 playerWeaponController != null && playerWeaponController.HasWeapon))
         {
             CmdTryPunch();
         }
 
-        if (cameraRig.Tick(isSeated, mouseSensitivity))
+        if (cameraRig.Tick(IsSeated, mouseSensitivity))
             RefreshRendererVisibility();
 
         if (!interactionMovementLocked)
@@ -320,7 +341,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
             HandleCharacterHotkeys();
         }
 
-        if (!isSeated && !interactionMovementLocked)
+        if (!IsSeated && !interactionMovementLocked)
         {
             Move();
         }
@@ -332,7 +353,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
     public override bool TryRequestStand()
     {
-        if (!isLocalPlayer || !isSeated || isDead)
+        if (!isLocalPlayer || !IsSeated || isDead)
         {
             return false;
         }
@@ -344,20 +365,29 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     [Server]
     public override bool TrySitServer(NetworkChairSeat seat)
     {
-        if (!NetworkServer.active || isDead || isSeated || seat == null || !seat.TryOccupyServer(netIdentity))
+        if (!NetworkServer.active ||
+            isDead ||
+            isSeated ||
+            seat == null ||
+            networkTransform == null ||
+            !seat.TryOccupyServer(netIdentity))
         {
             return false;
         }
 
         activeSeat = seat;
         isDancing = false;
-        isSeated = true;
-        ResetSprint();
         seatedSeatSurfaceHeight = seat.SeatSurfaceHeight;
         seatedBackrestOffset = seat.BackrestOffset;
+        isSeated = true;
+        ResetSprint();
         verticalVelocity = 0f;
-        ApplySeatPose(seat.SeatPosition, seat.SeatRotation);
-        TargetApplyPose(connectionToClient, seat.SeatPosition, seat.SeatRotation, true);
+        BeginSeatingTransitionServer(
+            true,
+            seat.SeatPosition,
+            seat.SeatRotation,
+            seatedSeatSurfaceHeight,
+            seatedBackrestOffset);
         return true;
     }
 
@@ -474,59 +504,171 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         Quaternion standRotation = activeSeat.SeatRotation;
         activeSeat.ReleaseServer(netIdentity);
         activeSeat = null;
+        seatedSeatSurfaceHeight = 0f;
+        seatedBackrestOffset = 0f;
         isSeated = false;
         verticalVelocity = -2f;
-        ApplySeatPose(standPosition, standRotation);
-        TargetApplyPose(connectionToClient, standPosition, standRotation, false);
+        BeginSeatingTransitionServer(
+            false,
+            standPosition,
+            standRotation,
+            seatedSeatSurfaceHeight,
+            seatedBackrestOffset);
     }
 
-    [TargetRpc]
-    private void TargetApplyPose(
-        NetworkConnectionToClient _,
+    [Server]
+    private void BeginSeatingTransitionServer(
+        bool seated,
         Vector3 position,
         Quaternion rotation,
-        bool seated)
+        float seatSurfaceHeight,
+        float seatBackrestOffset)
     {
-        isSeated = seated;
-        ApplySeatPose(position, rotation);
-        SetSeatedLocally(seated);
+        uint revision = NextSeatingTransitionRevision();
+
+        // NetworkTransformReliable forwards owner-authored snapshots immediately.
+        // Switch the server copy first, so any in-flight client snapshots are ignored
+        // before the authoritative seating pose is installed.
+        networkTransform.syncDirection = SyncDirection.ServerToClient;
+        pendingStandTransitionRevision = seated ? 0u : revision;
+
+        ApplySeatingTransitionPresentation(
+            seated,
+            position,
+            rotation,
+            seatSurfaceHeight,
+            seatBackrestOffset);
+        RpcApplySeatingTransition(
+            seated,
+            position,
+            rotation,
+            seatSurfaceHeight,
+            seatBackrestOffset,
+            revision);
+
+        if (!seated && connectionToClient == null)
+            CompleteStandTransitionServer(revision);
     }
 
-    private void ApplySeatPose(Vector3 position, Quaternion rotation)
+    [ClientRpc(channel = Channels.Reliable)]
+    private void RpcApplySeatingTransition(
+        bool seated,
+        Vector3 position,
+        Quaternion rotation,
+        float seatSurfaceHeight,
+        float seatBackrestOffset,
+        uint revision)
     {
-        bool wasEnabled = characterController != null && characterController.enabled;
-        if (wasEnabled)
-        {
-            characterController.enabled = false;
-        }
+        if (!IsNewerRevision(revision, lastAppliedSeatingTransitionRevision))
+            return;
 
-        transform.SetPositionAndRotation(position, rotation);
+        lastAppliedSeatingTransitionRevision = revision;
+        ApplySeatingTransitionPresentation(
+            seated,
+            position,
+            rotation,
+            seatSurfaceHeight,
+            seatBackrestOffset);
 
+        if (!seated && isLocalPlayer)
+            CmdAcknowledgeStandTransition(revision);
+    }
+
+    [Command(channel = Channels.Reliable)]
+    private void CmdAcknowledgeStandTransition(uint revision)
+    {
+        CompleteStandTransitionServer(revision);
+    }
+
+    [Server]
+    private void CompleteStandTransitionServer(uint revision)
+    {
+        if (isSeated || pendingStandTransitionRevision != revision)
+            return;
+
+        pendingStandTransitionRevision = 0u;
+        networkTransform.syncDirection = defaultNetworkTransformSyncDirection;
+    }
+
+    private void ApplySeatingTransitionPresentation(
+        bool seated,
+        Vector3 position,
+        Quaternion rotation,
+        float seatSurfaceHeight,
+        float seatBackrestOffset)
+    {
+        // Block owner input and capsule movement before touching the synchronized
+        // transform. This method is synchronous, so no Update can observe a
+        // standing, enabled controller at the new pose halfway through transition.
+        seatingTransitionInputBlocked = true;
+        hasSeatingPresentation = true;
+        presentedIsSeated = seated;
         if (characterController != null)
-        {
-            characterController.enabled = !isSeated && (isLocalPlayer || isServer);
-        }
-    }
+            characterController.enabled = false;
 
-    private void OnSeatedChanged(bool _, bool seated)
-    {
-        SetSeatedLocally(seated);
-    }
+        bool disableOwnerTransformWhileSeated =
+            seated && isLocalPlayer && !isServer && networkTransform != null;
+        if (disableOwnerTransformWhileSeated)
+            networkTransform.enabled = false;
 
-    private void SetSeatedLocally(bool seated)
-    {
+        ApplyNetworkPose(position, rotation);
         animationDriver.SetSeated(seated);
-        seating.SetSeatGeometry(seatedSeatSurfaceHeight, seatedBackrestOffset);
+        seating.SetSeatGeometry(seatSurfaceHeight, seatBackrestOffset);
 
         if (seated)
             SetDancingLocally(false);
 
-        seating.SetLocalState(seated, !seated && (isLocalPlayer || isServer));
+        if (!seated &&
+            isLocalPlayer &&
+            !isServer &&
+            networkTransform != null &&
+            !networkTransform.enabled)
+        {
+            networkTransform.enabled = true;
+            networkTransform.ResetState();
+        }
+
+        bool enableCharacterController =
+            !seated && !isDead && (isLocalPlayer || isServer);
+        seating.SetLocalState(seated, enableCharacterController);
+        seatingTransitionInputBlocked = false;
     }
+
+    private void ApplyNetworkPose(Vector3 position, Quaternion rotation)
+    {
+        if (networkTransform == null)
+            return;
+
+        Transform poseTarget = networkTransform.target != null
+            ? networkTransform.target
+            : transform;
+        poseTarget.SetPositionAndRotation(position, rotation);
+        networkTransform.ResetState();
+    }
+
+    private uint NextSeatingTransitionRevision()
+    {
+        nextSeatingTransitionRevision++;
+        if (nextSeatingTransitionRevision == 0u)
+            nextSeatingTransitionRevision = 1u;
+
+        return nextSeatingTransitionRevision;
+    }
+
+    private static bool IsNewerRevision(uint candidate, uint current) =>
+        candidate != current && unchecked((int)(candidate - current)) > 0;
 
     private void RefreshSeatedState()
     {
-        SetSeatedLocally(isSeated);
+        Transform poseTarget = networkTransform != null && networkTransform.target != null
+            ? networkTransform.target
+            : transform;
+        ApplySeatingTransitionPresentation(
+            isSeated,
+            poseTarget.position,
+            poseTarget.rotation,
+            seatedSeatSurfaceHeight,
+            seatedBackrestOffset);
     }
 
     private void OnCharacterChanged(CharacterId _, CharacterId selectedCharacter)
@@ -565,11 +707,17 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         activeModelRoot = selected.modelRoot;
         activeModelRootBaseLocalPos = selected.modelRoot.transform.localPosition;
         seating.SetVisualRoot(activeModelRoot, activeModelRootBaseLocalPos);
+        if (!seating.CalibrateSeatedPose(selected.animatorController, selected.avatar))
+        {
+            Debug.LogError(
+                $"Character '{selectedCharacter}' could not calibrate its authored Sitting pose.",
+                this);
+        }
 
         animationDriver.Rebind(
             selected.animatorController,
             selected.avatar,
-            isSeated,
+            IsSeated,
             isDead);
         SetMovementAnimationIdle();
         SetDanceIndexLocally(danceIndex);
@@ -650,7 +798,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
         if (characterController != null)
         {
-            characterController.enabled = !dead && !isSeated && (isLocalPlayer || isServer);
+            characterController.enabled = !dead && !IsSeated && (isLocalPlayer || isServer);
         }
 
         if (playerInteractor != null)
@@ -700,7 +848,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     [Server]
     public bool RelocateToStartRoomServer(Vector3 position, Quaternion rotation)
     {
-        if (!NetworkServer.active)
+        if (!NetworkServer.active || networkTransform == null)
         {
             return false;
         }
@@ -711,19 +859,18 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
             activeSeat = null;
         }
 
-        isSeated = false;
         isDancing = false;
+        seatedSeatSurfaceHeight = 0f;
+        seatedBackrestOffset = 0f;
+        isSeated = false;
         verticalVelocity = 0f;
         ResetSprint();
-        SetSeatedLocally(false);
-
-        NetworkTransformBase networkTransform = GetComponent<NetworkTransformBase>();
-        if (networkTransform == null)
-        {
-            return false;
-        }
-
-        networkTransform.ServerTeleport(position, rotation);
+        BeginSeatingTransitionServer(
+            false,
+            position,
+            rotation,
+            seatedSeatSurfaceHeight,
+            seatedBackrestOffset);
         return true;
     }
 
@@ -814,6 +961,15 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     {
         SetDanceIndexLocally(danceIndex);
         animationDriver.SetDancing(dancing);
+        playerWeaponController?.SetDancePresentationHidden(dancing);
+    }
+
+    internal void PrepareWeaponFirePresentation()
+    {
+        if (isDancing)
+            SetDancingLocally(false);
+
+        danceRadialMenu?.Cancel();
     }
 
     private void SetDanceIndexLocally(int selectedDance)
@@ -823,9 +979,8 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
     private void HandleDanceRadialMenu()
     {
-        bool hasWeapon = playerWeaponController != null && playerWeaponController.HasWeapon;
         bool movementLocked = playerInteractor != null && playerInteractor.IsMovementLocked;
-        if (isDead || isSeated || hasWeapon || movementLocked)
+        if (isDead || IsSeated || movementLocked)
         {
             danceRadialMenu.Cancel();
             if (isDancing)
@@ -834,7 +989,8 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         }
 
         danceRadialMenu.RefreshSelection();
-        if (!WasDanceReleased())
+        if (!GameInputBindings.WasReleasedThisFrameForModal(
+                GameInputAction.Dance))
             return;
 
         int selectedDance = danceRadialMenu.Close();
@@ -863,14 +1019,14 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
     private void LateUpdate()
     {
-        seating?.Tick(isSeated, isDead);
+        seating?.Tick(IsSeated, isDead);
     }
 
 
     private void OnAnimatorIK(int layerIndex)
     {
         float bodyRelativePitch = isLocalPlayer
-            ? cameraRig.GetBodyRelativePitch(isSeated)
+            ? cameraRig.GetBodyRelativePitch(IsSeated)
             : animationDriver.GetRemoteLookPitch();
         bool hasVisualRootScale =
             TryGetActiveVisualRootScale(out Vector3 visualRootScale);
@@ -918,57 +1074,17 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
     private Vector2 GetMoveInput()
     {
-#if ENABLE_INPUT_SYSTEM
-        if (Keyboard.current == null)
-        {
-            return Vector2.zero;
-        }
-
-        Vector2 input = Vector2.zero;
-
-        if (Keyboard.current.aKey.isPressed)
-        {
-            input.x -= 1f;
-        }
-
-        if (Keyboard.current.dKey.isPressed)
-        {
-            input.x += 1f;
-        }
-
-        if (Keyboard.current.sKey.isPressed)
-        {
-            input.y -= 1f;
-        }
-
-        if (Keyboard.current.wKey.isPressed)
-        {
-            input.y += 1f;
-        }
-
-        return Vector2.ClampMagnitude(input, 1f);
-#else
-        return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-#endif
+        return GameInputBindings.ReadMove();
     }
 
     private bool IsSprintHeld()
     {
-#if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null &&
-               (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed);
-#else
-        return Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-#endif
+        return GameInputBindings.IsPressed(GameInputAction.Sprint);
     }
 
     private bool WasJumpPressed()
     {
-#if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
-#else
-        return Input.GetKeyDown(KeyCode.Space);
-#endif
+        return GameInputBindings.WasPressedThisFrame(GameInputAction.Jump);
     }
 
     private static CharacterId? GetPressedCharacterHotkey()
@@ -996,29 +1112,13 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
     private bool WasPunchPressed()
     {
-#if ENABLE_INPUT_SYSTEM
-        return Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
-#else
-        return Input.GetMouseButtonDown(0);
-#endif
+        return GameInputBindings.WasPressedThisFrame(GameInputAction.Fire);
     }
 
     private bool WasDancePressed()
     {
-#if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null && Keyboard.current.tKey.wasPressedThisFrame;
-#else
-        return Input.GetKeyDown(KeyCode.T);
-#endif
+        return GameInputBindings.WasPressedThisFrame(GameInputAction.Dance);
     }
 
-    private bool WasDanceReleased()
-    {
-#if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null && Keyboard.current.tKey.wasReleasedThisFrame;
-#else
-        return Input.GetKeyUp(KeyCode.T);
-#endif
-    }
 }
 }

@@ -44,29 +44,33 @@ namespace InterrogationRoom.UI
             InteractionHudMode mode,
             string action,
             float progress,
-            UiLanguage language)
+            UiLanguage language,
+            string interactBinding = "E")
         {
             string localizedAction = UiText.Get(action, language);
+            string key = string.IsNullOrWhiteSpace(interactBinding)
+                ? "E"
+                : interactBinding;
 
             switch (mode)
             {
                 case InteractionHudMode.Available:
                     return new InteractionHudCopy(
-                        "E",
+                        key,
                         localizedAction,
                         UiText.Get("NACIŚNIJ, ABY WYKONAĆ", language),
                         0f);
 
                 case InteractionHudMode.HoldAvailable:
                     return new InteractionHudCopy(
-                        "E",
+                        key,
                         localizedAction,
                         UiText.Get("PRZYTRZYMAJ, ABY ROZPOCZĄĆ", language),
                         0f);
 
                 case InteractionHudMode.Active:
                     return new InteractionHudCopy(
-                        "E",
+                        key,
                         localizedAction,
                         UiText.Get("TRZYMAJ • PUŚĆ, ABY PRZERWAĆ", language),
                         UnityEngine.Mathf.Clamp01(progress));
@@ -94,7 +98,7 @@ namespace InterrogationRoom.UI
 
                 case InteractionHudMode.Seated:
                     return new InteractionHudCopy(
-                        "E",
+                        key,
                         localizedAction,
                         UiText.Get("NACIŚNIJ, ABY WSTAĆ", language),
                         0f);

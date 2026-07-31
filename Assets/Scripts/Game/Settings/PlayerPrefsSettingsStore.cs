@@ -21,6 +21,28 @@ namespace InterrogationRoom.Settings
             PlayerPrefs.SetFloat(key, value);
         }
 
+        public bool TryGetString(string key, out string value)
+        {
+            if (!PlayerPrefs.HasKey(key))
+            {
+                value = null;
+                return false;
+            }
+
+            value = PlayerPrefs.GetString(key);
+            return true;
+        }
+
+        public void SetString(string key, string value)
+        {
+            PlayerPrefs.SetString(key, value);
+        }
+
+        public void DeleteKey(string key)
+        {
+            PlayerPrefs.DeleteKey(key);
+        }
+
         public void Save()
         {
             PlayerPrefs.Save();

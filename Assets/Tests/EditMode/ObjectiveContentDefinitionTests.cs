@@ -26,6 +26,21 @@ namespace InterrogationRoom.Domain.Tests
             }
         }
 
+        [TestCase("WR-01", "papierosów", "skrytce")]
+        [TestCase("WR-04", "telefon", "depozycie")]
+        public void WrobienieSecondStep_NamesConcreteItemAndPlace(
+            string objectiveId,
+            string expectedItem,
+            string expectedPlace)
+        {
+            var definition = WrobienieDefinitions.Variants
+                .Single(value => value.Id == new PrivateObjectiveId(objectiveId));
+            var secondStep = definition.Steps[1];
+
+            Assert.That(secondStep.Description, Does.Contain(expectedItem));
+            Assert.That(secondStep.Description, Does.Contain(expectedPlace));
+        }
+
         [Test]
         public void EscapeLibrary_HasThreeCompatibleNarrativePlans()
         {

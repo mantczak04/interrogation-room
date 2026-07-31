@@ -64,6 +64,9 @@
     --space-4: 16px;
     --space-6: 24px;
     --space-8: 32px;
+
+    /* Tailwind rounded-sm equivalent used by every card and control. */
+    --radius-small: 4px;
 }
 
 /* ---------------------------------------------------------------------------
@@ -120,13 +123,13 @@
     background-color: rgba(20, 24, 27, 0.97);
     border-width: 2px;
     border-color: var(--brass);
-    border-radius: 2px;
+    border-radius: var(--radius-small);
 }
 
 .surface-paper {
     background-color: var(--paper);
     color: var(--ink);
-    border-radius: 0;
+    border-radius: var(--radius-small);
 }
 
 /* ---------------------------------------------------------------------------
@@ -143,7 +146,7 @@
     color: var(--text-hi);
     background-color: var(--green);
     border-width: 0;
-    border-radius: 2px;
+    border-radius: var(--radius-small);
     padding: 14px 24px;
     margin: 0;
     transition-property: background-color, color, translate;
@@ -159,10 +162,9 @@
     translate: 0 1px;
 }
 
-.btn:disabled {
-    background-color: var(--graphite-700);
-    color: var(--graphite-500);
-    opacity: 1;
+.btn:focus {
+    border-width: 1px;
+    border-color: var(--amber-dim);
 }
 
 .btn--destructive {
@@ -239,6 +241,14 @@
     translate: 0 1px;
 }
 
+.btn.is-selected,
+.btn.is-active {
+    background-color: var(--amber-dim);
+    color: var(--graphite-900);
+    border-width: 2px;
+    border-color: var(--amber);
+}
+
 /*
  * A menu entry is a button with the chrome removed: type on the art, with a
  * marker that slides in on hover. Used by the main menu.
@@ -257,18 +267,22 @@
     transition-duration: 0.10s;
 }
 
-.menu-entry:hover {
+.menu-entry:focus {
+    color: var(--paper-dark);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    translate: 0 0;
+}
+
+.menu-entry:hover,
+.menu-entry:focus:hover {
     color: var(--amber);
     translate: 10px 0;
 }
 
-.menu-entry:active {
+.menu-entry:active,
+.menu-entry:focus:active {
     color: var(--amber-dim);
-}
-
-.menu-entry:disabled {
-    color: var(--graphite-500);
-    opacity: 1;
 }
 
 /* ---------------------------------------------------------------------------
@@ -303,7 +317,7 @@
     background-color: rgba(0, 0, 0, 0);
     border-width: 1px;
     border-color: var(--brass);
-    border-radius: 2px;
+    border-radius: var(--radius-small);
     transition-property: background-color, border-color;
     transition-duration: 0.08s;
 }
@@ -317,8 +331,28 @@
     border-color: var(--amber);
 }
 
+.unity-toggle:focus .unity-toggle__checkmark {
+    border-width: 2px;
+    border-color: var(--amber);
+}
+
 .unity-toggle:disabled {
     opacity: 0.5;
+}
+
+.unity-toggle:disabled:hover .unity-toggle__checkmark,
+.unity-toggle:disabled:active .unity-toggle__checkmark,
+.unity-toggle:disabled:focus .unity-toggle__checkmark {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 1px;
+    border-color: var(--brass);
+}
+
+.unity-toggle:disabled:checked:hover .unity-toggle__checkmark,
+.unity-toggle:disabled:checked:active .unity-toggle__checkmark,
+.unity-toggle:disabled:checked:focus .unity-toggle__checkmark {
+    background-color: var(--amber);
+    border-color: var(--amber);
 }
 
 /* ---------------------------------------------------------------------------
@@ -331,7 +365,7 @@
     background-color: var(--paper-dark);
     color: var(--ink);
     border-width: 0;
-    border-radius: 0;
+    border-radius: var(--radius-small);
     padding: 10px 12px;
 }
 
@@ -344,4 +378,45 @@
     color: var(--amber);
     letter-spacing: 2px;
     margin-bottom: var(--space-2);
+}
+
+/* Popup fields follow the same paper-form language as text fields. */
+.dropdown > .unity-base-popup-field__input {
+    background-color: var(--paper-dark);
+    color: var(--ink);
+    border-width: 1px;
+    border-color: var(--paper-shadow);
+    border-radius: var(--radius-small);
+    padding: 10px 12px;
+}
+
+.dropdown:focus > .unity-base-popup-field__input {
+    background-color: var(--paper-bright);
+    border-width: 2px;
+    border-color: var(--amber);
+}
+
+/*
+ * Disabled rules are deliberately last. Modifier hover/active selectors must
+ * never make an unavailable control look clickable.
+ */
+.btn:disabled,
+.btn:disabled:hover,
+.btn:disabled:active,
+.btn:disabled:focus {
+    background-color: var(--graphite-700);
+    color: var(--graphite-300);
+    border-color: var(--graphite-500);
+    opacity: 0.6;
+    translate: 0 0;
+}
+
+.menu-entry:disabled,
+.menu-entry:disabled:hover,
+.menu-entry:disabled:active,
+.menu-entry:disabled:focus {
+    color: var(--graphite-500);
+    border-color: rgba(0, 0, 0, 0);
+    opacity: 0.7;
+    translate: 0 0;
 }

@@ -65,6 +65,32 @@ namespace InterrogationRoom.Networking.Tests
                 Is.EqualTo(expected));
         }
 
+        [TestCase(true, RoundPhase.Lobby, 1, true, true, true)]
+        [TestCase(true, RoundPhase.Lobby, 1, true, false, false)]
+        [TestCase(true, RoundPhase.Lobby, 0, true, true, false)]
+        [TestCase(true, RoundPhase.Lobby, 8, true, false, true)]
+        [TestCase(true, RoundPhase.Lobby, 9, true, true, false)]
+        [TestCase(true, RoundPhase.Lobby, 1, false, true, false)]
+        [TestCase(false, RoundPhase.Lobby, 1, true, true, false)]
+        [TestCase(true, RoundPhase.Round, 1, true, true, false)]
+        public void LobbyStart_AllowsOneReadyPlayerOnlyForDeveloperLobby(
+            bool isHost,
+            RoundPhase phase,
+            int playerCount,
+            bool allPlayersReady,
+            bool allowSoloDeveloperStart,
+            bool expected)
+        {
+            Assert.That(
+                RoundLobbyRules.CanStartRound(
+                    isHost,
+                    phase,
+                    playerCount,
+                    allPlayersReady,
+                    allowSoloDeveloperStart),
+                Is.EqualTo(expected));
+        }
+
         [Test]
         public void IntentPayloadContainsNoClientAuthoredPlayerIdentity()
         {

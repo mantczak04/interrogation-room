@@ -7,9 +7,6 @@ using InterrogationRoom.Settings;
 using Mirror;
 using UnityEngine;
 using UnityEngine.UIElements;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace InterrogationRoom.UI
 {
@@ -168,7 +165,6 @@ namespace InterrogationRoom.UI
         private Label _rejectionLabel;
         private Button _startButton;
         private VisualElement _startButtonHoverArea;
-        private Label _startButtonHoverInfo;
         private Button _lobbyReadyButton;
         private Label _lobbyHelpLabel;
         private Button _roundLimit5Button;
@@ -184,8 +180,6 @@ namespace InterrogationRoom.UI
         private bool _developerMenuOpen;
         private bool _unlimitedRound;
         private bool _privatePanelExpanded = true;
-        private bool _startButtonHovered;
-        private bool _startButtonCanStart;
         private string _startButtonBlockedMessage;
         private RoundPhase? _lastRenderedPhase;
         private readonly Dictionary<TextElement, string> _staticPolishText = new Dictionary<TextElement, string>();
@@ -220,14 +214,13 @@ namespace InterrogationRoom.UI
             BindVisualTree();
             CaptureStaticLocalizedText();
             GameSettingsService.Current.Changed += OnLanguageChanged;
+            GameInputBindings.BindingsChanged += ApplyPrivatePanelExpansion;
             _rejectionLabel.text = string.Empty;
             SetVisible(_rejectionLabel, false);
             coordinator.ViewReceived += OnViewReceived;
             coordinator.IntentRejected += OnIntentRejected;
             coordinator.LobbyResetReceived += OnLobbyResetReceived;
             _startButton.clicked += OnStartClicked;
-            _startButtonHoverArea.RegisterCallback<PointerEnterEvent>(OnStartButtonPointerEnter);
-            _startButtonHoverArea.RegisterCallback<PointerLeaveEvent>(OnStartButtonPointerLeave);
             _lobbyReadyButton.clicked += OnLobbyReadyClicked;
             _roundLimit5Button.clicked += OnRoundLimit5Clicked;
             _roundLimit10Button.clicked += OnRoundLimit10Clicked;
@@ -248,6 +241,7 @@ namespace InterrogationRoom.UI
         private void OnDisable()
         {
             GameSettingsService.Current.Changed -= OnLanguageChanged;
+            GameInputBindings.BindingsChanged -= ApplyPrivatePanelExpansion;
             if (coordinator != null)
             {
                 coordinator.ViewReceived -= OnViewReceived;
@@ -256,11 +250,6 @@ namespace InterrogationRoom.UI
             }
             if (_startButton != null)
                 _startButton.clicked -= OnStartClicked;
-            if (_startButtonHoverArea != null)
-            {
-                _startButtonHoverArea.UnregisterCallback<PointerEnterEvent>(OnStartButtonPointerEnter);
-                _startButtonHoverArea.UnregisterCallback<PointerLeaveEvent>(OnStartButtonPointerLeave);
-            }
             if (_lobbyReadyButton != null)
                 _lobbyReadyButton.clicked -= OnLobbyReadyClicked;
             if (_roundLimit5Button != null)
@@ -308,7 +297,9 @@ namespace InterrogationRoom.UI
                 // Polled here instead of a UI Toolkit KeyDownEvent: the root
                 // loses keyboard focus whenever the player clicks the game
                 // world, which made the [I] toggle silently stop working.
-                if (!_developerMenuOpen && WasTogglePrivatePanelPressed())
+                if (!_developerMenuOpen &&
+                    !PlayerInputGate.GameplayInputBlocked &&
+                    WasTogglePrivatePanelPressed())
                     TogglePrivatePanel();
 
                 if (_unlimitedRound)
@@ -544,38 +535,43 @@ namespace InterrogationRoom.UI
             SetVisible(_hudPanel, false);
             SetVisible(_resultPanel, false);
             SetVisible(_privatePanel, false);
-            bool validPlayerCount = playerCount >= RoundEngine.MinPlayers
-                && playerCount <= RoundEngine.MaxPlayers;
-            var canStart = coordinator.IsLocalHost
-                && validPlayerCount
-                && coordinator.AreAllLobbyPlayersReady;
+            bool soloDeveloperStart = coordinator.AllowsSoloDeveloperLobbyStart;
+            bool canStart = RoundLobbyRules.CanStartRound(
+                coordinator.IsLocalHost,
+                RoundPhase.Lobby,
+                playerCount,
+                coordinator.AreAllLobbyPlayersReady,
+                soloDeveloperStart);
             SetVisible(_startButtonHoverArea, coordinator.IsLocalHost);
             SetVisible(_secretObjectiveToggle, true);
             SetVisible(_secretObjectiveSummary, true);
             _startButton.SetEnabled(canStart);
-            _startButtonCanStart = canStart;
             // The dominant blocker first: readiness is irrelevant while the
             // lobby is short of players, and "everyone must be ready" on a
             // solo host read as a bug.
             _startButtonBlockedMessage = canStart
                 ? string.Empty
-                : playerCount < RoundEngine.MinPlayers
-                    ? UiText.Format("Potrzeba co najmniej {0} graczy.", RoundEngine.MinPlayers)
+                : playerCount < (soloDeveloperStart ? 1 : RoundEngine.MinPlayers)
+                    ? UiText.Format(
+                        "Potrzeba co najmniej {0} graczy.",
+                        soloDeveloperStart ? 1 : RoundEngine.MinPlayers)
                     : UiText.Get("Wszyscy gracze muszą być gotowi.");
             _startButton.tooltip = string.Empty;
-            RefreshStartButtonHoverInfo();
             _startButton.text = UiText.Get("Start Rundy");
             // The blocker is visible without hovering; the static 3-8 range
             // only remains when nothing blocks the start.
             _lobbyHelpLabel.text = coordinator.IsLocalHost && !canStart
                 ? _startButtonBlockedMessage
-                : UiText.Get("Rundę można rozpocząć dla 3–8 graczy.");
+                : soloDeveloperStart
+                    ? UiText.Get("Test deweloperski można rozpocząć solo.")
+                    : UiText.Get("Rundę można rozpocząć dla 3–8 graczy.");
             _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
             RefreshRoundLimitButtons();
             SetVisible(_lobbyReadyButton, connected);
             bool localReady = coordinator.IsLocalLobbyReady;
             _lobbyReadyButton.text = UiText.Get(localReady ? "Anuluj gotowość" : "Gotowy");
             _lobbyReadyButton.EnableInClassList("lobby-ready-button--active", localReady);
+            UiControlStates.SetActive(_lobbyReadyButton, localReady);
             bool secretObjectiveAvailable = playerCount >= RoundEngine.MinPlayersForSecretObjective;
             _secretObjectiveToggle.SetEnabled(coordinator.IsLocalHost && secretObjectiveAvailable);
             _secretObjectiveSummary.text = secretObjectiveAvailable
@@ -622,7 +618,7 @@ namespace InterrogationRoom.UI
             _rejectionLabel = Required<Label>(root, "rejection-label");
             _startButton = Required<Button>(root, "start-button");
             _startButtonHoverArea = Required<VisualElement>(root, "start-button-hover-area");
-            _startButtonHoverInfo = Required<Label>(root, "start-button-hover-info");
+            SetVisible(Required<Label>(root, "start-button-hover-info"), false);
             _lobbyReadyButton = Required<Button>(root, "lobby-ready-button");
             _lobbyHelpLabel = Required<Label>(root, "lobby-help-label");
             _roundLimit5Button = Required<Button>(root, "round-limit-5-button");
@@ -667,31 +663,6 @@ namespace InterrogationRoom.UI
         }
 
         private void OnStartClicked() => coordinator.RequestStartRound();
-
-        private void OnStartButtonPointerEnter(PointerEnterEvent pointerEvent)
-        {
-            _startButtonHovered = true;
-            RefreshStartButtonHoverInfo();
-        }
-
-        private void OnStartButtonPointerLeave(PointerLeaveEvent pointerEvent)
-        {
-            _startButtonHovered = false;
-            RefreshStartButtonHoverInfo();
-        }
-
-        private void RefreshStartButtonHoverInfo()
-        {
-            if (_startButtonHoverInfo == null)
-                return;
-
-            _startButtonHoverInfo.text = _startButtonBlockedMessage ?? string.Empty;
-            SetVisible(
-                _startButtonHoverInfo,
-                _startButtonHovered &&
-                !_startButtonCanStart &&
-                !string.IsNullOrWhiteSpace(_startButtonBlockedMessage));
-        }
 
         private void OnLobbyReadyClicked() =>
             coordinator.RequestSetLobbyReady(!coordinator.IsLocalLobbyReady);
@@ -756,11 +727,8 @@ namespace InterrogationRoom.UI
 
         private static bool WasTogglePrivatePanelPressed()
         {
-#if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame;
-#else
-            return Input.GetKeyDown(KeyCode.I);
-#endif
+            return GameInputBindings.WasPressedThisFrame(
+                GameInputAction.PrivateObjective);
         }
 
         private void ApplyPrivatePanelExpansion()
@@ -771,9 +739,13 @@ namespace InterrogationRoom.UI
             SetVisible(_privateContent, _privatePanelExpanded);
             _privatePanel.EnableInClassList("private-card--collapsed", !_privatePanelExpanded);
             bool registry = _privatePanel.ClassListContains("private-card--registry");
+            string binding = GameInputBindings.GetBindingDisplayString(
+                GameInputAction.PrivateObjective);
             _privateToggleButton.text = _privatePanelExpanded
-                ? UiText.Get("Zwiń [I]")
-                : registry ? UiText.Get("Rejestr [I]") : UiText.Get("Cel [I]");
+                ? UiText.Format("Zwiń [{0}]", binding)
+                : registry
+                    ? UiText.Format("Rejestr [{0}]", binding)
+                    : UiText.Format("Cel [{0}]", binding);
         }
 
         private void OnReturnToLobbyClicked() => coordinator.RequestReturnToLobby();

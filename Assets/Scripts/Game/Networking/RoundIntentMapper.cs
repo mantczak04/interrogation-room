@@ -19,6 +19,18 @@ namespace InterrogationRoom.Networking
         public static bool CanSetRoundLimit(bool isHost, RoundPhase phase, int minutes) =>
             isHost && phase == RoundPhase.Lobby && IsRoundLimitMinutesAllowed(minutes);
 
+        public static bool CanStartRound(
+            bool isHost,
+            RoundPhase phase,
+            int playerCount,
+            bool allPlayersReady,
+            bool allowSoloDeveloperStart) =>
+            isHost
+            && phase == RoundPhase.Lobby
+            && playerCount >= (allowSoloDeveloperStart ? 1 : RoundEngine.MinPlayers)
+            && playerCount <= RoundEngine.MaxPlayers
+            && allPlayersReady;
+
         public static double ToRoundLimitSeconds(int minutes)
         {
             if (!IsRoundLimitMinutesAllowed(minutes))

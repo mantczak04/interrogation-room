@@ -75,11 +75,11 @@ namespace InterrogationRoom.Networking.Tests
         }
 
         [TestCase(false, false, false, true, true)]
+        [TestCase(false, false, true, true, true)]
         [TestCase(true, false, false, true, false)]
         [TestCase(false, true, false, true, false)]
-        [TestCase(false, false, true, true, false)]
         [TestCase(false, false, false, false, false)]
-        public void DanceEligibilityRequiresAnAliveStandingUnarmedSupportedCharacter(
+        public void DanceEligibilityRequiresAnAliveStandingSupportedCharacter(
             bool isDead,
             bool isSeated,
             bool hasWeapon,

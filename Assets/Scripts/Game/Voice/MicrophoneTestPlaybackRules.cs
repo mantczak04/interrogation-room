@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace InterrogationRoom.Voice
 {
     public enum MicrophoneTestState
@@ -33,6 +36,11 @@ namespace InterrogationRoom.Voice
 
     public static class MicrophoneTestPlaybackRules
     {
+        public static bool ShouldMuteCapture(
+            bool userMuted,
+            bool microphoneTestActive) =>
+            userMuted && !microphoneTestActive;
+
         public static MicrophoneTestTransition Start(
             bool hasInputDevice,
             bool captureStarted)
@@ -110,6 +118,73 @@ namespace InterrogationRoom.Voice
                 requiresResync
                     ? MicrophoneTestAction.ResyncPlayback
                     : MicrophoneTestAction.None);
+        }
+    }
+
+    public readonly struct VoiceAudioDevice
+    {
+        public string Id { get; }
+        public string Name { get; }
+
+        public VoiceAudioDevice(string id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+    }
+
+    public static class VoiceDeviceSelection
+    {
+        public static bool IsUsableInputDevice(
+            string deviceId,
+            string deviceName) =>
+            !string.Equals(
+                deviceName,
+                "No Device",
+                StringComparison.OrdinalIgnoreCase) &&
+            (!string.IsNullOrWhiteSpace(deviceId) ||
+             !string.IsNullOrWhiteSpace(deviceName));
+
+        public static string ResolveDeviceId(
+            string preferredDeviceId,
+            string activeDeviceId,
+            IReadOnlyList<VoiceAudioDevice> availableDevices)
+        {
+            if (availableDevices == null || availableDevices.Count == 0)
+                return null;
+
+            string preferred = FindDeviceId(preferredDeviceId, availableDevices);
+            if (preferred != null)
+                return preferred;
+
+            string active = FindDeviceId(activeDeviceId, availableDevices);
+            if (active != null)
+                return active;
+
+            for (int index = 0; index < availableDevices.Count; index++)
+            {
+                if (!string.IsNullOrWhiteSpace(availableDevices[index].Id))
+                    return availableDevices[index].Id;
+            }
+
+            return null;
+        }
+
+        private static string FindDeviceId(
+            string requestedId,
+            IReadOnlyList<VoiceAudioDevice> availableDevices)
+        {
+            if (string.IsNullOrWhiteSpace(requestedId))
+                return null;
+
+            for (int index = 0; index < availableDevices.Count; index++)
+            {
+                string candidate = availableDevices[index].Id;
+                if (string.Equals(candidate, requestedId, StringComparison.Ordinal))
+                    return candidate;
+            }
+
+            return null;
         }
     }
 }

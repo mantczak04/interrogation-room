@@ -5,10 +5,6 @@
             <ui:VisualElement class="screen-shade" />
             <ui:VisualElement class="lobby-wash lobby-wash--left" />
             <ui:VisualElement class="lobby-wash lobby-wash--right" />
-            <ui:Button name="lobby-back-button" class="lobby-back" focusable="false">
-                <ui:VisualElement class="lobby-back-glyph" picking-mode="Ignore" />
-                <ui:Label text="Wyjdź z lobby" class="lobby-back-text" picking-mode="Ignore" />
-            </ui:Button>
             <ui:VisualElement class="lobby-layout">
                 <ui:VisualElement class="lobby-roster-panel">
                     <ui:Label name="lobby-roster-count" text="Lista graczy" class="kicker stamp-font lobby-side-kicker" />
@@ -16,7 +12,6 @@
                     <ui:VisualElement class="rule lobby-side-rule" />
                     <ui:Label name="lobby-player-list-empty" text="Oczekiwanie na graczy…" class="lobby-player-list-empty" />
                     <ui:ScrollView name="lobby-player-list" class="lobby-player-list" mode="Vertical" horizontal-scroller-visibility="Hidden" />
-                    <ui:Label text="V — wycisz / włącz mikrofon" class="lobby-voice-hint" />
                 </ui:VisualElement>
                 <ui:VisualElement class="lobby-settings-panel stamp-font">
                     <ui:Label text="GOSPODARZ GRY" class="kicker stamp-font lobby-side-kicker" />
@@ -62,6 +57,7 @@
                     <ui:Label text="Wygląd postaci nie zdradza roli." class="preview-caption" />
                 </ui:VisualElement>
             </ui:VisualElement>
+            <ui:Button name="lobby-back-button" class="lobby-back" text="Wyjdź z lobby" focusable="false" />
         </ui:VisualElement>
 
         <ui:VisualElement name="preparation-panel" class="full-screen-panel preparation-screen">

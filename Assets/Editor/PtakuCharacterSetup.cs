@@ -16,6 +16,8 @@ public static class PtakuCharacterSetup
     private const string ControllerPath = CharacterFolder + "/PtakuCharacter.controller";
     private const string MaterialPath = CharacterFolder + "/Ptaku_Material.mat";
     private const string PlayerPrefabPath = "Assets/Prefabs/Player.prefab";
+    private const string HumanoidPoseReferencePath =
+        "Assets/Characters/Animations/Dance/Dancing Twerk.fbx";
     private const float ImportScale = 0.01631579f;
 
     [MenuItem("Tools/Interrogation Room/Log Ptaku Sources")]
@@ -136,8 +138,27 @@ public static class PtakuCharacterSetup
             .ToDictionary(group => group.Key, group => group.First());
 
         HumanDescription description = importer.humanDescription;
+        Avatar poseReference = AssetDatabase.LoadAllAssetsAtPath(HumanoidPoseReferencePath)
+            .OfType<Avatar>()
+            .FirstOrDefault(candidate => candidate.isValid && candidate.isHuman);
+        if (poseReference == null)
+        {
+            throw new InvalidOperationException(
+                $"Humanoid pose reference not found at '{HumanoidPoseReferencePath}'. " +
+                $"Run '{DanceAnimationSetup.MenuPath}' first.");
+        }
+
+        HumanDescription referenceDescription = poseReference.humanDescription;
+        var referenceBoneByHumanName = referenceDescription.human
+            .ToDictionary(humanBone => humanBone.humanName, humanBone => humanBone.boneName);
+        var referenceSkeletonByBoneName = referenceDescription.skeleton
+            .ToDictionary(skeletonBone => skeletonBone.name);
+        var humanNameByBoneName = description.human
+            .ToDictionary(humanBone => humanBone.boneName, humanBone => humanBone.humanName);
+
         SkeletonBone[] skeleton = description.skeleton;
         int matchedBones = 0;
+        int normalizedHumanoidRotations = 0;
 
         for (int index = 0; index < skeleton.Length; index++)
         {
@@ -148,8 +169,24 @@ public static class PtakuCharacterSetup
             }
 
             bone.position = sourceTransform.localPosition;
-            bone.rotation = sourceTransform.localRotation;
             bone.scale = sourceTransform.localScale;
+            bone.rotation = sourceTransform.localRotation;
+
+            if (humanNameByBoneName.TryGetValue(bone.name, out string humanName) &&
+                referenceBoneByHumanName.TryGetValue(humanName, out string referenceBoneName) &&
+                referenceSkeletonByBoneName.TryGetValue(
+                    referenceBoneName,
+                    out SkeletonBone referenceBone))
+            {
+                // Ptaku's With Skin FBX was exported from an idle pose rather than a neutral
+                // Mixamo reference pose. Native clips share that Avatar and hide the mismatch,
+                // while shared dances retarget shoulders and legs from the wrong baseline.
+                // Keep Ptaku's authored proportions, but use the shared Mixamo reference
+                // rotations for Humanoid retargeting.
+                bone.rotation = referenceBone.rotation;
+                normalizedHumanoidRotations++;
+            }
+
             skeleton[index] = bone;
             matchedBones++;
         }
@@ -157,6 +194,12 @@ public static class PtakuCharacterSetup
         if (matchedBones == 0)
         {
             throw new InvalidOperationException("Ptaku Humanoid skeleton could not be normalized.");
+        }
+
+        if (normalizedHumanoidRotations == 0)
+        {
+            throw new InvalidOperationException(
+                "Ptaku Humanoid reference rotations could not be normalized.");
         }
 
         description.skeleton = skeleton;
@@ -247,6 +290,7 @@ public static class PtakuCharacterSetup
         controller.AddParameter("Punch", AnimatorControllerParameterType.Trigger);
         controller.AddParameter("PunchVariant", AnimatorControllerParameterType.Int);
         controller.AddParameter("IsDead", AnimatorControllerParameterType.Bool);
+        controller.AddParameter("IsInteracting", AnimatorControllerParameterType.Bool);
 
         AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
         BlendTree locomotionBlend = new()
@@ -267,6 +311,8 @@ public static class PtakuCharacterSetup
         AnimatorState punchAState = AddState(stateMachine, "Uppercut A", punchA);
         AnimatorState punchBState = AddState(stateMachine, "Uppercut B", punchB);
         AnimatorState deathState = AddState(stateMachine, "Death", death);
+        AnimatorState interactingState = AddState(stateMachine, "Interacting", punchA);
+        interactingState.speed = 0.45f;
 
         AddBoolTransition(locomotion, sittingState, "IsSeated", true, 0.15f);
         AddBoolTransition(sittingState, locomotion, "IsSeated", false, 0.15f);
@@ -284,6 +330,20 @@ public static class PtakuCharacterSetup
         AnimatorStateTransition deathTransition = stateMachine.AddAnyStateTransition(deathState);
         ConfigureImmediateTransition(deathTransition, 0.08f);
         deathTransition.AddCondition(AnimatorConditionMode.If, 0f, "IsDead");
+
+        AnimatorStateTransition interactionTransition =
+            stateMachine.AddAnyStateTransition(interactingState);
+        ConfigureImmediateTransition(interactionTransition, 0.15f);
+        interactionTransition.AddCondition(
+            AnimatorConditionMode.If,
+            0f,
+            "IsInteracting");
+        AddBoolTransition(
+            interactingState,
+            locomotion,
+            "IsInteracting",
+            false,
+            0.15f);
 
         EditorUtility.SetDirty(controller);
         return controller;

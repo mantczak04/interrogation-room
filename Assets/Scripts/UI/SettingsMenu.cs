@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using InterrogationRoom.Settings;
 using UnityEngine;
@@ -25,36 +27,44 @@ public sealed class SettingsMenu : MonoBehaviour
     private const float SortingOrder = 100f;
 
     private static SettingsMenu instance;
-    private static int escapeConsumedFrame = -1;
 
     private UIDocument document;
     private VisualElement scrim;
     private Slider sensitivitySlider;
     private Label sensitivityValueLabel;
-    private Label kickerLabel;
     private Label titleLabel;
-    private Label contextHintLabel;
     private Label sensitivityCaptionLabel;
     private Label languageCaptionLabel;
-    private Label voiceHintLabel;
     private Label microphoneCaptionLabel;
     private Label participantVolumeCaptionLabel;
-    private Label participantListEmptyLabel;
+    private Label controlsHintLabel;
     private Button polishButton;
     private Button englishButton;
+    private Button generalTabButton;
+    private Button controlsTabButton;
+    private Button soundTabButton;
     private Button backButton;
     private Button leaveButton;
-    private VisualElement leaveDivider;
+    private VisualElement generalSection;
+    private VisualElement controlsSection;
+    private VisualElement soundSection;
     private VoiceSettingsPresenter voicePresenter;
+    private InputBindingsSettingsPresenter inputBindingsPresenter;
 
     private Action onOpened;
     private Action onClosed;
     private Action leaveGame;
     private bool isOpen;
+    private SettingsSection activeSection = SettingsSection.General;
+
+    private enum SettingsSection
+    {
+        General,
+        Controls,
+        Sound
+    }
 
     public static bool IsOpen => instance != null && instance.isOpen;
-
-    public static bool EscapeConsumedThisFrame => escapeConsumedFrame == Time.frameCount;
 
     public static SettingsMenu EnsureInstance()
     {
@@ -89,9 +99,11 @@ public sealed class SettingsMenu : MonoBehaviour
         sensitivitySlider.SetValueWithoutNotify(sensitivity);
         UpdateSensitivityLabel(sensitivity);
         voicePresenter?.SetOpen(true);
+        inputBindingsPresenter?.SetOpen(true);
         RefreshSectionVisibility();
         scrim.style.display = DisplayStyle.Flex;
         isOpen = true;
+        PlayerInputGate.SetModalInputBlocked(this, true);
         onOpened?.Invoke();
     }
 
@@ -103,8 +115,10 @@ public sealed class SettingsMenu : MonoBehaviour
         }
 
         voicePresenter?.SetOpen(false);
+        inputBindingsPresenter?.SetOpen(false);
         isOpen = false;
         scrim.style.display = DisplayStyle.None;
+        PlayerInputGate.SetModalInputBlocked(this, false);
         onClosed?.Invoke();
     }
 
@@ -112,39 +126,23 @@ public sealed class SettingsMenu : MonoBehaviour
     {
         instance = this;
         BuildMenu();
+        EscapeInputRouter.EnsureInstance().Register(
+            this,
+            EscapeHandlerPriority.Settings,
+            () => isOpen,
+            Close);
         GameSettingsService.Current.Changed += OnSettingsChanged;
     }
 
     private void OnDestroy()
     {
         GameSettingsService.Current.Changed -= OnSettingsChanged;
+        EscapeInputRouter.UnregisterOwner(this);
+        PlayerInputGate.SetModalInputBlocked(this, false);
         if (instance == this)
         {
             instance = null;
         }
-    }
-
-    private void Update()
-    {
-        if (!isOpen)
-        {
-            return;
-        }
-
-        if (WasEscapePressed())
-        {
-            escapeConsumedFrame = Time.frameCount;
-            Close();
-        }
-    }
-
-    private static bool WasEscapePressed()
-    {
-#if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
-#else
-        return Input.GetKeyDown(KeyCode.Escape);
-#endif
     }
 
     private void BuildMenu()
@@ -167,22 +165,24 @@ public sealed class SettingsMenu : MonoBehaviour
         VisualElement root = document.rootVisualElement;
         scrim = root.Q<VisualElement>("settings-scrim");
 
-        kickerLabel = root.Q<Label>("kicker");
         titleLabel = root.Q<Label>("title");
-        contextHintLabel = root.Q<Label>("context-hint");
         sensitivityCaptionLabel = root.Q<Label>("sensitivity-caption");
         sensitivityValueLabel = root.Q<Label>("sensitivity-value");
         languageCaptionLabel = root.Q<Label>("language-caption");
-        voiceHintLabel = root.Q<Label>("voice-hint");
         microphoneCaptionLabel = root.Q<Label>("microphone-caption");
         participantVolumeCaptionLabel = root.Q<Label>("participant-volume-caption");
-        participantListEmptyLabel = root.Q<Label>("voice-participant-list-empty");
+        controlsHintLabel = root.Q<Label>("controls-hint");
         sensitivitySlider = root.Q<Slider>("sensitivity-slider");
         polishButton = root.Q<Button>("polish-button");
         englishButton = root.Q<Button>("english-button");
+        generalTabButton = root.Q<Button>("general-tab-button");
+        controlsTabButton = root.Q<Button>("controls-tab-button");
+        soundTabButton = root.Q<Button>("sound-tab-button");
         backButton = root.Q<Button>("back-button");
         leaveButton = root.Q<Button>("leave-button");
-        leaveDivider = root.Q<VisualElement>("leave-divider");
+        generalSection = root.Q<VisualElement>("general-section");
+        controlsSection = root.Q<VisualElement>("controls-section");
+        soundSection = root.Q<VisualElement>("sound-section");
 
         sensitivitySlider.lowValue = GameSettings.MinMouseSensitivity;
         sensitivitySlider.highValue = GameSettings.MaxMouseSensitivity;
@@ -191,15 +191,22 @@ public sealed class SettingsMenu : MonoBehaviour
         voicePresenter = GetComponent<VoiceSettingsPresenter>() ??
                          gameObject.AddComponent<VoiceSettingsPresenter>();
         voicePresenter.Configure(root);
+        inputBindingsPresenter = GetComponent<InputBindingsSettingsPresenter>() ??
+                                 gameObject.AddComponent<InputBindingsSettingsPresenter>();
+        inputBindingsPresenter.Configure(root);
 
         polishButton.clicked += () => SetLanguage(UiLanguage.Polish);
         englishButton.clicked += () => SetLanguage(UiLanguage.English);
+        generalTabButton.clicked += () => SelectSection(SettingsSection.General);
+        controlsTabButton.clicked += () => SelectSection(SettingsSection.Controls);
+        soundTabButton.clicked += () => SelectSection(SettingsSection.Sound);
         backButton.clicked += Close;
         leaveButton.clicked += OnLeaveClicked;
 
         UiSounds.Bind(root);
 
         scrim.style.display = DisplayStyle.None;
+        SelectSection(activeSection);
         RefreshLocalizedText();
     }
 
@@ -212,22 +219,21 @@ public sealed class SettingsMenu : MonoBehaviour
             leaveButton.style.display = inRound ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        if (leaveDivider != null)
-        {
-            leaveDivider.style.display = inRound ? DisplayStyle.Flex : DisplayStyle.None;
-        }
-
-        if (contextHintLabel != null)
-        {
-            contextHintLabel.text = UiText.Get(inRound
-                ? "Runda trwa — zmiany ustawień działają natychmiast."
-                : "Zmiany ustawień działają natychmiast.");
-        }
-
         if (backButton != null)
         {
             backButton.text = UiText.Get(inRound ? "Wróć do gry" : "Wróć do menu");
         }
+    }
+
+    private void SelectSection(SettingsSection section)
+    {
+        activeSection = section;
+        UiControlStates.SetSelected(generalTabButton, section == SettingsSection.General);
+        UiControlStates.SetSelected(controlsTabButton, section == SettingsSection.Controls);
+        UiControlStates.SetSelected(soundTabButton, section == SettingsSection.Sound);
+        UiControlStates.SetSelected(generalSection, section == SettingsSection.General);
+        UiControlStates.SetSelected(controlsSection, section == SettingsSection.Controls);
+        UiControlStates.SetSelected(soundSection, section == SettingsSection.Sound);
     }
 
     private void OnSettingsChanged()
@@ -263,27 +269,284 @@ public sealed class SettingsMenu : MonoBehaviour
 
     private void RefreshLocalizedText()
     {
-        if (kickerLabel == null)
+        if (titleLabel == null)
             return;
 
-        kickerLabel.text = UiText.Get("KARTA USTAWIEŃ • 01");
         titleLabel.text = UiText.Get("USTAWIENIA");
+        generalTabButton.text = UiText.Get("Ogólne").ToUpperInvariant();
+        controlsTabButton.text = UiText.Get("Sterowanie").ToUpperInvariant();
+        soundTabButton.text = UiText.Get("Dźwięk").ToUpperInvariant();
         sensitivityCaptionLabel.text = UiText.Get("Czułość myszy");
         languageCaptionLabel.text = UiText.Get("Język");
         microphoneCaptionLabel.text = UiText.Get("Twój mikrofon");
         participantVolumeCaptionLabel.text = UiText.Get("Głośność rozmówców");
-        participantListEmptyLabel.text = UiText.Get(
-            "Kontrolki rozmówców pojawią się po dołączeniu do lobby.");
+        controlsHintLabel.text = UiText.Get(
+            "Wybierz akcję, a następnie naciśnij nowy klawisz lub przycisk myszy. Esc anuluje zmianę.");
 
         UiLanguage language = GameSettingsService.Current.Language;
-        polishButton.text = $"{(language == UiLanguage.Polish ? "● " : string.Empty)}{UiText.Get("Polski")}";
-        englishButton.text = $"{(language == UiLanguage.English ? "● " : string.Empty)}{UiText.Get("Angielski")}";
+        polishButton.text = UiText.Get("Polski");
+        englishButton.text = UiText.Get("Angielski");
+        UiControlStates.SetSelected(polishButton, language == UiLanguage.Polish);
+        UiControlStates.SetSelected(englishButton, language == UiLanguage.English);
 
-        voiceHintLabel.text = UiText.Get("V — wycisz / włącz mikrofon");
         leaveButton.text = UiText.Get("Opuść Rundę");
 
         RefreshSectionVisibility();
         voicePresenter?.RefreshLocalizedText();
+        inputBindingsPresenter?.RefreshLocalizedText();
     }
+}
+
+[DisallowMultipleComponent]
+public sealed class InputBindingsSettingsPresenter : MonoBehaviour
+{
+    private readonly Dictionary<GameInputAction, Label> actionLabels = new();
+    private readonly Dictionary<GameInputAction, Button> bindingButtons = new();
+    private readonly Dictionary<GameInputAction, Button> resetButtons = new();
+
+    private VisualElement bindingsList;
+    private VisualElement rebindBlocker;
+    private Label rebindBlockerLabel;
+    private Label statusLabel;
+    private Button resetAllButton;
+    private GameInputAction? pendingAction;
+    private bool rebindBlockerHeld;
+    private Coroutine releaseBlockerCoroutine;
+
+    public void Configure(VisualElement root)
+    {
+        if (root == null)
+        {
+            Debug.LogError("InputBindingsSettingsPresenter requires a UI root.", this);
+            enabled = false;
+            return;
+        }
+
+        bindingsList = root.Q<VisualElement>("input-bindings-list");
+        rebindBlocker = root.Q<VisualElement>("input-rebind-blocker");
+        rebindBlockerLabel = root.Q<Label>("input-rebind-blocker-label");
+        statusLabel = root.Q<Label>("input-binding-status");
+        resetAllButton = root.Q<Button>("reset-all-bindings-button");
+        if (bindingsList == null ||
+            rebindBlocker == null ||
+            rebindBlockerLabel == null ||
+            statusLabel == null ||
+            resetAllButton == null)
+        {
+            Debug.LogError(
+                "SettingsMenu.uxml is missing one or more input-binding controls.",
+                this);
+            enabled = false;
+            return;
+        }
+
+        resetAllButton.clicked += ResetAll;
+
+        foreach (GameInputAction action in GameInputBindingCatalog.Actions)
+            AddBindingRow(action);
+
+        GameInputBindings.BindingsChanged += RefreshBindings;
+        GameInputBindings.RebindStateChanged += OnRebindStateChanged;
+        RefreshBindings();
+    }
+
+    public void SetOpen(bool open)
+    {
+        if (!open && GameInputBindings.IsRebinding)
+            GameInputBindings.CancelInteractiveRebind();
+
+        if (open)
+            RefreshBindings();
+    }
+
+    public void RefreshLocalizedText()
+    {
+        if (bindingsList == null)
+            return;
+
+        foreach (KeyValuePair<GameInputAction, Label> entry in actionLabels)
+            entry.Value.text = GetActionLabel(entry.Key);
+        foreach (Button resetButton in resetButtons.Values)
+            resetButton.text = UiText.Get("Reset");
+        resetAllButton.text = UiText.Get("Przywróć domyślne sterowanie");
+        rebindBlockerLabel.text =
+            UiText.Get("Naciśnij nowe wejście. Esc anuluje zmianę.");
+
+        if (pendingAction.HasValue && GameInputBindings.IsRebinding)
+        {
+            statusLabel.text = UiText.Format(
+                "Naciśnij nowe wejście dla: {0}. Esc anuluje.",
+                GetActionLabel(pendingAction.Value));
+        }
+    }
+
+    private void OnDestroy()
+    {
+        GameInputBindings.BindingsChanged -= RefreshBindings;
+        GameInputBindings.RebindStateChanged -= OnRebindStateChanged;
+        if (GameInputBindings.IsRebinding)
+            GameInputBindings.CancelInteractiveRebind();
+    }
+
+    private void AddBindingRow(GameInputAction action)
+    {
+        var row = new VisualElement();
+        row.AddToClassList("input-binding-row");
+
+        var actionLabel = new Label();
+        actionLabel.AddToClassList("input-binding-action");
+        var bindingButton = new Button(() => BeginRebind(action));
+        bindingButton.AddToClassList("btn");
+        bindingButton.AddToClassList("btn--paper");
+        bindingButton.AddToClassList("input-binding-button");
+        var resetButton = new Button(() => ResetOne(action));
+        resetButton.AddToClassList("btn");
+        resetButton.AddToClassList("btn--quiet");
+        resetButton.AddToClassList("input-binding-reset");
+
+        row.Add(actionLabel);
+        row.Add(bindingButton);
+        row.Add(resetButton);
+        bindingsList.Add(row);
+
+        actionLabels[action] = actionLabel;
+        bindingButtons[action] = bindingButton;
+        resetButtons[action] = resetButton;
+    }
+
+    private void BeginRebind(GameInputAction action)
+    {
+        pendingAction = action;
+        bool started = GameInputBindings.BeginInteractiveRebind(action, OnRebindCompleted);
+        if (!started)
+        {
+            pendingAction = null;
+            statusLabel.text = UiText.Get("Inna zmiana sterowania jest już aktywna.");
+            return;
+        }
+
+        rebindBlockerHeld = true;
+        statusLabel.text = UiText.Format(
+            "Naciśnij nowe wejście dla: {0}. Esc anuluje.",
+            GetActionLabel(action));
+        RefreshBindings();
+    }
+
+    private void OnRebindCompleted(InputRebindResult result)
+    {
+        statusLabel.text = result.Outcome switch
+        {
+            InputRebindOutcome.Applied => UiText.Format(
+                "Przypisano nowe wejście: {0}.",
+                GameInputBindings.GetBindingDisplayString(result.Action)),
+            InputRebindOutcome.Cancelled => UiText.Get("Zmiana sterowania została anulowana."),
+            InputRebindOutcome.Reserved => UiText.Get(
+                "Esc, F8 oraz klawisze postaci 1–5 są zarezerwowane."),
+            InputRebindOutcome.Conflict => UiText.Format(
+                "To wejście jest już przypisane do: {0}.",
+                result.ConflictingAction.HasValue
+                    ? GetActionLabel(result.ConflictingAction.Value)
+                    : UiText.Get("inna akcja")),
+            _ => UiText.Get("Nie można przypisać tego wejścia.")
+        };
+        RefreshBindings();
+    }
+
+    private void ResetOne(GameInputAction action)
+    {
+        GameInputBindings.ResetBinding(action);
+        statusLabel.text = UiText.Format(
+            "Przywrócono domyślne wejście dla: {0}.",
+            GetActionLabel(action));
+    }
+
+    private void ResetAll()
+    {
+        GameInputBindings.ResetAllBindings();
+        statusLabel.text = UiText.Get("Przywrócono domyślne sterowanie.");
+    }
+
+    private void OnRebindStateChanged()
+    {
+        if (!GameInputBindings.IsRebinding)
+        {
+            if (releaseBlockerCoroutine != null)
+                StopCoroutine(releaseBlockerCoroutine);
+            releaseBlockerCoroutine =
+                StartCoroutine(ReleaseRebindBlockerAfterPointerUp());
+        }
+
+        RefreshBindings();
+    }
+
+    private IEnumerator ReleaseRebindBlockerAfterPointerUp()
+    {
+        while (IsPointerPressed())
+            yield return null;
+
+        yield return new WaitForEndOfFrame();
+        rebindBlockerHeld = false;
+        pendingAction = null;
+        releaseBlockerCoroutine = null;
+        RefreshBindings();
+    }
+
+    private static bool IsPointerPressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Mouse.current != null &&
+               (Mouse.current.leftButton.isPressed ||
+                Mouse.current.rightButton.isPressed ||
+                Mouse.current.middleButton.isPressed);
+#else
+        return Input.GetMouseButton(0) ||
+               Input.GetMouseButton(1) ||
+               Input.GetMouseButton(2);
+#endif
+    }
+
+    private void RefreshBindings()
+    {
+        if (bindingsList == null)
+            return;
+
+        bool rebinding = GameInputBindings.IsRebinding;
+        foreach (GameInputAction action in GameInputBindingCatalog.Actions)
+        {
+            actionLabels[action].text = GetActionLabel(action);
+            bindingButtons[action].text =
+                GameInputBindings.GetBindingDisplayString(action);
+            bindingButtons[action].SetEnabled(!rebinding);
+            resetButtons[action].SetEnabled(!rebinding);
+            UiControlStates.SetSelected(
+                bindingButtons[action],
+                rebinding && pendingAction == action);
+        }
+
+        resetAllButton.SetEnabled(!rebinding);
+        rebindBlocker.style.display =
+            rebinding || rebindBlockerHeld
+                ? DisplayStyle.Flex
+                : DisplayStyle.None;
+    }
+
+    private static string GetActionLabel(GameInputAction action) =>
+        UiText.Get(action switch
+        {
+            GameInputAction.MoveForward => "Ruch do przodu",
+            GameInputAction.MoveBackward => "Ruch do tyłu",
+            GameInputAction.MoveLeft => "Ruch w lewo",
+            GameInputAction.MoveRight => "Ruch w prawo",
+            GameInputAction.Sprint => "Sprint",
+            GameInputAction.Jump => "Skok",
+            GameInputAction.Interact => "Interakcja",
+            GameInputAction.Drop => "Upuszczenie",
+            GameInputAction.Dance => "Taniec",
+            GameInputAction.View => "Zmiana widoku",
+            GameInputAction.PrivateObjective => "Panel prywatny",
+            GameInputAction.Fire => "Strzał",
+            GameInputAction.VoiceMute => "Wyciszenie mikrofonu",
+            _ => action.ToString()
+        });
 }
 }

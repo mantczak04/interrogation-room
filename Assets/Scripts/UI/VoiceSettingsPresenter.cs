@@ -16,33 +16,67 @@ namespace InterrogationRoom.UI
         private readonly Dictionary<uint, Label> participantNameLabels = new();
         private readonly Dictionary<uint, Label> participantStateLabels = new();
         private readonly Dictionary<uint, Button> participantMuteButtons = new();
+        private readonly List<string> inputDeviceIds = new();
 
         private Slider microphoneLevelSlider;
+        private DropdownField inputDeviceDropdown;
         private Label microphoneLevelValueLabel;
         private Label microphoneStateLabel;
         private Label microphoneTestStatusLabel;
-        private Label participantListEmptyLabel;
+        private Label inputDeviceCaptionLabel;
+        private Label inputDeviceStatusLabel;
         private ScrollView participantList;
         private Button microphoneMuteButton;
         private Button microphoneTestButton;
-        private MicrophoneTestPlayback microphoneTest;
+        private Button refreshVoiceDevicesButton;
+        private VivoxMicrophoneTestPlayback microphoneTest;
         private VivoxVoiceRuntime voiceRuntime;
         private NetworkRoundCoordinator roundCoordinator;
         private float nextRefresh;
         private float nextCoordinatorDiscovery;
         private int lastMicrophoneLevelPercent = int.MinValue;
         private bool isOpen;
+        private bool refreshingDeviceDropdown;
 
         public void Configure(VisualElement root)
         {
+            if (root == null)
+            {
+                Debug.LogError("VoiceSettingsPresenter requires a UI root.", this);
+                enabled = false;
+                return;
+            }
+
             microphoneLevelSlider = root.Q<Slider>("microphone-level-slider");
+            inputDeviceDropdown = root.Q<DropdownField>("input-device-dropdown");
             microphoneLevelValueLabel = root.Q<Label>("microphone-level-value");
             microphoneStateLabel = root.Q<Label>("microphone-state");
             microphoneTestStatusLabel = root.Q<Label>("microphone-test-status");
-            participantListEmptyLabel = root.Q<Label>("voice-participant-list-empty");
+            inputDeviceCaptionLabel = root.Q<Label>("input-device-caption");
+            inputDeviceStatusLabel = root.Q<Label>("input-device-status");
             participantList = root.Q<ScrollView>("voice-participant-list");
             microphoneMuteButton = root.Q<Button>("microphone-mute-button");
             microphoneTestButton = root.Q<Button>("microphone-test-button");
+            refreshVoiceDevicesButton = root.Q<Button>("refresh-voice-devices-button");
+
+            if (microphoneLevelSlider == null ||
+                inputDeviceDropdown == null ||
+                microphoneLevelValueLabel == null ||
+                microphoneStateLabel == null ||
+                microphoneTestStatusLabel == null ||
+                inputDeviceCaptionLabel == null ||
+                inputDeviceStatusLabel == null ||
+                participantList == null ||
+                microphoneMuteButton == null ||
+                microphoneTestButton == null ||
+                refreshVoiceDevicesButton == null)
+            {
+                Debug.LogError(
+                    "SettingsMenu.uxml is missing one or more required voice controls.",
+                    this);
+                enabled = false;
+                return;
+            }
 
             microphoneLevelSlider.lowValue = GameSettings.MinVoicePercent;
             microphoneLevelSlider.highValue = GameSettings.MaxVoicePercent;
@@ -50,11 +84,15 @@ namespace InterrogationRoom.UI
                 evt => GameSettingsService.Current.SetMicrophoneLevelPercent(evt.newValue));
             microphoneMuteButton.clicked += OnMicrophoneMuteClicked;
             microphoneTestButton.clicked += OnMicrophoneTestClicked;
+            refreshVoiceDevicesButton.clicked += OnRefreshVoiceDevicesClicked;
+            inputDeviceDropdown.RegisterValueChangedCallback(OnInputDeviceChanged);
 
-            microphoneTest = GetComponent<MicrophoneTestPlayback>() ??
-                             gameObject.AddComponent<MicrophoneTestPlayback>();
+            microphoneTest = GetComponent<VivoxMicrophoneTestPlayback>() ??
+                             gameObject.AddComponent<VivoxMicrophoneTestPlayback>();
             microphoneTest.SetLevelPercent(GameSettingsService.Current.MicrophoneLevelPercent);
             microphoneTest.StateChanged += OnMicrophoneTestStateChanged;
+            VivoxInputDeviceSettings.Changed += OnInputDeviceSettingsChanged;
+            InitializeDeviceSettings();
             Refresh(forceRoster: true);
         }
 
@@ -68,12 +106,12 @@ namespace InterrogationRoom.UI
             }
 
             microphoneTest?.Cancel();
-            voiceRuntime?.SetMicrophoneTestActive(false);
         }
 
         public void RefreshLocalizedText()
         {
             RefreshMicrophoneTestText();
+            RefreshDeviceLocalizedText();
             RefreshParticipantStates();
             Refresh(forceRoster: true);
         }
@@ -94,8 +132,8 @@ namespace InterrogationRoom.UI
             }
             microphoneTest?.SetLevelPercent(settings.MicrophoneLevelPercent);
 
-            if (voiceRuntime == null)
-                voiceRuntime = VivoxVoiceRuntime.Instance;
+            if (voiceRuntime != VivoxVoiceRuntime.Instance)
+                AttachVoiceRuntime(VivoxVoiceRuntime.Instance);
             if (roundCoordinator == null &&
                 (forceRoster || Time.unscaledTime >= nextCoordinatorDiscovery))
             {
@@ -103,13 +141,13 @@ namespace InterrogationRoom.UI
                 nextCoordinatorDiscovery = Time.unscaledTime + 1f;
             }
 
-            SyncMicrophoneTestMute();
             bool muted = settings.MicrophoneMuted;
             microphoneStateLabel.text =
                 UiText.Get(muted ? "MIKROFON WYCISZONY" : "MIKROFON WŁĄCZONY");
             microphoneMuteButton.text =
                 UiText.Get(muted ? "Włącz mikrofon" : "Wycisz mikrofon");
             RefreshMicrophoneTestText();
+            RefreshVoiceDevices();
             RefreshParticipantRoster();
             RefreshParticipantStates();
         }
@@ -127,7 +165,35 @@ namespace InterrogationRoom.UI
         {
             if (microphoneTest != null)
                 microphoneTest.StateChanged -= OnMicrophoneTestStateChanged;
-            voiceRuntime?.SetMicrophoneTestActive(false);
+            if (voiceRuntime != null)
+                _ = voiceRuntime.SetMicrophoneTestActiveAsync(false);
+            AttachVoiceRuntime(null);
+            VivoxInputDeviceSettings.Changed -= OnInputDeviceSettingsChanged;
+        }
+
+        private void AttachVoiceRuntime(VivoxVoiceRuntime runtime)
+        {
+            if (voiceRuntime == runtime)
+                return;
+
+            voiceRuntime = runtime;
+        }
+
+        private async void InitializeDeviceSettings()
+        {
+            try
+            {
+                await VivoxInputDeviceSettings.EnsureInitializedAsync();
+            }
+            catch (System.Exception exception)
+            {
+                Debug.LogWarning(
+                    $"[Vivox] Input device settings are unavailable: {exception.Message}",
+                    this);
+            }
+
+            RefreshVoiceDevices();
+            RefreshMicrophoneTestText();
         }
 
         private void OnMicrophoneMuteClicked()
@@ -138,20 +204,36 @@ namespace InterrogationRoom.UI
 
         private void OnMicrophoneTestClicked() => microphoneTest?.StartOrStop();
 
-        private void OnMicrophoneTestStateChanged()
+        private void OnRefreshVoiceDevicesClicked()
         {
-            SyncMicrophoneTestMute();
-            Refresh();
+            VivoxInputDeviceSettings.Refresh();
+            RefreshVoiceDevices();
         }
 
-        private void SyncMicrophoneTestMute()
+        private void OnInputDeviceChanged(ChangeEvent<string> change)
         {
-            if (voiceRuntime == null || microphoneTest == null)
+            if (refreshingDeviceDropdown)
                 return;
 
-            bool active = microphoneTest.State == MicrophoneTestState.Starting ||
-                          microphoneTest.State == MicrophoneTestState.Monitoring;
-            voiceRuntime.SetMicrophoneTestActive(active);
+            int index = inputDeviceDropdown.index;
+            if (index < 0 || index >= inputDeviceIds.Count)
+                return;
+
+            VivoxInputDeviceSettings.SetPreferredInputDevice(inputDeviceIds[index]);
+            inputDeviceStatusLabel.text = UiText.Get("Przełączanie urządzenia wejściowego…");
+        }
+
+        private void OnInputDeviceSettingsChanged()
+        {
+            microphoneTest?.RefreshInputAvailability(
+                VivoxInputDeviceSettings.HasEffectiveInputDevice);
+            RefreshVoiceDevices();
+            RefreshMicrophoneTestText();
+        }
+
+        private void OnMicrophoneTestStateChanged()
+        {
+            Refresh();
         }
 
         private void RefreshMicrophoneTestText()
@@ -186,10 +268,103 @@ namespace InterrogationRoom.UI
                     break;
                 default:
                     microphoneTestButton.text = UiText.Get("Odsłuch mikrofonu");
-                    microphoneTestStatusLabel.text = UiText.Get(
-                        "Usłyszysz siebie od razu. Dźwięk pozostaje lokalny i nie jest wysyłany innym.");
+                    microphoneTestStatusLabel.text = string.Empty;
                     break;
             }
+        }
+
+        private void RefreshVoiceDevices()
+        {
+            if (inputDeviceDropdown == null)
+                return;
+
+            refreshingDeviceDropdown = true;
+            inputDeviceIds.Clear();
+            var choices = new List<string>();
+            if (!VivoxInputDeviceSettings.IsInitialized)
+            {
+                choices.Add(UiText.Get("Wykrywanie urządzeń…"));
+                inputDeviceDropdown.choices = choices;
+                inputDeviceDropdown.SetValueWithoutNotify(choices[0]);
+                inputDeviceDropdown.SetEnabled(false);
+                refreshVoiceDevicesButton.SetEnabled(
+                    !VivoxInputDeviceSettings.IsInitializing);
+                microphoneTestButton.SetEnabled(false);
+                inputDeviceStatusLabel.text =
+                    string.IsNullOrWhiteSpace(VivoxInputDeviceSettings.LastError)
+                        ? UiText.Get(
+                            "Urządzenia Vivox są inicjalizowane bez logowania i bez dołączania do kanału.")
+                        : UiText.Format(
+                            "Nie udało się odczytać urządzeń: {0}",
+                            VivoxInputDeviceSettings.LastError);
+            }
+            else if (VivoxInputDeviceSettings.AvailableInputDevices.Count == 0)
+            {
+                choices.Add(UiText.Get("Brak urządzenia wejściowego"));
+                inputDeviceDropdown.choices = choices;
+                inputDeviceDropdown.SetValueWithoutNotify(choices[0]);
+                inputDeviceDropdown.SetEnabled(false);
+                refreshVoiceDevicesButton.SetEnabled(true);
+                microphoneTestButton.SetEnabled(false);
+                inputDeviceStatusLabel.text = UiText.Get(
+                    "Nie wykryto mikrofonu. Odbiór głosu pozostaje aktywny.");
+            }
+            else
+            {
+                var duplicateCounts = new Dictionary<string, int>();
+                int activeIndex = 0;
+                foreach (VoiceAudioDevice device in
+                         VivoxInputDeviceSettings.AvailableInputDevices)
+                {
+                    string baseName = string.IsNullOrWhiteSpace(device.Name)
+                        ? UiText.Get("Urządzenie bez nazwy")
+                        : device.Name;
+                    duplicateCounts.TryGetValue(baseName, out int count);
+                    count++;
+                    duplicateCounts[baseName] = count;
+                    choices.Add(count == 1 ? baseName : $"{baseName} ({count})");
+                    inputDeviceIds.Add(device.Id);
+                    if (string.Equals(
+                            device.Id,
+                            VivoxInputDeviceSettings.ActiveInputDeviceId,
+                            System.StringComparison.Ordinal))
+                    {
+                        activeIndex = choices.Count - 1;
+                    }
+                }
+
+                inputDeviceDropdown.choices = choices;
+                inputDeviceDropdown.index = activeIndex;
+                inputDeviceDropdown.SetValueWithoutNotify(choices[activeIndex]);
+                inputDeviceDropdown.SetEnabled(true);
+                refreshVoiceDevicesButton.SetEnabled(true);
+                microphoneTestButton.SetEnabled(
+                    voiceRuntime != null &&
+                    voiceRuntime.IsReady &&
+                    VivoxInputDeviceSettings.HasEffectiveInputDevice);
+                inputDeviceStatusLabel.text =
+                    VivoxInputDeviceSettings.HasEffectiveInputDevice
+                        ? UiText.Format(
+                            "Aktywne wejście: {0}",
+                            choices[activeIndex])
+                        : UiText.Get(
+                            "Brak aktywnego mikrofonu. Wybierz dostępne wejście lub odśwież listę.");
+            }
+
+            refreshingDeviceDropdown = false;
+        }
+
+        public void RefreshDeviceLocalizedText()
+        {
+            if (inputDeviceCaptionLabel == null ||
+                refreshVoiceDevicesButton == null)
+            {
+                return;
+            }
+
+            inputDeviceCaptionLabel.text = UiText.Get("Urządzenie wejściowe");
+            refreshVoiceDevicesButton.text = UiText.Get("Odśwież");
+            RefreshVoiceDevices();
         }
 
         private void RefreshParticipantRoster()
@@ -225,7 +400,6 @@ namespace InterrogationRoom.UI
                 }
             }
 
-            SetVisible(participantListEmptyLabel, rosterNames.Count == 0);
         }
 
         private void AddParticipant(uint netId, string displayName)
@@ -277,6 +451,7 @@ namespace InterrogationRoom.UI
             controls.Add(value);
             controls.Add(muteButton);
             row.Add(controls);
+            UiControlStates.Normalize(row);
             participantList.Add(row);
 
             participantRows[netId] = row;
@@ -315,12 +490,6 @@ namespace InterrogationRoom.UI
                 if (participantMuteButtons.TryGetValue(netId, out Button button))
                     button.text = UiText.Get(locallyMuted ? "Włącz dźwięk" : "Wycisz");
             }
-        }
-
-        private static void SetVisible(VisualElement element, bool visible)
-        {
-            if (element != null)
-                element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
     }
 }

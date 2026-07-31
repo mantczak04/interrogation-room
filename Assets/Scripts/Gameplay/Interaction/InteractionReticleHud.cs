@@ -1,4 +1,5 @@
 using InterrogationRoom.Gameplay;
+using InterrogationRoom.Settings;
 using InterrogationRoom.UI;
 using Mirror;
 using UnityEngine;
@@ -20,7 +21,6 @@ namespace InterrogationRoom.Gameplay.Interaction
         [Header("Copy")]
         [SerializeField] private string standUpPrompt = "Wstań";
         [SerializeField] private string heldItemPrefix = "Niesiesz";
-        [SerializeField] private string dropHint = "[G] Upuść";
 
         [Header("Motion")]
         [SerializeField, Min(1f)] private float panelLerpSpeed = 15f;
@@ -208,7 +208,9 @@ namespace InterrogationRoom.Gameplay.Interaction
                 mode,
                 action,
                 interactor.TimedInteractionProgress01,
-                UiText.CurrentLanguage);
+                UiText.CurrentLanguage,
+                GameInputBindings.GetBindingDisplayString(
+                    GameInputAction.Interact));
 
             keyLabel.text = copy.Key;
             titleLabel.text = copy.Title;
@@ -257,7 +259,10 @@ namespace InterrogationRoom.Gameplay.Interaction
 
             heldItemLabel.text =
                 $"{UiText.Get(heldItemPrefix).ToUpperInvariant()}  •  " +
-                $"{UiText.Get(heldItem.DisplayName)}     {UiText.Get(dropHint)}";
+                $"{UiText.Get(heldItem.DisplayName)}     " +
+                UiText.Format(
+                    "[{0}] Upuść",
+                    GameInputBindings.GetBindingDisplayString(GameInputAction.Drop));
         }
 
         private void BuildHud()

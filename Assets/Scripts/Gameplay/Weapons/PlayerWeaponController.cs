@@ -1,9 +1,7 @@
 using Mirror;
 using InterrogationRoom.Networking;
+using InterrogationRoom.Settings;
 using UnityEngine;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace InterrogationRoom.Gameplay.Weapons
 {
@@ -28,7 +26,9 @@ namespace InterrogationRoom.Gameplay.Weapons
         [SerializeField, Min(0.01f)] private float tracerLifetime = 0.12f;
         [SerializeField, Min(0.05f)] private float tracerLength = 1.25f;
         [SerializeField, ColorUsage(true, true)] private Color tracerColor = new Color(1f, 0.75f, 0.2f, 1f);
-        [SerializeField, Range(0f, 1f)] private float shotSoundVolume = 1f;
+        [SerializeField, Range(0f, 1f)] private float shotSoundVolume = 0.8f;
+        [SerializeField, Min(0.01f)] private float shotSoundMinDistance = 2f;
+        [SerializeField, Min(0.1f)] private float shotSoundMaxDistance = 35f;
 
         [SyncVar(hook = nameof(OnHasWeaponChanged))]
         private bool hasWeapon;
@@ -40,14 +40,21 @@ namespace InterrogationRoom.Gameplay.Weapons
         private GameObject heldWeaponVisual;
         private WeaponMuzzle heldWeaponMuzzle;
         private Material tracerMaterial;
+        private PlayerController playerController;
+        private bool dancePresentationHidden;
 
         public bool HasWeapon => hasWeapon;
         public bool IsWeaponAuthorized => weaponAuthorized;
 
+        private void Awake()
+        {
+            playerController = GetComponent<PlayerController>();
+        }
+
         public override void OnStartClient()
         {
             base.OnStartClient();
-            RefreshHeldWeaponVisual(hasWeapon);
+            RefreshHeldWeaponVisual(hasWeapon && !dancePresentationHidden);
         }
 
         public override void OnStartLocalPlayer()
@@ -104,6 +111,7 @@ namespace InterrogationRoom.Gameplay.Weapons
 
             if (hasWeapon && WasFirePressed())
             {
+                playerController?.PrepareWeaponFirePresentation();
                 Transform cameraTransform = playerCamera.transform;
                 CmdTryFire(cameraTransform.position, cameraTransform.forward);
             }
@@ -146,6 +154,10 @@ namespace InterrogationRoom.Gameplay.Weapons
         [Command]
         private void CmdTryFire(Vector3 requestedOrigin, Vector3 requestedDirection)
         {
+            // Every received trigger attempt cancels dancing, even if the shot is
+            // later rejected for authorization, aim validation, range, or cooldown.
+            playerController?.StopDanceServer();
+
             if (!RoundPhysicalRules.CanFireWeapon(weaponAuthorized, hasWeapon) ||
                 !IsFinite(requestedOrigin) ||
                 !IsFinite(requestedDirection) ||
@@ -240,6 +252,7 @@ namespace InterrogationRoom.Gameplay.Weapons
             Vector3 hitNormal,
             ShotHitKind hitKind)
         {
+            playerController?.PrepareWeaponFirePresentation();
             Vector3 visualOrigin = heldWeaponMuzzle != null ? heldWeaponMuzzle.Position : origin;
             heldWeaponMuzzle?.PlayFlash();
             SpawnTracer(visualOrigin, endpoint);
@@ -247,8 +260,26 @@ namespace InterrogationRoom.Gameplay.Weapons
 
             if (shotSound != null)
             {
-                AudioSource.PlayClipAtPoint(shotSound, visualOrigin, shotSoundVolume);
+                PlayShotSound(visualOrigin);
             }
+        }
+
+        private void PlayShotSound(Vector3 position)
+        {
+            var soundObject = new GameObject("Pistol Shot Audio");
+            soundObject.transform.position = position;
+
+            AudioSource source = soundObject.AddComponent<AudioSource>();
+            source.playOnAwake = false;
+            source.volume = shotSoundVolume;
+            source.spatialBlend = 1f;
+            source.rolloffMode = AudioRolloffMode.Logarithmic;
+            source.minDistance = shotSoundMinDistance;
+            source.maxDistance = Mathf.Max(shotSoundMinDistance, shotSoundMaxDistance);
+            source.dopplerLevel = 0f;
+            source.PlayOneShot(shotSound);
+
+            Destroy(soundObject, Mathf.Max(shotSound.length, 0.1f) + 0.1f);
         }
 
         private void SpawnTracer(Vector3 origin, Vector3 endpoint)
@@ -297,7 +328,17 @@ namespace InterrogationRoom.Gameplay.Weapons
                 return;
             }
 
-            RefreshHeldWeaponVisual(newValue);
+            RefreshHeldWeaponVisual(newValue && !dancePresentationHidden);
+        }
+
+        internal void SetDancePresentationHidden(bool hidden)
+        {
+            if (dancePresentationHidden == hidden)
+                return;
+
+            dancePresentationHidden = hidden;
+            if (isClient)
+                RefreshHeldWeaponVisual(hasWeapon && !dancePresentationHidden);
         }
 
         private void RefreshHeldWeaponVisual(bool shouldShow)
@@ -317,6 +358,7 @@ namespace InterrogationRoom.Gameplay.Weapons
         {
             if (heldWeaponVisual != null)
             {
+                heldWeaponVisual.SetActive(false);
                 Destroy(heldWeaponVisual);
                 heldWeaponVisual = null;
             }
@@ -344,11 +386,7 @@ namespace InterrogationRoom.Gameplay.Weapons
 
         private static bool WasFirePressed()
         {
-#if ENABLE_INPUT_SYSTEM
-            return Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
-#else
-            return Input.GetMouseButtonDown(0);
-#endif
+            return GameInputBindings.WasPressedThisFrame(GameInputAction.Fire);
         }
 
         private readonly struct ShotResolution
