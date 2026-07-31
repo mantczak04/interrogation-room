@@ -1020,6 +1020,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     private void LateUpdate()
     {
         seating?.Tick(IsSeated, isDead);
+        seating?.ApplySeatedLegPose(IsSeated, isDead);
     }
 
 

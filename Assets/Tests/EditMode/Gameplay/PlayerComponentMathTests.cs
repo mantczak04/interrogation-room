@@ -38,7 +38,51 @@ namespace InterrogationRoom.Gameplay.Tests
                 measuredTorsoBackDepth: 0.18f,
                 hasMeasurement: true);
 
-            Assert.That(offset, Is.EqualTo(-0.01f).Within(0.0001f));
+            Assert.That(offset, Is.EqualTo(-0.07f).Within(0.0001f));
+        }
+
+        [Test]
+        public void SeatedLowerLegTargetUsesSupportHeightWhenCalfCanReach()
+        {
+            Vector3 knee = new Vector3(0f, 0.4f, 0f);
+            const float lowerLegLength = 0.35f;
+
+            Vector3 target = PlayerSeating.ResolveLowerLegTarget(
+                kneePosition: knee,
+                animatedFootPosition: new Vector3(0.15f, 0.2f, 0.1f),
+                supportHeight: 0.02f,
+                soleToFootHeight: 0.08f,
+                lowerLegLength,
+                fallbackForward: Vector3.forward);
+
+            Assert.That(target.y, Is.EqualTo(0.1f).Within(0.0001f));
+            Assert.That(
+                Vector3.Distance(knee, target),
+                Is.EqualTo(lowerLegLength).Within(0.0001f));
+        }
+
+        [Test]
+        public void SeatedLowerLegTargetDanglesAboveUnreachableSupport()
+        {
+            Vector3 knee = new Vector3(0f, 0.6f, 0f);
+            Vector3 animatedFoot = new Vector3(0.15f, 0.4f, 0.1f);
+            const float lowerLegLength = 0.3f;
+
+            Vector3 target = PlayerSeating.ResolveLowerLegTarget(
+                knee,
+                animatedFoot,
+                supportHeight: 0f,
+                soleToFootHeight: 0.1f,
+                lowerLegLength,
+                fallbackForward: Vector3.forward);
+
+            Assert.That(
+                Vector3.Distance(knee, target),
+                Is.EqualTo(lowerLegLength).Within(0.0001f));
+            Assert.That(
+                target.y,
+                Is.GreaterThan(0.1f),
+                "An unreachable floor should leave the foot dangling above it.");
         }
 
         [TestCase(0.2f, 1f, false)]
