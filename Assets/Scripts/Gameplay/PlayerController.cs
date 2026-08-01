@@ -18,6 +18,8 @@ namespace InterrogationRoom.Gameplay
 [RequireComponent(typeof(NetworkIdentity))]
 public class PlayerController : PlayerGameplayController, IRoundEliminationPort, IRoundRelocationPort
 {
+    private const string OverviewCameraName = "MapOverviewCamera";
+
     [Serializable]
     private sealed class CharacterVisualDefinition
     {
@@ -121,6 +123,7 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
     private int nextPunchVariant;
     private IDanceRadialMenu danceRadialMenu;
+    private Camera overviewCamera;
 
     public override bool IsSeated =>
         isClient && hasSeatingPresentation ? presentedIsSeated : isSeated;
@@ -255,6 +258,8 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
     public override void OnStartLocalPlayer()
     {
+        SetOverviewCameraEnabled(false);
+
         GameSettings settings = GameSettingsService.Current;
         settings.SetMouseSensitivityFallback(mouseSensitivity);
         mouseSensitivity = settings.MouseSensitivity;
@@ -266,9 +271,24 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
 
     public override void OnStopLocalPlayer()
     {
+        SetOverviewCameraEnabled(true);
+
         GameSettingsService.Current.Changed -= ApplyGameSettings;
         danceRadialMenu?.Cancel();
         PlayerInputGate.SetPlayerCursorReleased(true);
+    }
+
+    private void SetOverviewCameraEnabled(bool enabled)
+    {
+        if (overviewCamera == null)
+        {
+            GameObject overviewCameraObject = GameObject.Find(OverviewCameraName);
+            if (overviewCameraObject != null)
+                overviewCamera = overviewCameraObject.GetComponent<Camera>();
+        }
+
+        if (overviewCamera != null)
+            overviewCamera.enabled = enabled;
     }
 
     private void ApplyGameSettings()
