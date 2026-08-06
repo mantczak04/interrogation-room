@@ -34,11 +34,6 @@ MonoBehaviour:
     canBeHidden: 1
     variantTexts: []
     distinctiveDetail: 0
-  - id: blad-projektora
-    text: "Projektor zgas\u0142 po komunikacie o b\u0142\u0119dzie numer 17."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: srebrny-guzik
     text: "Pani Marta znalaz\u0142a srebrny guzik pod obrotowym krzes\u0142em."
     canBeHidden: 1
@@ -64,4 +59,4 @@ MonoBehaviour:
     content: "Woreczek ze srebrnym guzikiem i szkicem okr\u0105g\u0142ej podstawy
       mebla."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

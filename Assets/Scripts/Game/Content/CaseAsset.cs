@@ -18,6 +18,7 @@ namespace InterrogationRoom.Content
     {
         /// <summary>Every Alibi has exactly this many readable points; other lengths are blocked.</summary>
         public const int RequiredFactCount = CaseDefinition.RequiredAlibiFactCount;
+        public const int RequiredHiddenFactCount = CaseDefinition.RequiredHiddenAlibiFactCount;
 
         [Tooltip("Tytuł sprawy (roboczy, nie pokazywany graczom).")]
         public string title;
@@ -140,6 +141,8 @@ namespace InterrogationRoom.Content
                 errors.Add("Alibi must mark at least one fact as charakterystycznyDetal.");
             if (minHiddenFacts < 0 || minHiddenFacts > maxHiddenFacts)
                 errors.Add($"Hidden-fact range {minHiddenFacts}..{maxHiddenFacts} is invalid.");
+            if (minHiddenFacts != RequiredHiddenFactCount || maxHiddenFacts != RequiredHiddenFactCount)
+                errors.Add($"Winny must have exactly {RequiredHiddenFactCount} hidden Alibi facts.");
             CollectVariantErrors(errors);
 
             var hideableCount = alibiFacts.Count(f => f != null && f.canBeHidden);

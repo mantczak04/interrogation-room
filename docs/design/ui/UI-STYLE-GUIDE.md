@@ -10,7 +10,7 @@ Cały UI udaje policyjną papierologię lat 80–90: teczki, formularze, maszyno
 
 - **Papers, Please** — dokument jako interfejs: stempel zamiast przycisku „OK", papier niesie stan gry. Stąd stemple na kartach ról i ekranie wyniku.
 - **Return of the Obra Dinn** — skrajnie oszczędna, niemal duotonowa paleta i typografia robią całą robotę; czytelność rośnie, gdy ekran ma jeden materiał tła. Stąd zasada: jeden dokument = jedna płaszczyzna papieru, bez pięter półprzezroczystych paneli.
-- **The Case of the Golden Idol** — fakty jako krótkie, wymienne żetony słów. Stąd 6 punktów Alibi jako oddzielne, numerowane wiersze formularza, nie akapit prozy.
+- **The Case of the Golden Idol** — fakty jako krótkie, wymienne żetony słów. Stąd 5 punktów Alibi jako oddzielne, numerowane wiersze formularza, nie akapit prozy.
 - **Her Story / Disco Elysium** — jedno diegetyczne „urządzenie" na ekran; tekst na ciemnym tle wymaga większej interlinii i mniejszych bloków. Stąd HUD na grafitowych panelach z krótkimi wierszami.
 - **Among Us / Town of Salem 2** — karta roli pokazywana na starcie musi być zrozumiała w 3 sekundy: rola > co robić > czego nie wiem. Stąd hierarchia karty w Przygotowaniu.
 - **Project Winter** — HUD w rogach, środek ekranu pusty; prywatne informacje w zwijanych panelach. Stąd reguła wolnego centrum podczas Rundy.

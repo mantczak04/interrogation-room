@@ -38,11 +38,6 @@ MonoBehaviour:
     - "Kelner przyni\xF3s\u0142 lemoniad\u0119 z plasterkami pomara\u0144czy na metalowej
       tacy, a mikrofon zamilk\u0142 przed ostatnim refrenem."
     distinctiveDetail: 1
-  - id: tamburyn
-    text: "Doko\u0144czyli piosenk\u0119 z tamburynem zdj\u0119tym ze \u015Bciany."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: zdjecia-w-budce
     text: "Potem zrobili wsp\xF3lne zdj\u0119cia w budce."
     canBeHidden: 1
@@ -67,4 +62,4 @@ MonoBehaviour:
     content: "Ty\u0142 paska zdj\u0119\u0107 z cieniami g\u0142\xF3w i kolejnymi
       numerami klatek, bez twarzy."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

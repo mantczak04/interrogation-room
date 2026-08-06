@@ -178,6 +178,12 @@ namespace InterrogationRoom.Domain
                 return Reject("Case requires at least one rotating Alibi variant pool.");
 
             var hideableCount = facts.Count(fact => fact.CanBeHidden);
+            if (start.Case.MinHiddenFacts != CaseDefinition.RequiredHiddenAlibiFactCount
+                || start.Case.MaxHiddenFacts != CaseDefinition.RequiredHiddenAlibiFactCount)
+            {
+                return Reject(
+                    $"Case must hide exactly {CaseDefinition.RequiredHiddenAlibiFactCount} Alibi facts from the Winny.");
+            }
             if (start.Case.MinHiddenFacts < 0
                 || start.Case.MinHiddenFacts > start.Case.MaxHiddenFacts
                 || start.Case.MaxHiddenFacts > hideableCount)

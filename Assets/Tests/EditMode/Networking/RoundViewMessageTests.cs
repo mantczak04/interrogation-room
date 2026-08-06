@@ -27,7 +27,6 @@ namespace InterrogationRoom.Networking.Tests
                     new AlibiFact("f1", "Kelner pomylił rachunek.", true),
                     new AlibiFact("f2", "Na chwilę zgasło światło.", true),
                     new AlibiFact("f3", "Wróciliśmy razem tramwajem.", false),
-                    new AlibiFact("f4", "Przed wyjściem zamówiliśmy herbatę.", false),
                     new AlibiFact(
                         "f5",
                         "Kelner miał zieloną muchę.",
@@ -35,8 +34,8 @@ namespace InterrogationRoom.Networking.Tests
                         new[] { "Kelner miał zieloną muchę.", "Kelner miał granatową muchę." },
                         distinctiveDetail: true)
                 },
-                minHiddenFacts: 1,
-                maxHiddenFacts: 1);
+                minHiddenFacts: 2,
+                maxHiddenFacts: 2);
 
         private static RoundEngine StartedEngine()
         {
@@ -90,6 +89,27 @@ namespace InterrogationRoom.Networking.Tests
             Assert.That(message.AlibiEntries, Is.Empty,
                 "Detektyw must not receive fact count or redaction markers.");
             Assert.That(restored.Alibi, Is.Null);
+        }
+
+        [Test]
+        public void PreparationPayloadsExposeFiveFactsOnlyToSuspectsAndTwoHolesOnlyToGuilty()
+        {
+            var engine = StartedEngine();
+            var detective = Players.Single(player => engine.ViewFor(player).Role == RoundRole.Detective);
+            var guilty = Players.Single(player => engine.ViewFor(player).Role == RoundRole.Guilty);
+            var innocent = Players.First(player => engine.ViewFor(player).Role == RoundRole.Innocent);
+
+            var detectiveMessage = RoundViewMessage.FromView(engine.ViewFor(detective), 0d);
+            var guiltyView = RoundTrip(RoundViewMessage.FromView(engine.ViewFor(guilty), 0d)).ToView();
+            var innocentView = RoundTrip(RoundViewMessage.FromView(engine.ViewFor(innocent), 0d)).ToView();
+
+            Assert.That(detectiveMessage.HasAlibi, Is.False);
+            Assert.That(detectiveMessage.AlibiEntries, Is.Empty);
+            Assert.That(guiltyView.Alibi.Entries.Count, Is.EqualTo(5));
+            Assert.That(guiltyView.Alibi.Entries.Count(entry => entry.IsHidden && entry.Text == null), Is.EqualTo(2));
+            Assert.That(guiltyView.Alibi.Entries.Count(entry => !entry.IsHidden && entry.Text != null), Is.EqualTo(3));
+            Assert.That(innocentView.Alibi.Entries.Count, Is.EqualTo(5));
+            Assert.That(innocentView.Alibi.Entries.All(entry => !entry.IsHidden && entry.Text != null), Is.True);
         }
 
         [Test]

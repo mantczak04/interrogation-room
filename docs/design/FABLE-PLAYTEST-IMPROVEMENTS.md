@@ -38,7 +38,7 @@ Po zmianach gra ma:
 
 - Fable wykonuje research UI/UX, tworzy spójny guide i od razu wdraża redesign bez osobnego zatwierdzania makiet.
 - Przygotowanie trwa maksymalnie 30 sekund i korzysta z gotowości wszystkich graczy.
-- Jedno Alibi ma dokładnie 6 czytelnych punktów oraz kontrolowaną zmienność nieistotnych szczegółów.
+- Jedno Alibi ma dokładnie 5 czytelnych punktów oraz kontrolowaną zmienność nieistotnych szczegółów.
 - Sprawa jest wybierana losowo; host nie wybiera scenariusza przed Rundą.
 - Wszystkie istniejące 15 Spraw oraz 15 Osobistych Spraw ma zostać doprowadzone do grywalnego stanu. Fable ma również przygotować dodatkowe Sprawy ponad tę pulę.
 - Poprawa aktywności obejmuje całość prywatnej rozgrywki: Osobiste Sprawy, Sekretne Cele i Wrobienie, Tropy do Alibi oraz Plan Ucieczki.
@@ -98,7 +98,7 @@ Alibi jest za mało, są powtarzalne, a nadmiernie dokładne informacje brzmią 
 
 ### Wymagany model contentu
 
-- Jedno Alibi zawsze zawiera dokładnie 6 krótkich, czytelnych punktów.
+- Jedno Alibi zawsze zawiera dokładnie 5 krótkich, czytelnych punktów; Winny widzi 3 i 2 luki.
 - Każde Alibi ma stały, spójny rdzeń wydarzeń oraz kontrolowaną pulę zmiennych szczegółów.
 - W każdym Alibi występuje co najmniej jeden charakterystyczny, ale nieistotny dla przebiegu wydarzeń szczegół, który gracze mogą zapamiętać i porównać w zeznaniach, np. kolor przedmiotu, smak przekąski, piosenka albo element ubrania.
 - Zmienne szczegóły nie mogą zmieniać sensu całego Alibi ani tworzyć sprzeczności z pozostałymi punktami.
@@ -238,7 +238,7 @@ Fable ma sam wymyślić konkretne easter eggi. Priorytetem jest ich różnorodno
 ### Testy automatyczne
 
 - Edit Mode: 30-sekundowe Przygotowanie, gotowość wszystkich graczy, skrócenie do 3 sekund i bezpowrotne usunięcie Alibi.
-- Edit Mode: losowanie Spraw oraz kompatybilnych wariantów bez sprzeczności i z dokładnie 6 punktami.
+- Edit Mode: losowanie Spraw oraz kompatybilnych wariantów bez sprzeczności i z dokładnie 5 punktami.
 - Edit Mode: prywatność widoków, sekwencje Celów, brak trwałego zablokowania obowiązkowego przedmiotu i poprawne indywidualne wyniki.
 - Edit Mode contentu: walidacja wszystkich grywalnych Spraw, powiązań Tropów, ukrywalnych faktów, unikalnych identyfikatorów i konfliktujących przedmiotów.
 - Play Mode: noszenie, upuszczanie, odkładanie i przejmowanie przedmiotów; minigry; przerwanie działania; zmiany świata i Incydenty.

@@ -46,12 +46,6 @@ MonoBehaviour:
     canBeHidden: 1
     variantTexts: []
     distinctiveDetail: 0
-  - id: zolty-transporter
-    text: "Po z\u0142apaniu kota zamkn\u0119li go w \u017C\xF3\u0142tym transporterze
-      i wyszli razem."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   alibiClues:
   - id: klips-sektora
     linkedFactId: sektor-c
@@ -65,4 +59,4 @@ MonoBehaviour:
     linkedFactId: przewrocone-wiadro
     content: "Fotografia mokrych psich \u0142ap, obrysu wiadra i rozlanej wody."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

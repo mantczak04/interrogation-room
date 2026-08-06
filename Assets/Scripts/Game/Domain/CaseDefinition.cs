@@ -11,7 +11,8 @@ namespace InterrogationRoom.Domain
     /// </summary>
     public sealed class CaseDefinition
     {
-        public const int RequiredAlibiFactCount = 6;
+        public const int RequiredAlibiFactCount = 5;
+        public const int RequiredHiddenAlibiFactCount = 2;
 
         public string Title { get; }
 

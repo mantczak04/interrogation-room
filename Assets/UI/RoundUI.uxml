@@ -24,6 +24,15 @@
                         <ui:Button name="round-limit-15-button" text="15 MIN" class="btn btn--quiet lobby-round-limit-button" />
                         <ui:Button name="round-limit-20-button" text="20 MIN" class="btn btn--quiet lobby-round-limit-button lobby-round-limit-button--last" />
                     </ui:VisualElement>
+                    <ui:VisualElement name="developer-role-section" class="developer-role-section" style="display: none;">
+                        <ui:Label text="ROLA TESTOWA" class="lobby-round-limit-title stamp-font" />
+                        <ui:VisualElement class="developer-role-options">
+                            <ui:Button name="developer-role-innocent-button" text="NIEWINNY" class="btn btn--quiet developer-role-button" />
+                            <ui:Button name="developer-role-guilty-button" text="WINNY" class="btn btn--quiet developer-role-button" />
+                            <ui:Button name="developer-role-detective-button" text="DETEKTYW" class="btn btn--quiet developer-role-button developer-role-button--last" />
+                        </ui:VisualElement>
+                        <ui:Label text="Runda rozpocznie się od Przygotowania i pokaże właściwy prywatny widok." class="developer-role-summary" />
+                    </ui:VisualElement>
                     <ui:VisualElement class="character-selector character-selector--legacy">
                         <ui:Button name="legacy-previous-character-button" text="‹" class="character-arrow" focusable="false" />
                         <ui:Label name="legacy-character-name-label" text="Małpa" class="character-name stamp-font" />

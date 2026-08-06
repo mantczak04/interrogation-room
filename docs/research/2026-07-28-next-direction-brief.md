@@ -269,11 +269,11 @@ This will reveal whether the real shortage is authored content or scene compatib
 
 Also resolve the current content-contract disagreement:
 
-- exactly six facts in code;
+- exactly five facts in code;
 - exactly eight in the playtest catalog;
-- 6–10 in an older mechanics document.
+- exactly five in the current mechanics document.
 
-The engine currently accepts exactly six. See `docs/research/2026-07-28-repository-direction-audit.md:205-223`.
+The engine currently accepts exactly five and redacts exactly two for the Guilty player.
 
 ### Priority 6 — Repair production prefab ownership
 

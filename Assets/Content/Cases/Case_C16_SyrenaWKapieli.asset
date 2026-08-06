@@ -16,12 +16,6 @@ MonoBehaviour:
   crimeDescription: "Kto\u015B ubra\u0142 br\u0105zow\u0105 syren\u0119 z miejskiej
     fontanny w szlafrok, czepek k\u0105pielowy i ogromne r\xF3\u017Cowe kapcie."
   alibiFacts:
-  - id: wejscie-do-apteki
-    text: "O 22:10 grupa wesz\u0142a do ca\u0142odobowej apteki po banda\u017C na
-      skr\u0119con\u0105 kostk\u0119."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: muszka-w-kaczki
     text: "Farmaceuta mia\u0142 granatow\u0105 muszk\u0119 w \u017C\xF3\u0142te kaczki."
     canBeHidden: 1
@@ -67,4 +61,4 @@ MonoBehaviour:
     content: "Wydruk urz\u0105dzenia z dwiema kr\xF3tkimi przerwami pomiaru podczas
       spadku napi\u0119cia."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

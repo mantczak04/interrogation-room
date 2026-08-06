@@ -33,7 +33,8 @@ namespace InterrogationRoom.Networking
         EscapePrepareVent,
         EscapeFinalVent,
         EscapePrepareGate,
-        EscapeFinalGate
+        EscapeFinalGate,
+        DetectiveIncidents
     }
 
     public static class RoundDeveloperTaskCatalog
@@ -57,10 +58,16 @@ namespace InterrogationRoom.Networking
             RoundDeveloperTask.EscapeFinalGate
         };
 
+        private static readonly RoundDeveloperTask[] DetectiveTasks =
+        {
+            RoundDeveloperTask.DetectiveIncidents
+        };
+
         public static IReadOnlyList<RoundDeveloperTask> TasksFor(RoundRole role)
         {
             switch (role)
             {
+                case RoundRole.Detective: return DetectiveTasks;
                 case RoundRole.Innocent: return InnocentTasks;
                 case RoundRole.Guilty: return GuiltyTasks;
                 default: return Array.Empty<RoundDeveloperTask>();
@@ -77,15 +84,22 @@ namespace InterrogationRoom.Networking
                 case RoundDeveloperTask.SecretObjectivePrepare:
                 case RoundDeveloperTask.SecretObjectivePlant:
                     return RoundDeveloperScenario.SecretObjective;
+                case RoundDeveloperTask.DetectiveIncidents:
+                    return RoundDeveloperScenario.DetectiveIncidents;
                 default:
                     return RoundDeveloperScenario.GuiltyEscape;
             }
         }
 
-        public static RoundRole RoleFor(RoundDeveloperTask task) =>
-            ScenarioFor(task) == RoundDeveloperScenario.GuiltyEscape
-                ? RoundRole.Guilty
-                : RoundRole.Innocent;
+        public static RoundRole RoleFor(RoundDeveloperTask task)
+        {
+            switch (ScenarioFor(task))
+            {
+                case RoundDeveloperScenario.GuiltyEscape: return RoundRole.Guilty;
+                case RoundDeveloperScenario.DetectiveIncidents: return RoundRole.Detective;
+                default: return RoundRole.Innocent;
+            }
+        }
 
         public static RoundDeveloperTask Next(RoundDeveloperTask task)
         {

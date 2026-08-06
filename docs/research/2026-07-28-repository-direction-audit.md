@@ -72,13 +72,13 @@ Jednym patchem decyzyjnym:
 
 **Problem**
 
-`FABLE-PLAYTEST-IMPROVEMENTS.md` ogłasza cały zakres jako obowiązkowy i ustanawia dokładne parametry: maks. 30 sekund Przygotowania, dokładnie 6 punktów Alibi oraz grywalność wszystkich 15 Spraw i 15 Osobistych Spraw. `AGENTS.md` nadal mówi, że dokładne timingi i wolumen contentu są strojeniem playtestowym, nie zatwierdzoną stałą.
+`FABLE-PLAYTEST-IMPROVEMENTS.md` ogłasza cały zakres jako obowiązkowy i ustanawia dokładne parametry: maks. 30 sekund Przygotowania, dokładnie 5 punktów Alibi oraz grywalność wszystkich 15 Spraw i 15 Osobistych Spraw. `AGENTS.md` nadal mówi, że dokładne timingi i wolumen contentu są strojeniem playtestowym, nie zatwierdzoną stałą.
 
 **Dowody dokumentacyjne**
 
 - Kanon pozostawia timingi i wolumen contentu otwarte: `AGENTS.md:45-49`.
 - Brief mówi „cały zakres ma zostać wykonany”: `docs/design/FABLE-PLAYTEST-IMPROVEMENTS.md:3-7`.
-- Dokładne decyzje 30 s / 6 punktów / wszystkie 15 + więcej: `docs/design/FABLE-PLAYTEST-IMPROVEMENTS.md:37-49`, `docs/design/FABLE-PLAYTEST-IMPROVEMENTS.md:81-118`.
+- Dokładne decyzje 30 s / 5 punktów / wszystkie 15 + więcej: `docs/design/FABLE-PLAYTEST-IMPROVEMENTS.md:37-49`, `docs/design/FABLE-PLAYTEST-IMPROVEMENTS.md:81-118`.
 - Starszy dokument timera nadal podaje 60–120 s: `docs/design/mechanics/limit-rundy.md:27-30`.
 - Specyfikacja Alibi nadal zakłada przycisk hosta + timer bezpieczeństwa: `docs/design/mechanics/alibi-i-redagowanie.md:57-60`.
 
@@ -90,11 +90,11 @@ Nie wiadomo, czy parametry Fable są nowym kanonem, jednorazowym briefem wykonaw
 
 Wymagana jest jedna decyzja właściciela:
 
-- **wariant A:** Fable jest zatwierdzonym następcą — przenieść 30 s, gotowość i 6 punktów do `AGENTS.md`/`CONTEXT.md` lub ADR-ów, a starsze dokumenty zaktualizować;
+- **wariant A:** Fable jest zatwierdzonym następcą — przenieść 30 s, gotowość i 5 punktów do `AGENTS.md`/`CONTEXT.md` lub ADR-ów, a starsze dokumenty zaktualizować;
 - **wariant B:** to parametry playtestu — oznaczyć je jako profil testowy, nie trwały kontrakt produktu;
 - **wariant C:** brief został wykonany i jest historyczny — dodać status ukończenia oraz link do raportu dowodowego.
 
-**Source-check:** implementacja odpowiada briefowi Fable: Przygotowanie ma limit 30 s, pełna gotowość skraca je do 3 s, `CaseDefinition` wymaga dokładnie 6 faktów, a UI pokazuje gotowość i licznik (`Assets/Scripts/Game/Networking/NetworkRoundCoordinator.cs:19-21`, `Assets/Scripts/Game/Networking/NetworkRoundCoordinator.cs:1110-1132`, `Assets/Scripts/Game/Domain/RoundEngine.cs:167-177`, `Assets/Scripts/Game/UI/RoundPresenter.cs:416-457`). Najbardziej prawdopodobny status to „brief wykonany jako bieżący profil”, ale dokumentacja nadal wymaga decyzji, czy parametry awansują do trwałego kanonu, czy pozostają strojeniem.
+**Source-check:** implementacja odpowiada bieżącemu profilowi: Przygotowanie ma limit 30 s, pełna gotowość skraca je do 3 s, `CaseDefinition` wymaga dokładnie 5 faktów i 2 luk Winnego, a UI pokazuje gotowość i licznik (`Assets/Scripts/Game/Networking/NetworkRoundCoordinator.cs`, `Assets/Scripts/Game/Domain/RoundEngine.cs`, `Assets/Scripts/Game/UI/RoundPresenter.cs`).
 
 ### P0.3 — Dokumentacja stanu produktu jest co najmniej o jeden duży etap spóźniona
 
@@ -206,19 +206,19 @@ Natychmiast usunąć tę pozycję z listy bezpiecznych builderów albo przepisa�
 
 **Problem**
 
-Brief Fable wymaga dokładnie 6 punktów i grywalności całej piętnastki. Katalog definiuje dokładnie 8 faktów, mówi najpierw wdrożyć cztery Osobiste Sprawy i kończy zakazem implementacji wszystkich 15 przed playtestem. Ogólna specyfikacja dopuszcza 6–10.
+Brief Fable wymaga dokładnie 5 punktów i grywalności całej piętnastki. Katalog oraz ogólna specyfikacja zostały ujednolicone do bieżącego kontraktu pięciu faktów.
 
 **Dowody dokumentacyjne**
 
-- 6 punktów i pełna piętnastka: `docs/design/FABLE-PLAYTEST-IMPROVEMENTS.md:93-118`.
+- 5 punktów i pełna piętnastka: `docs/design/FABLE-PLAYTEST-IMPROVEMENTS.md:93-118`.
 - 8 faktów jako kontrakt katalogu: `docs/design/PLAYTEST-CONTENT-CATALOG.md:20-31`.
 - Minimalne cztery Osobiste Sprawy: `docs/design/PLAYTEST-CONTENT-CATALOG.md:92-95`.
 - „Nie implementować wszystkich 15 przed pierwszym playtestem”: `docs/design/PLAYTEST-CONTENT-CATALOG.md:562-570`.
-- Ogólny model 6–10: `docs/design/mechanics/content-sprawy.md:25-30`.
+- Ogólny model 5 faktów: `docs/design/mechanics/content-sprawy.md:25-30`.
 
 **Następna zmiana**
 
-Źródła rozstrzygają bieżący kontrakt implementacyjny na **6 faktów**, **18 definicji Spraw** i **15 Osobistych Spraw**. Dokumenty należy zaktualizować do tego stanu albo jawnie zdecydować o cofnięciu/ograniczeniu contentu. Katalog 8-faktowy powinien zostać oznaczony jako superseded. Zamiast authoringu kolejnych pozycji potrzebna jest macierz: `definition exists` → `asset synced` → `configured in coordinator` → `physical anchors wired` → `automated test` → `real-client playtest`.
+Źródła rozstrzygają bieżący kontrakt implementacyjny na **5 faktów**, **18 definicji Spraw** i **15 Osobistych Spraw**. Zamiast authoringu kolejnych pozycji potrzebna jest macierz: `definition exists` → `asset synced` → `configured in coordinator` → `physical anchors wired` → `automated test` → `real-client playtest`.
 
 **Source-check:** `RoundEngine` odrzuca przypadki inne niż 6-faktowe (`Assets/Scripts/Game/Domain/RoundEngine.cs:167-177`); generator ma wpisy C01–C18 (`Assets/Scripts/Editor/Content/CaseAssetSync.cs:27-513`), a generator Osobistych Spraw synchronizuje OS-01–OS-15 (`Assets/Scripts/Editor/Content/PersonalMatterAssetSync.cs:19-38`). Sam komunikat generatora Spraw nadal błędnie mówi C01–C15 (`Assets/Scripts/Editor/Content/CaseAssetSync.cs:22-25`), co jest dodatkowym przykładem driftu statusu. Bez sceny nie potwierdzono runtime wiring tych 18/15 definicji.
 

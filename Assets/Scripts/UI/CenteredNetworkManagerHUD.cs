@@ -185,6 +185,8 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
                 manager.StartHost();
         }
 
+        SetMenuVisible(false, MenuPage.Home);
+
     }
 
     void OnDisable()
@@ -294,9 +296,10 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 #else
         bool sandboxPressed = Application.isEditor && Input.GetKeyDown(KeyCode.F8);
 #endif
-        if (sandboxPressed && !GameInputBindings.RawInputSuppressed)
+        bool sandboxOwnsInput = sandboxPinned || (isVisible && currentPage == MenuPage.Sandbox);
+        if (sandboxPressed && (sandboxOwnsInput || !GameInputBindings.RawInputSuppressed))
         {
-            if (sandboxPinned || (isVisible && currentPage == MenuPage.Sandbox))
+            if (sandboxOwnsInput)
             {
                 sandboxPinned = false;
                 SetMenuVisible(false, MenuPage.Home);

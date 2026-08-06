@@ -17,12 +17,6 @@ MonoBehaviour:
     p\u0142atkami kukurydzianymi i ustawi\u0142 w niej dwumetrow\u0105 srebrn\u0105
     \u0142y\u017Ck\u0119."
   alibiFacts:
-  - id: wejscie-repair-cafe
-    text: "O 18:20 grupa przysz\u0142a z zepsutym tosterem do spo\u0142ecznego warsztatu
-      naprawczego."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: stanowisko-sowa-4
     text: Przydzielono im stanowisko numer 4 oznaczone rysunkiem sowy.
     canBeHidden: 1
@@ -69,4 +63,4 @@ MonoBehaviour:
     content: "Formularz awarii z symbolem grza\u0142ki i notatk\u0105 \u201Eaudycja
       jazzowa w tle\u201D."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

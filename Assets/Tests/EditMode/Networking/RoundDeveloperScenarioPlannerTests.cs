@@ -15,7 +15,6 @@ namespace InterrogationRoom.Networking.Tests
                 new AlibiFact("f2", "Kelner pomylił rachunek.", true),
                 new AlibiFact("f3", "Na chwilę zgasło światło.", true),
                 new AlibiFact("f4", "Wróciliśmy tramwajem.", false),
-                new AlibiFact("f5", "Przed wyjściem zamówiliśmy herbatę.", false),
                 new AlibiFact(
                     "f6",
                     "Kelner miał zieloną muchę.",
@@ -23,8 +22,8 @@ namespace InterrogationRoom.Networking.Tests
                     new[] { "Kelner miał zieloną muchę.", "Kelner miał granatową muchę." },
                     distinctiveDetail: true)
             },
-            minHiddenFacts: 1,
-            maxHiddenFacts: 1,
+            minHiddenFacts: 2,
+            maxHiddenFacts: 2,
             new[]
             {
                 new AlibiClueDefinition(
@@ -88,11 +87,26 @@ namespace InterrogationRoom.Networking.Tests
                 plan.Seed,
                 plan.SecretObjectiveCount)).Accepted, Is.True);
             var view = engine.ViewFor(controlled);
+            Assert.That(view.Phase, Is.EqualTo(RoundPhase.Preparation));
             Assert.That(view.Role, Is.EqualTo(expectedRole));
             if (expectedObjective.HasValue)
                 Assert.That(view.PrivateObjective.Kind, Is.EqualTo(expectedObjective.Value));
             if (scenario == RoundDeveloperScenario.GuiltyEscape)
+            {
+                Assert.That(view.Alibi.Entries, Has.Count.EqualTo(5));
+                Assert.That(view.Alibi.Entries.Count(entry => entry.IsHidden), Is.EqualTo(2));
+                Assert.That(view.Alibi.Entries.Count(entry => !entry.IsHidden), Is.EqualTo(3));
                 Assert.That(view.Alibi.Entries.Single(entry => entry.FactId == "f2").IsHidden, Is.True);
+            }
+            else if (expectedRole == RoundRole.Innocent)
+            {
+                Assert.That(view.Alibi.Entries, Has.Count.EqualTo(5));
+                Assert.That(view.Alibi.Entries.All(entry => !entry.IsHidden), Is.True);
+            }
+            else
+            {
+                Assert.That(view.Alibi, Is.Null);
+            }
         }
 
         [Test]
@@ -185,6 +199,18 @@ namespace InterrogationRoom.Networking.Tests
         {
             Assert.That(RoundDeveloperTaskCatalog.ScenarioFor(task), Is.EqualTo(expectedScenario));
             Assert.That(RoundDeveloperTaskCatalog.RoleFor(task), Is.EqualTo(expectedRole));
+        }
+
+        [Test]
+        public void TaskCatalog_DetectiveHasASelectableIncidentScenario()
+        {
+            var tasks = RoundDeveloperTaskCatalog.TasksFor(RoundRole.Detective);
+
+            Assert.That(tasks.Count, Is.EqualTo(1));
+            Assert.That(
+                RoundDeveloperTaskCatalog.ScenarioFor(tasks[0]),
+                Is.EqualTo(RoundDeveloperScenario.DetectiveIncidents));
+            Assert.That(RoundDeveloperTaskCatalog.RoleFor(tasks[0]), Is.EqualTo(RoundRole.Detective));
         }
 
         [Test]

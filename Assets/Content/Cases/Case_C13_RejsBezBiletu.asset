@@ -16,12 +16,6 @@ MonoBehaviour:
   crimeDescription: "Kto\u015B wprowadzi\u0142 furgonetk\u0119 z lodami do sali obrad
     i przez godzin\u0119 odtwarza\u0142 z niej hymn miasta wspak."
   alibiFacts:
-  - id: dolny-poklad
-    text: "O 18:05 grupa przesz\u0142a przez bramk\u0119 przystani i usiad\u0142a
-      na dolnym pok\u0142adzie obok pomara\u0144czowego ko\u0142a ratunkowego."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: kobieta-ze-slonecznikiem
     text: "Naprzeciwko siedzia\u0142a kobieta z du\u017Cym s\u0142onecznikiem."
     canBeHidden: 1
@@ -65,4 +59,4 @@ MonoBehaviour:
     content: "Kartka nutowa bez tytu\u0142u, z ilustracj\u0105 dziewczyny w lesie
       i dopiskiem \u201Edolny pok\u0142ad\u201D."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

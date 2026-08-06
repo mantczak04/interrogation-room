@@ -21,7 +21,7 @@ namespace InterrogationRoom.Editor.Content
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[CaseAssetSync] Synchronized C01 through C15 as six-point CaseAssets.");
+            Debug.Log("[CaseAssetSync] Synchronized C01 through C18 as five-point CaseAssets with two authored redaction gaps.");
         }
 
         private static IReadOnlyList<Definition> Definitions() => new[]
@@ -36,7 +36,6 @@ namespace InterrogationRoom.Editor.Content
                     Fact("spotkanie-pizzeria", "O 19:00 wszyscy spotkali się w pizzerii „U Grubego” przy rynku.", false),
                     Fact("trzy-pizze", "Zamówili trzy pizze: hawajską, capricciosę i podwójny ser.", true),
                     Fact("bledny-rachunek", "Kelner pomylił rachunek i doliczył cztery kompoty, których nikt nie zamawiał.", true),
-                    Fact("awaria-swiatla", "Około 19:40 na kilka minut zgasło światło w całym lokalu.", false),
                     Fact(
                         "dowcip-kucharza",
                         "Kucharz opowiedział dowcip o strażaku, z którego nikt się nie zaśmiał.",
@@ -60,7 +59,6 @@ namespace InterrogationRoom.Editor.Content
                 "Ktoś wystrzelił weselny tort z armatki konfetti na dach remizy.",
                 new[]
                 {
-                    Fact("miejsca-przy-orkiestrze", "O 18:30 wszyscy zajęli miejsca przy stole obok orkiestry.", false),
                     Fact("rozlany-kompot", "Świadek pana młodego rozlał kompot z agrestu na biały obrus.", true),
                     Fact("pierwsza-polka", "Kapela zagrała polkę, gdy zegar nad barem wskazywał 18:47.", true),
                     Fact(
@@ -96,7 +94,6 @@ namespace InterrogationRoom.Editor.Content
                         "O 21:12 grupa otrzymała zielone ochraniacze na buty."),
                     Fact("termos-rakieta", "Astronom niósł termos w kształcie rakiety.", true),
                     Fact("wega-laser", "Pierwszą obserwowaną gwiazdą była Wega, wskazana zielonym laserem.", true),
-                    Fact("blad-projektora", "Projektor zgasł po komunikacie o błędzie numer 17.", false),
                     Fact("srebrny-guzik", "Pani Marta znalazła srebrny guzik pod obrotowym krzesłem.", true),
                     Fact("drozdzowki-i-wyjscie", "W kopule pachniało drożdżówkami; o 21:46 wszyscy podpisali księgę gości i odjechali razem nocnym busem.", false)
                 },
@@ -123,7 +120,6 @@ namespace InterrogationRoom.Editor.Content
                         "Przewodniczka miała czerwony parasol, mimo że nie padało.",
                         "Przewodniczka miała turkusowy parasol, mimo że nie padało."),
                     Fact("alarm-zegarow", "W sali zegarów rozległ się alarm dokładnie o 20:24.", true),
-                    Fact("bilet-przy-kaczce", "Pan Leon upuścił bilet obok gabloty z mechaniczną kaczką.", false),
                     Fact("zdjecie-wieloryba", "Grupa zrobiła zdjęcie przy szkielecie wieloryba w papierowej koronie.", true),
                     Fact("cukierki-i-wyjscie", "Kustosz poczęstował wszystkich miętowymi cukierkami; o 20:41 grupa wyszła przez sklep i razem wsiadła do autobusu naprzeciw muzeum.", false)
                 },
@@ -150,7 +146,6 @@ namespace InterrogationRoom.Editor.Content
                         "Recepcjonistka dała im kartę kolejki z rysunkiem lisa.",
                         "Recepcjonistka dała im kartę kolejki z rysunkiem borsuka."),
                     Fact("ostrzezenie-o-mgle", "Radio w poczekalni ostrzegło przed gęstą poranną mgłą.", true),
-                    Fact("terier-i-parasole", "Mały terier kichnął i przewrócił stojak na parasole.", false),
                     Fact("gwiazda-na-skorupie", "Weterynarz narysował na skorupie zmywalną białą gwiazdę.", true),
                     Fact("wyjscie-autobusem", "Wyszli drzwiami apteki, bo myto główne wejście, i o 06:05 razem wsiedli do autobusu numer 3.", false)
                 },
@@ -168,7 +163,6 @@ namespace InterrogationRoom.Editor.Content
                 "Ktoś ukradł pozłacanego koguta z szyldu hali drobiowej, skuł go kajdankami z miejską fontanną i odczytał mu prawa zatrzymanego.",
                 new[]
                 {
-                    Fact("ulewa-i-plaszcze", "Podczas ulewy grupa weszła do pralni „Bąbel” i włożyła mokre płaszcze do kosza ze złamaną rączką.", false),
                     Fact("czerwona-skarpetka", "W pustej pralce znaleźli jedną czerwoną dziecięcą skarpetkę.", true),
                     Fact("podwojne-kakao", "Obsługująca rozmieniła banknot na mosiężne żetony, a automat wydał dwa kakao po jednym wyborze.", true),
                     Fact(
@@ -203,7 +197,6 @@ namespace InterrogationRoom.Editor.Content
                         "Grupa weszła na ostatnią godzinę do kręgielni „Meteor” i dostała tor szósty pod nazwą „Borsuki”.",
                         "Grupa weszła na ostatnią godzinę do kręgielni „Meteor” i dostała tor szósty pod nazwą „Krety”."),
                     Fact("niedobrane-sznurowki", "Dostali biało-czerwone buty z niedobranymi sznurówkami.", true),
-                    Fact("pierwszy-rzut-i-kula", "Pierwsza kula przewróciła tylko jeden kręgiel, a po awarii podajnika pracownik ręcznie wyciągnął zieloną kulę.", false),
                     Fact("ogorki-przy-awarii", "Gdy podajnik stanął, zamówili miskę kiszonych ogórków.", true),
                     Fact("wynik-77", "Tablica wyników zamarła na liczbie 77.", true),
                     Fact("koniec-kolorowych-swiatel", "Wszyscy wyszli razem, kiedy zgasły kolorowe światła nad torami.", false)
@@ -231,7 +224,6 @@ namespace InterrogationRoom.Editor.Content
                         "Grupa przyszła na ostatnie zajęcia do pracowni ceramicznej, gdzie instruktorka rozdała im beżowe fartuchy."),
                     Fact("ryby-z-gliny", "Każdy ulepił z białej gliny rybę.", true),
                     Fact("prognoza-i-szkliwo", "Podczas prognozy pogody w radiu niebieskie szkliwo rozlało się obok stołu.", true),
-                    Fact("zolta-gabka", "Wytarli rozlane szkliwo dużą żółtą gąbką.", false),
                     Fact("druga-polka-pieca", "Instruktorka ustawiła prace na drugiej półce pieca.", true),
                     Fact("podpisane-etykiety", "Przed wyjściem wszyscy podpisali papierowe etykiety inicjałami.", false)
                 },
@@ -258,7 +250,6 @@ namespace InterrogationRoom.Editor.Content
                         true,
                         "Kelner przyniósł lemoniadę z plasterkami cytryny na metalowej tacy, a mikrofon zamilkł przed ostatnim refrenem.",
                         "Kelner przyniósł lemoniadę z plasterkami pomarańczy na metalowej tacy, a mikrofon zamilkł przed ostatnim refrenem."),
-                    Fact("tamburyn", "Dokończyli piosenkę z tamburynem zdjętym ze ściany.", false),
                     Fact("zdjecia-w-budce", "Potem zrobili wspólne zdjęcia w budce.", true),
                     Fact("niebieskie-stemple", "Wszyscy wyszli razem z niebieskimi stemplami na dłoniach.", false)
                 },
@@ -287,7 +278,6 @@ namespace InterrogationRoom.Editor.Content
                         "Czekając, składali koce w czerwono-białą kratę.",
                         "Czekając, składali koce w niebiesko-białe pasy."),
                     Fact("przewrocone-wiadro", "Beagle przewrócił wiadro z wodą.", true),
-                    Fact("zolty-transporter", "Po złapaniu kota zamknęli go w żółtym transporterze i wyszli razem.", false)
                 },
                 new[]
                 {
@@ -312,7 +302,6 @@ namespace InterrogationRoom.Editor.Content
                         "Wszyscy oglądali lilie pachnące cytryną.",
                         "Wszyscy oglądali lilie pachnące wanilią."),
                     Fact("skrzynia-27", "Kurier w żółtym płaszczu przywiózł skrzynię oznaczoną numerem 27.", true),
-                    Fact("polknieta-moneta", "Automat kasowy połknął monetę starszego klienta.", false),
                     Fact("tango-i-rekawiczka", "Z radia leciało tango, gdy z wózka spadła czerwona rękawiczka.", true),
                     Fact("papier-i-wyjscie", "Grupa złożyła trzy niebieskie arkusze papieru i o 20:43 wyszła razem za ciężarówką odbierającą szkło z wazonów.", false)
                 },
@@ -337,7 +326,6 @@ namespace InterrogationRoom.Editor.Content
                         true,
                         "O 17:20 grupa weszła na warsztaty introligatorskie i dostała pomarańczowe fartuchy z naszytą igłą.",
                         "O 17:20 grupa weszła na warsztaty introligatorskie i dostała musztardowe fartuchy z naszytą igłą."),
-                    Fact("zlamana-korba", "Instruktorka złamała korbę pokazowej prasy do papieru.", false),
                     Fact("kobaltowe-plotno", "Grupa wybrała kobaltowe płótno na okładkę wspólnego albumu.", true),
                     Fact("slady-kota", "Czarny kot przeszedł po stole i zostawił ślady łap w kleju.", true),
                     Fact("precle-i-notesy", "Podczas przerwy wszyscy jedli słone precle, a cztery gotowe notesy ustawili na lewej półce.", false),
@@ -357,7 +345,6 @@ namespace InterrogationRoom.Editor.Content
                 "Ktoś wprowadził furgonetkę z lodami do sali obrad i przez godzinę odtwarzał z niej hymn miasta wspak.",
                 new[]
                 {
-                    Fact("dolny-poklad", "O 18:05 grupa przeszła przez bramkę przystani i usiadła na dolnym pokładzie obok pomarańczowego koła ratunkowego.", false),
                     Fact("kobieta-ze-slonecznikiem", "Naprzeciwko siedziała kobieta z dużym słonecznikiem.", true),
                     Fact("dwa-sygnaly", "Przy czerwonej boi prom zatrąbił dwa razy.", true),
                     Fact(
@@ -394,7 +381,6 @@ namespace InterrogationRoom.Editor.Content
                         "Próba zaczęła się od trzech uderzeń w bęben; potem gołąb usiadł po lewej stronie balkonu i wszyscy na chwilę zamilkli.",
                         "Próba zaczęła się od trzech uderzeń w bęben; potem gołąb usiadł po prawej stronie balkonu i wszyscy na chwilę zamilkli."),
                     Fact("herbata-jablkowa", "W przerwie podano herbatę jabłkową w metalowych kubkach.", true),
-                    Fact("czerwona-kurtyna", "Grupa pomogła zwinąć czerwoną kurtynę.", false),
                     Fact("wyjscie-foyer", "O 19:52 wszyscy wyszli razem przez główne foyer.", false)
                 },
                 new[]
@@ -414,7 +400,6 @@ namespace InterrogationRoom.Editor.Content
                     Fact("taczka-numer-12", "O 16:40 grupa weszła na konkurs działkowy przez bramę z dyni i dostała czerwoną taczkę numer 12.", true),
                     Fact("dynia-14-kilogramow", "Wspólna dynia ważyła dokładnie czternaście kilogramów.", false),
                     Fact("nadgryziona-karta", "Koza odgryzła róg karty z wynikami.", true),
-                    Fact("wstazka-na-porze", "Sędzia przywiązał niebieską wstążkę do najdłuższego pora.", false),
                     Fact("deszcz-i-altana", "Nagły deszcz zagonił wszystkich pod pasiastą altanę.", true),
                     Fact(
                         "lemoniada-i-wyjscie",
@@ -438,7 +423,6 @@ namespace InterrogationRoom.Editor.Content
                 "Ktoś ubrał brązową syrenę z miejskiej fontanny w szlafrok, czepek kąpielowy i ogromne różowe kapcie.",
                 new[]
                 {
-                    Fact("wejscie-do-apteki", "O 22:10 grupa weszła do całodobowej apteki po bandaż na skręconą kostkę.", false),
                     Fact("muszka-w-kaczki", "Farmaceuta miał granatową muszkę w żółte kaczki.", true),
                     Fact("numer-kolejki-8", "Dostali bilet kolejki numer 8, choć poza nimi nikogo nie było.", true),
                     Fact("termometr-dwa-sygnaly", "Gdy światło na chwilę przygasło, termometr przy kasie zapiszczał dwa razy.", true),
@@ -465,7 +449,6 @@ namespace InterrogationRoom.Editor.Content
                 "Ktoś napełnił fontannę przed sądem płatkami kukurydzianymi i ustawił w niej dwumetrową srebrną łyżkę.",
                 new[]
                 {
-                    Fact("wejscie-repair-cafe", "O 18:20 grupa przyszła z zepsutym tosterem do społecznego warsztatu naprawczego.", false),
                     Fact("stanowisko-sowa-4", "Przydzielono im stanowisko numer 4 oznaczone rysunkiem sowy.", true),
                     Fact("zolte-nauszniki", "Wolontariusz zakładał żółte nauszniki przed każdym uruchomieniem tostera.", true),
                     Fact("jazz-i-bezpiecznik", "Podczas jazzowej audycji w radiu próbne grzanie wybiło bezpiecznik nad stołem.", true),
@@ -492,7 +475,6 @@ namespace InterrogationRoom.Editor.Content
                 "Ktoś zastąpił monety we wszystkich parkometrach przy ratuszu czekoladowymi krążkami w złotkach papierkach.",
                 new[]
                 {
-                    Fact("boczna-brama-szklarni", "O 19:30 grupa weszła boczną bramą na wieczorne zwiedzanie miejskiej szklarni.", false),
                     Fact("konewka-zaba", "Przewodniczka niosła zieloną konewkę w kształcie żaby.", true),
                     Fact("etykieta-monstery", "Skroplona para zasłoniła etykietę monstery, więc przewodniczka przetarła ją rękawem.", true),
                     Fact("mgielka-1944", "O 19:44 automatyczne zraszacze uruchomiły gęstą mgiełkę na całej alejce.", true),
@@ -525,7 +507,7 @@ namespace InterrogationRoom.Editor.Content
             asset.alibiFacts = new List<CaseAsset.AuthoredFact>(source.Facts);
             asset.alibiClues = new List<CaseAsset.AuthoredAlibiClue>(source.Clues);
             asset.minHiddenFacts = 2;
-            asset.maxHiddenFacts = 3;
+            asset.maxHiddenFacts = 2;
 
             var errors = asset.Validate();
             if (errors.Count > 0)

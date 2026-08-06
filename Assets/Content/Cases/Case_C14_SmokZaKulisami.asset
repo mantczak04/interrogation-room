@@ -45,11 +45,6 @@ MonoBehaviour:
     canBeHidden: 1
     variantTexts: []
     distinctiveDetail: 0
-  - id: czerwona-kurtyna
-    text: "Grupa pomog\u0142a zwin\u0105\u0107 czerwon\u0105 kurtyn\u0119."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: wyjscie-foyer
     text: "O 19:52 wszyscy wyszli razem przez g\u0142\xF3wne foyer."
     canBeHidden: 0
@@ -69,4 +64,4 @@ MonoBehaviour:
     content: "Kupon z jab\u0142kiem, metalowym kubkiem i piecz\u0105tk\u0105 \u201Eprzerwa\u201D,
       bez nazwy napoju."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

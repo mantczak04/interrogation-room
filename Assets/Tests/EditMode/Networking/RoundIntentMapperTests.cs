@@ -91,6 +91,32 @@ namespace InterrogationRoom.Networking.Tests
                 Is.EqualTo(expected));
         }
 
+        [TestCase(RoundRole.Innocent, RoundDeveloperScenario.PersonalMatter)]
+        [TestCase(RoundRole.Guilty, RoundDeveloperScenario.GuiltyEscape)]
+        [TestCase(RoundRole.Detective, RoundDeveloperScenario.DetectiveIncidents)]
+        public void DeveloperLobbyRole_StartsFullPreparationForTheSelectedRole(
+            RoundRole role,
+            RoundDeveloperScenario expectedScenario)
+        {
+            Assert.That(
+                RoundLobbyRules.DeveloperScenarioForRole(role),
+                Is.EqualTo(expectedScenario));
+        }
+
+        [TestCase(RoundRole.Innocent, 1, 3)]
+        [TestCase(RoundRole.Guilty, 1, 2)]
+        [TestCase(RoundRole.Detective, 1, 2)]
+        [TestCase(RoundRole.Innocent, 4, 4)]
+        public void DeveloperLobbyRole_ReservesAnInnocentSlotWhenRequired(
+            RoundRole role,
+            int connectedPlayerCount,
+            int expectedPlayerCount)
+        {
+            Assert.That(
+                RoundLobbyRules.ResolveDeveloperPlayerCount(role, connectedPlayerCount),
+                Is.EqualTo(expectedPlayerCount));
+        }
+
         [Test]
         public void IntentPayloadContainsNoClientAuthoredPlayerIdentity()
         {

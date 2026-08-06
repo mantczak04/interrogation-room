@@ -16,7 +16,6 @@ namespace InterrogationRoom.Networking.Tests
                 new AlibiFact("f2", "Kelner pomylił rachunek.", true),
                 new AlibiFact("f3", "Na chwilę zgasło światło.", true),
                 new AlibiFact("f4", "Wróciliśmy wspólnie tramwajem.", false),
-                new AlibiFact("f5", "Przed wyjściem zamówiliśmy herbatę.", false),
                 new AlibiFact(
                     "f6",
                     "Kelner miał zieloną muchę.",
@@ -24,8 +23,8 @@ namespace InterrogationRoom.Networking.Tests
                     new[] { "Kelner miał zieloną muchę.", "Kelner miał granatową muchę." },
                     distinctiveDetail: true)
             },
-            minHiddenFacts: 1,
-            maxHiddenFacts: 1,
+            minHiddenFacts: 2,
+            maxHiddenFacts: 2,
             new[]
             {
                 new AlibiClueDefinition(
@@ -53,6 +52,8 @@ namespace InterrogationRoom.Networking.Tests
             var first = Start(plan);
             AssertPreparationWireViews(first, plan);
             Assert.That(first.Handle(new RoundCommand.EndPreparation()).Accepted, Is.True);
+            foreach (var player in plan.Players)
+                Assert.That(RoundTrip(first.ViewFor(player)).Alibi, Is.Null);
 
             var clue = TestCase().AlibiClues.Single();
             Assert.That(first.Handle(new RoundCommand.AcquireAlibiClue(
@@ -109,6 +110,9 @@ namespace InterrogationRoom.Networking.Tests
                 Assert.That(fresh.RevealedIncidents, Is.Null);
                 if (fresh.Role == RoundRole.Guilty)
                 {
+                    Assert.That(fresh.Alibi.Entries.Count(entry => entry.IsHidden), Is.EqualTo(2));
+                    Assert.That(fresh.Alibi.Entries.Count(entry => !entry.IsHidden), Is.EqualTo(3));
+                    Assert.That(fresh.PrivateObjective, Is.Null);
                     Assert.That(fresh.AcquiredAlibiClues, Is.Empty);
                     Assert.That(fresh.EscapePlan.CompletedCommonStepCount, Is.Zero);
                     Assert.That(fresh.EscapePlan.ExitOptions.Any(option => option.IsPrepared), Is.False);
@@ -203,7 +207,21 @@ namespace InterrogationRoom.Networking.Tests
                 Assert.That(restored.Role, Is.EqualTo(source.Role));
                 Assert.That(restored.RoundReveal, Is.Null);
                 if (source.Role == RoundRole.Detective)
+                {
                     Assert.That(restored.Alibi, Is.Null);
+                }
+                else if (source.Role == RoundRole.Guilty)
+                {
+                    Assert.That(restored.Alibi.Entries.Count, Is.EqualTo(5));
+                    Assert.That(restored.Alibi.Entries.Count(entry => entry.IsHidden && entry.Text == null), Is.EqualTo(2));
+                    Assert.That(restored.Alibi.Entries.Count(entry => !entry.IsHidden && entry.Text != null), Is.EqualTo(3));
+                    Assert.That(restored.PrivateObjective, Is.Null);
+                }
+                else
+                {
+                    Assert.That(restored.Alibi.Entries.Count, Is.EqualTo(5));
+                    Assert.That(restored.Alibi.Entries.All(entry => !entry.IsHidden && entry.Text != null), Is.True);
+                }
             }
         }
 

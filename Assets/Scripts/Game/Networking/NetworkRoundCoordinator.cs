@@ -56,6 +56,7 @@ namespace InterrogationRoom.Networking
         private string _localLobbyDisplayName;
         private int _developerLobbyFakePlayerCount;
         private bool _allowSoloDeveloperLobbyStart;
+        private RoundRole _developerLobbyRole = RoundRole.Innocent;
         private double _roundDeadline;
         private double _roundStartedAtNetworkTime;
         private double _preparationDeadline;
@@ -103,6 +104,8 @@ namespace InterrogationRoom.Networking
             DeveloperToolsAvailable ? _developerLobbyFakePlayerCount : 0;
         public bool AllowsSoloDeveloperLobbyStart =>
             DeveloperToolsAvailable && _allowSoloDeveloperLobbyStart;
+        public RoundRole DeveloperLobbyRole =>
+            DeveloperToolsAvailable ? _developerLobbyRole : RoundRole.Innocent;
         public bool UsesSpatialVoice => VoiceModeRules.UsesSpatialAudio(
             NetworkServer.active
                 ? _phase
@@ -268,6 +271,23 @@ namespace InterrogationRoom.Networking
                 return false;
 
             _allowSoloDeveloperLobbyStart = true;
+            return true;
+        }
+
+        public bool TrySetDeveloperLobbyRole(RoundRole role)
+        {
+            if (!DeveloperToolsAvailable
+                || !IsLocalHost
+                || !_allowSoloDeveloperLobbyStart
+                || _phase != RoundPhase.Lobby
+                || (role != RoundRole.Innocent
+                    && role != RoundRole.Guilty
+                    && role != RoundRole.Detective))
+            {
+                return false;
+            }
+
+            _developerLobbyRole = role;
             return true;
         }
 
@@ -876,15 +896,14 @@ namespace InterrogationRoom.Networking
                 return;
             }
 
-            if (AllowsSoloDeveloperLobbyStart && ConnectedPlayerCount < RoundEngine.MinPlayers)
+            if (AllowsSoloDeveloperLobbyStart)
             {
                 PlayerId controlledPlayer = ConnectionToPlayerId(sender);
-                // The default developer scenario controls a Niewinny, so its
-                // technical roster needs Detektyw, Winny and at least one
-                // Niewinny even when testing-only domain settings allow two.
-                int targetPlayerCount = Math.Max(3, RoundEngine.MinPlayers);
+                int targetPlayerCount = RoundLobbyRules.ResolveDeveloperPlayerCount(
+                    _developerLobbyRole,
+                    ConnectedPlayerCount);
                 if (!TryStartDeveloperScenario(
-                        RoundDeveloperScenario.PersonalMatter,
+                        RoundLobbyRules.DeveloperScenarioForRole(_developerLobbyRole),
                         targetPlayerCount,
                         controlledPlayer,
                         out string rejectionReason))
@@ -1590,6 +1609,7 @@ namespace InterrogationRoom.Networking
             _developerPlan = null;
             _activeDeveloperTask = null;
             _allowSoloDeveloperLobbyStart = false;
+            _developerLobbyRole = RoundRole.Innocent;
             _hostAllowsSecretObjective = true;
             _roundLimitMinutes = RoundLobbyRules.DefaultRoundLimitMinutes;
             _publicLobbyPlayerCount = 0;

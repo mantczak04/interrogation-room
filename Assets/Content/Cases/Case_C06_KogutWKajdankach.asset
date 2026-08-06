@@ -17,12 +17,6 @@ MonoBehaviour:
     drobiowej, sku\u0142 go kajdankami z miejsk\u0105 fontann\u0105 i odczyta\u0142
     mu prawa zatrzymanego."
   alibiFacts:
-  - id: ulewa-i-plaszcze
-    text: "Podczas ulewy grupa wesz\u0142a do pralni \u201EB\u0105bel\u201D i w\u0142o\u017Cy\u0142a
-      mokre p\u0142aszcze do kosza ze z\u0142aman\u0105 r\u0105czk\u0105."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: czerwona-skarpetka
     text: "W pustej pralce znale\u017Ali jedn\u0105 czerwon\u0105 dzieci\u0119c\u0105
       skarpetk\u0119."
@@ -67,4 +61,4 @@ MonoBehaviour:
     linkedFactId: trzy-sygnaly-suszarki
     content: "Woreczek z wilgotnym filtrem k\u0142aczk\xF3w i trzema stemplami kontroli."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

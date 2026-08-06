@@ -24,7 +24,6 @@ namespace InterrogationRoom.Domain.Tests
                     new AlibiFact("f2", "Kelner wylał zupę na obrus.", true),
                     new AlibiFact("f3", "Wszyscy śpiewali sto lat panu Henrykowi.", true),
                     new AlibiFact("f4", "Ktoś zgubił klucze pod stołem.", true),
-                    new AlibiFact("f5", "Grupa wróciła tramwajem numer 12.", false),
                     new AlibiFact(
                         "f6",
                         "Na przystanku padał deszcz.",
@@ -186,22 +185,22 @@ namespace InterrogationRoom.Domain.Tests
         }
 
         [Test]
-        public void StartRound_CaseWithoutExactlySixFacts_IsRejected()
+        public void StartRound_CaseWithoutExactlyFiveFacts_IsRejected()
         {
             var source = TestCase();
-            var fiveFacts = new CaseDefinition(
+            var fourFacts = new CaseDefinition(
                 source.Title,
                 source.CrimeDescription,
-                source.AlibiFacts.Take(5),
+                source.AlibiFacts.Take(4),
                 source.MinHiddenFacts,
                 source.MaxHiddenFacts,
                 source.AlibiClues);
 
             var transition = new RoundEngine().Handle(
-                new RoundCommand.StartRound(fiveFacts, FivePlayers, seed: 1));
+                new RoundCommand.StartRound(fourFacts, FivePlayers, seed: 1));
 
             Assert.That(transition.Accepted, Is.False);
-            Assert.That(transition.RejectionReason, Does.Contain("exactly 6"));
+            Assert.That(transition.RejectionReason, Does.Contain("exactly 5"));
         }
 
         [Test]
@@ -242,11 +241,13 @@ namespace InterrogationRoom.Domain.Tests
             Assert.That(detectiveView.Alibi, Is.Null);
 
             // Niewinny: the complete Alibi, nothing hidden.
-            Assert.That(innocentView.Alibi.Entries.Count, Is.EqualTo(6));
+            Assert.That(innocentView.Alibi.Entries.Count, Is.EqualTo(5));
             Assert.That(innocentView.Alibi.Entries.All(e => !e.IsHidden && e.Text != null), Is.True);
 
-            // Winny: same ordered structure with redaction holes.
-            Assert.That(guiltyView.Alibi.Entries.Count, Is.EqualTo(6));
+            // Winny: the same five slots, exactly three visible and two redacted.
+            Assert.That(guiltyView.Alibi.Entries.Count, Is.EqualTo(5));
+            Assert.That(guiltyView.Alibi.Entries.Count(e => e.IsHidden), Is.EqualTo(2));
+            Assert.That(guiltyView.Alibi.Entries.Count(e => !e.IsHidden && e.Text != null), Is.EqualTo(3));
 
             // Przestępstwo is public for everyone.
             Assert.That(detectiveView.CrimeDescription, Is.Not.Empty);
@@ -288,6 +289,7 @@ namespace InterrogationRoom.Domain.Tests
             var hidden = guiltyView.Alibi.Entries.Where(e => e.IsHidden).ToList();
 
             Assert.That(hidden.Count, Is.EqualTo(2), "case configures exactly 2 hidden facts");
+            Assert.That(guiltyView.Alibi.Entries.Count(e => !e.IsHidden), Is.EqualTo(3));
             Assert.That(hidden.All(e => hideableIds.Contains(e.FactId)), Is.True);
             Assert.That(hidden.All(e => e.Text == null), Is.True, "hidden entries carry no text");
         }

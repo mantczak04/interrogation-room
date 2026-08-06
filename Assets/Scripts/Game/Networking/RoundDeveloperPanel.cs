@@ -193,6 +193,10 @@ namespace InterrogationRoom.Debugging
                     (_selectedRole == RoundRole.Guilty ? "✓ " : string.Empty) + UiText.Get("Winny"),
                     _buttonStyle))
                 _selectedRole = RoundRole.Guilty;
+            if (GUILayout.Button(
+                    (_selectedRole == RoundRole.Detective ? "✓ " : string.Empty) + UiText.Get("Detektyw"),
+                    _buttonStyle))
+                _selectedRole = RoundRole.Detective;
             GUILayout.EndHorizontal();
 
             GUILayout.Label(UiText.Get("Konkretne zadanie lub minigierka"), _headerStyle);
@@ -509,6 +513,7 @@ namespace InterrogationRoom.Debugging
                 case RoundDeveloperTask.EscapeFinalVent: return UiText.Get("Finał Ucieczki: Service Vent");
                 case RoundDeveloperTask.EscapePrepareGate: return UiText.Get("Minigierka: Zamek szyfrowy");
                 case RoundDeveloperTask.EscapeFinalGate: return UiText.Get("Finał Ucieczki: Loading Gate Exit");
+                case RoundDeveloperTask.DetectiveIncidents: return UiText.Get("Detektyw — Incydenty");
                 default: return task.ToString();
             }
         }
@@ -539,6 +544,8 @@ namespace InterrogationRoom.Debugging
                     return UiText.Get("Podejdź do Loading Gate Control i ukończ Zamek szyfrowy.");
                 case RoundDeveloperTask.EscapeFinalGate:
                     return UiText.Get("Loading Gate Exit jest przygotowany. Ukończ albo przerwij finał Ucieczki.");
+                case RoundDeveloperTask.DetectiveIncidents:
+                    return UiText.Get("Podejdź do Archive Alarm albo podłóż przedmiot w Target Locker. Hałaśliwy Incydent pojawi się od razu; Cichy odkryj ponownie przy zmienionym obiekcie.");
                 default:
                     return string.Empty;
             }

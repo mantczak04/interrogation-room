@@ -41,7 +41,6 @@ namespace InterrogationRoom.Content.Tests
                 new CaseAsset.AuthoredFact { id = "zupa", text = "Kelner wylał zupę na obrus.", canBeHidden = true },
                 new CaseAsset.AuthoredFact { id = "sto-lat", text = "Wszyscy śpiewali sto lat panu Henrykowi.", canBeHidden = true },
                 new CaseAsset.AuthoredFact { id = "klucze", text = "Ktoś zgubił klucze pod stołem.", canBeHidden = true },
-                new CaseAsset.AuthoredFact { id = "tramwaj", text = "Grupa wróciła tramwajem numer 12.", canBeHidden = false },
                 new CaseAsset.AuthoredFact
                 {
                     id = "pogoda",
@@ -78,12 +77,12 @@ namespace InterrogationRoom.Content.Tests
             Assert.That(definition.CrimeDescription, Is.EqualTo("Ktoś pomalował ratuszowy zegar na różowo."));
             Assert.That(definition.MinHiddenFacts, Is.EqualTo(2));
             Assert.That(definition.MaxHiddenFacts, Is.EqualTo(2));
-            Assert.That(definition.AlibiFacts.Count, Is.EqualTo(6));
+            Assert.That(definition.AlibiFacts.Count, Is.EqualTo(5));
             Assert.That(definition.AlibiFacts.Select(f => f.Text), Is.EqualTo(asset.alibiFacts.Select(f => f.text)));
             Assert.That(definition.AlibiFacts.Select(f => f.CanBeHidden), Is.EqualTo(asset.alibiFacts.Select(f => f.canBeHidden)));
-            Assert.That(definition.AlibiFacts[5].DistinctiveDetail, Is.True);
-            Assert.That(definition.AlibiFacts[5].VariantTexts, Is.EqualTo(asset.alibiFacts[5].variantTexts));
-            Assert.That(definition.AlibiFacts.Select(f => f.Id).Distinct().Count(), Is.EqualTo(6), "fact ids are unique");
+            Assert.That(definition.AlibiFacts[4].DistinctiveDetail, Is.True);
+            Assert.That(definition.AlibiFacts[4].VariantTexts, Is.EqualTo(asset.alibiFacts[4].variantTexts));
+            Assert.That(definition.AlibiFacts.Select(f => f.Id).Distinct().Count(), Is.EqualTo(5), "fact ids are unique");
             Assert.That(definition.AlibiFacts[1].Id, Is.EqualTo("zupa"));
             Assert.That(definition.AlibiClues.Count, Is.EqualTo(1));
             Assert.That(definition.AlibiClues[0].Id, Is.EqualTo(new AlibiClueId("paragon-zupa")));
@@ -101,16 +100,16 @@ namespace InterrogationRoom.Content.Tests
             asset.title = "Zmieniony tytuł";
             asset.alibiFacts[0].text = "Podmieniony fakt.";
             asset.alibiClues[0].content = "Podmieniony Trop.";
-            asset.alibiFacts[5].variantTexts[0] = "Podmieniony wariant.";
-            asset.alibiFacts.RemoveAt(5);
+            asset.alibiFacts[4].variantTexts[0] = "Podmieniony wariant.";
+            asset.alibiFacts.RemoveAt(4);
             asset.maxHiddenFacts = 3;
 
             Assert.That(definition.Title, Is.EqualTo("Testowa Sprawa"));
-            Assert.That(definition.AlibiFacts.Count, Is.EqualTo(6));
+            Assert.That(definition.AlibiFacts.Count, Is.EqualTo(5));
             Assert.That(definition.AlibiClues[0].Content,
                 Is.EqualTo("Paragon z restauracji: dwie zupy naliczone o 18:17."));
             Assert.That(definition.AlibiFacts[0].Text, Is.EqualTo("O 18:00 grupa spotkała się przy fontannie."));
-            Assert.That(definition.AlibiFacts[5].VariantTexts[0], Is.EqualTo("Na przystanku padał deszcz."));
+            Assert.That(definition.AlibiFacts[4].VariantTexts[0], Is.EqualTo("Na przystanku padał deszcz."));
             Assert.That(definition.MaxHiddenFacts, Is.EqualTo(2));
         }
 
@@ -202,18 +201,18 @@ namespace InterrogationRoom.Content.Tests
         }
 
         [Test]
-        public void Validate_RequiresExactlySixFactsAndControlledVariants()
+        public void Validate_RequiresExactlyFiveFactsAndControlledVariants()
         {
-            var fiveFacts = ValidAsset();
-            fiveFacts.alibiFacts.RemoveAt(4);
+            var fourFacts = ValidAsset();
+            fourFacts.alibiFacts.RemoveAt(4);
 
             var noRotation = ValidAsset();
-            noRotation.alibiFacts[5].variantTexts.Clear();
+            noRotation.alibiFacts[4].variantTexts.Clear();
 
             var noDistinctiveDetail = ValidAsset();
-            noDistinctiveDetail.alibiFacts[5].distinctiveDetail = false;
+            noDistinctiveDetail.alibiFacts[4].distinctiveDetail = false;
 
-            Assert.That(fiveFacts.Validate(), Has.Some.Contains("exactly"));
+            Assert.That(fourFacts.Validate(), Has.Some.Contains("exactly"));
             Assert.That(noRotation.Validate(), Has.Some.Contains("rotating"));
             Assert.That(noDistinctiveDetail.Validate(), Has.Some.Contains("charakterystycznyDetal"));
         }
@@ -222,16 +221,16 @@ namespace InterrogationRoom.Content.Tests
         public void Validate_RejectsInvalidVariantPoolsAndCluesCopyingAlternateText()
         {
             var blankVariant = ValidAsset();
-            blankVariant.alibiFacts[5].variantTexts.Add(" ");
+            blankVariant.alibiFacts[4].variantTexts.Add(" ");
 
             var duplicateVariant = ValidAsset();
-            duplicateVariant.alibiFacts[5].variantTexts.Add("  NA PRZYSTANKU PADAŁ DESZCZ.  ");
+            duplicateVariant.alibiFacts[4].variantTexts.Add("  NA PRZYSTANKU PADAŁ DESZCZ.  ");
 
             var missingPrimary = ValidAsset();
-            missingPrimary.alibiFacts[5].variantTexts.RemoveAt(0);
+            missingPrimary.alibiFacts[4].variantTexts.RemoveAt(0);
 
             var copiedAlternate = ValidAsset();
-            copiedAlternate.alibiFacts[5].canBeHidden = true;
+            copiedAlternate.alibiFacts[4].canBeHidden = true;
             copiedAlternate.alibiClues[0].linkedFactId = "pogoda";
             copiedAlternate.alibiClues[0].content = "Na przystanku padała drobna mżawka.";
 
@@ -294,6 +293,59 @@ namespace InterrogationRoom.Content.Tests
                 Assert.That(definition.AlibiFacts.Count(fact => fact.CanBeHidden),
                     Is.GreaterThanOrEqualTo(definition.MaxHiddenFacts), path);
                 Assert.That(definition.AlibiClues.Count, Is.EqualTo(3), path);
+            }
+        }
+
+        [Test]
+        public void AuthoredCaseLibrary_EveryCaseFiltersAlibiForEachRoleAndClosesItAfterPreparation()
+        {
+            var paths = AssetDatabase.FindAssets("t:CaseAsset", new[] { "Assets/Content/Cases" })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .OrderBy(path => path)
+                .ToArray();
+            var players = Enumerable.Range(1, 5).Select(id => new PlayerId(id)).ToArray();
+
+            Assert.That(paths, Has.Length.GreaterThanOrEqualTo(18));
+            for (var caseIndex = 0; caseIndex < paths.Length; caseIndex++)
+            {
+                var path = paths[caseIndex];
+                var definition = AssetDatabase.LoadAssetAtPath<CaseAsset>(path).ToDefinition();
+                var engine = new RoundEngine();
+                var start = engine.Handle(new RoundCommand.StartRound(definition, players, seed: caseIndex));
+
+                Assert.That(start.Accepted, Is.True, path);
+                var views = players.Select(engine.ViewFor).ToArray();
+                var detective = views.Single(view => view.Role == RoundRole.Detective);
+                var guilty = views.Single(view => view.Role == RoundRole.Guilty);
+                var innocent = views.First(view => view.Role == RoundRole.Innocent);
+
+                Assert.That(detective.Alibi, Is.Null, $"{path}: Detektyw must not learn the Alibi shape");
+                Assert.That(innocent.Alibi.Entries, Has.Count.EqualTo(5), path);
+                Assert.That(innocent.Alibi.Entries.All(entry => !entry.IsHidden && entry.Text != null), Is.True, path);
+                Assert.That(guilty.Alibi.Entries, Has.Count.EqualTo(5), path);
+                Assert.That(guilty.Alibi.Entries.Count(entry => entry.IsHidden), Is.EqualTo(2), path);
+                Assert.That(guilty.Alibi.Entries.Count(entry => !entry.IsHidden && entry.Text != null), Is.EqualTo(3), path);
+                Assert.That(guilty.Alibi.Entries.Where(entry => entry.IsHidden).All(entry => entry.Text == null), Is.True, path);
+                Assert.That(
+                    guilty.Alibi.Entries.Where(entry => entry.IsHidden).Select(entry => entry.FactId),
+                    Is.SubsetOf(definition.AlibiFacts.Where(fact => fact.CanBeHidden).Select(fact => fact.Id)),
+                    path);
+                Assert.That(
+                    guilty.Alibi.Entries.Select(entry => entry.FactId),
+                    Is.EqualTo(innocent.Alibi.Entries.Select(entry => entry.FactId)),
+                    path);
+
+                foreach (var (guiltyEntry, innocentEntry) in guilty.Alibi.Entries.Zip(
+                             innocent.Alibi.Entries,
+                             (guiltyEntry, innocentEntry) => (guiltyEntry, innocentEntry)))
+                {
+                    if (!guiltyEntry.IsHidden)
+                        Assert.That(guiltyEntry.Text, Is.EqualTo(innocentEntry.Text), path);
+                }
+
+                var endPreparation = engine.Handle(new RoundCommand.EndPreparation());
+                Assert.That(endPreparation.Accepted, Is.True, path);
+                Assert.That(players.Select(engine.ViewFor).All(view => view.Alibi == null), Is.True, path);
             }
         }
 

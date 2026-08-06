@@ -33,11 +33,6 @@ MonoBehaviour:
     canBeHidden: 1
     variantTexts: []
     distinctiveDetail: 0
-  - id: bilet-przy-kaczce
-    text: "Pan Leon upu\u015Bci\u0142 bilet obok gabloty z mechaniczn\u0105 kaczk\u0105."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: zdjecie-wieloryba
     text: "Grupa zrobi\u0142a zdj\u0119cie przy szkielecie wieloryba w papierowej
       koronie."
@@ -65,4 +60,4 @@ MonoBehaviour:
     content: "Negatyw z \u017Cebrami wielkiego szkieletu, papierowym z\u0119bem korony
       i sylwetkami bez twarzy."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

@@ -16,11 +16,6 @@ MonoBehaviour:
   crimeDescription: "Kto\u015B wystrzeli\u0142 weselny tort z armatki konfetti na
     dach remizy."
   alibiFacts:
-  - id: miejsca-przy-orkiestrze
-    text: "O 18:30 wszyscy zaj\u0119li miejsca przy stole obok orkiestry."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: rozlany-kompot
     text: "\u015Awiadek pana m\u0142odego rozla\u0142 kompot z agrestu na bia\u0142y
       obrus."
@@ -67,4 +62,4 @@ MonoBehaviour:
     content: "Kwit naprawy w\xF3zka z jednym przednim ko\u0142em opisanym jako piszcz\u0105ce
       pod obci\u0105\u017Ceniem."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

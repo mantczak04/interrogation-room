@@ -38,11 +38,6 @@ MonoBehaviour:
     canBeHidden: 1
     variantTexts: []
     distinctiveDetail: 0
-  - id: zolta-gabka
-    text: "Wytarli rozlane szkliwo du\u017C\u0105 \u017C\xF3\u0142t\u0105 g\u0105bk\u0105."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: druga-polka-pieca
     text: "Instruktorka ustawi\u0142a prace na drugiej p\xF3\u0142ce pieca."
     canBeHidden: 1
@@ -65,4 +60,4 @@ MonoBehaviour:
     content: "Karta za\u0142adunku z glinianymi \u0142uskami zaznaczonymi na drugim
       poziomie."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

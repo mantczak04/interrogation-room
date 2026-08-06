@@ -31,12 +31,6 @@ MonoBehaviour:
     canBeHidden: 1
     variantTexts: []
     distinctiveDetail: 0
-  - id: pierwszy-rzut-i-kula
-    text: "Pierwsza kula przewr\xF3ci\u0142a tylko jeden kr\u0119giel, a po awarii
-      podajnika pracownik r\u0119cznie wyci\u0105gn\u0105\u0142 zielon\u0105 kul\u0119."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: ogorki-przy-awarii
     text: "Gdy podajnik stan\u0105\u0142, zam\xF3wili misk\u0119 kiszonych og\xF3rk\xF3w."
     canBeHidden: 1
@@ -67,4 +61,4 @@ MonoBehaviour:
     content: "Zdj\u0119cie dw\xF3ch czerwonych si\xF3demek i odbicia numeru toru,
       bez graczy."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

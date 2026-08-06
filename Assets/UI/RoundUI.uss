@@ -392,6 +392,44 @@
     margin-bottom: var(--space-2);
 }
 
+.developer-role-section {
+    margin-bottom: var(--space-2);
+}
+
+.developer-role-options {
+    flex-direction: row;
+}
+
+.developer-role-button {
+    flex-grow: 1;
+    height: 34px;
+    margin-right: var(--space-2);
+    padding-left: 5px;
+    padding-right: 5px;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.developer-role-button--last {
+    margin-right: 0;
+}
+
+.developer-role-button--selected,
+.developer-role-button--selected:hover,
+.developer-role-button--selected:focus,
+.developer-role-button--selected:active {
+    background-color: var(--green);
+    border-color: var(--green);
+    color: var(--paper);
+}
+
+.developer-role-summary {
+    margin-top: 4px;
+    color: var(--text-hi);
+    font-size: 12px;
+    white-space: normal;
+}
+
 /*
  * Time limits are type, not chips. The chosen value is underlined in amber
  * the way a detective circles a figure in a report; the rest wait in

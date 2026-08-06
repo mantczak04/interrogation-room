@@ -171,6 +171,10 @@ namespace InterrogationRoom.UI
         private Button _roundLimit10Button;
         private Button _roundLimit15Button;
         private Button _roundLimit20Button;
+        private VisualElement _developerRoleSection;
+        private Button _developerRoleInnocentButton;
+        private Button _developerRoleGuiltyButton;
+        private Button _developerRoleDetectiveButton;
         private Toggle _secretObjectiveToggle;
         private Label _secretObjectiveSummary;
         private Button _returnToLobbyButton;
@@ -226,6 +230,9 @@ namespace InterrogationRoom.UI
             _roundLimit10Button.clicked += OnRoundLimit10Clicked;
             _roundLimit15Button.clicked += OnRoundLimit15Clicked;
             _roundLimit20Button.clicked += OnRoundLimit20Clicked;
+            _developerRoleInnocentButton.clicked += OnDeveloperRoleInnocentClicked;
+            _developerRoleGuiltyButton.clicked += OnDeveloperRoleGuiltyClicked;
+            _developerRoleDetectiveButton.clicked += OnDeveloperRoleDetectiveClicked;
             _secretObjectiveToggle.RegisterValueChangedCallback(OnSecretObjectiveChanged);
             _readyButton.clicked += OnReadyClicked;
             _privateToggleButton.clicked += TogglePrivatePanel;
@@ -260,6 +267,12 @@ namespace InterrogationRoom.UI
                 _roundLimit15Button.clicked -= OnRoundLimit15Clicked;
             if (_roundLimit20Button != null)
                 _roundLimit20Button.clicked -= OnRoundLimit20Clicked;
+            if (_developerRoleInnocentButton != null)
+                _developerRoleInnocentButton.clicked -= OnDeveloperRoleInnocentClicked;
+            if (_developerRoleGuiltyButton != null)
+                _developerRoleGuiltyButton.clicked -= OnDeveloperRoleGuiltyClicked;
+            if (_developerRoleDetectiveButton != null)
+                _developerRoleDetectiveButton.clicked -= OnDeveloperRoleDetectiveClicked;
             if (_secretObjectiveToggle != null)
                 _secretObjectiveToggle.UnregisterValueChangedCallback(OnSecretObjectiveChanged);
             if (_readyButton != null)
@@ -566,6 +579,7 @@ namespace InterrogationRoom.UI
                     ? UiText.Get("Test deweloperski można rozpocząć solo.")
                     : UiText.Get("Rundę można rozpocząć dla 3–8 graczy.");
             _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
+            RefreshDeveloperRoleButtons(soloDeveloperStart);
             RefreshRoundLimitButtons();
             SetVisible(_lobbyReadyButton, connected);
             bool localReady = coordinator.IsLocalLobbyReady;
@@ -625,6 +639,10 @@ namespace InterrogationRoom.UI
             _roundLimit10Button = Required<Button>(root, "round-limit-10-button");
             _roundLimit15Button = Required<Button>(root, "round-limit-15-button");
             _roundLimit20Button = Required<Button>(root, "round-limit-20-button");
+            _developerRoleSection = Required<VisualElement>(root, "developer-role-section");
+            _developerRoleInnocentButton = Required<Button>(root, "developer-role-innocent-button");
+            _developerRoleGuiltyButton = Required<Button>(root, "developer-role-guilty-button");
+            _developerRoleDetectiveButton = Required<Button>(root, "developer-role-detective-button");
             _secretObjectiveToggle = Required<Toggle>(root, "secret-objective-toggle");
             _secretObjectiveSummary = Required<Label>(root, "secret-objective-summary");
             _returnToLobbyButton = Required<Button>(root, "return-to-lobby-button");
@@ -672,10 +690,52 @@ namespace InterrogationRoom.UI
         private void OnRoundLimit15Clicked() => SelectRoundLimit(15);
         private void OnRoundLimit20Clicked() => SelectRoundLimit(20);
 
+        private void OnDeveloperRoleInnocentClicked() => SelectDeveloperRole(RoundRole.Innocent);
+        private void OnDeveloperRoleGuiltyClicked() => SelectDeveloperRole(RoundRole.Guilty);
+        private void OnDeveloperRoleDetectiveClicked() => SelectDeveloperRole(RoundRole.Detective);
+
         private void SelectRoundLimit(int minutes)
         {
             coordinator.TrySetRoundLimitMinutes(minutes);
             RenderLobby();
+        }
+
+        private void SelectDeveloperRole(RoundRole role)
+        {
+            coordinator.TrySetDeveloperLobbyRole(role);
+            RenderLobby();
+        }
+
+        private void RefreshDeveloperRoleButtons(bool visible)
+        {
+            SetVisible(_developerRoleSection, visible);
+            bool editable = visible && coordinator.IsLocalHost;
+            RoundRole selectedRole = coordinator.DeveloperLobbyRole;
+            RefreshDeveloperRoleButton(
+                _developerRoleInnocentButton,
+                RoundRole.Innocent,
+                selectedRole,
+                editable);
+            RefreshDeveloperRoleButton(
+                _developerRoleGuiltyButton,
+                RoundRole.Guilty,
+                selectedRole,
+                editable);
+            RefreshDeveloperRoleButton(
+                _developerRoleDetectiveButton,
+                RoundRole.Detective,
+                selectedRole,
+                editable);
+        }
+
+        private static void RefreshDeveloperRoleButton(
+            Button button,
+            RoundRole role,
+            RoundRole selectedRole,
+            bool editable)
+        {
+            button.SetEnabled(editable);
+            button.EnableInClassList("developer-role-button--selected", role == selectedRole);
         }
 
         private void RefreshRoundLimitButtons()
@@ -782,7 +842,14 @@ namespace InterrogationRoom.UI
 
         private static string FormatPreparationInstruction(RoundRole role, UiLanguage language)
         {
-            if (role != RoundRole.Detective)
+            if (role == RoundRole.Guilty)
+            {
+                return UiText.Get(
+                    "Masz 3 znane fakty i 2 braki. Zapamiętaj znane fakty, słuchaj zeznań i improwizuj, ale nie poznasz treści braków z interfejsu. Po Przygotowaniu nie będzie można ponownie otworzyć Alibi.",
+                    language);
+            }
+
+            if (role == RoundRole.Innocent)
                 return UiText.Get("Zapamiętaj swoją wersję Alibi. Po Przygotowaniu nie będzie można jej ponownie otworzyć.", language);
 
             return UiText.Get(

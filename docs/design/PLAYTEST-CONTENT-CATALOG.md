@@ -37,7 +37,7 @@ Skróty `A*`, `B*` i `C*` w poniższych tabelach oznaczają wyłącznie tickety 
 | Element | Status | Gdzie żyje / kiedy rozstrzygamy |
 |---|---|---|
 | Ręcznie authorowane Przestępstwo i Alibi | Ustalone | `CaseAsset` / `CaseDefinition` |
-| 6–10 krótkich faktów; w tym katalogu zawsze 8 | Ustalone dla katalogu | Content przed implementacją |
+| Dokładnie 5 krótkich faktów w runtime | Ustalone dla bieżącego profilu | Authorowany content synchronizowany przez `CaseAssetSync` |
 | 3 kandydatów do ukrycia i 2 braki w pierwszym playteście | Roboczy parametr katalogu | Potwierdzić po pierwszych Rundach |
 | 1 aktywny Trop przy 2 brakach | Roboczy parametr katalogu | Chroni zasadę, że Tropy nie uzupełniają wszystkich braków; potwierdzić po playteście |
 | Paragon, zdjęcie, wiadomość i dokument jako Tropy | Ustalone jako rodziny nośników | Konkretna treść powstaje teraz per Sprawa |

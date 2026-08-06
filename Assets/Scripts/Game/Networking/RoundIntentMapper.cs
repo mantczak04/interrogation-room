@@ -31,6 +31,31 @@ namespace InterrogationRoom.Networking
             && playerCount <= RoundEngine.MaxPlayers
             && allPlayersReady;
 
+        public static RoundDeveloperScenario DeveloperScenarioForRole(RoundRole role)
+        {
+            switch (role)
+            {
+                case RoundRole.Innocent:
+                    return RoundDeveloperScenario.PersonalMatter;
+                case RoundRole.Guilty:
+                    return RoundDeveloperScenario.GuiltyEscape;
+                case RoundRole.Detective:
+                    return RoundDeveloperScenario.DetectiveIncidents;
+                default:
+                    throw new System.ArgumentOutOfRangeException(nameof(role), role, null);
+            }
+        }
+
+        public static int ResolveDeveloperPlayerCount(
+            RoundRole controlledRole,
+            int connectedPlayerCount)
+        {
+            int requiredPlayerCount = controlledRole == RoundRole.Innocent
+                ? System.Math.Max(3, RoundEngine.MinPlayers)
+                : RoundEngine.MinPlayers;
+            return System.Math.Max(connectedPlayerCount, requiredPlayerCount);
+        }
+
         public static double ToRoundLimitSeconds(int minutes)
         {
             if (!IsRoundLimitMinutesAllowed(minutes))

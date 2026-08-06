@@ -35,12 +35,6 @@ MonoBehaviour:
     canBeHidden: 1
     variantTexts: []
     distinctiveDetail: 0
-  - id: awaria-swiatla
-    text: "Oko\u0142o 19:40 na kilka minut zgas\u0142o \u015Bwiat\u0142o w ca\u0142ym
-      lokalu."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: dowcip-kucharza
     text: "Kucharz opowiedzia\u0142 dowcip o stra\u017Caku, z kt\xF3rego nikt si\u0119
       nie za\u015Bmia\u0142."
@@ -70,4 +64,4 @@ MonoBehaviour:
     content: "Kartka kucharza z he\u0142mem stra\u017Cackim i skre\u015Blonym zako\u0144czeniem
       \u017Cartu."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

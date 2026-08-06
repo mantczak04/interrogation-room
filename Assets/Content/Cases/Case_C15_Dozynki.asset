@@ -33,12 +33,6 @@ MonoBehaviour:
     canBeHidden: 1
     variantTexts: []
     distinctiveDetail: 0
-  - id: wstazka-na-porze
-    text: "S\u0119dzia przywi\u0105za\u0142 niebiesk\u0105 wst\u0105\u017Ck\u0119
-      do najd\u0142u\u017Cszego pora."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: deszcz-i-altana
     text: "Nag\u0142y deszcz zagoni\u0142 wszystkich pod pasiast\u0105 altan\u0119."
     canBeHidden: 1
@@ -68,4 +62,4 @@ MonoBehaviour:
     linkedFactId: deszcz-i-altana
     content: "Zdj\u0119cie kropli, pasiastych element\xF3w dachu i mokrych sylwetek."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

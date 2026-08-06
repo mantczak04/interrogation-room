@@ -16,12 +16,6 @@ MonoBehaviour:
   crimeDescription: "Kto\u015B zast\u0105pi\u0142 monety we wszystkich parkometrach
     przy ratuszu czekoladowymi kr\u0105\u017Ckami w z\u0142otkach papierkach."
   alibiFacts:
-  - id: boczna-brama-szklarni
-    text: "O 19:30 grupa wesz\u0142a boczn\u0105 bram\u0105 na wieczorne zwiedzanie
-      miejskiej szklarni."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: konewka-zaba
     text: "Przewodniczka nios\u0142a zielon\u0105 konewk\u0119 w kszta\u0142cie \u017Caby."
     canBeHidden: 1
@@ -66,4 +60,4 @@ MonoBehaviour:
     content: "Log instalacji z godzin\u0105 19:44 i uruchomieniem wszystkich dysz
       w jednej alejce."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

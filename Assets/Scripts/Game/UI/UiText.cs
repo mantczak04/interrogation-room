@@ -195,6 +195,7 @@ namespace InterrogationRoom.UI
                 ["Intencja została odrzucona."] = "The action was rejected.",
                 ["Brak w Twojej wersji Alibi"] = "Missing from your version of the Alibi",
                 ["Zapamiętaj swoją wersję Alibi. Po Przygotowaniu nie będzie można jej ponownie otworzyć."] = "Memorize your version of the Alibi. You cannot open it again after Preparation.",
+                ["Masz 3 znane fakty i 2 braki. Zapamiętaj znane fakty, słuchaj zeznań i improwizuj, ale nie poznasz treści braków z interfejsu. Po Przygotowaniu nie będzie można ponownie otworzyć Alibi."] = "You know 3 facts and have 2 gaps. Memorize the known facts, listen to testimony, and improvise, but the UI will not reveal the missing content. You cannot open the Alibi again after Preparation.",
                 ["1. Przesłuchaj każdego Podejrzanego.\n2. Porównuj zeznania z tym, co widzisz, oraz z Rejestrem Incydentów.\n3. Masz jedną Egzekucję — pierwsze trafienie żywego Podejrzanego kończy Rundę."] = "1. Question every Suspect.\n2. Compare testimony with what you observe and with the Incident Registry.\n3. You have one Execution — the first hit on a living Suspect ends the Round.",
                 ["AKTA SYSTEMOWE • MENU"] = "SYSTEM FILES • MENU",
                 ["WYBIERZ TRYB"] = "CHOOSE MODE",

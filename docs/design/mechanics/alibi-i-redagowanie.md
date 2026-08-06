@@ -19,6 +19,7 @@ Alibi to wspólna, prawdziwa wersja wydarzeń — punkt odniesienia dla wszystki
 - Alibi jest częścią `CaseDefinition` ([content-sprawy.md](./content-sprawy.md)) jako **uporządkowana lista faktów** (rekomendacja robocza — patrz „Otwarte pytania").
 - Każdy fakt ma stabilny identyfikator oraz flagę `możliwyDoUkrycia` ustawianą przez autora sprawy (nie każdy fakt nadaje się do ukrycia).
 - Sprawa definiuje, ile faktów ukrywa się Winnemu (stała lub zakres losowany z seeda Rundy).
+- Bieżący kontrakt każdej Sprawy to dokładnie 5 faktów: Niewinny widzi wszystkie 5, a Winny 3 fakty i 2 markery braku.
 
 ### Redagowanie dla Winnego
 
@@ -49,7 +50,7 @@ Alibi to wspólna, prawdziwa wersja wydarzeń — punkt odniesienia dla wszystki
 
 ## Kryteria akceptacji / testy
 
-- Winny widzi dokładnie skonfigurowaną liczbę braków i tylko wśród faktów `możliwyDoUkrycia`.
+- Winny widzi dokładnie 2 braki i 3 znane fakty; braki są wybierane wyłącznie wśród faktów `możliwyDoUkrycia`.
 - Suma: fakty widoczne dla Winnego + ukryte = pełne Alibi Niewinnego (ta sama treść bazowa, ADR-0006).
 - Po `EndPreparation` żadne wywołanie `ViewFor` nie zwraca treści Alibi.
 - Widok Detektywa w żadnej fazie nie zawiera ani faktów, ani markerów ukrycia, ani liczby faktów.

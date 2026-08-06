@@ -26,11 +26,6 @@ MonoBehaviour:
     - "O 17:20 grupa wesz\u0142a na warsztaty introligatorskie i dosta\u0142a musztardowe
       fartuchy z naszyt\u0105 ig\u0142\u0105."
     distinctiveDetail: 1
-  - id: zlamana-korba
-    text: "Instruktorka z\u0142ama\u0142a korb\u0119 pokazowej prasy do papieru."
-    canBeHidden: 0
-    variantTexts: []
-    distinctiveDetail: 0
   - id: kobaltowe-plotno
     text: "Grupa wybra\u0142a kobaltowe p\u0142\xF3tno na ok\u0142adk\u0119 wsp\xF3lnego
       albumu."
@@ -67,4 +62,4 @@ MonoBehaviour:
     content: "Zbli\u017Cenie ma\u0142ych odcisk\xF3w w przezroczystym kleju i pojedynczego
       czarnego w\u0142osa."
   minHiddenFacts: 2
-  maxHiddenFacts: 3
+  maxHiddenFacts: 2

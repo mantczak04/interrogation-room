@@ -190,8 +190,8 @@ namespace InterrogationRoom.Networking.Tests
             var caseAsset = ScriptableObject.CreateInstance<CaseAsset>();
             caseAsset.title = title;
             caseAsset.crimeDescription = "Ktoś pomalował ratuszowy zegar na różowo.";
-            caseAsset.minHiddenFacts = 1;
-            caseAsset.maxHiddenFacts = 1;
+            caseAsset.minHiddenFacts = 2;
+            caseAsset.maxHiddenFacts = 2;
             caseAsset.alibiFacts = new List<CaseAsset.AuthoredFact>
             {
                 new CaseAsset.AuthoredFact
@@ -208,7 +208,6 @@ namespace InterrogationRoom.Networking.Tests
                 },
                 new CaseAsset.AuthoredFact { id = "f3", text = "Orkiestra zagrała pierwszy walc.", canBeHidden = false },
                 new CaseAsset.AuthoredFact { id = "f4", text = "Ktoś zgubił klucze pod stołem.", canBeHidden = true },
-                new CaseAsset.AuthoredFact { id = "f5", text = "Grupa wróciła tramwajem numer 12.", canBeHidden = false },
                 new CaseAsset.AuthoredFact
                 {
                     id = "f6",

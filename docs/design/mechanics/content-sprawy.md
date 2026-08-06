@@ -26,8 +26,8 @@ Sprawy (Przestępstwo + Alibi) są **ręcznie autorowane** (ADR-0010) — żadne
 
 - Jedna testowa Sprawa wystarcza dla slice'a. Struktura przykładu:
   - Przestępstwo: absurdalny, publicznie znany czyn (rama wspólna, nie wskazuje Winnego).
-  - Alibi: 6–10 krótkich faktów opisujących, co grupa robiła w czasie Przestępstwa.
-  - 2–3 fakty oznaczone jako możliwe do ukrycia.
+  - Alibi: dokładnie 5 krótkich faktów opisujących, co grupa robiła w czasie Przestępstwa.
+  - co najmniej 2 fakty oznaczone jako możliwe do ukrycia; w każdej Rundzie Winny otrzymuje dokładnie 2 luki.
 
 ### Rozszerzenie: Tropy do Alibi
 

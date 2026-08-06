@@ -39,7 +39,10 @@ namespace InterrogationRoom.UI.Tests
             var alibi = new AlibiView(new[]
             {
                 new AlibiEntry("f1", false, "Jawny fakt."),
-                new AlibiEntry("f2", true, null)
+                new AlibiEntry("f2", true, null),
+                new AlibiEntry("f3", false, "Drugi jawny fakt."),
+                new AlibiEntry("f4", true, null),
+                new AlibiEntry("f5", false, "Trzeci jawny fakt.")
             });
 
             var state = RoundPresenter.BuildState(
@@ -50,7 +53,10 @@ namespace InterrogationRoom.UI.Tests
             Assert.That(state.AlibiVisible, Is.True);
             Assert.That(state.AlibiText, Does.Contain("1. Jawny fakt."));
             Assert.That(state.AlibiText, Does.Contain("2. [Brak w Twojej wersji Alibi]"));
-            Assert.That(state.PreparationInstructionText, Does.Contain("nie będzie można jej ponownie otworzyć"));
+            Assert.That(state.AlibiText, Does.Contain("4. [Brak w Twojej wersji Alibi]"));
+            Assert.That(state.PreparationInstructionText, Does.Contain("3 znane fakty"));
+            Assert.That(state.PreparationInstructionText, Does.Contain("2 braki"));
+            Assert.That(state.PreparationInstructionText, Does.Contain("nie będzie można ponownie otworzyć Alibi"));
             Assert.That(state.ReadyButtonVisible, Is.True);
         }
 
@@ -195,7 +201,7 @@ namespace InterrogationRoom.UI.Tests
             Assert.That(state.CrimeText, Is.EqualTo("Ktoś przemalował pomnik."));
             Assert.That(state.AlibiText, Does.Contain("Fabularny fakt pozostaje bez zmian."));
             Assert.That(state.AlibiText, Does.Contain("Missing from your version of the Alibi"));
-            Assert.That(state.PreparationInstructionText, Does.Contain("Memorize your version"));
+            Assert.That(state.PreparationInstructionText, Does.Contain("You know 3 facts and have 2 gaps"));
             Assert.That(state.ReadyCountText, Is.EqualTo("Ready: 0/4"));
         }
 
