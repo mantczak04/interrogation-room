@@ -30,7 +30,7 @@ namespace InterrogationRoom.Gameplay.Tests
         }
 
         [Test]
-        public void CancellationHasNoEffectAndAnotherActorCannotConsumeRequiredAction()
+        public void RejectedEscapePreparationRestoresPresentationAndCannotConsumeRequiredAction()
         {
             Type actionType = FindAssemblyCSharpType(
                 "InterrogationRoom.Gameplay.Interaction.NetworkObjectiveWorldAction");
@@ -43,6 +43,7 @@ namespace InterrogationRoom.Gameplay.Tests
                 new[] { typeof(NetworkIdentity) });
             MethodInfo complete = actionType.GetMethod("TryCompleteInteractionServer");
             PropertyInfo revision = actionType.GetProperty("WorldRevision");
+            PropertyInfo completionEpoch = actionType.GetProperty("CompletionEpoch");
             int completionSignals = 0;
             SubscribeCountingHandler(action, actionType.GetEvent("CompletedServer"), () => completionSignals++);
 
@@ -62,24 +63,33 @@ namespace InterrogationRoom.Gameplay.Tests
                 .Invoke(action, new object[] { other }), Is.True,
                 "The server must expose whether the domain binder retained the completion.");
 
-            Assert.That(actionType.GetMethod("ReleaseActorCompletionServer")
+            Assert.That(actionType.GetMethod("RejectActorCompletionServer")
                 .Invoke(action, new object[] { other }), Is.True);
+            Assert.That(revision.GetValue(action), Is.Zero,
+                "A rejected escape preparation must not remain visibly prepared.");
             Assert.That(actionType.GetMethod("HasActorCompletionServer")
                 .Invoke(action, new object[] { other }), Is.False,
                 "A rejected objective action must no longer look authoritative to its performer.");
-            Assert.That(begin.Invoke(action, new object[] { other }), Is.True,
-                "Area A can release an out-of-order completion without reverting the world.");
-            cancel.Invoke(action, new object[] { other });
+            Assert.That(actionType.GetMethod("RetainActorCompletionServer")
+                .Invoke(action, new object[] { other }), Is.True);
+            Assert.That(actionType.GetMethod("HasActorCompletionServer")
+                .Invoke(action, new object[] { other }), Is.True,
+                "A completed minigame stays unavailable to the same performer.");
+            Assert.That(begin.Invoke(action, new object[] { other }), Is.False,
+                "The same performer cannot repeat a completed minigame.");
 
             Assert.That(begin.Invoke(action, new object[] { owner }), Is.True,
                 "A foreign completion cannot permanently block the assigned owner.");
             Assert.That(complete.Invoke(action, new object[] { owner }), Is.True);
-            Assert.That(revision.GetValue(action), Is.EqualTo(2));
+            Assert.That(revision.GetValue(action), Is.EqualTo(1));
             Assert.That(completionSignals, Is.EqualTo(2));
 
+            int epochBeforeReset = (int)completionEpoch.GetValue(action);
             actionType.GetMethod("ResetInteractionStateServer").Invoke(action, null);
             Assert.That(revision.GetValue(action), Is.Zero,
                 "A new Runda must restore the authored world presentation.");
+            Assert.That(completionEpoch.GetValue(action), Is.EqualTo(epochBeforeReset + 1),
+                "Clients need a non-secret epoch to clear their local completion hint.");
             Assert.That(begin.Invoke(action, new object[] { other }), Is.True,
                 "Per-actor completion reservations must not leak into the next Runda.");
         }

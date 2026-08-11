@@ -13,7 +13,6 @@ namespace InterrogationRoom.Minigames
     public enum MinigameAttemptResult
     {
         Incorrect,
-        Restarted,
         Success
     }
 
@@ -295,42 +294,43 @@ namespace InterrogationRoom.Minigames
             479, 497
         };
 
-        public CodeLockSession(int code, int maximumAttempts)
+        public CodeLockSession(int code)
         {
             Code = Math.Max(0, Math.Min(999, code));
-            MaximumAttempts = Math.Max(1, maximumAttempts);
         }
 
         public static int AvailableCodeCount => Codes.Length;
 
         public static CodeLockBag CreateBag(int seed) => new CodeLockBag(Codes, seed);
 
-        public static CodeLockSession Create(int seed, int maximumAttempts)
+        public static CodeLockSession Create(int seed)
         {
             int index = seed % Codes.Length;
             if (index < 0)
                 index += Codes.Length;
-            return new CodeLockSession(Codes[index], maximumAttempts);
+            return new CodeLockSession(Codes[index]);
         }
 
         public int Code { get; }
-        public int MaximumAttempts { get; }
-        public int AttemptsInCurrentRun { get; private set; }
+        public int TotalDigitSum => Code / 100 + Code / 10 % 10 + Code % 10;
         public int FirstPairSum => Code / 100 + Code / 10 % 10;
         public int LastPairSum => Code / 10 % 10 + Code % 10;
-        public int OuterPairSum => Code / 100 + Code % 10;
+
+        public bool IsDigitCorrect(int index, int digit)
+        {
+            if (index < 0 || index > 2 || digit < 0 || digit > 9)
+                return false;
+
+            int divisor = index == 0 ? 100 : index == 1 ? 10 : 1;
+            return Code / divisor % 10 == digit;
+        }
 
         public MinigameAttemptResult Enter(int candidate)
         {
             if (candidate == Code)
                 return MinigameAttemptResult.Success;
 
-            AttemptsInCurrentRun++;
-            if (AttemptsInCurrentRun < MaximumAttempts)
-                return MinigameAttemptResult.Incorrect;
-
-            AttemptsInCurrentRun = 0;
-            return MinigameAttemptResult.Restarted;
+            return MinigameAttemptResult.Incorrect;
         }
     }
 

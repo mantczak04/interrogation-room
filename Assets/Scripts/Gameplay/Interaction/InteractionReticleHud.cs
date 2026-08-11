@@ -134,6 +134,9 @@ namespace InterrogationRoom.Gameplay.Interaction
             if (!interactor.HasHoveredTarget)
                 return InteractionHudMode.Hidden;
 
+            if (interactor.HoveredMinigameCompleted)
+                return InteractionHudMode.Unavailable;
+
             return interactor.HoveredInteractionRequiresHold
                 ? InteractionHudMode.HoldAvailable
                 : InteractionHudMode.Available;
@@ -393,6 +396,8 @@ namespace InterrogationRoom.Gameplay.Interaction
             switch (mode)
             {
                 case InteractionHudMode.Success:
+                    return SuccessColor;
+                case InteractionHudMode.Unavailable:
                     return SuccessColor;
                 case InteractionHudMode.Warning:
                     return WarningColor;

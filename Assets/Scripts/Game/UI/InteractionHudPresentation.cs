@@ -6,6 +6,7 @@ namespace InterrogationRoom.UI
     {
         Hidden,
         Available,
+        Unavailable,
         HoldAvailable,
         Active,
         Success,
@@ -59,6 +60,13 @@ namespace InterrogationRoom.UI
                         key,
                         localizedAction,
                         UiText.Get("NACIŚNIJ, ABY WYKONAĆ", language),
+                        0f);
+
+                case InteractionHudMode.Unavailable:
+                    return new InteractionHudCopy(
+                        "✓",
+                        localizedAction,
+                        UiText.Get("ZADANIE UKOŃCZONE", language),
                         0f);
 
                 case InteractionHudMode.HoldAvailable:

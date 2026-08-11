@@ -34,6 +34,20 @@ namespace InterrogationRoom.UI.Tests
             Assert.That(copy.Progress, Is.EqualTo(1f));
         }
 
+        [Test]
+        public void CompletedMinigameTargetDoesNotSuggestAnotherInteraction()
+        {
+            InteractionHudCopy copy = InteractionHudPresentation.Build(
+                InteractionHudMode.Unavailable,
+                "To zadanie zostało już wykonane.",
+                0f,
+                UiLanguage.Polish);
+
+            Assert.That(copy.Key, Is.EqualTo("✓"));
+            Assert.That(copy.Title, Is.EqualTo("To zadanie zostało już wykonane."));
+            Assert.That(copy.Instruction, Is.EqualTo("ZADANIE UKOŃCZONE"));
+        }
+
         [TestCase(InteractionHudMode.Success, "CZYNNOŚĆ ZAKOŃCZONA")]
         [TestCase(InteractionHudMode.Warning, "SPRAWDŹ SWÓJ AKTUALNY CEL")]
         [TestCase(InteractionHudMode.Cancelled, "MOŻESZ SPRÓBOWAĆ PONOWNIE")]

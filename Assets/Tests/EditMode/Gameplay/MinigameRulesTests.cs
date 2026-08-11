@@ -49,7 +49,7 @@ namespace InterrogationRoom.Gameplay.Tests
         public void CodeLockPoolContainsFiftyDistinctCodesWithConsistentClues()
         {
             CodeLockSession[] sessions = Enumerable.Range(0, CodeLockSession.AvailableCodeCount)
-                .Select(seed => CodeLockSession.Create(seed, maximumAttempts: 3))
+                .Select(CodeLockSession.Create)
                 .ToArray();
 
             Assert.That(CodeLockSession.AvailableCodeCount, Is.EqualTo(50));
@@ -57,9 +57,9 @@ namespace InterrogationRoom.Gameplay.Tests
 
             foreach (CodeLockSession session in sessions)
             {
-                int first = (session.FirstPairSum + session.OuterPairSum - session.LastPairSum) / 2;
-                int middle = session.FirstPairSum - first;
-                int last = session.OuterPairSum - first;
+                int first = session.TotalDigitSum - session.LastPairSum;
+                int last = session.TotalDigitSum - session.FirstPairSum;
+                int middle = session.TotalDigitSum - first - last;
                 int reconstructedCode = first * 100 + middle * 10 + last;
 
                 Assert.That(reconstructedCode, Is.EqualTo(session.Code));
@@ -88,17 +88,19 @@ namespace InterrogationRoom.Gameplay.Tests
         }
 
         [Test]
-        public void CodeLockRestartsAfterLimitedAttemptsWithoutBecomingBlocked()
+        public void CodeLockAllowsUnlimitedAttemptsAndReportsEachDigitMatch()
         {
-            var session = new CodeLockSession(code: 417, maximumAttempts: 2);
+            var session = new CodeLockSession(code: 417);
 
+            Assert.That(session.TotalDigitSum, Is.EqualTo(12));
             Assert.That(session.FirstPairSum, Is.EqualTo(5));
             Assert.That(session.LastPairSum, Is.EqualTo(8));
-            Assert.That(session.OuterPairSum, Is.EqualTo(11));
+            Assert.That(session.IsDigitCorrect(0, 4), Is.True);
+            Assert.That(session.IsDigitCorrect(1, 2), Is.False);
+            Assert.That(session.IsDigitCorrect(2, 7), Is.True);
 
-            Assert.That(session.Enter(111), Is.EqualTo(MinigameAttemptResult.Incorrect));
-            Assert.That(session.Enter(222), Is.EqualTo(MinigameAttemptResult.Restarted));
-            Assert.That(session.AttemptsInCurrentRun, Is.Zero);
+            for (int attempt = 0; attempt < 20; attempt++)
+                Assert.That(session.Enter(111), Is.EqualTo(MinigameAttemptResult.Incorrect));
             Assert.That(session.Enter(417), Is.EqualTo(MinigameAttemptResult.Success));
         }
 

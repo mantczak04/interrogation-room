@@ -162,8 +162,12 @@ namespace InterrogationRoom.Gameplay.Interaction
             bool accepted = TrySubmitObjectiveCompletion(completion);
             if (!accepted && completion.Target != null)
             {
-                completion.Target.GetComponent<NetworkObjectiveWorldAction>()
-                    ?.ReleaseActorCompletionServer(completion.Actor);
+                NetworkObjectiveWorldAction action =
+                    completion.Target.GetComponent<NetworkObjectiveWorldAction>();
+                if (IsEscapePreparationStep(completion.PayloadId))
+                    action?.RejectActorCompletionServer(completion.Actor);
+                else
+                    action?.ReleaseActorCompletionServer(completion.Actor);
             }
         }
 

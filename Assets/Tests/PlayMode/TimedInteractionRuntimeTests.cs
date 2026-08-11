@@ -156,6 +156,7 @@ namespace InterrogationRoom.Gameplay.Tests
 
         [TestCase("Completed", "Success")]
         [TestCase("CompletedWithoutObjectiveProgress", "Warning")]
+        [TestCase("CompletedWithoutEscapeProgress", "Warning")]
         [TestCase("Cancelled", "Cancelled")]
         [TestCase("MinigameFailed", "Cancelled")]
         public void TimedOutcomesMapToDistinctPlayerFeedback(

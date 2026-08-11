@@ -21,10 +21,14 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SyncVar(hook = nameof(OnWorldRevisionChanged))]
         private int worldRevision;
 
+        [SyncVar]
+        private int completionEpoch;
+
         private readonly HashSet<int> completedActors = new HashSet<int>();
         private int lastAudibleRevision;
 
         public int WorldRevision => worldRevision;
+        public int CompletionEpoch => completionEpoch;
         public int CompletedActorCountServer => completedActors.Count;
         public string AnchorId => anchorId ?? string.Empty;
 
@@ -59,6 +63,23 @@ namespace InterrogationRoom.Gameplay.Interaction
         }
 
         /// <summary>
+        /// Rejects an escape-preparation completion before it becomes a lasting
+        /// public state. Other objective actions keep using ReleaseActorCompletionServer
+        /// so their authored bluff presentation remains unchanged.
+        /// </summary>
+        [Server]
+        public bool RejectActorCompletionServer(NetworkIdentity interactor)
+        {
+            if (!NetworkServer.active || !completedActors.Remove(GetActorKey(interactor)))
+                return false;
+
+            worldRevision = Mathf.Max(0, worldRevision - 1);
+            lastAudibleRevision = Mathf.Min(lastAudibleRevision, worldRevision);
+            ApplyPresentation(worldRevision);
+            return true;
+        }
+
+        /// <summary>
         /// Read after CompletedServer listeners return. The physical binder removes
         /// the actor when the world action did not advance their authoritative Runda state.
         /// </summary>
@@ -66,6 +87,17 @@ namespace InterrogationRoom.Gameplay.Interaction
         public bool HasActorCompletionServer(NetworkIdentity interactor)
         {
             return NetworkServer.active && completedActors.Contains(GetActorKey(interactor));
+        }
+
+        /// <summary>
+        /// Keeps a completed minigame unavailable to the same performer even when
+        /// its domain objective did not advance. Other players remain unaffected.
+        /// </summary>
+        [Server]
+        public bool RetainActorCompletionServer(NetworkIdentity interactor)
+        {
+            int actorKey = GetActorKey(interactor);
+            return NetworkServer.active && actorKey != 0 && completedActors.Add(actorKey);
         }
 
         protected sealed override bool ApplyCompletedEffectServer(NetworkIdentity interactor)
@@ -133,6 +165,7 @@ namespace InterrogationRoom.Gameplay.Interaction
             completedActors.Clear();
             lastAudibleRevision = 0;
             worldRevision = 0;
+            completionEpoch++;
             ApplyPresentation(worldRevision);
         }
     }

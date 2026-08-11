@@ -81,6 +81,9 @@ namespace InterrogationRoom.Gameplay.Minigames
         private bool closing;
         private Font font;
         private Canvas canvas;
+        private Button closeButton;
+        private bool closeNotifiesCancellation = true;
+        private Action beforeClose;
         protected Text StatusLabel { get; private set; }
         protected Transform ContentRoot { get; private set; }
         protected MinigameSpec Spec { get; private set; }
@@ -106,7 +109,7 @@ namespace InterrogationRoom.Gameplay.Minigames
                 this,
                 EscapeHandlerPriority.Modal,
                 () => !closing,
-                () => Close(notifyCancellation: true));
+                RequestClose);
             EnsureEventSystem();
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             BuildFrame(UiText.Get(Title), UiText.Get(spec.IntroText));
@@ -152,6 +155,14 @@ namespace InterrogationRoom.Gameplay.Minigames
         {
             StatusLabel.text = value;
             StatusLabel.color = color;
+        }
+
+        protected void ConfigureClose(string label, bool notifyCancellation, Action action = null)
+        {
+            closeNotifiesCancellation = notifyCancellation;
+            beforeClose = action;
+            if (closeButton != null)
+                closeButton.GetComponentInChildren<Text>(true).text = label;
         }
 
         protected virtual void SetButtonsInteractable(bool interactable)
@@ -369,14 +380,26 @@ namespace InterrogationRoom.Gameplay.Minigames
                 TextAnchor.MiddleCenter,
                 FontStyle.Bold,
                 30f);
-            CreateButton(
+            closeButton = CreateButton(
                 panel.transform,
                 "Cancel",
                 UiText.Get("Anuluj"),
-                () => Close(notifyCancellation: true),
+                RequestClose,
                 ButtonPaper,
                 InkColor,
                 44f);
+        }
+
+        private void RequestClose()
+        {
+            if (closing)
+                return;
+
+            Action action = beforeClose;
+            beforeClose = null;
+            action?.Invoke();
+            if (!closing)
+                Close(closeNotifiesCancellation);
         }
 
         private void RestoreCursor()
@@ -556,9 +579,19 @@ namespace InterrogationRoom.Gameplay.Minigames
 
     public sealed class CodeLockMinigamePanel : MinigamePanelBase
     {
+        private static readonly Color DigitCorrectColor = new Color32(0x07, 0x82, 0x3D, 0xFF);
+        private static readonly Color DigitIncorrectColor = new Color32(0xB7, 0x1C, 0x2A, 0xFF);
+        private static readonly Color LedNeutralColor = new Color32(0x75, 0x72, 0x66, 0x55);
+        private static readonly Color LedCorrectColor = new Color32(0x00, 0xE6, 0x76, 0xFF);
+        private static readonly Color LedIncorrectColor = new Color32(0xFF, 0x17, 0x44, 0xFF);
+        private static readonly Color LedCorrectGlowColor = new Color32(0x28, 0xFF, 0x86, 0x90);
+        private static readonly Color LedIncorrectGlowColor = new Color32(0xFF, 0x3B, 0x47, 0x90);
+
         private CodeLockSession session;
         private readonly int[] digits = new int[3];
         private readonly Text[] digitLabels = new Text[3];
+        private readonly Image[] digitIndicators = new Image[3];
+        private readonly Outline[] digitIndicatorGlows = new Outline[3];
 
         protected override string Title => "Zamek szyfrowy";
 
@@ -571,17 +604,26 @@ namespace InterrogationRoom.Gameplay.Minigames
             layout.childForceExpandHeight = false;
             CreateLabel(
                 parent,
+                "CodeInstruction",
+                UiText.Get("Ustaw trzy cyfry tak, aby zgadzała się suma wszystkich cyfr oraz obie sumy sąsiednich pokręteł."),
+                17,
+                InkColor,
+                TextAnchor.MiddleCenter,
+                FontStyle.Normal,
+                48f);
+            CreateLabel(
+                parent,
                 "CodeBrief",
                 UiText.Format(
-                    "Notatka technika:\npierwsza + środkowa = {0},  środkowa + ostatnia = {1},  pierwsza + ostatnia = {2}",
+                    "Notatka technika:\nWSZYSTKIE = {0}\nLEWA + ŚRODKOWA = {1}\nŚRODKOWA + PRAWA = {2}",
+                    session.TotalDigitSum,
                     session.FirstPairSum,
-                    session.LastPairSum,
-                    session.OuterPairSum),
+                    session.LastPairSum),
                 20,
                 InkColor,
                 TextAnchor.MiddleCenter,
                 FontStyle.Bold,
-                62f);
+                110f);
 
             var dialsObject = new GameObject("Dials", typeof(RectTransform));
             dialsObject.transform.SetParent(parent, false);
@@ -607,6 +649,16 @@ namespace InterrogationRoom.Gameplay.Minigames
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandHeight = false;
+            string position = index == 0 ? "LEWA" : index == 1 ? "ŚRODKOWA" : "PRAWA";
+            CreateLabel(
+                dialObject.transform,
+                "Position",
+                UiText.Get(position),
+                14,
+                MutedInkColor,
+                TextAnchor.MiddleCenter,
+                FontStyle.Bold,
+                22f);
             CreateButton(dialObject.transform, "Plus", "+", () => ChangeDigit(index, 1), ButtonPaper, InkColor, 38f);
             digitLabels[index] = CreateLabel(
                 dialObject.transform,
@@ -617,13 +669,34 @@ namespace InterrogationRoom.Gameplay.Minigames
                 TextAnchor.MiddleCenter,
                 FontStyle.Bold,
                 56f);
+            CreateDigitIndicator(dialObject.transform, index);
             CreateButton(dialObject.transform, "Minus", "−", () => ChangeDigit(index, -1), ButtonPaper, InkColor, 38f);
+        }
+
+        private void CreateDigitIndicator(Transform parent, int index)
+        {
+            var indicatorObject = new GameObject("FeedbackLed", typeof(RectTransform));
+            indicatorObject.transform.SetParent(parent, false);
+
+            var layout = indicatorObject.AddComponent<LayoutElement>();
+            layout.minHeight = 7f;
+            layout.preferredHeight = 7f;
+
+            digitIndicators[index] = indicatorObject.AddComponent<Image>();
+            digitIndicators[index].color = LedNeutralColor;
+            digitIndicators[index].raycastTarget = false;
+
+            digitIndicatorGlows[index] = indicatorObject.AddComponent<Outline>();
+            digitIndicatorGlows[index].effectColor = Color.clear;
+            digitIndicatorGlows[index].effectDistance = new Vector2(2f, 2f);
+            digitIndicatorGlows[index].useGraphicAlpha = true;
         }
 
         private void ChangeDigit(int index, int delta)
         {
             digits[index] = (digits[index] + delta + 10) % 10;
             digitLabels[index].text = digits[index].ToString();
+            SetDigitFeedback(index, null);
         }
 
         private void Confirm()
@@ -636,23 +709,37 @@ namespace InterrogationRoom.Gameplay.Minigames
         {
             if (result == MinigameAttemptResult.Success)
             {
-                Succeed();
+                for (int index = 0; index < digitLabels.Length; index++)
+                    SetDigitFeedback(index, true);
+                SetStatus(UiText.Get("Kod poprawny — brama odblokowana."), DigitCorrectColor);
+                SetButtonsInteractable(false);
+                ConfigureClose(UiText.Get("Zamknij"), notifyCancellation: false, Succeed);
                 return;
             }
 
-            if (result == MinigameAttemptResult.Restarted)
-            {
-                Array.Clear(digits, 0, digits.Length);
-                foreach (Text label in digitLabels)
-                    label.text = "0";
-                SetStatus(UiText.Get(
-                    "Limit prób. Zamek zresetował pokrętła — możesz spróbować ponownie."), WarningColor);
-                return;
-            }
+            for (int index = 0; index < digitLabels.Length; index++)
+                SetDigitFeedback(index, session.IsDigitCorrect(index, digits[index]));
 
-            int remaining = session.MaximumAttempts - session.AttemptsInCurrentRun;
-            SetStatus(UiText.Format("Błędny kod. Pozostało prób: {0}.", remaining), WarningColor);
+            SetStatus(UiText.Get(
+                "Błędny kod. Zielone cyfry są poprawne — popraw czerwone i spróbuj ponownie."), DigitIncorrectColor);
         }
+
+        private void SetDigitFeedback(int index, bool? isCorrect)
+        {
+            Color coreColor = !isCorrect.HasValue
+                ? LedNeutralColor
+                : isCorrect.Value ? LedCorrectColor : LedIncorrectColor;
+            Color glowColor = !isCorrect.HasValue
+                ? Color.clear
+                : isCorrect.Value ? LedCorrectGlowColor : LedIncorrectGlowColor;
+
+            digitLabels[index].color = !isCorrect.HasValue
+                ? AccentDark
+                : isCorrect.Value ? DigitCorrectColor : DigitIncorrectColor;
+            digitIndicators[index].color = coreColor;
+            digitIndicatorGlows[index].effectColor = glowColor;
+        }
+
     }
 
     public sealed class RecordsTerminalMinigamePanel : MinigamePanelBase

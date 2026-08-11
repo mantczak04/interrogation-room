@@ -177,11 +177,19 @@ namespace InterrogationRoom.UI.Tests
                 UiText.Get("Przeszukiwanie akt", UiLanguage.English),
                 Is.EqualTo("File Search"));
             Assert.That(
-                UiText.Format(
-                    "Błędny kod. Pozostało prób: {0}.",
-                    UiLanguage.English,
-                    2),
-                Is.EqualTo("Wrong code. Attempts remaining: 2."));
+                UiText.Get(
+                    "Ustaw trzy cyfry tak, aby zgadzała się suma wszystkich cyfr oraz obie sumy sąsiednich pokręteł.",
+                    UiLanguage.English),
+                Is.EqualTo("Set the three digits so the total and both adjacent-dial sums match."));
+            Assert.That(
+                UiText.Get(
+                    "Błędny kod. Zielone cyfry są poprawne — popraw czerwone i spróbuj ponownie.",
+                    UiLanguage.English),
+                Is.EqualTo("Wrong code. Green digits are correct — fix the red digits and try again."));
+            Assert.That(UiText.Get("Zamknij", UiLanguage.English), Is.EqualTo("Close"));
+            Assert.That(
+                UiText.Get("To zadanie zostało już wykonane.", UiLanguage.English),
+                Is.EqualTo("This task has already been completed."));
         }
 
         [Test]

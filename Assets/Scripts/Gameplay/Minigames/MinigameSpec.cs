@@ -28,7 +28,6 @@ namespace InterrogationRoom.Gameplay.Minigames
 
         [Header("Zamek szyfrowy")]
         [SerializeField, Range(-1, 999)] private int contextCode = -1;
-        [SerializeField, Range(1, 6)] private int maximumCodeAttempts = 3;
 
         [Header("Terminal kartoteki")]
         [SerializeField, Range(60, 72)] private int recordCount = 60;
@@ -52,7 +51,6 @@ namespace InterrogationRoom.Gameplay.Minigames
         public int TargetYear => Mathf.Clamp(targetYear, 1900, 2100);
         public float WrongChoiceDelay => Mathf.Max(0.25f, wrongChoiceDelay);
         public int Code => CreateCodeLockSession(seed).Code;
-        public int MaximumCodeAttempts => Mathf.Clamp(maximumCodeAttempts, 1, 6);
         public int RecordCount => Mathf.Clamp(recordCount, 60, 72);
         public bool RaisesIncidentOnFailure => failureIncidentSource != null;
 
@@ -74,7 +72,7 @@ namespace InterrogationRoom.Gameplay.Minigames
             if (sharedCodeBag == null)
                 sharedCodeBag = CodeLockSession.CreateBag(unchecked(launchSeed + authoredSalt));
 
-            return new CodeLockSession(sharedCodeBag.DrawNext(), MaximumCodeAttempts);
+            return new CodeLockSession(sharedCodeBag.DrawNext());
         }
 
         [Server]

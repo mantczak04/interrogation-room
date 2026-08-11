@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using InterrogationRoom.Gameplay;
 using InterrogationRoom.Gameplay.Items;
 using InterrogationRoom.Gameplay.Minigames;
@@ -15,6 +16,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         Cancelled,
         Completed,
         CompletedWithoutObjectiveProgress,
+        CompletedWithoutEscapeProgress,
         MinigameFailed
     }
 
@@ -48,6 +50,7 @@ namespace InterrogationRoom.Gameplay.Interaction
         private Component hoveredTarget;
         private NetworkIdentity hoveredIdentity;
         private INetworkInteractable hoveredInteractable;
+        private bool hoveredMinigameCompleted;
         private INetworkTimedInteractable activeTimedTarget;
         private NetworkIdentity activeTimedTargetIdentity;
         private MinigameSpec activeMinigameSpec;
@@ -55,12 +58,15 @@ namespace InterrogationRoom.Gameplay.Interaction
         private bool localTimedInteractionActive;
         private bool localMinigameInteractionActive;
         private bool localMinigameCompletionPending;
+        private uint localTimedTargetNetId;
         private double localTimedInteractionStartedAt;
         private double localTimedInteractionEndsAt;
         private string localTimedInteractionPrompt;
         private string localInteractionFeedback;
         private double localInteractionFeedbackEndsAt;
         private InteractionFeedbackKind localInteractionFeedbackKind;
+        private readonly Dictionary<uint, int> completedMinigameTargetEpochs =
+            new Dictionary<uint, int>();
         private readonly RaycastHit[] lineOfSightHitBuffer = new RaycastHit[32];
 
         [SyncVar(hook = nameof(OnInteractionMovementLockedChanged))]
@@ -69,9 +75,13 @@ namespace InterrogationRoom.Gameplay.Interaction
         public Component HoveredTarget => hoveredTarget;
 
         public bool HasHoveredTarget => hoveredTarget != null && hoveredInteractable != null;
+        public bool HoveredMinigameCompleted => hoveredMinigameCompleted;
 
-        public string HoveredPrompt => hoveredInteractable?.InteractionPrompt;
+        public string HoveredPrompt => hoveredMinigameCompleted
+            ? UiText.Get("To zadanie zostało już wykonane.")
+            : hoveredInteractable?.InteractionPrompt;
         public bool HoveredInteractionRequiresHold =>
+            !hoveredMinigameCompleted &&
             hoveredInteractable is INetworkTimedInteractable &&
             (hoveredTarget == null || hoveredTarget.GetComponent<MinigameSpec>() == null);
         public bool IsMovementLocked => interactionMovementLocked;
@@ -181,6 +191,9 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
+            if (hoveredMinigameCompleted)
+                return;
+
             if (hoveredIdentity != null && hoveredIdentity.netId != 0)
             {
                 CmdTryInteract(hoveredIdentity.netId);
@@ -211,14 +224,21 @@ namespace InterrogationRoom.Gameplay.Interaction
                 return;
             }
 
-            if (!TryGetInteractable(hit.collider.transform, out INetworkInteractable interactable) ||
-                !IsHoverActionable(interactable))
+            if (!TryGetInteractable(hit.collider.transform, out INetworkInteractable interactable))
             {
                 SetHoveredTarget(null, null);
                 return;
             }
 
-            SetHoveredTarget(interactable as Component, interactable);
+            bool completed = IsLocallyCompletedMinigameTarget(interactable as Component);
+            if ((!completed && !IsHoverActionable(interactable)) ||
+                (completed && !IsHoverReachable(interactable)))
+            {
+                SetHoveredTarget(null, null);
+                return;
+            }
+
+            SetHoveredTarget(interactable as Component, interactable, completed);
         }
 
         /// <summary>
@@ -231,6 +251,12 @@ namespace InterrogationRoom.Gameplay.Interaction
             {
                 return false;
             }
+
+            return IsHoverReachable(interactable);
+        }
+
+        private bool IsHoverReachable(INetworkInteractable interactable)
+        {
 
             Vector3 interactionPosition = interactable.InteractionPosition;
             if ((interactionPosition - transform.position).sqrMagnitude > interactionRange * interactionRange)
@@ -261,9 +287,13 @@ namespace InterrogationRoom.Gameplay.Interaction
                    ReferenceEquals(headInteractable, interactable);
         }
 
-        private void SetHoveredTarget(Component target, INetworkInteractable interactable)
+        private void SetHoveredTarget(
+            Component target,
+            INetworkInteractable interactable,
+            bool minigameCompleted = false)
         {
             hoveredIdentity = target != null ? target.GetComponentInParent<NetworkIdentity>() : null;
+            hoveredMinigameCompleted = minigameCompleted;
 
             if (hoveredTarget == target)
             {
@@ -274,6 +304,29 @@ namespace InterrogationRoom.Gameplay.Interaction
             hoveredTarget = target;
             hoveredInteractable = interactable;
             HoveredTargetChanged?.Invoke(target);
+        }
+
+        private bool IsLocallyCompletedMinigameTarget(Component target)
+        {
+            if (target == null || target.GetComponent<MinigameSpec>() == null)
+                return false;
+
+            NetworkIdentity identity = target.GetComponentInParent<NetworkIdentity>();
+            if (identity == null || identity.netId == 0 ||
+                !completedMinigameTargetEpochs.TryGetValue(identity.netId, out int completedEpoch))
+            {
+                return false;
+            }
+
+            NetworkObjectiveWorldAction objectiveAction =
+                target.GetComponent<NetworkObjectiveWorldAction>();
+            if (objectiveAction != null && objectiveAction.CompletionEpoch != completedEpoch)
+            {
+                completedMinigameTargetEpochs.Remove(identity.netId);
+                return false;
+            }
+
+            return true;
         }
 
         [Command]
@@ -369,6 +422,11 @@ namespace InterrogationRoom.Gameplay.Interaction
                 activeTimedTarget,
                 actor,
                 worldCompleted);
+            if (worldCompleted && activeMinigameSpec != null &&
+                activeTimedTarget is NetworkObjectiveWorldAction objectiveAction)
+            {
+                objectiveAction.RetainActorCompletionServer(actor);
+            }
             EndActiveTimedInteractionServer(outcome);
             return outcome == TimedInteractionClientOutcome.Completed;
         }
@@ -556,7 +614,11 @@ namespace InterrogationRoom.Gameplay.Interaction
             if (target is NetworkObjectiveWorldAction objectiveAction &&
                 !objectiveAction.HasActorCompletionServer(actor))
             {
-                return TimedInteractionClientOutcome.CompletedWithoutObjectiveProgress;
+                return target.CompletionPayloadId?.StartsWith(
+                    "escape-prepare-",
+                    StringComparison.Ordinal) == true
+                    ? TimedInteractionClientOutcome.CompletedWithoutEscapeProgress
+                    : TimedInteractionClientOutcome.CompletedWithoutObjectiveProgress;
             }
 
             return TimedInteractionClientOutcome.Completed;
@@ -576,6 +638,7 @@ namespace InterrogationRoom.Gameplay.Interaction
             localTimedInteractionActive = true;
             localMinigameInteractionActive = hasMinigame;
             localMinigameCompletionPending = false;
+            localTimedTargetNetId = targetNetId;
             localTimedInteractionEndsAt = endsAt;
             localTimedInteractionStartedAt = endsAt - Math.Max(0.05d, duration);
             localTimedInteractionPrompt = prompt;
@@ -603,6 +666,9 @@ namespace InterrogationRoom.Gameplay.Interaction
             NetworkConnection target,
             TimedInteractionClientOutcome outcome)
         {
+            if (localMinigameInteractionActive && IsCompletedOutcome(outcome))
+                MarkLocalMinigameCompleted(localTimedTargetNetId);
+
             ClearLocalTimedInteraction();
             SetLocalInteractionFeedback(
                 ResolveFeedbackKind(outcome),
@@ -629,6 +695,7 @@ namespace InterrogationRoom.Gameplay.Interaction
                 case TimedInteractionClientOutcome.Completed:
                     return InteractionFeedbackKind.Success;
                 case TimedInteractionClientOutcome.CompletedWithoutObjectiveProgress:
+                case TimedInteractionClientOutcome.CompletedWithoutEscapeProgress:
                     return InteractionFeedbackKind.Warning;
                 default:
                     return InteractionFeedbackKind.Cancelled;
@@ -642,6 +709,7 @@ namespace InterrogationRoom.Gameplay.Interaction
                 case TimedInteractionClientOutcome.Completed:
                     return 1.4f;
                 case TimedInteractionClientOutcome.CompletedWithoutObjectiveProgress:
+                case TimedInteractionClientOutcome.CompletedWithoutEscapeProgress:
                     return 3.5f;
                 case TimedInteractionClientOutcome.MinigameFailed:
                     return 2.5f;
@@ -658,6 +726,8 @@ namespace InterrogationRoom.Gameplay.Interaction
                     return "Czynność zatwierdzona.";
                 case TimedInteractionClientOutcome.CompletedWithoutObjectiveProgress:
                     return "Czynność wykonana, ale nie rozwinęła twojego aktualnego celu.";
+                case TimedInteractionClientOutcome.CompletedWithoutEscapeProgress:
+                    return "Zamek otwarty, ale nie jest to etap Twojego celu.";
                 case TimedInteractionClientOutcome.MinigameFailed:
                     return "Niepowodzenie. Możesz spróbować ponownie.";
                 default:
@@ -705,11 +775,33 @@ namespace InterrogationRoom.Gameplay.Interaction
                 : null;
         }
 
+        private void MarkLocalMinigameCompleted(uint targetNetId)
+        {
+            if (targetNetId == 0 ||
+                !NetworkClient.spawned.TryGetValue(targetNetId, out NetworkIdentity identity))
+            {
+                return;
+            }
+
+            NetworkObjectiveWorldAction objectiveAction =
+                identity.GetComponent<NetworkObjectiveWorldAction>();
+            completedMinigameTargetEpochs[targetNetId] =
+                objectiveAction != null ? objectiveAction.CompletionEpoch : 0;
+        }
+
+        private static bool IsCompletedOutcome(TimedInteractionClientOutcome outcome)
+        {
+            return outcome == TimedInteractionClientOutcome.Completed ||
+                   outcome == TimedInteractionClientOutcome.CompletedWithoutObjectiveProgress ||
+                   outcome == TimedInteractionClientOutcome.CompletedWithoutEscapeProgress;
+        }
+
         private void ClearLocalTimedInteraction()
         {
             localTimedInteractionActive = false;
             localMinigameInteractionActive = false;
             localMinigameCompletionPending = false;
+            localTimedTargetNetId = 0;
             localTimedInteractionStartedAt = 0d;
             localTimedInteractionEndsAt = 0d;
             localTimedInteractionPrompt = null;
