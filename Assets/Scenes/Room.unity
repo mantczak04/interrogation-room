@@ -11186,7 +11186,6 @@ MonoBehaviour:
   targetYear: 1998
   wrongChoiceDelay: 2
   contextCode: -1
-  maximumCodeAttempts: 3
   recordCount: 6
   failureIncidentSource: {fileID: 0}
 --- !u!4 &505717275 stripped
@@ -18180,7 +18179,6 @@ MonoBehaviour:
   targetYear: 1998
   wrongChoiceDelay: 2
   contextCode: -1
-  maximumCodeAttempts: 3
   recordCount: 6
   failureIncidentSource: {fileID: 0}
 --- !u!1 &790304490
@@ -37972,15 +37970,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 8a41a2a24d54420ff90fd4864972d059, type: 3}
       propertyPath: m_LocalScale.x
-      value: 153
+      value: 1.53
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8a41a2a24d54420ff90fd4864972d059, type: 3}
       propertyPath: m_LocalScale.y
-      value: 153
+      value: 1.53
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8a41a2a24d54420ff90fd4864972d059, type: 3}
       propertyPath: m_LocalScale.z
-      value: 153
+      value: 1.53
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8a41a2a24d54420ff90fd4864972d059, type: 3}
       propertyPath: m_LocalPosition.x
@@ -40751,6 +40749,10 @@ PrefabInstance:
       value: 1.1
       objectReference: {fileID: 0}
     - target: {fileID: 3061637940234048304, guid: 6d22cb59a855741de8da3725eb7ea9bf, type: 3}
+      propertyPath: m_CullingMask.m_Bits
+      value: 4294967295
+      objectReference: {fileID: 0}
+    - target: {fileID: 3061637940234048304, guid: 6d22cb59a855741de8da3725eb7ea9bf, type: 3}
       propertyPath: m_Shadows.m_Strength
       value: 0.85
       objectReference: {fileID: 0}
@@ -43104,7 +43106,6 @@ MonoBehaviour:
   targetYear: 1998
   wrongChoiceDelay: 2
   contextCode: 731
-  maximumCodeAttempts: 3
   recordCount: 6
   failureIncidentSource: {fileID: 0}
 --- !u!1 &1844684334
@@ -44577,6 +44578,10 @@ PrefabInstance:
       value: 1.1
       objectReference: {fileID: 0}
     - target: {fileID: 3061637940234048304, guid: 6d22cb59a855741de8da3725eb7ea9bf, type: 3}
+      propertyPath: m_CullingMask.m_Bits
+      value: 4294967295
+      objectReference: {fileID: 0}
+    - target: {fileID: 3061637940234048304, guid: 6d22cb59a855741de8da3725eb7ea9bf, type: 3}
       propertyPath: m_Shadows.m_Strength
       value: 0.85
       objectReference: {fileID: 0}
@@ -44999,6 +45004,133 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b5e94f0b5a7e2a3479c8b010245d8d03, type: 3}
   m_PrefabInstance: {fileID: 1920908896}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1923324021
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1923324024}
+  - component: {fileID: 1923324023}
+  - component: {fileID: 1923324022}
+  m_Layer: 0
+  m_Name: Swiatlo_Postaci_Przesluchania
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1923324022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1923324021}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
+--- !u!108 &1923324023
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1923324021}
+  m_Enabled: 1
+  serializedVersion: 13
+  m_Type: 0
+  m_Color: {r: 1, g: 0.85, b: 0.66, a: 1}
+  m_Intensity: 1.15
+  m_Range: 3.5
+  m_SpotAngle: 100
+  m_InnerSpotAngle: 32
+  m_CookieSize2D: {x: 0.5, y: 0.5}
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 2
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShapeRadius: 0.025
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
+--- !u!4 &1923324024
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1923324021}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 8.85, y: 2.4, z: 2.95}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1933330317
 GameObject:
   m_ObjectHideFlags: 0
@@ -47117,6 +47249,10 @@ PrefabInstance:
     - target: {fileID: 1521215778782416934, guid: 7c720486872c9429eafbb5d88f57e108, type: 3}
       propertyPath: m_BounceIntensity
       value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1521215778782416934, guid: 7c720486872c9429eafbb5d88f57e108, type: 3}
+      propertyPath: m_CullingMask.m_Bits
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1521215778782416934, guid: 7c720486872c9429eafbb5d88f57e108, type: 3}
       propertyPath: m_Shadows.m_Strength
@@ -50896,6 +51032,10 @@ PrefabInstance:
       propertyPath: sceneId
       value: 1806798897
       objectReference: {fileID: 0}
+    - target: {fileID: 5639661180223801007, guid: df85ecde18c242f42b9481e0633f0da4, type: 3}
+      propertyPath: m_CullingMask.m_Bits
+      value: 4294967295
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -50944,3 +51084,4 @@ SceneRoots:
   - {fileID: 1601813853}
   - {fileID: 64197291}
   - {fileID: 899264532}
+  - {fileID: 1923324024}

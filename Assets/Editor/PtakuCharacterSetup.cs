@@ -8,6 +8,9 @@ using UnityEngine;
 
 public static class PtakuCharacterSetup
 {
+    private const float CharacterSurfaceSmoothness = 0.1f;
+    private const uint CharacterLightingRenderingLayer = 1u << 1;
+
     private const string CharacterFolder = "Assets/Characters/Ptaku";
     // The standalone generated model is a static mesh. The Idle export is the
     // single With Skin FBX and therefore owns the animated mesh and Humanoid rig.
@@ -431,6 +434,24 @@ public static class PtakuCharacterSetup
             material.SetTexture("_BaseMap", texture);
         }
 
+        // 3DAI exports are authored as matte character surfaces. Keep Ptaku aligned
+        // with the remaining playable characters so dark reflection probes do not
+        // turn its clothes and skin into a glossy, metallic-looking surface.
+        if (material.HasProperty("_Metallic"))
+        {
+            material.SetFloat("_Metallic", 0f);
+        }
+
+        if (material.HasProperty("_Smoothness"))
+        {
+            material.SetFloat("_Smoothness", CharacterSurfaceSmoothness);
+        }
+
+        if (material.HasProperty("_Glossiness"))
+        {
+            material.SetFloat("_Glossiness", CharacterSurfaceSmoothness);
+        }
+
         EditorUtility.SetDirty(material);
         return material;
     }
@@ -469,6 +490,11 @@ public static class PtakuCharacterSetup
             if (nestedAnimator != null)
             {
                 UnityEngine.Object.DestroyImmediate(nestedAnimator);
+            }
+
+            foreach (Renderer renderer in modelRoot.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.renderingLayerMask |= CharacterLightingRenderingLayer;
             }
 
             modelRoot.SetActive(false);

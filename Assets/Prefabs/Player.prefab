@@ -670,6 +670,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -3253478321480055311, guid: 87ea5b61c1b25ac8fac10c7f83187104, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: -3253478321480055311, guid: 87ea5b61c1b25ac8fac10c7f83187104, type: 3}
       propertyPath: m_UpdateWhenOffscreen
       value: 1
       objectReference: {fileID: 0}
@@ -754,6 +758,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3440081490395719855, guid: 58c5f944e4c675feead951581f92719e, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3440081490395719855, guid: 58c5f944e4c675feead951581f92719e, type: 3}
       propertyPath: m_UpdateWhenOffscreen
       value: 1
       objectReference: {fileID: 0}
@@ -830,6 +838,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3250058322132301307, guid: c01301025c9fbf1428afa505470d4cfa, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3250058322132301307, guid: c01301025c9fbf1428afa505470d4cfa, type: 3}
       propertyPath: m_UpdateWhenOffscreen
       value: 1
       objectReference: {fileID: 0}
@@ -896,6 +908,10 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 3bbb10fdc8db08c49b51e52a924aa4e7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2135511560255608156, guid: 3bbb10fdc8db08c49b51e52a924aa4e7, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 3bbb10fdc8db08c49b51e52a924aa4e7, type: 3}
       propertyPath: m_Name
@@ -968,6 +984,10 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: c7c0c5bc5b0ea3ac4a90665856f5146c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7958188863813196942, guid: c7c0c5bc5b0ea3ac4a90665856f5146c, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: -7958188863813196942, guid: c7c0c5bc5b0ea3ac4a90665856f5146c, type: 3}
       propertyPath: m_UpdateWhenOffscreen
