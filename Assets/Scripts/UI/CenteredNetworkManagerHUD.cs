@@ -1,3 +1,4 @@
+using System.Net.Sockets;
 using System.Text;
 using Mirror;
 using InterrogationRoom.Debugging;
@@ -36,6 +37,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
 
     private const string PanelSettingsResource = "UI/UIPanelSettings";
     private const string VisualTreeResource = "UI/NetworkMenu";
+    private const int DeveloperHostPortAttempts = 8;
 
     /// <summary>Above the Round UI, below the settings sheet.</summary>
     private const float SortingOrder = 50f;
@@ -178,12 +180,7 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
         roundCoordinator?.TryEnableSoloDeveloperLobbyStart();
 
         if (!NetworkClient.active && !NetworkServer.active)
-        {
-            if (SteamMode)
-                steamLobby.HostLobby();
-            else
-                manager.StartHost();
-        }
+            StartDeveloperHost();
 
         SetMenuVisible(false, MenuPage.Home);
 
@@ -729,14 +726,53 @@ public class CenteredNetworkManagerHUD : MonoBehaviour
             return;
 
         if (!NetworkClient.active && !NetworkServer.active)
-        {
-            if (SteamMode)
-                steamLobby.HostLobby();
-            else
-                manager.StartHost();
-        }
+            StartDeveloperHost();
 
         SetMenuVisible(true, MenuPage.Sandbox);
+    }
+
+    void StartDeveloperHost()
+    {
+        if (SteamMode)
+        {
+            steamLobby.HostLobby();
+            return;
+        }
+
+#if UNITY_EDITOR
+        if (Transport.active is PortTransport portTransport)
+        {
+            for (int attempt = 0; attempt < DeveloperHostPortAttempts; attempt++)
+            {
+                try
+                {
+                    manager.StartHost();
+                    return;
+                }
+                catch (SocketException exception) when (
+                    exception.SocketErrorCode == SocketError.AddressAlreadyInUse
+                    && attempt + 1 < DeveloperHostPortAttempts)
+                {
+                    // A failed Mirror start initializes server statics before
+                    // the transport bind throws. Reset them before retrying.
+                    NetworkServer.Shutdown();
+
+                    ushort occupiedPort = portTransport.Port;
+                    portTransport.Port = occupiedPort == ushort.MaxValue
+                        ? (ushort)1024
+                        : (ushort)(occupiedPort + 1);
+                    Debug.LogWarning(
+                        $"[CenteredNetworkManagerHUD] Port KCP {occupiedPort} jest zajęty. " +
+                        $"Test deweloperski ponawia start na porcie {portTransport.Port}.",
+                        this);
+                }
+            }
+
+            return;
+        }
+#endif
+
+        manager.StartHost();
     }
 
     void SetMenuVisible(bool visible, MenuPage page)

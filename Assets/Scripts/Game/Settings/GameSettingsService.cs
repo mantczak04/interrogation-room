@@ -119,6 +119,11 @@ namespace InterrogationRoom.Settings
             return !GameplaySuppressed && GetAction(action).WasPressedThisFrame();
         }
 
+        public static bool WasPressedThisFrameForModal(GameInputAction action)
+        {
+            return !IsRebinding && GetAction(action).WasPressedThisFrame();
+        }
+
         public static bool WasReleasedThisFrame(GameInputAction action)
         {
             return !GameplaySuppressed && GetAction(action).WasReleasedThisFrame();

@@ -2,18 +2,11 @@
     <ui:Style src="project://database/Assets/UI/RoundUI.uss" />
     <ui:VisualElement name="round-ui-root" class="round-ui">
         <ui:VisualElement name="lobby-panel" class="lobby-screen">
-            <ui:VisualElement class="screen-shade" />
+            <ui:VisualElement class="screen-shade lobby-screen-shade" />
             <ui:VisualElement class="lobby-wash lobby-wash--left" />
             <ui:VisualElement class="lobby-wash lobby-wash--right" />
             <ui:VisualElement class="lobby-layout">
-                <ui:VisualElement class="lobby-roster-panel">
-                    <ui:Label name="lobby-roster-count" text="Lista graczy" class="kicker stamp-font lobby-side-kicker" />
-                    <ui:Label text="OBECNI NA POSTERUNKU" class="lobby-side-title stamp-font" />
-                    <ui:VisualElement class="rule lobby-side-rule" />
-                    <ui:Label name="lobby-player-list-empty" text="Oczekiwanie na graczy…" class="lobby-player-list-empty" />
-                    <ui:ScrollView name="lobby-player-list" class="lobby-player-list" mode="Vertical" horizontal-scroller-visibility="Hidden" />
-                </ui:VisualElement>
-                <ui:VisualElement class="lobby-settings-panel stamp-font">
+                <ui:VisualElement name="lobby-settings-panel" class="lobby-settings-panel stamp-font" style="display: none;">
                     <ui:Label text="GOSPODARZ GRY" class="kicker stamp-font lobby-side-kicker" />
                     <ui:Label text="USTAWIENIA" class="lobby-side-title stamp-font" />
                     <ui:VisualElement class="rule lobby-side-rule" />
@@ -40,7 +33,8 @@
                     </ui:VisualElement>
                     <ui:Toggle name="secret-objective-toggle" label="Włącz Sekretny Cel" value="true" class="lobby-toggle" />
                     <ui:Label name="secret-objective-summary" text="Sekretny Cel jest dostępny od 5 graczy." class="lobby-toggle-summary" />
-                    <ui:VisualElement class="rule rule--faint lobby-actions-rule" />
+                </ui:VisualElement>
+                <ui:VisualElement name="lobby-host-actions" class="lobby-host-actions stamp-font">
                     <ui:Button name="invite-button" text="Zaproś znajomych" class="btn stamp-font lobby-action" />
                     <ui:VisualElement name="invite-friend-panel" class="lobby-invite-panel" style="display: none;">
                         <ui:Label text="ZNAJOMI STEAM ONLINE" class="lobby-invite-heading stamp-font" />
@@ -54,9 +48,21 @@
                     </ui:VisualElement>
                     <ui:Label name="lobby-help-label" text="Rundę można rozpocząć dla 3–8 graczy." class="lobby-help" />
                 </ui:VisualElement>
-                <ui:VisualElement class="preview-column">
-                    <ui:Label text="TWOJA POSTAĆ" class="preview-kicker stamp-font" />
-                    <ui:Image name="character-preview" class="character-preview" scale-mode="ScaleToFit" />
+                <ui:VisualElement class="lobby-stage">
+                    <ui:Label name="lobby-roster-count" text="Gracze w lobby: 0/8" class="lobby-stage-count stamp-font" />
+                    <ui:VisualElement name="developer-lineup-preview-section" class="developer-lineup-preview stamp-font" style="display: none;">
+                        <ui:Label name="developer-dummy-count-label" text="MANEKINY: 0" class="developer-dummy-count" />
+                        <ui:Button name="developer-dummy-remove-button" text="−" class="btn btn--quiet developer-dummy-step" />
+                        <ui:Button name="developer-dummy-add-button" text="+" class="btn btn--quiet developer-dummy-step" />
+                        <ui:Button name="developer-dummy-five-button" text="5 GRACZY" class="btn btn--quiet developer-dummy-target" />
+                        <ui:Button name="developer-dummy-eight-button" text="8 GRACZY" class="btn btn--quiet developer-dummy-target" />
+                        <ui:Button name="developer-dummy-clear-button" text="WYCZYŚĆ" class="btn btn--quiet developer-dummy-clear" />
+                    </ui:VisualElement>
+                    <ui:Label name="lobby-player-list-empty" text="Oczekiwanie na graczy…" class="lobby-player-list-empty" />
+                    <ui:VisualElement name="lobby-lineup-viewport" class="lobby-lineup-viewport">
+                        <ui:Image name="lobby-lineup-preview" class="lobby-lineup-preview" scale-mode="ScaleToFit" picking-mode="Ignore" />
+                        <ui:VisualElement name="lobby-player-lineup" class="lobby-player-lineup" picking-mode="Ignore" />
+                    </ui:VisualElement>
                     <ui:VisualElement class="character-selector preview-character-selector">
                         <ui:Button name="previous-character-button" text="‹" class="character-arrow" focusable="false" />
                         <ui:Label name="character-name-label" text="Małpa" class="character-name stamp-font" />
@@ -66,6 +72,7 @@
                     <ui:Label text="Wygląd postaci nie zdradza roli." class="preview-caption" />
                 </ui:VisualElement>
             </ui:VisualElement>
+            <ui:Button name="lobby-settings-toggle-button" text="USTAWIENIA LOBBY" class="btn btn--quiet lobby-settings-toggle stamp-font" />
             <ui:Button name="lobby-back-button" class="lobby-back" text="Wyjdź z lobby" focusable="false" />
         </ui:VisualElement>
 

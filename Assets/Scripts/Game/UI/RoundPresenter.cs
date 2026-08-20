@@ -163,6 +163,9 @@ namespace InterrogationRoom.UI
         private Label _resultVerdictLabel;
         private Label _resultReasonLabel;
         private Label _rejectionLabel;
+        private VisualElement _lobbySettingsPanel;
+        private Button _lobbySettingsToggleButton;
+        private VisualElement _lobbyHostActions;
         private Button _startButton;
         private VisualElement _startButtonHoverArea;
         private Button _lobbyReadyButton;
@@ -175,6 +178,13 @@ namespace InterrogationRoom.UI
         private Button _developerRoleInnocentButton;
         private Button _developerRoleGuiltyButton;
         private Button _developerRoleDetectiveButton;
+        private VisualElement _developerLineupPreviewSection;
+        private Label _developerDummyCountLabel;
+        private Button _developerDummyRemoveButton;
+        private Button _developerDummyAddButton;
+        private Button _developerDummyFiveButton;
+        private Button _developerDummyEightButton;
+        private Button _developerDummyClearButton;
         private Toggle _secretObjectiveToggle;
         private Label _secretObjectiveSummary;
         private Button _returnToLobbyButton;
@@ -184,6 +194,7 @@ namespace InterrogationRoom.UI
         private bool _developerMenuOpen;
         private bool _unlimitedRound;
         private bool _privatePanelExpanded = true;
+        private bool _lobbySettingsOpen;
         private string _startButtonBlockedMessage;
         private RoundPhase? _lastRenderedPhase;
         private readonly Dictionary<TextElement, string> _staticPolishText = new Dictionary<TextElement, string>();
@@ -224,6 +235,7 @@ namespace InterrogationRoom.UI
             coordinator.ViewReceived += OnViewReceived;
             coordinator.IntentRejected += OnIntentRejected;
             coordinator.LobbyResetReceived += OnLobbyResetReceived;
+            _lobbySettingsToggleButton.clicked += OnLobbySettingsToggleClicked;
             _startButton.clicked += OnStartClicked;
             _lobbyReadyButton.clicked += OnLobbyReadyClicked;
             _roundLimit5Button.clicked += OnRoundLimit5Clicked;
@@ -233,6 +245,11 @@ namespace InterrogationRoom.UI
             _developerRoleInnocentButton.clicked += OnDeveloperRoleInnocentClicked;
             _developerRoleGuiltyButton.clicked += OnDeveloperRoleGuiltyClicked;
             _developerRoleDetectiveButton.clicked += OnDeveloperRoleDetectiveClicked;
+            _developerDummyRemoveButton.clicked += OnDeveloperDummyRemoveClicked;
+            _developerDummyAddButton.clicked += OnDeveloperDummyAddClicked;
+            _developerDummyFiveButton.clicked += OnDeveloperDummyFiveClicked;
+            _developerDummyEightButton.clicked += OnDeveloperDummyEightClicked;
+            _developerDummyClearButton.clicked += OnDeveloperDummyClearClicked;
             _secretObjectiveToggle.RegisterValueChangedCallback(OnSecretObjectiveChanged);
             _readyButton.clicked += OnReadyClicked;
             _privateToggleButton.clicked += TogglePrivatePanel;
@@ -257,6 +274,8 @@ namespace InterrogationRoom.UI
             }
             if (_startButton != null)
                 _startButton.clicked -= OnStartClicked;
+            if (_lobbySettingsToggleButton != null)
+                _lobbySettingsToggleButton.clicked -= OnLobbySettingsToggleClicked;
             if (_lobbyReadyButton != null)
                 _lobbyReadyButton.clicked -= OnLobbyReadyClicked;
             if (_roundLimit5Button != null)
@@ -273,6 +292,16 @@ namespace InterrogationRoom.UI
                 _developerRoleGuiltyButton.clicked -= OnDeveloperRoleGuiltyClicked;
             if (_developerRoleDetectiveButton != null)
                 _developerRoleDetectiveButton.clicked -= OnDeveloperRoleDetectiveClicked;
+            if (_developerDummyRemoveButton != null)
+                _developerDummyRemoveButton.clicked -= OnDeveloperDummyRemoveClicked;
+            if (_developerDummyAddButton != null)
+                _developerDummyAddButton.clicked -= OnDeveloperDummyAddClicked;
+            if (_developerDummyFiveButton != null)
+                _developerDummyFiveButton.clicked -= OnDeveloperDummyFiveClicked;
+            if (_developerDummyEightButton != null)
+                _developerDummyEightButton.clicked -= OnDeveloperDummyEightClicked;
+            if (_developerDummyClearButton != null)
+                _developerDummyClearButton.clicked -= OnDeveloperDummyClearClicked;
             if (_secretObjectiveToggle != null)
                 _secretObjectiveToggle.UnregisterValueChangedCallback(OnSecretObjectiveChanged);
             if (_readyButton != null)
@@ -549,6 +578,15 @@ namespace InterrogationRoom.UI
             SetVisible(_resultPanel, false);
             SetVisible(_privatePanel, false);
             bool soloDeveloperStart = coordinator.AllowsSoloDeveloperLobbyStart;
+            if (!coordinator.IsLocalHost)
+                _lobbySettingsOpen = false;
+            SetVisible(_lobbySettingsToggleButton, coordinator.IsLocalHost);
+            SetVisible(_lobbySettingsPanel, coordinator.IsLocalHost && _lobbySettingsOpen);
+            _lobbyHostActions.BringToFront();
+            if (_lobbySettingsOpen)
+                _lobbySettingsPanel.BringToFront();
+            _lobbySettingsToggleButton.text = UiText.Get(
+                _lobbySettingsOpen ? "ZAMKNIJ USTAWIENIA" : "USTAWIENIA LOBBY");
             bool canStart = RoundLobbyRules.CanStartRound(
                 coordinator.IsLocalHost,
                 RoundPhase.Lobby,
@@ -556,6 +594,7 @@ namespace InterrogationRoom.UI
                 coordinator.AreAllLobbyPlayersReady,
                 soloDeveloperStart);
             SetVisible(_startButtonHoverArea, coordinator.IsLocalHost);
+            SetVisible(_lobbyHelpLabel, coordinator.IsLocalHost);
             SetVisible(_secretObjectiveToggle, true);
             SetVisible(_secretObjectiveSummary, true);
             _startButton.SetEnabled(canStart);
@@ -580,6 +619,7 @@ namespace InterrogationRoom.UI
                     : UiText.Get("Rundę można rozpocząć dla 3–8 graczy.");
             _secretObjectiveToggle.SetValueWithoutNotify(coordinator.HostAllowsSecretObjective);
             RefreshDeveloperRoleButtons(soloDeveloperStart);
+            RefreshDeveloperDummyControls(soloDeveloperStart, playerCount);
             RefreshRoundLimitButtons();
             SetVisible(_lobbyReadyButton, connected);
             bool localReady = coordinator.IsLocalLobbyReady;
@@ -630,6 +670,9 @@ namespace InterrogationRoom.UI
             _resultVerdictLabel = Required<Label>(root, "result-verdict-label");
             _resultReasonLabel = Required<Label>(root, "result-reason-label");
             _rejectionLabel = Required<Label>(root, "rejection-label");
+            _lobbySettingsPanel = Required<VisualElement>(root, "lobby-settings-panel");
+            _lobbySettingsToggleButton = Required<Button>(root, "lobby-settings-toggle-button");
+            _lobbyHostActions = Required<VisualElement>(root, "lobby-host-actions");
             _startButton = Required<Button>(root, "start-button");
             _startButtonHoverArea = Required<VisualElement>(root, "start-button-hover-area");
             SetVisible(Required<Label>(root, "start-button-hover-info"), false);
@@ -643,6 +686,13 @@ namespace InterrogationRoom.UI
             _developerRoleInnocentButton = Required<Button>(root, "developer-role-innocent-button");
             _developerRoleGuiltyButton = Required<Button>(root, "developer-role-guilty-button");
             _developerRoleDetectiveButton = Required<Button>(root, "developer-role-detective-button");
+            _developerLineupPreviewSection = Required<VisualElement>(root, "developer-lineup-preview-section");
+            _developerDummyCountLabel = Required<Label>(root, "developer-dummy-count-label");
+            _developerDummyRemoveButton = Required<Button>(root, "developer-dummy-remove-button");
+            _developerDummyAddButton = Required<Button>(root, "developer-dummy-add-button");
+            _developerDummyFiveButton = Required<Button>(root, "developer-dummy-five-button");
+            _developerDummyEightButton = Required<Button>(root, "developer-dummy-eight-button");
+            _developerDummyClearButton = Required<Button>(root, "developer-dummy-clear-button");
             _secretObjectiveToggle = Required<Toggle>(root, "secret-objective-toggle");
             _secretObjectiveSummary = Required<Label>(root, "secret-objective-summary");
             _returnToLobbyButton = Required<Button>(root, "return-to-lobby-button");
@@ -682,6 +732,15 @@ namespace InterrogationRoom.UI
 
         private void OnStartClicked() => coordinator.RequestStartRound();
 
+        private void OnLobbySettingsToggleClicked()
+        {
+            if (!coordinator.IsLocalHost)
+                return;
+
+            _lobbySettingsOpen = !_lobbySettingsOpen;
+            RenderLobby();
+        }
+
         private void OnLobbyReadyClicked() =>
             coordinator.RequestSetLobbyReady(!coordinator.IsLocalLobbyReady);
 
@@ -693,6 +752,26 @@ namespace InterrogationRoom.UI
         private void OnDeveloperRoleInnocentClicked() => SelectDeveloperRole(RoundRole.Innocent);
         private void OnDeveloperRoleGuiltyClicked() => SelectDeveloperRole(RoundRole.Guilty);
         private void OnDeveloperRoleDetectiveClicked() => SelectDeveloperRole(RoundRole.Detective);
+
+        private void OnDeveloperDummyRemoveClicked() =>
+            SetDeveloperDummyCount(coordinator.DeveloperLobbyFakePlayerCount - 1);
+
+        private void OnDeveloperDummyAddClicked() =>
+            SetDeveloperDummyCount(coordinator.DeveloperLobbyFakePlayerCount + 1);
+
+        private void OnDeveloperDummyFiveClicked() =>
+            SetDeveloperDummyCount(Math.Max(0, 5 - coordinator.PublicLobbyPlayerCount));
+
+        private void OnDeveloperDummyEightClicked() =>
+            SetDeveloperDummyCount(Math.Max(0, RoundEngine.MaxPlayers - coordinator.PublicLobbyPlayerCount));
+
+        private void OnDeveloperDummyClearClicked() => SetDeveloperDummyCount(0);
+
+        private void SetDeveloperDummyCount(int count)
+        {
+            coordinator.TrySetDeveloperLobbyFakePlayerCount(count);
+            RenderLobby();
+        }
 
         private void SelectRoundLimit(int minutes)
         {
@@ -726,6 +805,23 @@ namespace InterrogationRoom.UI
                 RoundRole.Detective,
                 selectedRole,
                 editable);
+        }
+
+        private void RefreshDeveloperDummyControls(bool visible, int realPlayerCount)
+        {
+            SetVisible(_developerLineupPreviewSection, visible);
+            if (!visible)
+                return;
+
+            int dummyCount = coordinator.DeveloperLobbyFakePlayerCount;
+            int maximumDummyCount = Math.Max(0, RoundEngine.MaxPlayers - realPlayerCount);
+            bool editable = coordinator.IsLocalHost;
+            _developerDummyCountLabel.text = UiText.Format("Manekiny: {0}", dummyCount);
+            _developerDummyRemoveButton.SetEnabled(editable && dummyCount > 0);
+            _developerDummyAddButton.SetEnabled(editable && dummyCount < maximumDummyCount);
+            _developerDummyFiveButton.SetEnabled(editable && realPlayerCount < 5);
+            _developerDummyEightButton.SetEnabled(editable && realPlayerCount < RoundEngine.MaxPlayers);
+            _developerDummyClearButton.SetEnabled(editable && dummyCount > 0);
         }
 
         private static void RefreshDeveloperRoleButton(

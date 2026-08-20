@@ -954,12 +954,15 @@ public sealed class VivoxVoiceRuntime : MonoBehaviour
     private void HandleMuteInput()
     {
         bool togglePressed =
-            GameInputBindings.WasPressedThisFrame(GameInputAction.VoiceMute);
-        if (!togglePressed || !VivoxService.Instance.IsLoggedIn)
+            GameInputBindings.WasPressedThisFrameForModal(GameInputAction.VoiceMute);
+        if (!togglePressed)
         {
             return;
         }
 
+        // Muting is a local persisted preference, so the key must still work
+        // while Vivox is reconnecting or unavailable. ApplyMuteState safely
+        // no-ops until the service is ready, while lobby UI updates at once.
         GameSettingsService.Current.SetMicrophoneMuted(
             !GameSettingsService.Current.MicrophoneMuted);
     }
