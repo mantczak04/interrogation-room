@@ -188,7 +188,7 @@ After the change:
 
 Scene and asset construction is scripted through `[MenuItem]` editor tools. When one of these covers the change, re-run it through Unity MCP `execute_menu_item` instead of editing the scene by hand:
 
-- `Assets/Editor/MainMenuSetup.cs` — `Tools/Setup Main Menu Scene` rebuilds the whole MainMenu scene.
+- `Assets/Editor/MainMenuSetup.cs` — the obsolete uGUI builder is intentionally disabled. The production MainMenu uses UI Toolkit; do not rebuild or overwrite it until a replacement builder implements the current scene contract.
 - `Assets/Editor/PtakuCharacterSetup.cs` — character prefab/rig setup menu items.
 - `Assets/Scripts/Editor/ChairSeatBaker.cs` — bakes chair seat alignment data.
 - `Assets/Scripts/Editor/Content/CaseAssetSync.cs`, `PersonalMatterAssetSync.cs` — sync authored case content into assets.

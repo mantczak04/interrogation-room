@@ -3,6 +3,7 @@
 #endif
 
 using Mirror;
+using InterrogationRoom.Domain;
 using InterrogationRoom.Networking;
 using InterrogationRoom.UI;
 using UnityEngine;
@@ -53,6 +54,7 @@ public class SteamLobby : MonoBehaviour
     void Awake()
     {
         manager = GetComponent<NetworkManager>();
+        EnforceSupportedPlayerCapacity();
 
         bool steamAvailable = SteamAvailable;
         SetTransportEnabled(steamTransport, steamAvailable);
@@ -67,10 +69,21 @@ public class SteamLobby : MonoBehaviour
 
     void OnValidate()
     {
+        manager = GetComponent<NetworkManager>();
+        EnforceSupportedPlayerCapacity();
+
         if (localTransport == null)
             Debug.LogError("[SteamLobby] Local KCP transport reference is required.", this);
         if (steamTransport != null && steamTransport == localTransport)
             Debug.LogError("[SteamLobby] Steam and local transports must be different components.", this);
+    }
+
+    void EnforceSupportedPlayerCapacity()
+    {
+        if (manager != null)
+        {
+            manager.maxConnections = RoundEngine.MaxPlayers;
+        }
     }
 
     static void SetTransportEnabled(Transport transport, bool enabled)
@@ -131,6 +144,7 @@ public class SteamLobby : MonoBehaviour
             return;
         }
 
+        EnforceSupportedPlayerCapacity();
         lobbyPending = true;
         SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, manager.maxConnections);
     }

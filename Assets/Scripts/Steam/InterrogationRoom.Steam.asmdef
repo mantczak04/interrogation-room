@@ -2,6 +2,7 @@
     "name": "InterrogationRoom.Steam",
     "rootNamespace": "InterrogationRoom.Steam",
     "references": [
+        "InterrogationRoom.Domain",
         "InterrogationRoom.Game",
         "Mirror",
         "FizzySteamworks",

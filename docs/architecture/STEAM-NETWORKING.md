@@ -18,7 +18,7 @@ Ten dokument opisuje zaimplementowaną integrację multiplayer przez Steam. Decy
 
 ## Przepływy
 
-- **Hostowanie:** `SteamLobby.HostLobby()` → `SteamMatchmaking.CreateLobby` (lobby tylko dla znajomych, rozmiar z `maxConnections`) → `OnLobbyCreated` zapisuje SteamID hosta w danych lobby pod kluczem `HostAddress` i woła `StartHost()`.
+- **Hostowanie:** `SteamLobby` wymusza `NetworkManager.maxConnections = RoundEngine.MaxPlayers` (obecnie 8) przed uruchomieniem Mirror i w walidacji edytorowej. `HostLobby()` → `SteamMatchmaking.CreateLobby` (lobby tylko dla znajomych, rozmiar z tego limitu) → `OnLobbyCreated` zapisuje SteamID hosta w danych lobby pod kluczem `HostAddress` i woła `StartHost()`.
 - **Dołączanie przez nakładkę:** znajomy wybiera „Dołącz do gry” → callback `GameLobbyJoinRequested_t` → `JoinLobby` → `OnLobbyEntered` czyta `HostAddress`, ustawia `networkAddress` i woła `StartClient()`.
 - **Zaproszenie przy wyłączonej grze:** Steam uruchamia grę z argumentem `+connect_lobby <id>`; `SteamLobby.Start()` czyta argument i dołącza do lobby.
 - **Rozłączenie:** przyciski Stop w HUD oraz `OnDestroy` opuszczają lobby (`LeaveLobby`).
