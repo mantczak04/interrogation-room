@@ -10,6 +10,7 @@
             <ui:VisualElement class="settings-tabs">
                 <ui:Button name="general-tab-button" class="settings-tab stamp-font is-selected" text="OGÓLNE" />
                 <ui:Button name="controls-tab-button" class="settings-tab stamp-font" text="STEROWANIE" />
+                <ui:Button name="graphics-tab-button" class="settings-tab stamp-font" text="GRAFIKA" />
                 <ui:Button name="sound-tab-button" class="settings-tab stamp-font" text="DŹWIĘK" />
             </ui:VisualElement>
 
@@ -32,6 +33,13 @@
                     </ui:VisualElement>
                 </ui:VisualElement>
 
+                <ui:VisualElement name="graphics-section" class="settings-section">
+                    <ui:VisualElement class="settings-group">
+                        <ui:Label name="graphics-caption" class="settings-caption" text="Jakość grafiki" />
+                        <ui:DropdownField name="graphics-quality" class="dropdown settings-dropdown" />
+                        <ui:Label name="graphics-hint" class="settings-hint" text="" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
                 <ui:VisualElement name="controls-section" class="settings-section">
                     <ui:Label name="controls-hint" class="settings-hint" text="Wybierz akcję, a następnie naciśnij nowy klawisz lub przycisk myszy. Esc anuluje zmianę." />
                     <ui:VisualElement name="input-bindings-list" class="input-bindings-list" />

@@ -72,6 +72,28 @@ namespace InterrogationRoom.Gameplay.Tests
             Assert.That(doorType.GetProperty("IsOpen")?.GetValue(door), Is.False);
         }
 
+        [TestCase(-1f, 0f)]
+        [TestCase(1f, 0f)]
+        [TestCase(-1f, 90f)]
+        [TestCase(1f, 90f)]
+        public void PlayerOpenedDoorSwingsAwayFromTheActor(float side, float yaw)
+        {
+            Type doorType = FindAssemblyCSharpType("InterrogationRoom.Gameplay.Interaction.NetworkDoor");
+            Component door = CreateDoor("Door", doorType);
+            door.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+            SetField(door, "animationDuration", 0f);
+            InvokePrivate(door, "Awake");
+            var actor = CreateObject("Opener").AddComponent<NetworkIdentity>();
+            actor.transform.position = door.transform.position + door.transform.forward * side * 1.3f;
+            Vector3 closed = door.transform.Find("DoorLeaf").position;
+            SetServerActive(true);
+            Assert.That(doorType.GetMethod("TryInteractServer").Invoke(door, new object[] { actor }), Is.True);
+            Vector3 travel = door.transform.Find("DoorLeaf").position - closed;
+            Assert.That(Vector3.Dot(travel, actor.transform.position - closed), Is.LessThan(0f),
+                "Opening must move the leaf away from the player on either approach and door orientation.");
+            Assert.That(GetBlockingCollider(door).enabled, Is.True);
+        }
+
         [Test]
         public void DoorRotatesAroundDetectedLeafEdgeAndReturnsToClosedPose()
         {

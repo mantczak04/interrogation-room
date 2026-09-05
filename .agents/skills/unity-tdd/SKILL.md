@@ -1,6 +1,6 @@
 ---
 name: unity-tdd
-description: Develop Unity gameplay or integration behavior test-first in this project. Use for red-green work, RoundEngine rules, Unity lifecycle behavior, or Mirror integration that needs tests at approved seams.
+description: Develop Unity behavior test-first when requested or selected for a behavior change. Covers RoundEngine, Unity lifecycle, and Mirror integration.
 ---
 
 # Unity TDD
@@ -17,7 +17,7 @@ Use these approved seams without asking again:
 - `NetworkRoundCoordinator -> PlayerRoundView` for private delivery.
 - UI rendering a received view and sending intentions.
 
-Confirm any new seam with the user before writing tests. Test public behavior, not private fields, Unity serialization details, or internal collaborators.
+Prefer existing seams. Choose routine test seams within scope; ask only when a new boundary changes approved architecture or behavior. Test public behavior, not private fields, serialization details, or internal collaborators.
 
 ## Choose the test level
 
@@ -25,7 +25,7 @@ Confirm any new seam with the user before writing tests. Test public behavior, n
 - `CaseAsset` conversion: Edit Mode unless Unity lifecycle behavior is essential.
 - Scene, frame, physics, or lifecycle behavior: Play Mode only when Edit Mode cannot observe the behavior.
 - Mirror behavior: first prove domain behavior in Edit Mode, then verify host/client integration on KCP.
-- Steam or voice: isolate as an integration spike after KCP succeeds.
+- Steam changes: verify after KCP succeeds. Voice changes: test affected behavior with multiple clients, independently of domain rules.
 
 ## Run the loop
 

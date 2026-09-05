@@ -1,0 +1,146 @@
+{
+  "scenario": "Unity Room Play Mode, solo local KCP host, local Detective, unpaused active Round",
+  "checks": [
+    {
+      "door": "DrzwiDepozyt",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiDepozyt",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiArchiwum",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiArchiwum",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiOdprawy",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiOdprawy",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiSala",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiSala",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiMagazyn",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiMagazyn",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiArchiwumDepozyt",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiArchiwumDepozyt",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiDepozytBiuro",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiDepozytBiuro",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiBiuro",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiBiuro",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiWarsztatOdprawy",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiWarsztatOdprawy",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiPrzesluchania",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiPrzesluchania",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiSocjalny",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiSocjalny",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiSocjalnyWarsztat",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiSocjalnyWarsztat",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiRecepcja",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiRecepcja",
+      "side": 1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiWarsztat",
+      "side": -1,
+      "opened": true
+    },
+    {
+      "door": "DrzwiWarsztat",
+      "side": 1,
+      "opened": true
+    }
+  ],
+  "invalidated": "Interrupted second-half session discarded after loss of the MCP connection; those approaches were rerun after recovery."
+}

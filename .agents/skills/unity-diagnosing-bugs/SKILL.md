@@ -9,7 +9,7 @@ Read [AGENTS.md](../../../AGENTS.md) and the documents governing the affected be
 
 ## Build the tightest practical loop
 
-Try the first level that can reproduce the exact symptom:
+Start with available errors and evidence. Choose the smallest faithful reproduction; this list is not a mandatory sequence:
 
 1. Pure Edit Mode test.
 2. Unity compilation or script validation.
@@ -20,15 +20,15 @@ Try the first level that can reproduce the exact symptom:
 7. ParrelSync multi-client reproduction.
 8. FizzySteamworks on two machines/accounts.
 
-Do not escalate while a lower level gives a faithful signal. Unity reloads may take minutes; optimize for the tightest practical deterministic loop, not an arbitrary duration. If required Editor interaction is unavailable through MCP, follow the mandatory stop rule in `AGENTS.md`.
+Escalate only when the current evidence cannot distinguish causes. Follow `AGENTS.md` for Editor access and performance measurements.
 
 ## Diagnose
 
-1. Reproduce the user's exact symptom and minimize the scenario until every remaining element is load-bearing.
-2. Rank 3-5 falsifiable hypotheses. State the prediction for each; share the list, then continue unless user input is required.
+1. Confirm the exact symptom from evidence; reproduce it when needed to distinguish causes.
+2. Test plausible explanations and their predictions. Do not invent alternatives when direct evidence already establishes the cause.
 3. Test one variable at a time. Prefer debugger/profiler evidence; tag temporary logs uniquely.
 4. For performance, establish a measured baseline before proposing changes.
-5. Identify the cause with evidence. If authorized to fix, turn the minimal repro into a regression test at the correct seam, observe red, apply the fix, and observe green.
-6. Re-run the original scenario, remove temporary instrumentation, and use `$unity-change-verification`.
+5. If authorized to fix, add red-green regression coverage for testable behavior; use direct validation for configuration or compilation fixes.
+6. After a fix, verify the original symptom with `$unity-change-verification`. Remove temporary instrumentation.
 
-Complete diagnosis when the cause and disproved alternatives are evidence-backed. Complete a fix only when both minimal and original scenarios pass.
+Complete diagnosis when evidence supports the cause; otherwise report what remains unresolved. A fix requires confirmation that the original symptom is resolved.

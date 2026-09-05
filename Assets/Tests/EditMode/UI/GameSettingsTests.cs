@@ -50,6 +50,28 @@ namespace InterrogationRoom.UI.Tests
         }
 
         [Test]
+        public void GraphicsQuality_PersistsAcrossSettingsInstances_AndNotifiesOnce()
+        {
+            int changes = 0;
+            settings.Changed += () => changes++;
+            settings.SetGraphicsQuality(1);
+            settings.SetGraphicsQuality(1);
+            Assert.That(new GameSettings(store).GraphicsQuality, Is.EqualTo(1));
+            Assert.That(store.SaveCount, Is.EqualTo(1));
+            Assert.That(changes, Is.EqualTo(1));
+        }
+
+        [TestCase(-3f, 0)]
+        [TestCase(99f, 3)]
+        [TestCase(float.NaN, 3)]
+        [TestCase(float.PositiveInfinity, 3)]
+        public void GraphicsQuality_InvalidStoredValue_IsSafe(float stored, int expected)
+        {
+            store.Values[GameSettings.GraphicsQualityKey] = stored;
+            Assert.That(settings.GraphicsQuality, Is.EqualTo(expected));
+        }
+
+        [Test]
         public void VoiceSettings_WithoutStoredValues_UseSafeDefaults()
         {
             Assert.That(settings.MicrophoneLevelPercent, Is.EqualTo(100f));

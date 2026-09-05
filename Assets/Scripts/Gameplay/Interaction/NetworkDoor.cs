@@ -33,6 +33,9 @@ namespace InterrogationRoom.Gameplay.Interaction
         [SerializeField] private string openPrompt = "Close door";
         [SerializeField, Min(0f)] private float toggleCooldown = 0.3f;
 
+        // Public presentation state must arrive before the open-state hook runs.
+        [SyncVar] private int openingSide;
+
         [SyncVar(hook = nameof(OnOpenStateChanged))]
         private bool isOpen;
 
@@ -112,11 +115,19 @@ namespace InterrogationRoom.Gameplay.Interaction
             }
 
             nextToggleAt = NetworkTime.time + toggleCooldown;
-            return SetOpenServer(!isOpen);
+            if (!isOpen)
+                openingSide = ChooseOpeningSide(interactor.transform.position);
+            return SetOpenState(!isOpen);
         }
 
         [Server]
         public bool SetOpenServer(bool open)
+        {
+            if (open && !isOpen) openingSide = 0;
+            return SetOpenState(open);
+        }
+
+        private bool SetOpenState(bool open)
         {
             if (isOpen == open)
                 return false;
@@ -175,6 +186,9 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         private Quaternion ResolveOpenRelativeRotation()
         {
+            if (openingSide != 0)
+                return Quaternion.Euler(openLocalEulerAngles * openingSide);
+
             Quaternion configuredRotation = Quaternion.Euler(openLocalEulerAngles);
             string roomId = string.Equals(roomAId, "korytarz", System.StringComparison.Ordinal)
                 ? roomBId
@@ -199,6 +213,18 @@ namespace InterrogationRoom.Gameplay.Interaction
                 : configuredRotation;
         }
 
+        private int ChooseOpeningSide(Vector3 actorPosition)
+        {
+            if (doorLeaf == null || doorLeaf.parent == null) return 1;
+            Vector3 configured = doorLeaf.parent.TransformPoint(
+                ResolveTargetLocalPosition(Quaternion.Euler(openLocalEulerAngles)));
+            Vector3 opposite = doorLeaf.parent.TransformPoint(
+                ResolveTargetLocalPosition(Quaternion.Euler(-openLocalEulerAngles)));
+            // Ignore player height: choose the leaf pose farther from the opener on the floor plane.
+            configured.y = opposite.y = actorPosition.y;
+            return (opposite - actorPosition).sqrMagnitude > (configured - actorPosition).sqrMagnitude ? -1 : 1;
+        }
+
         private Vector3 ResolveTargetLocalPosition(Quaternion relativeRotation)
         {
             Quaternion targetRotation = closedLocalRotation * relativeRotation;
@@ -209,20 +235,18 @@ namespace InterrogationRoom.Gameplay.Interaction
 
         private IEnumerator AnimateDoor(Vector3 targetPosition, Quaternion targetRotation)
         {
-            Vector3 startPosition = doorLeaf.localPosition;
             Quaternion startRotation = doorLeaf.localRotation;
+            Vector3 scaledHingeOffset = Vector3.Scale(doorLeaf.localScale, resolvedHingeLocalOffset);
+            Vector3 hingeInParent = closedLocalPosition + closedLocalRotation * scaledHingeOffset;
             float elapsed = 0f;
             while (elapsed < animationDuration)
             {
                 elapsed += Time.deltaTime;
-                doorLeaf.localPosition = Vector3.Lerp(
-                    startPosition,
-                    targetPosition,
-                    Mathf.Clamp01(elapsed / animationDuration));
                 doorLeaf.localRotation = Quaternion.Slerp(
                     startRotation,
                     targetRotation,
                     Mathf.Clamp01(elapsed / animationDuration));
+                doorLeaf.localPosition = hingeInParent - doorLeaf.localRotation * scaledHingeOffset;
                 yield return null;
             }
 

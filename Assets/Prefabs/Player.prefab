@@ -402,7 +402,7 @@ MonoBehaviour:
   interactionCamera: {fileID: 7222047874019103226}
   interactionRange: 2.5
   serverRangeTolerance: 0.25
-  serverViewHeight: 0.7
+  serverViewHeight: 1.55
   interactionMask:
     serializedVersion: 2
     m_Bits: 4294967295

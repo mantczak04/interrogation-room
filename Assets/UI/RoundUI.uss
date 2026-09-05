@@ -990,11 +990,16 @@
 
 .role-stamp {
     align-self: flex-start;
-    font-size: 56px;
-    letter-spacing: 3px;
+    font-size: var(--type-title);
+    letter-spacing: 0;
     color: var(--ink);
-    opacity: 0.82;
-    rotate: -4deg;
+    opacity: 1;
+    -unity-font-style: bold;
+    border-left-width: 4px;
+    border-left-color: var(--green);
+    padding-left: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     margin-bottom: 16px;
 }
 
@@ -1114,8 +1119,8 @@
 
 .hud-card {
     position: absolute;
-    padding: 16px;
-    background-color: rgba(20, 24, 27, 0.85);
+    padding: 20px;
+    background-color: var(--scrim-heavy);
     border-radius: var(--radius-small);
     border-left-width: 1px;
     border-right-width: 1px;
@@ -1131,20 +1136,29 @@
     right: 24px;
     bottom: 24px;
     width: 360px;
+    border-left-width: 3px;
+    border-left-color: var(--green-hover);
 }
 
-.hud-role,
+.hud-role {
+    font-size: var(--type-subtitle);
+    letter-spacing: 0;
+    -unity-font-style: bold;
+    color: var(--text-hi);
+}
+
 .private-title {
-    font-size: 15px;
-    letter-spacing: 2px;
-    color: var(--amber);
+    font-size: var(--type-lead);
+    letter-spacing: 0;
+    -unity-font-style: bold;
+    color: var(--text-hi);
 }
 
 .hud-crime {
-    font-size: 13px;
-    color: var(--text-hi);
+    font-size: var(--type-body);
+    color: var(--graphite-300);
     white-space: normal;
-    margin-top: 8px;
+    margin-top: 12px;
 }
 
 /*
@@ -1157,7 +1171,9 @@
 .private-card {
     left: 24px;
     bottom: 24px;
-    width: 420px;
+    width: 460px;
+    border-top-width: 3px;
+    border-top-color: var(--green-hover);
 }
 
 .private-card--registry {
@@ -1186,6 +1202,8 @@
 
 .private-title {
     flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
     white-space: normal;
     /* Wrap within the available space instead of forcing the row wider than
        the card (the default min-width is the longest word). */
@@ -1218,11 +1236,11 @@
 .private-step {
     white-space: normal;
 }
-.private-motive { font-size: 13px; color: var(--graphite-300); margin-bottom: 12px; }
-.private-step { font-size: 15px; color: var(--text-hi); -unity-font-style: bold; margin-bottom: 8px; }
-.private-location { font-size: 15px; color: var(--text-hi); margin-bottom: 8px; }
-.private-progress { font-size: 13px; color: var(--amber-dim); margin-bottom: 12px; }
-.private-text { font-size: 13px; color: var(--graphite-300); -unity-paragraph-spacing: 6px; }
+.private-motive { font-size: var(--type-body); color: var(--graphite-300); margin-bottom: 16px; }
+.private-step { font-size: var(--type-lead); color: var(--text-hi); -unity-font-style: bold; margin-bottom: 12px; }
+.private-location { font-size: var(--type-body); color: var(--text-hi); margin-bottom: 12px; }
+.private-progress { font-size: var(--type-kicker); color: var(--amber); margin-bottom: 8px; }
+.private-text { font-size: var(--type-body); color: var(--graphite-300); -unity-paragraph-spacing: 6px; }
 
 .result-card {
     position: absolute;

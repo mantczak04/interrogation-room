@@ -88,7 +88,7 @@
                     <ui:Label name="preparation-timer-label" class="preparation-timer document-font" />
                 </ui:VisualElement>
                 <ui:ScrollView name="preparation-scroll" class="preparation-scroll" mode="Vertical" horizontal-scroller-visibility="Hidden">
-                    <ui:Label name="role-label" class="role-stamp stamp-font" />
+                    <ui:Label name="role-label" class="role-stamp" />
                     <ui:Label text="Przestępstwo" class="section-title paper-section-title stamp-font" />
                     <ui:Label name="crime-label" class="body-text document-font" />
                     <ui:VisualElement name="alibi-section">
@@ -107,12 +107,12 @@
         <ui:VisualElement name="round-hud" class="hud no-hover-sound">
             <ui:Label name="timer-label" class="timer document-font" />
             <ui:VisualElement class="hud-card role-card">
-                <ui:Label name="hud-role-label" class="hud-role stamp-font" />
+                <ui:Label name="hud-role-label" class="hud-role" />
                 <ui:Label name="hud-crime-label" class="hud-crime" />
             </ui:VisualElement>
             <ui:VisualElement name="private-panel" class="hud-card private-card">
                 <ui:VisualElement class="private-header">
-                    <ui:Label name="private-title-label" class="private-title stamp-font" />
+                    <ui:Label name="private-title-label" class="private-title" />
                     <ui:Button name="private-toggle-button" text="Zwiń [I]" class="btn btn--quiet panel-toggle" />
                 </ui:VisualElement>
                 <ui:ScrollView name="private-content" class="private-content">

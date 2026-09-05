@@ -12,6 +12,7 @@ namespace InterrogationRoom.Settings
     {
         public const string MouseSensitivityKey = "settings.mouseSensitivity";
         public const string LanguageKey = "settings.language";
+        public const string GraphicsQualityKey = "settings.graphics.quality";
         public const string MicrophoneLevelKey = "settings.voice.microphoneLevel";
         public const string MicrophoneMutedKey = "settings.voice.microphoneMuted";
         public const string VoiceInputDeviceKey = "settings.voice.inputDevice";
@@ -53,6 +54,21 @@ namespace InterrogationRoom.Settings
 
         public string PreferredVoiceInputDeviceId =>
             GetOptionalString(VoiceInputDeviceKey);
+
+        public int GraphicsQuality => store.TryGetFloat(GraphicsQualityKey, out float stored)
+            ? NormalizeGraphicsQuality(stored) : 3;
+
+        public void SetGraphicsQuality(int quality)
+        {
+            int normalized = NormalizeGraphicsQuality(quality);
+            if (store.TryGetFloat(GraphicsQualityKey, out float stored) && stored == normalized) return;
+            store.SetFloat(GraphicsQualityKey, normalized);
+            store.Save();
+            Changed?.Invoke();
+        }
+
+        private static int NormalizeGraphicsQuality(float value) =>
+            float.IsNaN(value) || float.IsInfinity(value) ? 3 : (int)Math.Max(0, Math.Min(3, value));
 
         public void SetMouseSensitivityFallback(float value)
         {

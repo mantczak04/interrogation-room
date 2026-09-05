@@ -1,0 +1,278 @@
+{
+  "date": "2026-09-05",
+  "scene": "Assets/Scenes/Room.unity",
+  "mode": "Unity Editor Play Mode, local KCP host, one player, Round phase",
+  "seats": [
+    {
+      "seat": "Meble/Sala_KrzesloE1",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Przesluchania_KrzesloN",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Office_Sofa/Siedzisko_L",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Korytarz_LawkaW/Siedzisko_L",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Reception_Bench/Siedzisko_L",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Sala_Sofa/Siedzisko_L",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Archiwum_Krzeslo",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Office_Chair",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Sala_KrzesloW2",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Evidence_Bench/Siedzisko_P",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Sala_KrzesloW1",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Sala_KrzesloW3",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Briefing_ChairB",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "InteriorDetails/Briefing_ChairD",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Reception_Bench/Siedzisko_S",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Sala_Lawka/Siedzisko_P",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Sala_Lawka/Siedzisko_S",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Korytarz_LawkaE/Siedzisko_S",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Korytarz_LawkaE/Siedzisko_P",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Reception_Bench/Siedzisko_P",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Briefing_ChairA",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Sala_SofaE/Siedzisko",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Socjalny_Stolek1",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Office_Sofa/Siedzisko_P",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Korytarz_LawkaE/Siedzisko_L",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Przesluchania_KrzesloS",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Korytarz_LawkaW/Siedzisko_S",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Sala_Sofa/Siedzisko_P",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Office_Sofa/Siedzisko_S",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Socjalny_Stolek2",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Evidence_Bench/Siedzisko_S",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "InteriorDetails/Briefing_ChairC",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Sala_Lawka/Siedzisko_L",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Korytarz_LawkaW/Siedzisko_P",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Evidence_Bench/Siedzisko_L",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Sala_Sofa/Siedzisko_S",
+      "sit": true,
+      "standClear": true
+    },
+    {
+      "seat": "Meble/Sala_KrzesloE2",
+      "sit": true,
+      "standClear": true
+    }
+  ],
+  "doors": [
+    {
+      "door": "DrzwiSala",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiPrzesluchania",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiArchiwum",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiSocjalny",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiDepozyt",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiWarsztat",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiBiuro",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiOdprawy",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiMagazyn",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiRecepcja",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiArchiwumDepozyt",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiDepozytBiuro",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiSocjalnyWarsztat",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    },
+    {
+      "door": "DrzwiWarsztatOdprawy",
+      "openMove": "2.60",
+      "closed": "closed=True moved=0.91"
+    }
+  ],
+  "traversal": {
+    "spawns": 8,
+    "doors": 14,
+    "roomVolumes": 14,
+    "interactions": 58,
+    "reachableGridCells": 5485,
+    "passed": true
+  },
+  "limitations": [
+    "No multiplayer testing requested.",
+    "No standalone performance benchmark.",
+    "Interaction reachability does not prove completion of every authored objective.",
+    "Vivox voice login timed out during the solo session."
+  ]
+}

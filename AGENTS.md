@@ -1,41 +1,41 @@
-# Agent Instructions
+# Agent instructions
 
-These instructions apply to the entire repository. This is a Unity 6 game project. Protect gameplay secrets, the user's existing changes, and the context/token budget.
+This Unity 6 repository uses Polish design documents and canonical terms from `CONTEXT.md`.
 
-Project design documents are written in Polish. Preserve the canonical Polish domain terms defined in `CONTEXT.md`, such as `Runda`, `Detektyw`, `Winny`, `Niewinny`, `Alibi`, and `Egzekucja`.
+## Scope
+
+- Complete the smallest change requested. Diagnosis, review, or explanation alone does not authorize implementation or unrelated refactoring.
+- Before editing, run `git status --short`. Preserve existing staged, unstaged, and untracked work; never overwrite, revert, or clean unrelated changes.
+- Resolve routine choices within the authorized scope. Ask only for missing decisions that affect behavior or scope; continue independent work when one operation is blocked.
 
 ## Agent skills
 
-Start project workflows with [ask-interrogation-room](./.agents/skills/ask-interrogation-room/SKILL.md). Repository skills take precedence over similarly named global skills for work in this project; `AGENTS.md` remains the policy source of truth.
+Start with [ask-interrogation-room](./.agents/skills/ask-interrogation-room/SKILL.md). Load only applicable skills; reuse unchanged documents already read. User instructions take precedence over skill guidelines. This file owns repository policy; prefer repository skills over global equivalents. If a skill blocks authorized work, cite its exact instruction and explain the remaining blocker.
 
 ### OpenCode compatibility
 
-- At the start of every OpenCode session, load the global `i-have-adhd` skill and use its action-first, numbered, low-noise response format throughout the session.
-- OpenCode discovers the project workflows under `.agents/skills/`; do not duplicate them under `.opencode/skills/`.
-- The project-level `opencode.json` owns the OpenCode connection to `unityMCP` at `http://127.0.0.1:8080/mcp`.
-- If the ADHD skill cannot be loaded, continue with the same response constraints and report the missing skill briefly.
+- In OpenCode sessions, load global `i-have-adhd` and use action-first, numbered, low-noise responses. If unavailable, retain that format and report the missing skill.
+- OpenCode uses `.agents/skills/` and the MCP connection in `opencode.json`; do not duplicate skills under `.opencode/skills/`.
 
-## Start Here
+## Task-specific context
 
-Before changing code, read only the documents required for the current task:
+Read only the references triggered by the task:
 
-1. [CONTEXT.md](./CONTEXT.md) — canonical language and approved domain rules. Read it for every gameplay change.
-2. [MVP-ARCHITECTURE.md](./docs/architecture/MVP-ARCHITECTURE.md) — first vertical-slice scope, modules, seams, and implementation order. Read it for architecture, networking, or Round changes.
-3. [OPEN-QUESTIONS.md](./docs/design/OPEN-QUESTIONS.md) — deferred decisions. Do not implement them as approved features without a new user decision.
-4. [proximity-voice-tools.md](./docs/research/proximity-voice-tools.md) — Dissonance/Vivox/Photon/Steam Voice research. Read it only for voice-chat or acoustics work.
-5. [STEAM-NETWORKING.md](./docs/architecture/STEAM-NETWORKING.md) — implemented Steam multiplayer stack (Steamworks.NET, FizzySteamworks, `SteamLobby`, KCP fallback). Read it only for Steam, lobby, or transport work.
-6. [docs/adr](./docs/adr/) — durable decision rationale. Read only ADRs relevant to the current task; do not load the entire directory by default.
+1. Gameplay: [CONTEXT.md](./CONTEXT.md), canonical terms and domain rules.
+2. Architecture, networking, or `Runda`: [MVP-ARCHITECTURE.md](./docs/architecture/MVP-ARCHITECTURE.md), module boundaries and slice scope.
+3. Unresolved product decisions: [OPEN-QUESTIONS.md](./docs/design/OPEN-QUESTIONS.md). Deferred features require a user decision.
+4. Voice or acoustics: [glos-przestrzenny.md](./docs/design/mechanics/glos-przestrzenny.md), approved Vivox behavior. Use [proximity-voice-tools.md](./docs/research/proximity-voice-tools.md) only for historical research; Dissonance is superseded.
+5. Steam, lobby, or transport: [STEAM-NETWORKING.md](./docs/architecture/STEAM-NETWORKING.md).
+6. Decision rationale: select relevant files from [docs/adr](./docs/adr/); do not load the whole directory.
 
-## Approved Product Rules
+## Approved product rules
+
+Preserve these constraints. Flag conflicts before changing the domain model; an explicit user decision may supersede an existing rule. Research and proposals are not approved features.
 
 - Round composition: 3–8 players, primarily balanced for 5; exactly 1 `Detektyw`, 1 `Winny`, and 1–6 `Niewinny` players.
-- The `Winny` committed a public absurd `Przestępstwo` and receives the true `Alibi` with selected facts hidden.
-- `Niewinny` players see the complete `Alibi`; the `Detektyw` never sees it.
-- Suspects see the `Alibi` only during `Przygotowanie`. They cannot reopen it afterward.
+- The public absurd `Przestępstwo` was committed by the `Winny`. During `Przygotowanie`, `Niewinny` players see the complete `Alibi`, the `Winny` receives it with selected facts hidden, and the `Detektyw` never sees it. Suspects cannot reopen it afterward.
 - A `Runda` is continuous and free-roaming, with no formal interrogation turns.
-- The `Detektyw` has one shared `Limit Rundy` and exactly one `Egzekucja`.
-- Executing the `Winny` gives the `Detektyw` a win. Executing a `Niewinny`, or failing to execute before time expires, is a loss.
-- The `Detektyw` starts the Round with a pistol that suspects cannot take or use. Misses do not consume the `Egzekucja`; the first hit on a living suspect does.
+- The `Detektyw` has one shared `Limit Rundy` and one `Egzekucja`. The starting pistol cannot be taken or used by suspects. Misses do not consume the `Egzekucja`; the first hit on a living suspect ends the `Runda`. Hitting the `Winny` wins; hitting a `Niewinny` or timing out loses.
 - `Niewinny` players have individual outcomes and win only by completing exactly one `Prywatny Cel` plus achieving `Przetrwanie`.
 - An `Osobista Sprawa` is the default `Prywatny Cel`. A `Sekretny Cel` replaces it and requires `Wrobienie`, the designated `Niewinny`'s elimination, and the owner's survival.
 - `Sekretny Cel` is disabled for three or four players. For five to eight players, one is enabled by default and the host may disable it in the lobby.
@@ -43,37 +43,9 @@ Before changing code, read only the documents required for the current task:
 - Suspicious actions are readable but motives remain ambiguous. Loud Incidents report immediately; quiet Incidents enter the Detective's private registry only after personal discovery.
 - `Bunt` is an emergent alignment of individual interests after private goals are completed. It has no phrase, signal, button, dedicated action, or separate Round phase.
 - Crimes and alibis use hand-authored modules; do not generate runtime case content with AI.
-- Voice is always spatial. Privacy comes from distance, rooms, and doors, not private voice channels.
 - The final Detective Notes UI and Alibi presentation remain unresolved. Exact objective timings, content volume, and map expansion are playtest tuning, not approved fixed values.
 
-If code or a request contradicts these rules, identify the conflict before changing the domain model.
-
-## ADR Index by Topic
-
-### Roles, objectives, and Round resolution
-
-- [ADR-0001](./docs/adr/0001-one-hidden-guilty-suspect.md) — one hidden Guilty suspect.
-- [ADR-0002](./docs/adr/0002-innocents-play-for-their-own-survival.md) — individual Innocent outcomes.
-- [ADR-0003](./docs/adr/0003-one-execution-ends-the-round.md) — one Execution ends the Round.
-- [ADR-0004](./docs/adr/0004-one-time-limit-for-the-whole-round.md) — one time limit for the whole Round.
-- [ADR-0013](./docs/adr/0013-private-goals-and-emergent-rebellion.md) — mandatory private goals and emergent Rebellion.
-
-### Flow and information
-
-- [ADR-0005](./docs/adr/0005-continuous-free-roaming-rounds.md) — continuous free-roaming Rounds.
-- [ADR-0006](./docs/adr/0006-guilty-receives-redacted-alibi.md) — redacted Alibi for the Guilty player.
-- [ADR-0007](./docs/adr/0007-alibi-is-hidden-after-preparation.md) — Alibi disappears after Preparation.
-- [ADR-0008](./docs/adr/0008-detective-reconstructs-alibi-from-testimony.md) — Detective reconstructs the Alibi from testimony.
-
-### Voice, content, and architecture
-
-- [ADR-0009](./docs/adr/0009-voice-privacy-comes-from-space.md) — voice privacy comes from space.
-- [ADR-0010](./docs/adr/0010-authored-modular-case-content.md) — hand-authored modular cases.
-- [ADR-0011](./docs/adr/0011-server-owns-secrets-and-exposes-private-views.md) — server-owned secrets and private player views.
-- [ADR-0012](./docs/adr/0012-steam-lobby-with-runtime-transport-fallback.md) — Steam lobbies with runtime transport fallback to KCP.
-- [ADR-0014](./docs/adr/0014-readable-actions-ambiguous-motives.md) — readable actions with ambiguous motives, incidents, and Escape.
-
-## Files and Directories: Do Not Read or Edit
+## Excluded files and directories
 
 Never scan, recursively open, or edit:
 
@@ -95,11 +67,13 @@ Assets/SourceFiles/
 docs/map-polish/screenshots/
 ```
 
-These contain generated Unity data, builds, logs, caches, tool state, or raw source media (`models/` and `Assets/SourceFiles/` hold large FBX/texture source files; `docs/map-polish/screenshots/` is image-only). If diagnostics absolutely require a log, use a precise filter and a small output limit. Never load an entire `Editor.log`, `Player.log`, or file under `Logs/`.
+For essential log diagnostics only, use a precise filter and small output limit; never load a full `Editor.log`, `Player.log`, or file under `Logs/`.
+
+Use Git commands to inspect repository status and history; the `.git/` exclusion prohibits direct file inspection and editing there.
 
 Do not read binary or media files as text (`*.png`, `*.jpg`, `*.fbx`, `*.wav`, `*.mp3`, `*.webm`, `*.dll`). Inspect a specific asset only when the task requires it.
 
-## Third-Party Code and Unity-Managed Files
+## Third-party code and Unity-managed files
 
 Do not edit vendor code unless the user explicitly requests a fork or vendor patch:
 
@@ -115,11 +89,10 @@ A targeted read of one vendor file is allowed when verifying an integration. Do 
 
 - Do not edit `Packages/packages-lock.json` manually; Unity Package Manager owns it.
 - Do not edit `*.meta` files manually. Let Unity create them and move them with their assets.
-- Do not modify raw YAML in `*.unity`, `*.prefab`, or `*.asset` when Unity MCP can perform the operation safely.
+- Modify scenes, prefabs, and serialized assets through Unity MCP. If MCP cannot perform the operation, follow the stop rule below; raw YAML editing is not a fallback.
 - Read or change `ProjectSettings/` only when required by the task; prefer the corresponding Unity MCP operation.
-- Never overwrite, revert, or clean unrelated user changes. Check `git status --short` before editing and ignore unrelated files.
 
-## Efficient Repository Search
+## Efficient repository search
 
 - Use `rg` and `rg --files` with generated directories excluded. Do not recursively enumerate the repository root to search for code.
 - Start with `Assets/Scripts/`, `CONTEXT.md`, and the relevant document under `docs/`.
@@ -127,14 +100,9 @@ A targeted read of one vendor file is allowed when verifying an integration. Do 
 - Inspect large scenes, prefabs, and ScriptableObjects through Unity MCP or a targeted `rg -n` query using a type, object name, or GUID. Never dump an entire file.
 - Do not generate asset previews or screenshots unless visual inspection is required.
 
-Safe search examples:
+## Unity MCP rules
 
-```powershell
-rg -n "RoundEngine|NetworkRoundCoordinator" Assets/Scripts docs CONTEXT.md
-rg --files Assets/Scripts docs -g '*.cs' -g '*.md'
-```
-
-## Unity MCP Rules
+Apply this section to Editor operations, including required verification. Source and documentation edits may use `apply_patch`.
 
 Before the first Unity MCP operation:
 
@@ -149,42 +117,18 @@ Bound every query:
 - `manage_asset(search)`: 25–50 results per page and `generate_preview=false`.
 - Console: query `Error` first, then `Warning` only if needed; use a small limit and a message filter. Never fetch full console history.
 - Use `batch_execute` for repetitive mutations.
-- After script changes, wait for compilation and inspect compiler errors only before continuing.
-- Do not enter Play Mode or run a build when Edit Mode tests or script validation are sufficient.
+- After script changes, wait for compilation to finish and check compiler errors before dependent Editor operations. Fix task-introduced errors before continuing; report pre-existing errors separately.
 
-### Mandatory Stop Rule When Unity MCP Cannot Perform an Editor Operation
+### Stop rule when Unity MCP cannot perform an Editor operation
 
-This rule applies to tasks that require Unity Editor interaction, including hierarchy, Inspector, components, scenes, prefabs, asset import, package windows, or Play Mode. It does not prohibit normal source-code or documentation edits through `apply_patch`.
+If MCP cannot perform a required hierarchy, Inspector, component, scene, prefab, import, package-window, or Play Mode operation:
 
-If the required Editor operation cannot be performed with the available Unity MCP tools:
+1. Stop that operation. Do not substitute raw YAML, shell/window automation, scripted input, cache modification, or other OS workarounds.
+2. Report the missing capability and incomplete work. Supply a copy-ready prompt for a separate task using `computer-use:computer-use` through the visible Editor.
+3. Include the absolute project path, exact target, desired state, no unrelated changes or reverts, no raw YAML, and steps to save, check Console Errors, visually verify the result, and report remaining problems.
+4. Invoke Computer Use in this task only if the user explicitly requests it here.
 
-1. **Stop that part of the task immediately.**
-2. **Do not attempt a workaround** through raw scene/prefab/asset YAML, shell-driven window automation, scripted keyboard or mouse input, Unity cache modification, or any other OS/system-level hack.
-3. State exactly which Unity MCP capability is missing and what remains incomplete.
-4. Return a copy-ready prompt for a separate Codex task that explicitly uses the `computer-use:computer-use` skill.
-5. The prompt must include the absolute project path, exact scene/object/asset, desired final state, prohibition on unrelated changes, and visual plus Console verification steps.
-6. Do not invoke Computer Use yourself unless the user explicitly asks for it in the current task.
-
-Fallback prompt template:
-
-```text
-Use the `computer-use:computer-use` skill to perform the following operation in Unity Editor.
-
-Project: C:\Users\Piotr\Documents\Unity projects\interrogation-room
-Scene/object/asset: <exact target>
-Goal: <expected final state>
-
-Unity MCP cannot perform: <specific missing capability>.
-Make the change only through the visible Unity Editor interface. Do not edit raw YAML, do not modify unrelated files, and do not revert existing user changes.
-
-After the change:
-1. save the correct scene or asset,
-2. check Console for Errors,
-3. visually verify <specific expected result>,
-4. report the actions taken and any remaining problems.
-```
-
-## Code-Authored Editor Tooling
+## Code-authored Editor tooling
 
 Scene and asset construction is scripted through `[MenuItem]` editor tools. When one of these covers the change, re-run it through Unity MCP `execute_menu_item` instead of editing the scene by hand:
 
@@ -195,7 +139,7 @@ Scene and asset construction is scripted through `[MenuItem]` editor tools. When
 
 After running a builder, check the Console for errors and save the affected scene or asset.
 
-## MVP Architecture Constraints
+## Architecture constraints
 
 - Round rules belong to the pure `RoundEngine` module; it must not depend on Unity, Mirror, Steamworks, or UI.
 - `NetworkRoundCoordinator` is the single Mirror adapter for a Round and the only place that maps connections to `PlayerId`.
@@ -203,23 +147,25 @@ After running a builder, check the Console for errors and save the affected scen
 - Never synchronize secrets through global `SyncVar` fields. A client receives only its own `PlayerRoundView` through a targeted message.
 - `CaseAsset` is for authoring; immutable `CaseDefinition` data enters the domain.
 - UI renders a received view and sends intentions; it does not resolve rules.
-- Voice is independent of `RoundEngine`. The implemented stack is Unity Vivox: `Assets/Scripts/Voice/VivoxVoiceRuntime.cs` and `Assets/Scripts/Voice/VivoxVoiceOcclusion.cs`, with pure voice logic in `Assets/Scripts/Game/Voice/`. Voice is global in Lobby, spatial from `Przygotowanie` through `Finished`, and global again after returning to Lobby. The decision of record (2026-07-14) is in `docs/design/mechanics/glos-przestrzenny.md`; the Dissonance recommendation in `docs/research/proximity-voice-tools.md` is historical research only.
-- Use the current KCP transport and ParrelSync for local development. Test FizzySteamworks with two machines/accounts.
+- Vivox is independent of `RoundEngine`: runtime and occlusion in `Assets/Scripts/Voice/`, pure logic in `Assets/Scripts/Game/Voice/`. Voice is global in Lobby and spatial from `Przygotowanie` through `Finished`. Privacy comes from distance, rooms, and doors; there are no private voice channels.
 
 ## Verification
 
-### Performance and visual-regression evidence
-
-- Treat performance work as a controlled A/B experiment. Before and after each sample, record and compare the active scene, Play Mode state, transport, host/client connection count, Round phase, local-player presence, active camera, and relevant UI state. Discard a run if any precondition changes.
-- Warm both variants equivalently. Frame-time claims require at least 60 unique frames per variant and must report sample count, median, p95, and noise or outliers. Prefer an attributed Profiler marker over a global counter; never compare isolated frames or counters captured from different gameplay states.
-- Source edits cause compilation and domain reloads, and MCP/Editor activity can contaminate global GC and frame counters. Re-establish the full scenario after every reload and do not claim an allocation or frame-time improvement when the measured counter is inconsistent or below noise.
-- For UI performance changes, preserve one-time binding, initialization, and first-render paths. Verify a cold Play Mode start plus every affected transition (at minimum hidden, visible, open, and close) before accepting steady-state gains.
-- Screenshot capture is asynchronous. Wait for a completed rendered frame, confirm the output file is non-empty, and inspect it. Discard black, transitional, stale, or wrong-state captures. If random or animated content differs, pin it to the same state or state explicitly that a pixel comparison is invalid.
-- Capture Console errors before the baseline and compare them with the final run so pre-existing errors are not attributed to the change. Do not claim that the application is smooth on weak hardware from Editor profiling alone; that claim requires a standalone Player build tested on representative minimum-spec hardware with the same scenario and quality settings.
+Use [unity-change-verification](./.agents/skills/unity-change-verification/SKILL.md) for implementation. Check this task's changes, not untouched local or upstream work. Documentation-only changes need diff, link, and instruction-consistency checks, without Unity. Run the narrowest sufficient checks; broaden or repeat only for new changes, failures, or unresolved concerns. Skip Play Mode and builds when Edit Mode or script validation suffices.
 
 - Cover `RoundEngine` logic with Edit Mode tests through its public interface.
-- Run tests through Unity MCP: `run_tests` with `EditMode`, then poll `get_test_job` for results. When only one area changed, filter by its test assembly (for example `InterrogationRoom.Domain.EditModeTests`, `...Game.Networking.EditModeTests`, `...Game.UI.EditModeTests`, `...Game.Voice.EditModeTests`). PlayMode tests need a running Editor; run them only when Edit Mode coverage is insufficient.
+- Run tests through Unity MCP: `run_tests` with `EditMode`, then poll `get_test_job` to completion. Filter by the affected test assembly when only one area changed. Use Play Mode tests only when Edit Mode coverage is insufficient.
 - After C# changes, verify Unity compilation and Console errors.
-- After networking changes, run a local host + client test; test Steam only after KCP succeeds.
-- After scene changes, verify the hierarchy and save the active scene through Unity MCP.
-- Before finishing, run `git diff --check` and report any tests that could not be run.
+- After networking changes, test local KCP host + client with ParrelSync; test FizzySteamworks only after KCP succeeds, using two machines/accounts.
+- After scene changes, verify the hierarchy and save the affected scene through Unity MCP.
+- Before finishing, inspect the final diff and run `git diff --check` plus `git diff --cached --check` when staged changes exist. Report pre-existing failures separately.
+- Report the result and checks as passed, failed, or not run, with reasons for omissions and remaining work. Distinguish pre-existing errors. A submitted test job is not a passing result.
+
+### Performance and visual-regression evidence
+
+- For each A/B sample, record scene, Play Mode, transport, connection counts, `Runda` phase, local-player presence, camera, and UI state before and after. Discard runs with changed preconditions.
+- Warm variants equally. Frame-time claims require at least 60 unique frames per variant; report count, median, p95, and noise/outliers. Prefer attributed Profiler markers; never compare isolated frames or different gameplay states.
+- Re-establish the scenario after compilation/domain reloads. MCP/Editor activity contaminates global GC/frame counters; claim no improvement from inconsistent or below-noise measurements.
+- Preserve UI binding, initialization, and first render. Verify cold Play Mode startup and every affected transition, including hidden, visible, open, and close.
+- Await completed screenshot rendering, confirm a non-empty file, and inspect it. Discard black, transitional, stale, or wrong-state captures. Pin random/animated content or report pixel comparison as invalid.
+- Compare baseline and final Console errors. Minimum-spec performance claims require a standalone Player on representative hardware with matching scenario and quality settings; Editor profiling alone is insufficient.

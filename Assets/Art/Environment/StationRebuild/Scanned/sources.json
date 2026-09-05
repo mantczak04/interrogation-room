@@ -1,0 +1,418 @@
+{
+  "provider": "Powered by Poly Haven",
+  "license": "https://polyhaven.com/license",
+  "assets": [
+    {
+      "id": "painted_plaster_wall",
+      "kind": "texture",
+      "source": "https://polyhaven.com/a/painted_plaster_wall",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/painted_plaster_wall/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/painted_plaster_wall/painted_plaster_wall_diff_2k.jpg",
+          "md5": "32f4f4e5ded7d20e55e337004d0d9691"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/painted_plaster_wall/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/painted_plaster_wall/painted_plaster_wall_nor_gl_2k.jpg",
+          "md5": "18faf9f7949aefdb3ae7cef7195cba04"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/painted_plaster_wall/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/painted_plaster_wall/painted_plaster_wall_arm_2k.jpg",
+          "md5": "b66f912016257faa7e71a1530e387545"
+        }
+      ]
+    },
+    {
+      "id": "terrazzo_tiles",
+      "kind": "texture",
+      "source": "https://polyhaven.com/a/terrazzo_tiles",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/terrazzo_tiles/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/terrazzo_tiles/terrazzo_tiles_diff_2k.jpg",
+          "md5": "b4bfb01525c22e611d9a0651f372ae91"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/terrazzo_tiles/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/terrazzo_tiles/terrazzo_tiles_nor_gl_2k.jpg",
+          "md5": "6fdd6cc116b9018108b91f3d5ddf1cff"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/terrazzo_tiles/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/terrazzo_tiles/terrazzo_tiles_arm_2k.jpg",
+          "md5": "0fb422cdf520645d1f842fb455915130"
+        }
+      ]
+    },
+    {
+      "id": "concrete_floor_worn_001",
+      "kind": "texture",
+      "source": "https://polyhaven.com/a/concrete_floor_worn_001",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/concrete_floor_worn_001/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/concrete_floor_worn_001/concrete_floor_worn_001_diff_2k.jpg",
+          "md5": "6a3645f19f2ac4b7f60f43419c5d09ec"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/concrete_floor_worn_001/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/concrete_floor_worn_001/concrete_floor_worn_001_nor_gl_2k.jpg",
+          "md5": "210fbc9fe40492177e79fdb4afda268e"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/concrete_floor_worn_001/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/concrete_floor_worn_001/concrete_floor_worn_001_arm_2k.jpg",
+          "md5": "ed519bf68bcf8581447a9d3fbc1e8c45"
+        }
+      ]
+    },
+    {
+      "id": "oak_wood_planks",
+      "kind": "texture",
+      "source": "https://polyhaven.com/a/oak_wood_planks",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/oak_wood_planks/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/oak_wood_planks/oak_wood_planks_diff_2k.jpg",
+          "md5": "740160778f1c4b78bac74d96fe3c06ea"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/oak_wood_planks/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/oak_wood_planks/oak_wood_planks_nor_gl_2k.jpg",
+          "md5": "7291b28d1aa5e0002d93b4d419268e98"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/oak_wood_planks/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/oak_wood_planks/oak_wood_planks_arm_2k.jpg",
+          "md5": "29d201ec076f74fbeb9ce1ca99dc9163"
+        }
+      ]
+    },
+    {
+      "id": "rusty_painted_metal",
+      "kind": "texture",
+      "source": "https://polyhaven.com/a/rusty_painted_metal",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/rusty_painted_metal/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rusty_painted_metal/rusty_painted_metal_diff_2k.jpg",
+          "md5": "dd4f975d539100c4d31fa91d41e1ea71"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/rusty_painted_metal/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rusty_painted_metal/rusty_painted_metal_nor_gl_2k.jpg",
+          "md5": "f9fe4bf3312f06b0eacd7c57470d6285"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/rusty_painted_metal/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rusty_painted_metal/rusty_painted_metal_arm_2k.jpg",
+          "md5": "1ae307c9293e24227313d18f857c226b"
+        }
+      ]
+    },
+    {
+      "id": "grey_plaster_03",
+      "kind": "texture",
+      "source": "https://polyhaven.com/a/grey_plaster_03",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/grey_plaster_03/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/grey_plaster_03/grey_plaster_03_diff_2k.jpg",
+          "md5": "480d2125eae0feb027ceddab7e314ac0"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/grey_plaster_03/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/grey_plaster_03/grey_plaster_03_nor_gl_2k.jpg",
+          "md5": "47b897d9fc5751823993f5d9e71e4732"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/grey_plaster_03/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/grey_plaster_03/grey_plaster_03_arm_2k.jpg",
+          "md5": "1ec682ee8c65f5c71766e592b04ba5f0"
+        }
+      ]
+    },
+    {
+      "id": "drawer_cabinet",
+      "kind": "model",
+      "source": "https://polyhaven.com/a/drawer_cabinet",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/drawer_cabinet/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/drawer_cabinet/drawer_cabinet_diff_2k.jpg",
+          "md5": "ecf30786b237f49412c4026e9d9eb7bd"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/drawer_cabinet/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/drawer_cabinet/drawer_cabinet_nor_gl_2k.jpg",
+          "md5": "b9982e0169745395fc37fdc7c3af7626"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/drawer_cabinet/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/drawer_cabinet/drawer_cabinet_arm_2k.jpg",
+          "md5": "434369a715fd968e2ef99253ca2a497a"
+        },
+        {
+          "channel": "model",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/drawer_cabinet/drawer_cabinet.fbx",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/drawer_cabinet/drawer_cabinet_2k.fbx",
+          "md5": "4c31e9196be007face10b0f70bf5f57e"
+        }
+      ]
+    },
+    {
+      "id": "power_box_01",
+      "kind": "model",
+      "source": "https://polyhaven.com/a/power_box_01",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/power_box_01/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/power_box_01/power_box_01_diff_2k.jpg",
+          "md5": "c911f1ffb29ea558069498a01d5ccc5a"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/power_box_01/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/power_box_01/power_box_01_nor_gl_2k.jpg",
+          "md5": "453ff402c8af7f09a53644fcdc604e7f"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/power_box_01/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/power_box_01/power_box_01_arm_2k.jpg",
+          "md5": "af49a41c1fa2c50456e3f7c2eaabd3b0"
+        },
+        {
+          "channel": "model",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/power_box_01/power_box_01.fbx",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/power_box_01/power_box_01_2k.fbx",
+          "md5": "554c847419fedd6dbbed84acf0f682b8"
+        }
+      ]
+    },
+    {
+      "id": "potted_plant_04",
+      "kind": "model",
+      "source": "https://polyhaven.com/a/potted_plant_04",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/potted_plant_04/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/potted_plant_04/potted_plant_04_diff_2k.jpg",
+          "md5": "5027506c5e268ac90a12c59af29fdd6b"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/potted_plant_04/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/potted_plant_04/potted_plant_04_nor_gl_2k.jpg",
+          "md5": "2e6ce98447b27e7a28d1c274b46c1448"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/potted_plant_04/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/potted_plant_04/potted_plant_04_arm_2k.jpg",
+          "md5": "f082178308dea1cd23598786603bda6d"
+        },
+        {
+          "channel": "model",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/potted_plant_04/potted_plant_04.fbx",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/potted_plant_04/potted_plant_04_2k.fbx",
+          "md5": "e042829c10c5c1ff34e179e415306541"
+        }
+      ]
+    },
+    {
+      "id": "binder_notebook",
+      "kind": "model",
+      "source": "https://polyhaven.com/a/binder_notebook",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/binder_notebook/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/binder_notebook/binder_notebook_diff_2k.jpg",
+          "md5": "724bade04ee8cb9866b652f4ab39082b"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/binder_notebook/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/binder_notebook/binder_notebook_nor_gl_2k.jpg",
+          "md5": "e61e5a6591d77a16a373c81b0866a0d2"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/binder_notebook/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/binder_notebook/binder_notebook_arm_2k.jpg",
+          "md5": "e9e0870248c3f9651b5e8202c8c9b93a"
+        },
+        {
+          "channel": "model",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/binder_notebook/binder_notebook.fbx",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/binder_notebook/binder_notebook_2k.fbx",
+          "md5": "2240220310d09947a11cd214a635ebda"
+        }
+      ]
+    },
+    {
+      "id": "metal_toolbox",
+      "kind": "model",
+      "source": "https://polyhaven.com/a/metal_toolbox",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/metal_toolbox/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/metal_toolbox/metal_toolbox_diff_2k.jpg",
+          "md5": "870d4d3804daadd9c4df40f746d56fa7"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/metal_toolbox/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/metal_toolbox/metal_toolbox_nor_gl_2k.jpg",
+          "md5": "75f7a9df8c867eba5b4d29219ec496e5"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/metal_toolbox/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/metal_toolbox/metal_toolbox_arm_2k.jpg",
+          "md5": "05506bb3feca52d47682dd76af5383dc"
+        },
+        {
+          "channel": "model",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/metal_toolbox/metal_toolbox.fbx",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/metal_toolbox/metal_toolbox_2k.fbx",
+          "md5": "2a39bbcb4aeb4cbf8da8a978bdd2e925"
+        }
+      ]
+    },
+    {
+      "id": "cardboard_box_01",
+      "kind": "model",
+      "source": "https://polyhaven.com/a/cardboard_box_01",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/cardboard_box_01/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/cardboard_box_01/cardboard_box_01_diff_2k.jpg",
+          "md5": "40a2ca17b3a7fb225798fe4d88868417"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/cardboard_box_01/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/cardboard_box_01/cardboard_box_01_nor_gl_2k.jpg",
+          "md5": "ddb48558effc348622d70b06550ca9a5"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/cardboard_box_01/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/cardboard_box_01/cardboard_box_01_arm_2k.jpg",
+          "md5": "8ce163ffd6f1ed59e0504ff45326b95c"
+        },
+        {
+          "channel": "model",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/cardboard_box_01/cardboard_box_01.fbx",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/cardboard_box_01/cardboard_box_01_2k.fbx",
+          "md5": "1e6c381317f3f4f27c91de02a377dd1e"
+        }
+      ]
+    },
+    {
+      "id": "fire_alarm",
+      "kind": "model",
+      "source": "https://polyhaven.com/a/fire_alarm",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/fire_alarm/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fire_alarm/fire_alarm_diff_2k.jpg",
+          "md5": "69b26977fe7b26873670e5885b6bced5"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/fire_alarm/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fire_alarm/fire_alarm_nor_gl_2k.jpg",
+          "md5": "38f922b2da645ea8653700b3efaa81ef"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/fire_alarm/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fire_alarm/fire_alarm_arm_2k.jpg",
+          "md5": "8bfdcfa29b91e63adbd06a83126f7e1d"
+        },
+        {
+          "channel": "model",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/fire_alarm/fire_alarm.fbx",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/fire_alarm/fire_alarm_2k.fbx",
+          "md5": "6973089f9f919330b356383f8fe7563f"
+        }
+      ]
+    },
+    {
+      "id": "desk_lamp_arm_01",
+      "kind": "model",
+      "source": "https://polyhaven.com/a/desk_lamp_arm_01",
+      "license": "CC0",
+      "files": [
+        {
+          "channel": "albedo",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/desk_lamp_arm_01/albedo.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/desk_lamp_arm_01/desk_lamp_arm_01_diff_2k.jpg",
+          "md5": "18b2a20186590642bf99537784bdc414"
+        },
+        {
+          "channel": "normal",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/desk_lamp_arm_01/normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/desk_lamp_arm_01/desk_lamp_arm_01_nor_gl_2k.jpg",
+          "md5": "f576a49c0203d1115fd4fb4b68f0548c"
+        },
+        {
+          "channel": "arm",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/desk_lamp_arm_01/arm.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/desk_lamp_arm_01/desk_lamp_arm_01_arm_2k.jpg",
+          "md5": "7f4335c90f5be6ac9d9e0073a12cc7e5"
+        },
+        {
+          "channel": "model",
+          "path": "Assets/Art/Environment/StationRebuild/Scanned/desk_lamp_arm_01/desk_lamp_arm_01.fbx",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/fbx/2k/desk_lamp_arm_01/desk_lamp_arm_01_2k.fbx",
+          "md5": "f51c0a48a59bef1e8cbde149f91e6f11"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,566 @@
+{
+  "doors": [
+    {
+      "name": "DrzwiArchiwum",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiArchiwum",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiArchiwumDepozyt",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.35000014
+    },
+    {
+      "name": "DrzwiArchiwumDepozyt",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.35
+    },
+    {
+      "name": "DrzwiBiuro",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiBiuro",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiDepozyt",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiDepozyt",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiDepozytBiuro",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.35000038
+    },
+    {
+      "name": "DrzwiDepozytBiuro",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3499999
+    },
+    {
+      "name": "DrzwiMagazyn",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.35000014
+    },
+    {
+      "name": "DrzwiMagazyn",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3499999
+    },
+    {
+      "name": "DrzwiOdprawy",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiOdprawy",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiPrzesluchania",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.35
+    },
+    {
+      "name": "DrzwiPrzesluchania",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.35000014
+    },
+    {
+      "name": "DrzwiRecepcja",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.35000014
+    },
+    {
+      "name": "DrzwiRecepcja",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3499999
+    },
+    {
+      "name": "DrzwiSala",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3499999
+    },
+    {
+      "name": "DrzwiSala",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3499999
+    },
+    {
+      "name": "DrzwiSocjalny",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiSocjalny",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiSocjalnyWarsztat",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.35000014
+    },
+    {
+      "name": "DrzwiSocjalnyWarsztat",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.35
+    },
+    {
+      "name": "DrzwiWarsztat",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiWarsztat",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3500005
+    },
+    {
+      "name": "DrzwiWarsztatOdprawy",
+      "side": -1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.35000038
+    },
+    {
+      "name": "DrzwiWarsztatOdprawy",
+      "side": 1,
+      "open": true,
+      "away": true,
+      "push": 0,
+      "crossed": true,
+      "dist": -1.3499999
+    }
+  ],
+  "seats": [
+    {
+      "index": 0,
+      "name": "Archiwum_Krzeslo",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 1,
+      "name": "Briefing_ChairA",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 2,
+      "name": "Briefing_ChairB",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 3,
+      "name": "Briefing_ChairC",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 4,
+      "name": "Briefing_ChairD",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 5,
+      "name": "Office_Chair",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 6,
+      "name": "Przesluchania_KrzesloN",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 7,
+      "name": "Przesluchania_KrzesloS",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 8,
+      "name": "Sala_KrzesloE1",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 9,
+      "name": "Sala_KrzesloE2",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 10,
+      "name": "Sala_KrzesloW1",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 11,
+      "name": "Sala_KrzesloW2",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 12,
+      "name": "Sala_KrzesloW3",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 13,
+      "name": "Siedzisko",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 14,
+      "name": "Siedzisko_L",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 15,
+      "name": "Siedzisko_L",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 16,
+      "name": "Siedzisko_L",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 17,
+      "name": "Siedzisko_L",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 18,
+      "name": "Siedzisko_L",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 19,
+      "name": "Siedzisko_L",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 20,
+      "name": "Siedzisko_L",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 21,
+      "name": "Siedzisko_P",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 22,
+      "name": "Siedzisko_P",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 23,
+      "name": "Siedzisko_P",
+      "sat": false,
+      "standRequest": false,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 24,
+      "name": "Siedzisko_P",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 25,
+      "name": "Siedzisko_P",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 26,
+      "name": "Siedzisko_P",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 27,
+      "name": "Siedzisko_P",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 28,
+      "name": "Siedzisko_S",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 29,
+      "name": "Siedzisko_S",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 30,
+      "name": "Siedzisko_S",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 31,
+      "name": "Siedzisko_S",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 32,
+      "name": "Siedzisko_S",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 33,
+      "name": "Siedzisko_S",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 34,
+      "name": "Siedzisko_S",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 35,
+      "name": "Socjalny_Stolek1",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    },
+    {
+      "index": 36,
+      "name": "Socjalny_Stolek2",
+      "sat": true,
+      "standRequest": true,
+      "standing": true,
+      "blocking": []
+    }
+  ],
+  "officeSeatRetry": {
+    "index": 23,
+    "path": "Map_Station/Meble/Office_Sofa/Siedzisko_P",
+    "approach": [
+      -8,
+      0.04,
+      11.54
+    ],
+    "sat": true,
+    "standRequest": true,
+    "initialApproach": "Side approach blocked by armrest; front approach passes"
+  }
+}

@@ -13,7 +13,7 @@ Domain <- Runtime adapters/UI/Voice <- Play Mode integration tests
   └─ Edit Mode domain tests
 ```
 
-Keep `Domain` independent of Unity, Mirror, Steamworks, UI, and Dissonance. Runtime may reference Domain plus the packages it adapts. Editor-only code must not enter player assemblies. Test assemblies reference only the production assemblies and test framework they exercise.
+Keep `Domain` independent of Unity, Mirror, Steamworks, UI, and voice SDKs such as Vivox. Runtime may reference Domain plus the packages it adapts. Editor code stays outside player assemblies; tests reference only the assemblies and framework they exercise.
 
 Before proposing changes, inspect existing `*.asmdef` files and package references with targeted search. Recommend a split only when it enforces a meaningful boundary, test isolation, or compile benefit. Prefer a few directional assemblies over one assembly per folder; reject cycles and shared dumping grounds.
 

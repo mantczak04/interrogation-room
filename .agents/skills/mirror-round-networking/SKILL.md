@@ -18,16 +18,16 @@ Map the change across these boundaries before editing:
 
 ## Protect private information
 
-For every outbound field, record its source, recipient, permitted phase, and reason. Construct each payload from `ViewFor(recipientPlayerId)`. Keep roles, complete Alibi, hidden facts, and Sekretne Cele only on the host. Use targeted messages or `TargetRpc`; public synchronization may contain only explicitly public state.
+For each changed outbound field, check source, recipient, and permitted phase. The host owns authoritative secrets; each client receives only its phase-filtered `ViewFor(recipientPlayerId)` through a targeted message or `TargetRpc`. Public synchronization contains only public state.
 
 Treat client input as an intention. Resolve sender identity from the authenticated connection, validate authority and phase on the host, then pass a domain command to `RoundEngine`. Never accept a client-supplied `PlayerId` as authority.
 
 ## Verify in order
 
-1. Edit Mode tests for every changed Runda rule or private-view filter.
-2. Unity compilation and bounded Console Errors.
-3. Local host/client over KCP, including one unauthorized or wrong-phase intention and recipient privacy checks.
-4. ParrelSync multi-client test after KCP succeeds.
-5. FizzySteamworks only after local behavior is correct; use two machines/accounts.
+For implementation, use `$unity-change-verification`. For design/review, assess evidence without treating investigation as a code change.
 
-Use `$unity-change-verification` and report levels not run. Complete when each secret field has one intended recipient path, authority is host-derived, and the highest applicable reachable integration level passes.
+- Test changed Runda rules and private-view filters in Edit Mode.
+- For networking changes, test KCP host/client, recipient privacy, and a rejected unauthorized or wrong-phase intention. Use ParrelSync for multiple clients.
+- Test FizzySteamworks on two machines/accounts only when Steam/lobby/transport behavior is affected, after KCP succeeds.
+
+Complete when payloads respect recipient/phase permissions, authority is host-derived, and applicable checks pass. Report unavailable checks as gaps, not success.

@@ -1,0 +1,494 @@
+{
+  "rooms": [
+    {
+      "key": "interrogation",
+      "id": "pokoj-przesluchan",
+      "label": "01  PRZESLUCHANIA",
+      "x": 0.0,
+      "z": 0.5,
+      "width": 6,
+      "depth": 5
+    },
+    {
+      "key": "common",
+      "id": "sala-wspolna",
+      "label": "02  SALA WSPOLNA",
+      "x": 0.0,
+      "z": 10.125,
+      "width": 12,
+      "depth": 7.75
+    },
+    {
+      "key": "archive",
+      "id": "archiwum",
+      "label": "03  ARCHIWUM",
+      "x": -10.625,
+      "z": -2.0,
+      "width": 8.75,
+      "depth": 6
+    },
+    {
+      "key": "evidence",
+      "id": "dowody",
+      "label": "04  DEPOZYT",
+      "x": -10.625,
+      "z": 4.625,
+      "width": 8.75,
+      "depth": 6.75
+    },
+    {
+      "key": "office",
+      "id": "biuro",
+      "label": "05  BIURO",
+      "x": -10.625,
+      "z": 11.125,
+      "width": 8.75,
+      "depth": 5.75
+    },
+    {
+      "key": "social",
+      "id": "pokoj-socjalny",
+      "label": "06  POKOJ SOCJALNY",
+      "x": 10.625,
+      "z": -2.0,
+      "width": 8.75,
+      "depth": 6
+    },
+    {
+      "key": "workshop",
+      "id": "warsztat",
+      "label": "07  WARSZTAT",
+      "x": 10.625,
+      "z": 4.625,
+      "width": 8.75,
+      "depth": 6.75
+    },
+    {
+      "key": "briefing",
+      "id": "odprawy",
+      "label": "08  SALA ODPRAW",
+      "x": 10.625,
+      "z": 11.125,
+      "width": 8.75,
+      "depth": 5.75
+    },
+    {
+      "key": "storage",
+      "id": "magazyn",
+      "label": "09  MAGAZYN",
+      "x": -3.0625,
+      "z": -9.125,
+      "width": 5.875,
+      "depth": 7.75
+    },
+    {
+      "key": "reception",
+      "id": "recepcja",
+      "label": "10  RECEPCJA",
+      "x": 3.0625,
+      "z": -9.125,
+      "width": 5.875,
+      "depth": 7.75
+    },
+    {
+      "key": "hall_south",
+      "id": "korytarz",
+      "label": "",
+      "x": 0.0,
+      "z": -3.625,
+      "width": 12,
+      "depth": 2.75
+    },
+    {
+      "key": "hall_north",
+      "id": "korytarz",
+      "label": "",
+      "x": 0.0,
+      "z": 4.625,
+      "width": 12,
+      "depth": 2.75
+    },
+    {
+      "key": "hall_west",
+      "id": "korytarz",
+      "label": "",
+      "x": -4.625,
+      "z": 0.5,
+      "width": 2.75,
+      "depth": 5.5
+    },
+    {
+      "key": "hall_east",
+      "id": "korytarz",
+      "label": "",
+      "x": 4.625,
+      "z": 0.5,
+      "width": 2.75,
+      "depth": 5.5
+    }
+  ],
+  "doors": [
+    {
+      "name": "DrzwiPrzesluchania",
+      "x": 0,
+      "z": -2.125,
+      "angle": 0,
+      "a": "korytarz",
+      "b": "pokoj-przesluchan",
+      "label": "01  PRZESLUCHANIA"
+    },
+    {
+      "name": "DrzwiSala",
+      "x": 0,
+      "z": 6.125,
+      "angle": 0,
+      "a": "korytarz",
+      "b": "sala-wspolna",
+      "label": "02  SALA WSPOLNA"
+    },
+    {
+      "name": "DrzwiArchiwum",
+      "x": -6.125,
+      "z": -0.5,
+      "angle": 90,
+      "a": "korytarz",
+      "b": "archiwum",
+      "label": "03  ARCHIWUM"
+    },
+    {
+      "name": "DrzwiSocjalny",
+      "x": 6.125,
+      "z": -0.5,
+      "angle": 90,
+      "a": "korytarz",
+      "b": "pokoj-socjalny",
+      "label": "06  SOCJALNY"
+    },
+    {
+      "name": "DrzwiDepozyt",
+      "x": -6.125,
+      "z": 4.5,
+      "angle": 90,
+      "a": "korytarz",
+      "b": "dowody",
+      "label": "04  DEPOZYT"
+    },
+    {
+      "name": "DrzwiWarsztat",
+      "x": 6.125,
+      "z": 4.5,
+      "angle": 90,
+      "a": "korytarz",
+      "b": "warsztat",
+      "label": "07  WARSZTAT"
+    },
+    {
+      "name": "DrzwiBiuro",
+      "x": -6.125,
+      "z": 10.5,
+      "angle": 90,
+      "a": "sala-wspolna",
+      "b": "biuro",
+      "label": "05  BIURO"
+    },
+    {
+      "name": "DrzwiOdprawy",
+      "x": 6.125,
+      "z": 10.5,
+      "angle": 90,
+      "a": "sala-wspolna",
+      "b": "odprawy",
+      "label": "08  ODPRAWY"
+    },
+    {
+      "name": "DrzwiMagazyn",
+      "x": -3,
+      "z": -5.125,
+      "angle": 0,
+      "a": "korytarz",
+      "b": "magazyn",
+      "label": "09  MAGAZYN"
+    },
+    {
+      "name": "DrzwiRecepcja",
+      "x": 3,
+      "z": -5.125,
+      "angle": 0,
+      "a": "korytarz",
+      "b": "recepcja",
+      "label": "10  RECEPCJA"
+    },
+    {
+      "name": "DrzwiArchiwumDepozyt",
+      "x": -10.5,
+      "z": 1.125,
+      "angle": 0,
+      "a": "archiwum",
+      "b": "dowody",
+      "label": "DEPOZYT / ARCHIWUM"
+    },
+    {
+      "name": "DrzwiDepozytBiuro",
+      "x": -10.5,
+      "z": 8.125,
+      "angle": 0,
+      "a": "dowody",
+      "b": "biuro",
+      "label": "BIURO / DEPOZYT"
+    },
+    {
+      "name": "DrzwiSocjalnyWarsztat",
+      "x": 10.5,
+      "z": 1.125,
+      "angle": 0,
+      "a": "pokoj-socjalny",
+      "b": "warsztat",
+      "label": "WARSZTAT / SOCJALNY"
+    },
+    {
+      "name": "DrzwiWarsztatOdprawy",
+      "x": 10.5,
+      "z": 8.125,
+      "angle": 0,
+      "a": "warsztat",
+      "b": "odprawy",
+      "label": "ODPRAWY / WARSZTAT"
+    }
+  ],
+  "lights": [
+    {
+      "name": "interrogation0",
+      "x": 0,
+      "z": 0.5,
+      "central": true
+    },
+    {
+      "name": "common0",
+      "x": -2.0,
+      "z": 10.125,
+      "central": false
+    },
+    {
+      "name": "common1",
+      "x": 2.0,
+      "z": 10.125,
+      "central": false
+    },
+    {
+      "name": "archive0",
+      "x": -12.625,
+      "z": -2.0,
+      "central": false
+    },
+    {
+      "name": "archive1",
+      "x": -8.625,
+      "z": -2.0,
+      "central": false
+    },
+    {
+      "name": "evidence0",
+      "x": -12.625,
+      "z": 4.625,
+      "central": false
+    },
+    {
+      "name": "evidence1",
+      "x": -8.625,
+      "z": 4.625,
+      "central": false
+    },
+    {
+      "name": "office0",
+      "x": -12.625,
+      "z": 11.125,
+      "central": false
+    },
+    {
+      "name": "office1",
+      "x": -8.625,
+      "z": 11.125,
+      "central": false
+    },
+    {
+      "name": "social0",
+      "x": 8.625,
+      "z": -2.0,
+      "central": false
+    },
+    {
+      "name": "social1",
+      "x": 12.625,
+      "z": -2.0,
+      "central": false
+    },
+    {
+      "name": "workshop0",
+      "x": 8.625,
+      "z": 4.625,
+      "central": false
+    },
+    {
+      "name": "workshop1",
+      "x": 12.625,
+      "z": 4.625,
+      "central": false
+    },
+    {
+      "name": "briefing0",
+      "x": 8.625,
+      "z": 11.125,
+      "central": false
+    },
+    {
+      "name": "briefing1",
+      "x": 12.625,
+      "z": 11.125,
+      "central": false
+    },
+    {
+      "name": "storage0",
+      "x": -3.0625,
+      "z": -11.125,
+      "central": false
+    },
+    {
+      "name": "storage1",
+      "x": -3.0625,
+      "z": -7.125,
+      "central": false
+    },
+    {
+      "name": "reception0",
+      "x": 3.0625,
+      "z": -11.125,
+      "central": false
+    },
+    {
+      "name": "reception1",
+      "x": 3.0625,
+      "z": -7.125,
+      "central": false
+    },
+    {
+      "name": "hall_south0",
+      "x": -4,
+      "z": -3.625,
+      "central": false
+    },
+    {
+      "name": "hall_south1",
+      "x": 0.0,
+      "z": -3.625,
+      "central": false
+    },
+    {
+      "name": "hall_south2",
+      "x": 4,
+      "z": -3.625,
+      "central": false
+    },
+    {
+      "name": "hall_north0",
+      "x": -4,
+      "z": 4.625,
+      "central": false
+    },
+    {
+      "name": "hall_north1",
+      "x": 0.0,
+      "z": 4.625,
+      "central": false
+    },
+    {
+      "name": "hall_north2",
+      "x": 4,
+      "z": 4.625,
+      "central": false
+    },
+    {
+      "name": "hall_west0",
+      "x": -4.625,
+      "z": 0.5,
+      "central": false
+    },
+    {
+      "name": "hall_east0",
+      "x": 4.625,
+      "z": 0.5,
+      "central": false
+    }
+  ],
+  "windows": [
+    {
+      "x": -15.125,
+      "z": -2.5,
+      "axis": "z"
+    },
+    {
+      "x": -15.125,
+      "z": 4.5,
+      "axis": "z"
+    },
+    {
+      "x": -15.125,
+      "z": 11,
+      "axis": "z"
+    },
+    {
+      "x": -6.125,
+      "z": -9,
+      "axis": "z"
+    },
+    {
+      "x": 15.125,
+      "z": -2.5,
+      "axis": "z"
+    },
+    {
+      "x": 15.125,
+      "z": 4.5,
+      "axis": "z"
+    },
+    {
+      "x": 15.125,
+      "z": 11,
+      "axis": "z"
+    },
+    {
+      "x": 6.125,
+      "z": -9,
+      "axis": "z"
+    },
+    {
+      "x": -10.5,
+      "z": 14.125,
+      "axis": "x"
+    },
+    {
+      "x": -3,
+      "z": 14.125,
+      "axis": "x"
+    },
+    {
+      "x": 3,
+      "z": 14.125,
+      "axis": "x"
+    },
+    {
+      "x": 10.5,
+      "z": 14.125,
+      "axis": "x"
+    },
+    {
+      "x": -3,
+      "z": -13.125,
+      "axis": "x"
+    },
+    {
+      "x": 3,
+      "z": -13.125,
+      "axis": "x"
+    }
+  ]
+}

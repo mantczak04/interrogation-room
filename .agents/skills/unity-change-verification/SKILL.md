@@ -5,7 +5,7 @@ description: Select and run deterministic evidence for changes in this Unity pro
 
 # Unity change verification
 
-Read [AGENTS.md](../../../AGENTS.md). Classify every changed file, then run the union of applicable checks:
+Follow [AGENTS.md](../../../AGENTS.md) for Editor operations and final checks. Classify this task's changes, excluding untouched local/upstream work. Reuse passing evidence unless changes or failures invalidate it.
 
 | Change category | Required evidence |
 | --- | --- |
@@ -13,20 +13,12 @@ Read [AGENTS.md](../../../AGENTS.md). Classify every changed file, then run the 
 | Any C# | Unity compilation/script validation, then bounded Console `Error` query |
 | `CaseAsset` conversion | Edit Mode conversion test; inspect authored asset only if changed |
 | Unity lifecycle, scene interaction, physics | Narrow Play Mode evidence only when Edit Mode is insufficient |
-| Mirror messages/coordinator | Domain tests, then local KCP host/client |
+| Mirror messages/coordinator | Relevant rule/view-filter tests, then local KCP host/client |
 | Multi-client state | KCP first, then ParrelSync |
 | Steam transport | KCP success first, then two machines/accounts |
-| Voice/acoustics | Independent spike with at least two clients; keep separate from `RoundEngine` |
+| Pure voice logic | Relevant Edit Mode tests |
+| Voice runtime/acoustics | Affected behavior with at least two clients; no new spike required |
 | Scene/prefab/Inspector | MCP hierarchy/component verification and save the correct scene/asset |
 | Documentation/skills only | Targeted validator or link check; no Unity run by default |
 
-Before any Editor operation, perform the MCP preflight from `AGENTS.md`. If MCP lacks a required operation, apply its mandatory stop rule; do not substitute raw YAML or OS automation.
-
-Always:
-
-1. Run the narrowest evidence first and escalate only when the change category requires it.
-2. Inspect the final diff for unrelated or Unity-generated edits.
-3. Run `git diff --check`.
-4. Report each check as `passed`, `failed`, or `not run`, with the exact reason for every `not run`.
-
-Complete when every changed category maps to evidence and failures or omissions are visible rather than implied away.
+Run the applicable rows, starting with the narrowest check. Complete when every affected category has evidence or an explicit failed/not-run result with its reason. Unavailable checks remain verification gaps.

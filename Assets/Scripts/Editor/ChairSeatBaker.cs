@@ -1,4 +1,5 @@
 using System.Text;
+using System.Linq;
 using InterrogationRoom.Gameplay.Interaction;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -48,7 +49,7 @@ namespace InterrogationRoom.EditorTools
 
         private static string Bake(NetworkChairSeat chair)
         {
-            Renderer[] renderers = chair.GetComponentsInChildren<Renderer>(true);
+            Renderer[] renderers = chair.GetComponentsInChildren<Renderer>().Where(r => r.enabled).ToArray();
             if (renderers.Length == 0)
             {
                 return $"{chair.name}: SKIPPED (no renderer)";
@@ -93,7 +94,8 @@ namespace InterrogationRoom.EditorTools
             int backrestCount = 0;
             float topThreshold = bounds.min.y + bounds.size.y * 0.6f;
 
-            foreach (MeshFilter meshFilter in chair.GetComponentsInChildren<MeshFilter>(true))
+            foreach (MeshFilter meshFilter in chair.GetComponentsInChildren<MeshFilter>()
+                         .Where(f => f.TryGetComponent<Renderer>(out var r) && r.enabled))
             {
                 Mesh mesh = meshFilter.sharedMesh;
                 if (mesh == null)
@@ -194,7 +196,8 @@ namespace InterrogationRoom.EditorTools
             closestHit = default;
             float closestDistance = float.MaxValue;
 
-            foreach (MeshFilter meshFilter in chair.GetComponentsInChildren<MeshFilter>(true))
+            foreach (MeshFilter meshFilter in chair.GetComponentsInChildren<MeshFilter>()
+                         .Where(f => f.TryGetComponent<Renderer>(out var r) && r.enabled))
             {
                 Mesh mesh = meshFilter.sharedMesh;
                 if (mesh == null)

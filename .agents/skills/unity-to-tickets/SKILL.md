@@ -13,7 +13,7 @@ description: Break an approved Unity plan, spec, or conversation into dependency
    A finished pure `RoundEngine` ticket with Edit Mode evidence is a valid increment. Do not force UI, networking, or every layer into it.
 3. Give each ticket an outcome, acceptance evidence, blockers, relevant approved seam, and explicit exclusions. Keep it small enough for one fresh agent context.
 4. Use tracer bullets within a layer or integration boundary when they produce real end-to-end evidence. Use expand-contract for wide mechanical refactors that cannot remain green as independent vertical slices.
-5. Present the dependency graph for user approval. Publish only to a tracker or file destination the user selected; do not infer tracker semantics.
+5. Present tickets and dependencies. Publish only when authorized, to the user-selected destination; do not request approval again for work already authorized.
 6. Name project workflows in execution notes: `$unity-implement`, `$unity-tdd`, `$mirror-round-networking`, and `$unity-change-verification` as applicable.
 
 Complete when every ticket can be verified independently, every blocking edge is necessary, and no ticket silently approves an open product decision.

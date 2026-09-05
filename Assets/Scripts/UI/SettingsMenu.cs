@@ -43,6 +43,11 @@ public sealed class SettingsMenu : MonoBehaviour
     private Button generalTabButton;
     private Button controlsTabButton;
     private Button soundTabButton;
+    private Button graphicsTabButton;
+    private VisualElement graphicsSection;
+    private DropdownField graphicsQuality;
+    private Label graphicsCaption;
+    private Label graphicsHint;
     private Button backButton;
     private Button leaveButton;
     private VisualElement generalSection;
@@ -61,7 +66,8 @@ public sealed class SettingsMenu : MonoBehaviour
     {
         General,
         Controls,
-        Sound
+        Sound,
+        Graphics
     }
 
     public static bool IsOpen => instance != null && instance.isOpen;
@@ -183,6 +189,14 @@ public sealed class SettingsMenu : MonoBehaviour
         generalSection = root.Q<VisualElement>("general-section");
         controlsSection = root.Q<VisualElement>("controls-section");
         soundSection = root.Q<VisualElement>("sound-section");
+        graphicsTabButton = root.Q<Button>("graphics-tab-button");
+        graphicsSection = root.Q<VisualElement>("graphics-section");
+        graphicsQuality = root.Q<DropdownField>("graphics-quality");
+        graphicsCaption = root.Q<Label>("graphics-caption");
+        graphicsHint = root.Q<Label>("graphics-hint");
+        graphicsTabButton.clicked += () => SelectSection(SettingsSection.Graphics);
+        graphicsQuality.RegisterValueChangedCallback(evt =>
+            GameSettingsService.Current.SetGraphicsQuality(graphicsQuality.index));
 
         sensitivitySlider.lowValue = GameSettings.MinMouseSensitivity;
         sensitivitySlider.highValue = GameSettings.MaxMouseSensitivity;
@@ -234,6 +248,8 @@ public sealed class SettingsMenu : MonoBehaviour
         UiControlStates.SetSelected(generalSection, section == SettingsSection.General);
         UiControlStates.SetSelected(controlsSection, section == SettingsSection.Controls);
         UiControlStates.SetSelected(soundSection, section == SettingsSection.Sound);
+        UiControlStates.SetSelected(graphicsTabButton, section == SettingsSection.Graphics);
+        UiControlStates.SetSelected(graphicsSection, section == SettingsSection.Graphics);
     }
 
     private void OnSettingsChanged()
@@ -276,6 +292,11 @@ public sealed class SettingsMenu : MonoBehaviour
         generalTabButton.text = UiText.Get("Ogólne").ToUpperInvariant();
         controlsTabButton.text = UiText.Get("Sterowanie").ToUpperInvariant();
         soundTabButton.text = UiText.Get("Dźwięk").ToUpperInvariant();
+        graphicsTabButton.text = UiText.Get("Grafika").ToUpperInvariant();
+        graphicsCaption.text = UiText.Get("Jakość grafiki");
+        graphicsHint.text = UiText.Get("Niższa jakość zmniejsza rozdzielczość obrazu i koszt cieni. Zmiany działają natychmiast.");
+        graphicsQuality.choices = new List<string> { UiText.Get("Niska"), UiText.Get("Średnia"), UiText.Get("Wysoka"), "Ultra" };
+        graphicsQuality.SetValueWithoutNotify(graphicsQuality.choices[GameSettingsService.Current.GraphicsQuality]);
         sensitivityCaptionLabel.text = UiText.Get("Czułość myszy");
         languageCaptionLabel.text = UiText.Get("Język");
         microphoneCaptionLabel.text = UiText.Get("Twój mikrofon");
