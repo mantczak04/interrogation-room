@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Furniture and visibility fixes</title>
+<style>body{margin:24px;background:#191d1e;color:#ece7dd;font:16px/1.5 system-ui}main{max-width:1100px;margin:auto}img{width:100%;border-radius:8px}figure{margin:24px 0}a{color:#b7d8ee}</style><main><h1>Furniture and visibility fixes</h1><p>No lighting bake. Old furniture shadows remain until the later bake.</p>
+<figure><img src="briefing-complete.png" alt="Round briefing tables and aligned chairs"><figcaption>Room 08: restored round tables, closer chairs and warmer finishes.</figcaption></figure>
+<figure><img src="interrogation-final.png" alt="Interrogation chairs nearer table"></figure>
+<figure><img src="panel-corrected.png" alt="Open electrical panel facing into room"></figure>
+<figure><img src="rug-final.png" alt="Mat at interrogation door"></figure>
+<figure><img src="archive-complete.png" alt="Archive furniture against wall, with box on side table"></figure>
+<h2>Visibility bug reproduction</h2><figure><img src="direct-occlusion-True.png" alt="Coat rack incorrectly culled"><figcaption>Before: incorrect occlusion hides the rack.</figcaption></figure><figure><img src="direct-occlusion-False.png" alt="Same camera with occlusion disabled"><figcaption>Same camera, only occlusion disabled: the rack returns.</figcaption></figure>
+<figure><img src="coat-play-fixed.png" alt="Rack visible in singleplayer after fix"><figcaption>After: singleplayer visibility check.</figcaption></figure><figure><img src="deposit-play-fixed.png" alt="Deposit room in singleplayer"></figure><p><a href="REPORT.md">Verification report</a></p></main></html>

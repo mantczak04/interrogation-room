@@ -46,22 +46,6 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     [Tooltip("Multiplies the walking speed while sprinting.")]
     private float sprintSpeedMultiplier = 1.55f;
 
-    [SerializeField, Min(0.5f)]
-    [Tooltip("Seconds of continuous sprinting available from a full budget.")]
-    private float sprintDurationSeconds = 3f;
-
-    [SerializeField, Min(0.5f)]
-    [Tooltip("Seconds needed to refill an empty budget once recovery starts.")]
-    private float sprintRecoverySeconds = 6f;
-
-    [SerializeField, Min(0f)]
-    [Tooltip("Pause between releasing sprint and the budget starting to refill.")]
-    private float sprintRecoveryDelaySeconds = 0.6f;
-
-    [SerializeField, Range(0f, 1f)]
-    [Tooltip("Budget required to start a new sprint, so a drained player cannot stutter-tap it.")]
-    private float sprintMinimumChargeToStart = 0.25f;
-
     [Header("Characters")]
     [SerializeField] private CharacterVisualDefinition[] characterVisuals = Array.Empty<CharacterVisualDefinition>();
 
@@ -86,8 +70,6 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     private SyncDirection defaultNetworkTransformSyncDirection;
     private int allocationKey;
     private float verticalVelocity;
-    private float sprintCharge01 = 1f;
-    private float sprintRecoveryDelayRemaining;
     private bool isSprinting;
     private NetworkChairSeat activeSeat;
     private bool forceShowLocalModel;
@@ -133,8 +115,8 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     public override Camera PlayerCamera => playerCamera;
     public override bool IsThirdPerson => cameraRig != null && cameraRig.IsThirdPerson;
 
-    /// <summary>Remaining sprint budget, 0..1, for a HUD to render.</summary>
-    public float SprintCharge01 => sprintCharge01;
+    /// <summary>Compatibility value for HUD consumers; sprint is unlimited.</summary>
+    public float SprintCharge01 => 1f;
 
     public bool IsSprinting => isSprinting;
 
@@ -919,18 +901,8 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         move = Vector3.ClampMagnitude(move, 1f);
 
-        // Sprinting is a forward burst; it does not turn strafing into a getaway.
-        bool wantsSprint = IsSprintHeld() && moveInput.y > 0.1f && !isDancing;
-        isSprinting = PlayerSprintStamina.Advance(
-            wantsSprint,
-            isSprinting,
-            Time.deltaTime,
-            sprintDurationSeconds,
-            sprintRecoverySeconds,
-            sprintRecoveryDelaySeconds,
-            sprintMinimumChargeToStart,
-            ref sprintCharge01,
-            ref sprintRecoveryDelayRemaining);
+        // Sprint remains forward-only, with no stamina duration or recovery limit.
+        isSprinting = IsSprintHeld() && moveInput.y > 0.1f && !isDancing;
 
         // The locomotion blend tree only spans idle..walk, so the animator keeps
         // receiving a normalised speed while the body travels faster.
@@ -958,8 +930,6 @@ public class PlayerController : PlayerGameplayController, IRoundEliminationPort,
     private void ResetSprint()
     {
         isSprinting = false;
-        sprintCharge01 = 1f;
-        sprintRecoveryDelayRemaining = 0f;
     }
 
     private void SetMovementAnimationIdle()

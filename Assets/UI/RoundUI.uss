@@ -1120,7 +1120,7 @@
 .hud-card {
     position: absolute;
     padding: 20px;
-    background-color: var(--scrim-heavy);
+    background-color: var(--ink);
     border-radius: var(--radius-small);
     border-left-width: 1px;
     border-right-width: 1px;
@@ -1211,6 +1211,7 @@
 }
 
 .panel-toggle {
+    -unity-font-definition: url("project://database/Assets/UI/Fonts/Lato-Regular.ttf");
     /* Sized by its own label, not fixed: 88px clipped "Rejestr [I]" and
        "Objective [I]" mid-bracket, and the label changes with state and
        language. min-width keeps the three states the same size in practice. */
@@ -1222,8 +1223,8 @@
     flex-shrink: 0;
     /* .btn pads for a full-size action; this one has to fit a card header. */
     padding: 0 10px;
-    font-size: var(--type-micro);
-    letter-spacing: 1px;
+    font-size: var(--type-kicker);
+    letter-spacing: 0;
     white-space: nowrap;
 }
 
